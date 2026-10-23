@@ -8,7 +8,7 @@ export interface Profile {
   cue: "vertical" | "curve" | "paired" | "marks" | "outline";
   hint: string;
 }
-// Proposed tasks, not verified transcriptions of the original MIKECA cards.
+// Proposed tasks, not verified transcriptions of the original 提供資料 cards.
 export const profiles: Record<string, Profile> = {
   mandrill: {
     part: "鼻の両側の溝",

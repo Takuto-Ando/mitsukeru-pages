@@ -3,13 +3,13 @@ export interface Animal {
   name: string;
   scientificName: string;
   zooStatus: "verified" | "unverified";
-  mikecaStatus: "verified" | "unverified";
+  sourceStatus: "verified" | "unverified";
   zooSource: string;
 }
 export const scope = {
   expectedSpeciesCount: 30,
   officialRosterStatus: "awaiting-source" as const,
-  note: "16グループは画像から判読した暫定リストです。MIKECAの正式な全30カードとの一致は未確認です。",
+  note: "16グループは画像から判読した暫定リストです。提供資料の正式な全30カードとの一致は未確認です。",
 };
 export const animals: Animal[] = [
   {
@@ -17,9 +17,9 @@ export const animals: Animal[] = [
     name: "ヤギ",
     scientificName: "Capra hircus",
     zooStatus: "verified",
-    mikecaStatus: "unverified",
+    sourceStatus: "unverified",
     zooSource: "https://zoo.city.kyoto.lg.jp/zoo/animals/c_aegagrus",
   },
 ];
-export const verifiedMikecaAnimals = () =>
-  animals.filter((animal) => animal.mikecaStatus === "verified");
+export const verifiedSourceAnimals = () =>
+  animals.filter((animal) => animal.sourceStatus === "verified");
