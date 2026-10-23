@@ -1,7 +1,7 @@
-name: Deploy static site to GitHub Pages
+name: Publish Web app
 on:
   push:
-    branches: [codex/20261023-pages]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read
@@ -11,21 +11,30 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - uses: actions/configure-pages@v5
+      - run: npm run build
+        env:
+          VITE_BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('/{0}/', github.event.repository.name) }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/configure-pages@v5
-      - name: Prepare public site
-        run: |
-          mkdir -p _site
-          cp index.html _site/index.html
-          touch _site/.nojekyll
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-      - id: deployment
+      - name: Deploy
+        id: deployment
         uses: actions/deploy-pages@v4

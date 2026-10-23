@@ -1,0 +1,15 @@
+/* Existing supplied design values; replace with Figma variables. */
+:root {
+  font-family:
+    "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
+    Meiryo, sans-serif;
+  color: #464637;
+  background: #fffbef;
+  font-synthesis: none;
+  --teal: #287e79;
+  --orange: #db7747;
+  --yellow: #f4cc65;
+  --ink: #464637;
+  --cream: #fffbef;
+  --line: #e7e2d2;
+}
