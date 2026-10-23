@@ -12,7 +12,9 @@ import { evaluateObservation } from "./evaluator";
 import { profiles, evaluateProfile } from "./content/profiles";
 import type { Stroke, Evaluation } from "./types";
 import "./styles/figma.css";
+import { useButtonMotion } from "./components/useButtonMotion";
 export default function App() {
+  useButtonMotion();
   const [step, setStep] = useState(0),
     [groupId, setGroupId] = useState("goat"),
     [photo, setPhoto] = useState("");

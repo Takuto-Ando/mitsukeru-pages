@@ -61,7 +61,7 @@ test("Figma4画面・描画・Undo・判定・重ね合わせ・解説", async (
     .getByTestId("user-lines")
     .locator("polyline")
     .getAttribute("points");
-  await page.getByRole("button", { name: "お手本", exact: true }).click();
+  await page.getByRole("button", { name: "正解", exact: true }).click();
   await expect(page.getByTestId("user-lines")).toHaveAttribute(
     "visibility",
     "hidden",

@@ -21,9 +21,9 @@ export function SketchComparison({
       <div className="comparison-modes" role="group" aria-label="比較の表示">
         {(
           [
-            ["drawing", "自分の絵"],
+            ["drawing", "自分の線"],
             ["overlay", "重ねる"],
-            ["answer", "お手本"],
+            ["answer", "正解"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -93,14 +93,14 @@ export function SketchComparison({
                 preserveAspectRatio="none"
               />
             ) : (
-              <PupilShape fill="#db7747" />
+              <PupilShape fill="#242e2b" />
             )}
           </motion.g>
         </g>
       </svg>
       <p className="comparison-legend">
         <span>ターコイズ：自分の線</span>
-        <span>半透明のオレンジ：正解の模式図</span>
+        <span>半透明の黒：正解の模式図</span>
       </p>
       <p className="result-caption">
         模式図は一例です。形の完全一致を求めず、実物で見えた特徴を確かめよう。

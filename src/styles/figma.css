@@ -314,3 +314,11 @@ body {
   width: 8px;
   height: 8px;
 }
+.figma-shell .primary {
+  box-shadow: 0 4px 0 #397a73;
+  touch-action: manipulation;
+}
+.figma-shell button:focus-visible {
+  outline: 3px solid #ed9873;
+  outline-offset: 4px;
+}

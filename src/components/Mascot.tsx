@@ -49,7 +49,7 @@ export function Mascot({ step }: { step: number }) {
             "style",
           );
           style.textContent =
-            '[id^="blinkable eye"],[id^="eye pupil"]{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}';
+            '[id^="blinkable eye"],[id^="eye pupil"]{transition:translate .12s ease-out;transform-box:fill-box;transform-origin:center;animation:blink 3s infinite}@keyframes blink{0%,44%,48%,100%{transform:scaleY(1)}46%{transform:scaleY(.08)}}';
           doc.documentElement.append(style);
         }}
       />

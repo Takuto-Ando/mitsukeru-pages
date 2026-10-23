@@ -46,3 +46,7 @@ Chromium/WebKitの自動検証とiPhone相当スクリーンショットで確�
 - `/mitsukeru-pages/` の公開用サブパスでも同じ結果。
 - iOS資材同期・署名付きDebugビルド成功。実機へのインストールは行っていません。
 - スクリーンショット：test-results/figma-{camera,draw,compare,learn}-webkit.png。Figmaの4画面と目視比較し、上記の機能上の差分を記録。
+
+## プロトタイプ指定の追補
+
+Motion playground（9:2）とmotion contextの取得はFigma StarterプランのMCP呼び出し上限で失敗しました。最新のプロトタイプ遷移・キー フレームを取得済みとはしていません。前回取得した4画面を維持し、利用者が今回明示した仕様に従い、ボタンの94%縮小とSpring復帰、3秒間隔のまばたき、視線の補間、ヤギの正解の半透明黒、表示切替ラベル「自分の線／正解／重ねる」を実装しました。追加依存はありません。`src/components/useButtonMotion.ts` がボタンの操作反応を管理します。
