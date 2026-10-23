@@ -132,4 +132,4 @@ Webの変更を実機アプリへ反映するには毎回syncし、Xcodeで接�
 
 ## この公開リポジトリ
 
-公開先は https://takuto-ando.github.io/mitsukeru-pages/ 。mainの更新を自動公開します。iOSネイティブプロジェクトはローカル開発版で管理し、このWeb公開リポジトリには含めていません。
+公開先は https://takuto-ando.github.io/mitsukeru-pages/ 。mainの更新を自動公開します。iOSネイティブプロジェクトもこのリポジトリのios/で管理します。WebとiOSは同じsrc/を使います。

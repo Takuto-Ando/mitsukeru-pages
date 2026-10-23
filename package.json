@@ -11,7 +11,7 @@
     "test:e2e": "playwright test",
     "format": "prettier --write src tests *.ts *.json index.html",
     "test:e2e:preview": "E2E_PREVIEW=1 playwright test",
-    "ios:sync": "npm run build && cap sync ios",
+    "ios:sync": "VITE_BASE_PATH=/ npm run build && cap sync ios",
     "ios:open": "cap open ios",
     "ios:run": "npm run ios:sync && cap run ios",
     "ios:demo": "npm run ios:sync && node scripts/ios-demo.mjs"
