@@ -434,3 +434,49 @@ body {
     animation: none;
   }
 }
+
+.figma-header .collection-link {
+  position: static;
+  font-size: 14px;
+  margin-top: 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.collection-card {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fffaf0;
+  padding: 8px;
+}
+.collection-open {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.collection-open svg {
+  width: 100%;
+  height: auto;
+}
+.collection-open strong {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.collection-open time {
+  font-size: 12px;
+}
+.collection-card .text-button {
+  font-size: 13px;
+}
+.collection-save {
+  margin-top: 16px;
+}

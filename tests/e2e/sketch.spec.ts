@@ -102,10 +102,10 @@ for (const group of groups.filter((g) => g.id !== "goat"))
     await page.getByRole("button", { name: "こたえあわせ →" }).click();
     await expect(
       page
-        .getByRole("status")
+        .locator(".figma-feedback")
         .or(page.getByRole("heading", { name: "特徴を見つけたね！" })),
     ).toBeVisible();
-    if (await page.getByRole("status").count())
+    if (await page.locator(".figma-feedback").count())
       await page
         .getByRole("button", { name: /うん、実物でも見えた|お手本で確かめる/ })
         .click();
@@ -142,7 +142,7 @@ test("スマホ幅・素材・ファイル入力なし", async ({ page }) => {
   });
 });
 
-test("シャッターで写真を保持してから未認識の手動選択を出す", async ({
+test("シャッター・AI候補の確認・手動選択（推論Workerはモック）", async ({
   page,
   browserName,
 }) => {
@@ -151,6 +151,25 @@ test("シャッターで写真を保持してから未認識の手動選択を�
     "Canvas captureStream mock is Chromium-only; physical iPhone camera needs device testing.",
   );
   await page.addInitScript(() => {
+    window.Worker = class {
+      onmessage: ((event: { data: unknown }) => void) | null = null;
+      terminate() {}
+      postMessage() {
+        setTimeout(
+          () =>
+            this.onmessage?.({
+              data: {
+                type: "result",
+                result: {
+                  status: "candidates",
+                  candidates: [{ groupId: "goat", score: 0.75 }],
+                },
+              },
+            }),
+          20,
+        );
+      }
+    } as unknown as typeof Worker;
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
@@ -187,6 +206,19 @@ test("シャッターで写真を保持してから未認識の手動選択を�
   await expect(
     page.getByText("撮影した写真を見て、動物を選んでね。"),
   ).toBeVisible();
+  await page
+    .getByRole("button", { name: "AIで候補を探す", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "この動物かな？" }),
+  ).toBeVisible();
+  await expect(page.locator(".animal-grid button")).toHaveCount(16);
+  await page
+    .getByRole("button", { name: "ヤギ・ヒツジ を観察する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
   await page.screenshot({
     path: "test-results/capture-mobile.png",
     fullPage: true,
@@ -366,4 +398,69 @@ test("ヤギ以外の両腕を自動判定し、きらめきと星の完成演�
     path: `test-results/gibbon-discovery-${test.info().project.name}.png`,
     fullPage: true,
   });
+});
+
+test("動物の絵を保存・再読込・見返し・比較・削除できる", async ({ page }) => {
+  await select(page, "goat");
+  await draw(page);
+  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  const original = await page
+    .getByTestId("user-lines")
+    .locator("polyline")
+    .evaluateAll((es) => es.map((e) => e.getAttribute("points")));
+  await page.getByRole("button", { name: "この動物を保存する" }).click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.reload();
+  await page.getByRole("button", { name: "描いた動物 (1)" }).click();
+  await page.screenshot({
+    path: `test-results/collection-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "ヤギ・ヒツジの絵を見返す" }).click();
+  await expect(page.getByTestId("user-lines").locator("polyline")).toHaveCount(
+    original.length,
+  );
+  const saved = await page
+    .getByTestId("user-lines")
+    .locator("polyline")
+    .evaluateAll((es) => es.map((e) => e.getAttribute("points")));
+  // Saved coordinates keep 0.01 px precision in the 600 × 400 shared frame.
+  expect(saved[0]?.split(" ").length).toBe(original[0]?.split(" ").length);
+  await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
+  await expect(page.getByTestId("answer-shape")).toHaveAttribute(
+    "visibility",
+    "visible",
+  );
+  await page.getByRole("button", { name: "一覧に戻る" }).click();
+  await page.getByRole("button", { name: "削除", exact: true }).click();
+  await page.getByRole("button", { name: "残す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "ヤギ・ヒツジの絵を見返す" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "削除", exact: true }).click();
+  await page.getByRole("button", { name: "削除する", exact: true }).click();
+  await page.reload();
+  await page.getByRole("button", { name: "描いた動物 (0)" }).click();
+  await expect(page.getByText("0枚の発見を保存しています。")).toBeVisible();
+});
+
+test("保存に失敗したとき保存済みと表示しない", async ({ page }) => {
+  await page.addInitScript(() => {
+    Storage.prototype.setItem = function () {
+      throw new DOMException("full", "QuotaExceededError");
+    };
+  });
+  await select(page, "goat");
+  await draw(page);
+  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await page.getByRole("button", { name: "この動物を保存する" }).click();
+  await expect(page.getByRole("alert")).toContainText("保存できませんでした");
+  await expect(
+    page.getByRole("button", { name: "この動物を保存する" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "描いた動物 (0)" }),
+  ).toBeVisible();
 });

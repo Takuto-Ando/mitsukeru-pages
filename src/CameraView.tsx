@@ -1,3 +1,5 @@
+import { groups } from "./content/groups";
+import type { Candidate } from "./recognition/labels";
 import { AnimalSelector } from "./components/AnimalSelector";
 import { useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, ScanLine } from "lucide-react";
@@ -10,6 +12,8 @@ export function CameraView({
 }) {
   const [captured, setCaptured] = useState("");
   const [busy, setBusy] = useState(false);
+  const [recognizing, setRecognizing] = useState(false);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const reduce = useReducedMotion();
   const video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
@@ -21,6 +25,7 @@ export function CameraView({
   useEffect(
     () => () => {
       generation.current++;
+      speciesRecognizer.cancel();
       stream.current?.getTracks().forEach((track) => track.stop());
     },
     [],
@@ -75,15 +80,32 @@ export function CameraView({
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       setCaptured(image);
-      const result = await speciesRecognizer.recognize(image);
-      if (result.status === "recognized") onSelect(image, result.groupId);
-      else {
-        setMessage(result.reason);
-      }
+      setCandidates([]);
+      setMessage(
+        "写真を撮りました。AIで候補を探すか、下から動物を選んでください。",
+      );
     } catch {
       setMessage("撮影できませんでした。カメラをもう一度試してください。");
     } finally {
       setBusy(false);
+    }
+  }
+  async function recognize() {
+    const request = generation.current;
+    setRecognizing(true);
+    setCandidates([]);
+    setMessage("初回モデルを読込中です。手動選択もできます。");
+    try {
+      const result = await speciesRecognizer.recognize(captured, (text) => {
+        if (request === generation.current) setMessage(text);
+      });
+      if (request !== generation.current) return;
+      if (result.status === "candidates") {
+        setCandidates(result.candidates);
+        setMessage("AIの候補です。実物と写真を見て確定してください。");
+      } else setMessage(result.reason);
+    } finally {
+      if (request === generation.current) setRecognizing(false);
     }
   }
   return (
@@ -124,9 +146,11 @@ export function CameraView({
       {message && (
         <p className="camera-message" role="status">
           {message}
-          <button className="text-button" onClick={() => void start()}>
-            カメラをもう一度試す
-          </button>
+          {status === "failed" && (
+            <button className="text-button" onClick={() => void start()}>
+              カメラをもう一度試す
+            </button>
+          )}
         </p>
       )}
       {captured && (
@@ -142,13 +166,50 @@ export function CameraView({
       )}
       <button
         className="primary"
-        disabled={status !== "live" || busy}
+        disabled={status !== "live" || busy || recognizing}
         onClick={() => void capture()}
       >
         {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>
+      {captured && (
+        <>
+          <button
+            className="primary"
+            disabled={recognizing}
+            onClick={() => void recognize()}
+          >
+            {recognizing ? "候補を探しています…" : "AIで候補を探す"}
+          </button>
+          {recognizing && (
+            <button
+              className="text-button"
+              onClick={() => speciesRecognizer.cancel()}
+            >
+              検索をやめる
+            </button>
+          )}
+          <p className="quiet-note">
+            初回は約150MB以上のモデルをダウンロードします。Wi-Fiをおすすめします。写真は端末内で処理します。
+          </p>
+        </>
+      )}
+      {candidates.length > 0 && (
+        <section aria-label="AIの候補">
+          <h2>この動物かな？</h2>
+          {candidates.map((c) => (
+            <button
+              className="animal-choice"
+              key={c.groupId}
+              onClick={() => onSelect(captured, c.groupId)}
+            >
+              {groups.find((g) => g.id === c.groupId)?.name} を観察する
+            </button>
+          ))}
+          <p>違うときは、下から選んでね。</p>
+        </section>
+      )}
       <p className="quiet-note">
-        自動認識モデルは準備中です。下の動物を選ぶと観察を始められます。
+        簡易AIは間違えることがあります。動物名は自分で確定します。
       </p>
       {captured && <p role="status">撮影した写真を見て、動物を選んでね。</p>}
       <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
