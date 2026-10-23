@@ -48,7 +48,7 @@ export default function App() {
   }
   function answer() {
     const result = profile
-      ? evaluateProfile(clipStrokes(strokes, scene), profile)
+      ? evaluateProfile(clipStrokes(strokes, scene), profile, scene)
       : evaluateObservation(
           clipStrokes(strokes, scene),
           challenge.observationParameters,
@@ -108,7 +108,7 @@ export default function App() {
               )}
               {profile && (
                 <p className="quiet-note">
-                  提案課題・自動判定は未検証。実物を見て自己確認します。
+                  提案課題です。特徴で判定し、迷ったときは自分で確かめます。
                 </p>
               )}
               {photo && (
@@ -175,6 +175,24 @@ export default function App() {
               </motion.h1>
               {feedback?.passed && (
                 <div className="figma-confetti" aria-hidden="true">
+                  {!reduce &&
+                    [0, 1, 2, 3, 4, 5].map((i) => (
+                      <motion.span
+                        className="discovery-star"
+                        key={i}
+                        initial={{ opacity: 0, scale: 0.3, x: 0, y: 0 }}
+                        animate={{
+                          opacity: [0, 1, 0],
+                          scale: [0.3, 1.2, 0.8],
+                          rotate: (i % 2 ? 1 : -1) * 75,
+                          x: (i - 2.5) * 38,
+                          y: -20 - Math.sin(i) * 35,
+                        }}
+                        transition={{ duration: 1.1, delay: i * 0.05 }}
+                      >
+                        ✦
+                      </motion.span>
+                    ))}
                   {["Orange", "Teal", "Gold", "Coral"].map((c, i) => (
                     <motion.img
                       key={c}
@@ -208,7 +226,9 @@ export default function App() {
                 scene={scene}
               />
               <p className="figma-support center">
-                少し違っていても、横長に気づけたね。
+                {profile
+                  ? "少し違っていても、見つけた特徴が大切だよ。"
+                  : "少し違っていても、横長に気づけたね。"}
               </p>
               <button className="primary" onClick={() => next(3)}>
                 {profile ? "特徴について知ろう →" : "どうして横長なの？ →"}
@@ -304,7 +324,7 @@ export default function App() {
                 {profile && (
                   <>
                     <p>
-                      この課題の自動正誤判定は未検証です。自己確認で進みます。
+                      この課題は描いた特徴の広がり・向き・曲がりなどで判定します。曖昧な場合は自分で確かめられます。
                     </p>
                     {group.source && (
                       <a href={group.source}>京都市動物園の公式図鑑</a>

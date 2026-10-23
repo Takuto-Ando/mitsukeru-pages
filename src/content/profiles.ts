@@ -1,3 +1,5 @@
+import { evaluateFeatures } from "../profileEvaluator";
+import type { Scene } from "./scenes";
 import type { Stroke, Evaluation } from "../types";
 export interface Profile {
   part: string;
@@ -170,31 +172,22 @@ export const profiles: Record<string, Profile> = {
 export function evaluateProfile(
   strokes: Stroke[],
   profile: Profile,
+  scene?: Scene,
 ): Evaluation {
-  const points = strokes
-    .flat()
-    .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
-  const width = points.length
-    ? Math.max(...points.map((p) => p.x)) - Math.min(...points.map((p) => p.x))
-    : 0;
-  const height = points.length
-    ? Math.max(...points.map((p) => p.y)) - Math.min(...points.map((p) => p.y))
-    : 0;
-  // These proposed tasks have no validated automatic classifier. Feature cues
-  // drive the question, not a false positive label based on arbitrary geometry.
-  return {
-    passed: false,
-    status: "uncertain",
-    message: points.length
-      ? "実物でも、こんな形に見えた？"
-      : "見えた特徴を描いてみよう。",
-    suggestion: profile.hint,
-    debug: {
-      cue: profile.cue,
-      width,
-      height,
-      strokes: strokes.length,
-      automaticJudging: "unvalidated",
-    },
-  };
+  const id = Object.entries(profiles).find(([, p]) => p === profile)?.[0];
+  if (!id)
+    return {
+      passed: false,
+      status: "uncertain",
+      message: "実物と見比べよう。",
+      suggestion: profile.hint,
+    };
+  if (!scene)
+    return {
+      passed: false,
+      status: "uncertain",
+      message: "実物と見比べよう。",
+      suggestion: profile.hint,
+    };
+  return evaluateFeatures(strokes, scene, profile.hint);
 }

@@ -97,14 +97,21 @@ for (const group of groups.filter((g) => g.id !== "goat"))
   }) => {
     await select(page, group.id);
     await expect(
-      page.getByText("提案課題・自動判定は未検証。実物を見て自己確認します。"),
+      page.getByText(
+        "提案課題です。特徴で判定し、迷ったときは自分で確かめます。",
+      ),
     ).toBeVisible();
     await draw(page);
     await page.getByRole("button", { name: "こたえあわせ →" }).click();
-    await expect(page.getByRole("status")).toContainText(
-      "実物でも、こんな形に見えた？",
-    );
-    await page.getByRole("button", { name: "うん、実物でも見えた" }).click();
+    await expect(
+      page
+        .getByRole("status")
+        .or(page.getByRole("heading", { name: "完成！ だいはっけん！" })),
+    ).toBeVisible();
+    if (await page.getByRole("status").count())
+      await page
+        .getByRole("button", { name: /うん、実物でも見えた|お手本で確かめる/ })
+        .click();
     await expect(page.getByTestId("answer-shape")).toHaveAttribute(
       "visibility",
       "hidden",
@@ -314,6 +321,52 @@ test("空白マスクの外は回答不可、完成まで背景と座標を保�
   await page.setViewportSize({ width: 393, height: 852 });
   await page.screenshot({
     path: `test-results/completed-animal-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+});
+
+test("ヤギ以外の両腕を自動判定し、きらめきと星の完成演出を表示", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await select(page, "gibbon");
+  const canvas = page.getByTestId("canvas");
+  await canvas.scrollIntoViewIfNeeded();
+  const b = (await canvas.boundingBox())!;
+  for (const stroke of [
+    [
+      [130, 85],
+      [245, 210],
+    ],
+    [
+      [470, 85],
+      [345, 210],
+    ],
+  ]) {
+    await page.mouse.move(
+      b.x + (stroke[0][0] / 600) * b.width,
+      b.y + (stroke[0][1] / 400) * b.height,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      b.x + (stroke[1][0] / 600) * b.width,
+      b.y + (stroke[1][1] / 400) * b.height,
+      { steps: 20 },
+    );
+    await page.mouse.up();
+  }
+  await expect(page.locator(".stroke-sparkle")).toHaveCount(1);
+  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await expect(
+    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
+  ).toBeVisible();
+  await expect(page.locator(".discovery-star")).toHaveCount(6);
+  await expect(page.getByTestId("answer-shape")).toHaveAttribute(
+    "visibility",
+    "hidden",
+  );
+  await page.screenshot({
+    path: `test-results/gibbon-discovery-${test.info().project.name}.png`,
     fullPage: true,
   });
 });

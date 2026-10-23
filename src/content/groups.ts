@@ -5,7 +5,7 @@ export interface ObservationGroup {
   question: string;
   fact: string;
   source?: string;
-  evaluation: "horizontal" | "self";
+  evaluation: "horizontal" | "features";
   explanationStatus: "verified" | "partial" | "unverified";
   answer: { kind: "pupil" | "pending"; asset?: string };
   media?: { path: string; alt: string; credit?: string };
@@ -171,7 +171,7 @@ export const groups: ObservationGroup[] = rows.map(
     source: slug
       ? `https://zoo.city.kyoto.lg.jp/zoo/animals/${slug}`
       : undefined,
-    evaluation: id === "goat" ? "horizontal" : "self",
+    evaluation: id === "goat" ? "horizontal" : "features",
     explanationStatus,
     media: groupPhotos[id],
     answer: { kind: id === "goat" ? "pupil" : "pending" },

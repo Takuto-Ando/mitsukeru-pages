@@ -31,6 +31,10 @@ export interface Challenge {
 }
 export interface Evaluation {
   debug?: {
+    turn?: number;
+    horizontal?: number;
+    vertical?: number;
+    regions?: { width: number; height: number }[];
     cue: string;
     width: number;
     height: number;

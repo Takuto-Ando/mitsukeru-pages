@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Eraser, Undo2, RotateCcw } from "lucide-react";
 import { scenes, clipStrokes, scenePoint, type Scene } from "./content/scenes";
@@ -33,6 +34,8 @@ export function SketchCanvas({
   strokes: Stroke[];
   onChange: (next: Stroke[]) => void;
 }) {
+  const reduce = useReducedMotion();
+  const last = clipStrokes(strokes, scene).at(-1)?.at(-1);
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
@@ -155,6 +158,19 @@ export function SketchCanvas({
             if (active.current === event.pointerId) cancel();
           }}
         />
+        {!reduce && last && (
+          <motion.span
+            key={strokes.length}
+            className="stroke-sparkle"
+            style={{ left: `${last.x / 6}%`, top: `${last.y / 4}%` }}
+            initial={{ opacity: 0, scale: 0.5, y: 0 }}
+            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 1], y: -24 }}
+            transition={{ duration: 0.65 }}
+            aria-hidden="true"
+          >
+            ✦
+          </motion.span>
+        )}
         {!strokes.length && !draft.length && (
           <span className="paper-prompt">
             <Pencil size={15} />
