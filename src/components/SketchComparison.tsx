@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { scenes, clipStrokes, type Scene } from "../content/scenes";
+import { SceneBase, SceneRegions } from "./ObservationScene";
+import { useState, useId } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { EyeOutline, SketchLines, PupilShape } from "../Illustrations";
+import { SketchLines, PupilShape } from "../Illustrations";
 import type { ObservationGroup } from "../content/groups";
 import type { Stroke } from "../types";
 
@@ -8,16 +10,21 @@ export function SketchComparison({
   strokes,
   answer,
   profile,
+  scene = scenes.goat,
 }: {
   strokes: Stroke[];
+  scene?: Scene;
   profile?: { background: string; answer: string };
   answer: ObservationGroup["answer"];
 }) {
-  const [mode, setMode] = useState<"drawing" | "answer" | "overlay">("overlay");
+  const [mode, setMode] = useState<"drawing" | "answer" | "overlay">("drawing");
+  const clipId = useId();
   const reduce = useReducedMotion();
   return (
     <div className="sketch-comparison">
-      <p>あなたの線と、お手本を重ねてみよう。</p>
+      <p>
+        自分の描いた線で、動物の姿が完成したね。比較するときは「重ねる」を押してね。
+      </p>
       <div className="comparison-modes" role="group" aria-label="比較の表示">
         {(
           [
@@ -45,28 +52,23 @@ export function SketchComparison({
         aria-label="ヤギの横長の瞳孔の模式図"
         data-mode={mode}
       >
-        <g
-          transform={profile ? undefined : "translate(70,-55) scale(.78,1.32)"}
-        >
-          {profile ? (
-            <path
-              d={profile.background}
-              fill="none"
-              stroke="#b8a58c"
-              strokeWidth="4"
-            />
-          ) : (
-            <EyeOutline />
-          )}
+        <defs>
+          <clipPath id={clipId}>
+            <SceneRegions scene={scene} />
+          </clipPath>
+        </defs>
+        <SceneBase scene={scene} completed />
+        <g clipPath={`url(#${clipId})`}>
           <g
             data-testid="user-lines"
             visibility={mode === "answer" ? "hidden" : "visible"}
           >
-            <SketchLines strokes={strokes} />
+            <SketchLines strokes={clipStrokes(strokes, scene)} />
           </g>
           <motion.g
             data-testid="answer-shape"
             visibility={mode === "drawing" ? "hidden" : "visible"}
+            key={mode}
             initial={reduce ? false : { opacity: 0 }}
             animate={{ opacity: 0.4 }}
             transition={{
@@ -76,16 +78,18 @@ export function SketchComparison({
           >
             {profile ? (
               <path
-                d={profile.answer}
+                d={scene.answerPath}
                 fill="none"
                 stroke="#db7747"
                 strokeWidth="9"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
-            ) : answer.asset ? (
+            ) : scene.answerAsset || answer.asset ? (
               <image
-                href={import.meta.env.BASE_URL + answer.asset}
+                href={
+                  import.meta.env.BASE_URL + (scene.answerAsset || answer.asset)
+                }
                 x="0"
                 y="0"
                 width="600"

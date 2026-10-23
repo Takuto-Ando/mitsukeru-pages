@@ -55,21 +55,24 @@ test("Figma4画面・描画・Undo・判定・重ね合わせ・解説", async (
   });
   await page.getByRole("button", { name: "こたえあわせ →" }).click();
   await expect(
-    page.getByRole("heading", { name: "だいはっけん！" }),
+    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
   ).toBeVisible();
   const points = await page
     .getByTestId("user-lines")
     .locator("polyline")
-    .getAttribute("points");
+    .evaluateAll((elements) => elements.map((e) => e.getAttribute("points")));
   await page.getByRole("button", { name: "正解", exact: true }).click();
   await expect(page.getByTestId("user-lines")).toHaveAttribute(
     "visibility",
     "hidden",
   );
   await page.getByRole("button", { name: "重ねる", exact: true }).click();
-  await expect(
-    page.getByTestId("user-lines").locator("polyline"),
-  ).toHaveAttribute("points", points!);
+  expect(
+    await page
+      .getByTestId("user-lines")
+      .locator("polyline")
+      .evaluateAll((elements) => elements.map((e) => e.getAttribute("points"))),
+  ).toEqual(points);
   await page.screenshot({
     path: `test-results/figma-compare-${test.info().project.name}.png`,
     fullPage: true,
@@ -102,6 +105,11 @@ for (const group of groups.filter((g) => g.id !== "goat"))
       "実物でも、こんな形に見えた？",
     );
     await page.getByRole("button", { name: "うん、実物でも見えた" }).click();
+    await expect(page.getByTestId("answer-shape")).toHaveAttribute(
+      "visibility",
+      "hidden",
+    );
+    await page.getByRole("button", { name: "重ねる", exact: true }).click();
     await expect(page.getByTestId("answer-shape")).toBeVisible();
     await page.getByRole("button", { name: "特徴について知ろう →" }).click();
     await expect(
@@ -196,13 +204,17 @@ test("実タッチイベント・素材読込・reduced motion", async ({
   await session.send("Emulation.setTouchEmulationEnabled", { enabled: true });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchStart",
-    touchPoints: [{ x: b.x + 30, y: b.y + 100, id: 0 }],
+    touchPoints: [{ x: b.x + 30, y: b.y + b.height * 0.5, id: 0 }],
   });
   for (let i = 1; i <= 20; i++)
     await session.send("Input.dispatchTouchEvent", {
       type: "touchMove",
       touchPoints: [
-        { x: b.x + 30 + i * 8, y: b.y + 100 + Math.sin(i / 4) * 20, id: 0 },
+        {
+          x: b.x + 30 + i * 8,
+          y: b.y + b.height * 0.5 + Math.sin(i / 4) * 10,
+          id: 0,
+        },
       ],
     });
   await session.send("Input.dispatchTouchEvent", {
@@ -258,4 +270,50 @@ test("ボタンが94%に縮みSpringで戻り、正解は半透明の黒", async
     page.getByTestId("answer-shape").locator("rect"),
   ).toHaveAttribute("fill", "#242e2b");
   await expect(page.getByTestId("answer-shape")).toHaveCSS("opacity", "0.4");
+});
+
+test("空白マスクの外は回答不可、完成まで背景と座標を保持", async ({ page }) => {
+  await select(page, "goat");
+  const canvas = page.getByTestId("canvas");
+  await canvas.scrollIntoViewIfNeeded();
+  let b = (await canvas.boundingBox())!;
+  await page.mouse.move(b.x + 5, b.y + 5);
+  await page.mouse.down();
+  await page.mouse.move(b.x + 30, b.y + 30, { steps: 8 });
+  await page.mouse.up();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+  await expect(page.getByTestId("animal-background")).toBeVisible();
+  await draw(page);
+  const image = await canvas.evaluate((e) => {
+    const c = e as HTMLCanvasElement;
+    return c.getContext("2d")!.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(image).toBe(0);
+  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await expect(page.getByTestId("answer-shape")).toHaveAttribute(
+    "visibility",
+    "hidden",
+  );
+  await expect(page.getByTestId("user-lines")).toHaveAttribute(
+    "visibility",
+    "visible",
+  );
+  const lines = page.getByTestId("user-lines");
+  const initial = await lines.innerHTML();
+  for (const width of [320, 393, 844]) {
+    await page.setViewportSize({ width, height: 852 });
+    expect(await lines.innerHTML()).toBe(initial);
+    await expect(page.locator(".comparison-overlay")).toHaveAttribute(
+      "viewBox",
+      "0 0 600 400",
+    );
+    await expect(page.getByTestId("animal-background")).toBeVisible();
+  }
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.screenshot({
+    path: `test-results/completed-animal-${test.info().project.name}.png`,
+    fullPage: true,
+  });
 });

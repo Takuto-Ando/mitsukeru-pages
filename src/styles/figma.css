@@ -322,3 +322,16 @@ body {
   outline: 3px solid #ed9873;
   outline-offset: 4px;
 }
+/* Drawing and completion share one viewport, scene and mask; no independent fitting. */
+.figma-shell .comparison-overlay {
+  aspect-ratio: 329/310;
+}
+.figma-shell .drawing-paper {
+  isolation: isolate;
+}
+.figma-shell .eye-template {
+  pointer-events: none;
+}
+.figma-shell .paper-prompt {
+  pointer-events: none;
+}

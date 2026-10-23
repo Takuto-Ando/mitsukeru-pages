@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Eraser, Undo2, RotateCcw } from "lucide-react";
-import { Eye } from "./Illustrations";
+import { scenes, clipStrokes, scenePoint, type Scene } from "./content/scenes";
+import { SceneBase } from "./components/ObservationScene";
 import type { Point, Stroke } from "./types";
 
 function segmentDistance(point: Point, start: Point, end: Point) {
@@ -24,11 +25,11 @@ function segmentDistance(point: Point, start: Point, end: Point) {
 export function SketchCanvas({
   strokes,
   onChange,
-  template = "eye",
-  backdrop,
+  scene = scenes.goat,
 }: {
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
+  scene?: Scene;
   strokes: Stroke[];
   onChange: (next: Stroke[]) => void;
 }) {
@@ -46,6 +47,10 @@ export function SketchCanvas({
     const context = canvas.getContext("2d");
     if (!context) return;
     context.scale(ratio, ratio);
+    context.beginPath();
+    for (const r of scene.regions)
+      context.rect(r.x * 600, r.y * 400, r.width * 600, r.height * 400);
+    context.clip();
     context.lineWidth = 7;
     context.lineCap = "round";
     context.lineJoin = "round";
@@ -57,20 +62,17 @@ export function SketchCanvas({
       for (const point of stroke.slice(1)) context.lineTo(point.x, point.y);
       context.stroke();
     }
-  }, [strokes, draft]);
+  }, [strokes, draft, scene]);
   function point(event: React.PointerEvent<HTMLCanvasElement>): Point {
     const rect = event.currentTarget.getBoundingClientRect();
-    return {
-      x: Math.max(
-        0,
-        Math.min(600, ((event.clientX - rect.left) * 600) / rect.width),
-      ),
-      y: Math.max(
-        0,
-        Math.min(400, ((event.clientY - rect.top) * 400) / rect.height),
-      ),
-    };
+    return scenePoint(
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+      rect.width,
+      rect.height,
+    );
   }
+
   function eraseAt(position: Point) {
     onChange(
       strokes.filter(
@@ -98,7 +100,15 @@ export function SketchCanvas({
         <span>見えた部分を描こう</span>
       </div>
       <div className={"drawing-paper " + (draft.length ? "is-drawing" : "")}>
-        {backdrop || (template === "eye" && <Eye />)}
+        <svg
+          className="eye-template"
+          viewBox="0 0 600 400"
+          preserveAspectRatio="none"
+          aria-label={scene.label + "を描き足すイラスト"}
+          role="img"
+        >
+          <SceneBase scene={scene} />
+        </svg>
         <canvas
           ref={ref}
           data-testid="canvas"
@@ -131,8 +141,11 @@ export function SketchCanvas({
           }}
           onPointerUp={(event) => {
             if (active.current !== event.pointerId) return;
-            if (!erase && current.current.length > 1)
-              onChange([...strokes, [...current.current, point(event)]]);
+            if (!erase && current.current.length > 1) {
+              const next = [...current.current, point(event)];
+              if (clipStrokes([next], scene).length)
+                onChange([...strokes, next]);
+            }
             cancel();
           }}
           onPointerCancel={(event) => {

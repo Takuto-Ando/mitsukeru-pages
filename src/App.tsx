@@ -12,6 +12,7 @@ import { evaluateObservation } from "./evaluator";
 import { profiles, evaluateProfile } from "./content/profiles";
 import type { Stroke, Evaluation } from "./types";
 import "./styles/figma.css";
+import { scenes, clipStrokes } from "./content/scenes";
 import { useButtonMotion } from "./components/useButtonMotion";
 export default function App() {
   useButtonMotion();
@@ -32,6 +33,7 @@ export default function App() {
   const challenge = challenges[0];
   const group = groups.find((g) => g.id === groupId)!;
   const profile = profiles[groupId];
+  const scene = scenes[groupId];
   function restart() {
     setStrokes([]);
     setFeedback(undefined);
@@ -46,8 +48,11 @@ export default function App() {
   }
   function answer() {
     const result = profile
-      ? evaluateProfile(strokes, profile)
-      : evaluateObservation(strokes, challenge.observationParameters);
+      ? evaluateProfile(clipStrokes(strokes, scene), profile)
+      : evaluateObservation(
+          clipStrokes(strokes, scene),
+          challenge.observationParameters,
+        );
     setFeedback(result);
     if (result.passed) {
       audio.current?.unlock();
@@ -117,24 +122,7 @@ export default function App() {
                 </details>
               )}
               <SketchCanvas
-                template={profile ? "blank" : "eye"}
-                backdrop={
-                  profile ? (
-                    <svg
-                      className="eye-template"
-                      viewBox="0 0 600 400"
-                      preserveAspectRatio="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d={profile.background}
-                        fill="none"
-                        stroke="#b8a58c"
-                        strokeWidth="4"
-                      />
-                    </svg>
-                  ) : undefined
-                }
+                scene={scene}
                 strokes={strokes}
                 onChange={(s) => {
                   setStrokes(s);
@@ -181,7 +169,9 @@ export default function App() {
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 250, damping: 14 }}
               >
-                {feedback?.passed ? "だいはっけん！" : "見えた形を確かめよう"}
+                {feedback?.passed
+                  ? "完成！ だいはっけん！"
+                  : "見えた形を確かめよう"}
               </motion.h1>
               {feedback?.passed && (
                 <div className="figma-confetti" aria-hidden="true">
@@ -215,6 +205,7 @@ export default function App() {
                 strokes={strokes}
                 answer={group.answer}
                 profile={profile}
+                scene={scene}
               />
               <p className="figma-support center">
                 少し違っていても、横長に気づけたね。
