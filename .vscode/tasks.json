@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Vite デバッグサーバー",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev", "--", "--port", "5180"],
+      "isBackground": true,
+      "options": {"cwd": "${workspaceFolder}"},
+      "problemMatcher": {
+        "owner": "vite",
+        "pattern": {"regexp": "^(.*):(\\d+):(\\d+): (.*)$", "file": 1, "line": 2, "column": 3, "message": 4},
+        "background": {"activeOnStart": true, "beginsPattern": ".*VITE.*", "endsPattern": ".*Local:.*5180.*"}
+      },
+      "presentation": {"reveal": "always", "panel": "dedicated"},
+      "runOptions": {"instanceLimit": 1}
+    },
+    {"label": "本番ビルド", "type": "shell", "command": "npm", "args": ["run", "build"], "group": "build", "problemMatcher": "$tsc"},
+    {"label": "iOSへ最新Webを同期", "type": "shell", "command": "npm", "args": ["run", "ios:sync"], "problemMatcher": []}
+  ]
+}

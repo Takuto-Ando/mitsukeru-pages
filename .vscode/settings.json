@@ -1,0 +1,6 @@
+{
+  "window.title": "みつけるスケッチ 最新版 — ${activeEditorShort}",
+  "debug.defaultLayout": "docked",
+  "files.exclude": {"**/.DS_Store": true},
+  "search.exclude": {"dist": true, "ios/App/App/public": true}
+}

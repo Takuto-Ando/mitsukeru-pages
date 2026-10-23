@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Webアプリをデバッグ（Chrome）",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5180/",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "Vite デバッグサーバー",
+      "sourceMaps": true,
+      "skipFiles": ["**/node_modules/**"]
+    },
+    {
+      "name": "判定の単体テストをデバッグ",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--no-file-parallelism"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+    }
+  ]
+}

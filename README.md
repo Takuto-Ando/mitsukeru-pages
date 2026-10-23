@@ -135,3 +135,11 @@ Webの変更を実機アプリへ反映するには毎回syncし、Xcodeで接�
 ## この公開リポジトリ
 
 公開先は https://takuto-ando.github.io/mitsukeru-pages/ 。mainの更新を自動公開します。iOSネイティブプロジェクトもこのリポジトリのios/で管理します。WebとiOSは同じsrc/を使います。
+
+## VS Codeでデバッグ
+
+このフォルダ（mitsukeru-pages）をVS Codeで開き、F5 →「Webアプリをデバッグ（Chrome）」を選びます。Viteを5180番で起動し、Chromeを開きます。既存の5175番のプレビューとは別です。ChromeとNode.js・npmが必要です。VS Code標準のJavaScript Debuggerを使うため追加拡張は不要です。
+
+`src/App.tsx`（画面と回答）、`src/SketchCanvas.tsx`（指の入力）、`src/evaluator.ts`（ヤギの判定）の行番号の左をクリックするとブレークポイントを設定できます。画面で操作するとそこで停止し、変数・呼び出し履歴を確認できます。「判定の単体テストをデバッグ」も選択できます。
+
+停止はShift+F5。Viteが残る場合はターミナルでControl+C、または「タスク: タスクの終了」で停止します。VS Codeの変更はローカルに即反映されますが、iPhoneアプリには「タスク: タスクの実行 → iOSへ最新Webを同期」を実行した後、同じフォルダのXcodeプロジェクトでRunが必要です。公開Web版はmainへpushすると更新されます。
