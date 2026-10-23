@@ -9,7 +9,6 @@ export function CameraView({
   onSelect: (photo?: string, id?: string) => void;
 }) {
   const [captured, setCaptured] = useState("");
-  const [manual, setManual] = useState(false);
   const [busy, setBusy] = useState(false);
   const reduce = useReducedMotion();
   const video = useRef<HTMLVideoElement>(null),
@@ -80,7 +79,6 @@ export function CameraView({
       if (result.status === "recognized") onSelect(image, result.groupId);
       else {
         setMessage(result.reason);
-        setManual(true);
       }
     } catch {
       setMessage("撮影できませんでした。カメラをもう一度試してください。");
@@ -92,7 +90,7 @@ export function CameraView({
     <div className="camera-page">
       <div className="screen-title">
         <h1>どの動物を見ている？</h1>
-        <p>実物から少し離れて、シャッターボタンで写真を撮ろう。</p>
+        <p>写真を撮っても、下から動物を選んでも始められるよ。</p>
       </div>
       <div className="camera-frame">
         <video
@@ -149,22 +147,11 @@ export function CameraView({
       >
         {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>
-      {status === "failed" && !manual && (
-        <button className="text-button" onClick={() => setManual(true)}>
-          カメラが使えないので手動で選ぶ
-        </button>
-      )}
-      {manual && (
-        <>
-          <p role="status">
-            {captured
-              ? "動物を自動認識できませんでした。"
-              : "カメラが利用できないため、写真なしで続けます。"}{" "}
-            自動認識モデルは未導入です。
-          </p>
-          <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
-        </>
-      )}
+      <p className="quiet-note">
+        自動認識モデルは準備中です。下の動物を選ぶと観察を始められます。
+      </p>
+      {captured && <p role="status">撮影した写真を見て、動物を選んでね。</p>}
+      <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
       <p className="quiet-note">
         写真は端末内だけで扱い、外部に送信しません。描くときは実物を観察してね。
       </p>

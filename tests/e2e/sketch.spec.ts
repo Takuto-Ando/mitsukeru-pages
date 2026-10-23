@@ -12,9 +12,6 @@ async function select(page: Page, id: string) {
   );
   await page.goto("./");
   await page
-    .getByRole("button", { name: "カメラが使えないので手動で選ぶ" })
-    .click();
-  await page
     .locator(".animal-grid")
     .getByRole("button", {
       name: new RegExp(groups.find((g) => g.id === id)!.name),
@@ -181,14 +178,14 @@ test("シャッターで写真を保持してから未認識の手動選択を�
   await expect(
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
-  await expect(page.locator(".animal-grid")).toHaveCount(0);
+  await expect(page.locator(".animal-grid button")).toHaveCount(16);
   await page.getByRole("button", { name: "シャッター", exact: true }).click();
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真" }),
   ).toBeVisible();
   await expect(page.locator(".animal-grid button")).toHaveCount(16);
   await expect(
-    page.getByRole("status").filter({ hasText: "自動認識モデルは未導入" }),
+    page.getByText("撮影した写真を見て、動物を選んでね。"),
   ).toBeVisible();
   await page.screenshot({
     path: "test-results/capture-mobile.png",

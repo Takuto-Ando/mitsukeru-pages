@@ -355,3 +355,24 @@ body {
 .discovery-star:nth-child(even) {
   color: #75b6ab;
 }
+/* Manual selection remains available alongside the camera, including before permission. */
+.figma-shell .animal-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.figma-shell .animal-grid .animal-choice {
+  padding: 12px;
+  min-width: 0;
+  border-radius: 18px;
+}
+.figma-shell .animal-grid strong {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.figma-shell .animal-grid small {
+  font-size: 10px;
+  line-height: 1.6;
+}
+.figma-shell .animal-selector h2 {
+  font-size: 20px;
+}
