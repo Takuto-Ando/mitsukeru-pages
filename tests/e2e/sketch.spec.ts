@@ -52,18 +52,18 @@ test("Figma4画面・描画・Undo・判定・重ね合わせ・解説", async (
   });
   await page.getByRole("button", { name: "こたえあわせ →" }).click();
   await expect(
-    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
+    page.getByRole("heading", { name: "特徴を見つけたね！" }),
   ).toBeVisible();
   const points = await page
     .getByTestId("user-lines")
     .locator("polyline")
     .evaluateAll((elements) => elements.map((e) => e.getAttribute("points")));
-  await page.getByRole("button", { name: "正解", exact: true }).click();
+  await page.getByRole("button", { name: "お手本", exact: true }).click();
   await expect(page.getByTestId("user-lines")).toHaveAttribute(
     "visibility",
     "hidden",
   );
-  await page.getByRole("button", { name: "重ねる", exact: true }).click();
+  await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
   expect(
     await page
       .getByTestId("user-lines")
@@ -103,7 +103,7 @@ for (const group of groups.filter((g) => g.id !== "goat"))
     await expect(
       page
         .getByRole("status")
-        .or(page.getByRole("heading", { name: "完成！ だいはっけん！" })),
+        .or(page.getByRole("heading", { name: "特徴を見つけたね！" })),
     ).toBeVisible();
     if (await page.getByRole("status").count())
       await page
@@ -113,7 +113,7 @@ for (const group of groups.filter((g) => g.id !== "goat"))
       "visibility",
       "hidden",
     );
-    await page.getByRole("button", { name: "重ねる", exact: true }).click();
+    await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
     await expect(page.getByTestId("answer-shape")).toBeVisible();
     await page.getByRole("button", { name: "特徴について知ろう →" }).click();
     await expect(
@@ -355,7 +355,7 @@ test("ヤギ以外の両腕を自動判定し、きらめきと星の完成演�
   await expect(page.locator(".stroke-sparkle")).toHaveCount(1);
   await page.getByRole("button", { name: "こたえあわせ →" }).click();
   await expect(
-    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
+    page.getByRole("heading", { name: "特徴を見つけたね！" }),
   ).toBeVisible();
   await expect(page.locator(".discovery-star")).toHaveCount(6);
   await expect(page.getByTestId("answer-shape")).toHaveAttribute(

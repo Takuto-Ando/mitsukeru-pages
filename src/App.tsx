@@ -1,3 +1,4 @@
+import { artwork, assetPath } from "./content/artwork";
 import { useState, useRef, useEffect } from "react";
 import { createFeedbackAudio } from "./audio";
 import { motion, useReducedMotion } from "motion/react";
@@ -34,6 +35,7 @@ export default function App() {
   const group = groups.find((g) => g.id === groupId)!;
   const profile = profiles[groupId];
   const scene = scenes[groupId];
+  const art = artwork[groupId];
   function restart() {
     setStrokes([]);
     setFeedback(undefined);
@@ -121,6 +123,11 @@ export default function App() {
                   />
                 </details>
               )}
+              <p className="artwork-status" role="note">
+                {art.status === "reviewed"
+                  ? "観察イラスト"
+                  : "専用イラストは制作待ちです。現在は配置確認用の提案図を表示しています。"}
+              </p>
               <SketchCanvas
                 scene={scene}
                 strokes={strokes}
@@ -170,7 +177,9 @@ export default function App() {
                 transition={{ type: "spring", stiffness: 250, damping: 14 }}
               >
                 {feedback?.passed
-                  ? "完成！ だいはっけん！"
+                  ? art.status === "reviewed"
+                    ? "完成！ だいはっけん！"
+                    : "特徴を見つけたね！"
                   : "見えた形を確かめよう"}
               </motion.h1>
               {feedback?.passed && (
@@ -247,7 +256,13 @@ export default function App() {
                 initial={reduce ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                {profile ? (
+                {art.explanation ? (
+                  <img
+                    className="explanation-asset"
+                    src={assetPath(art.explanation)}
+                    alt={art.alt}
+                  />
+                ) : profile ? (
                   <svg viewBox="0 0 600 400" className="eye-template">
                     <path
                       d={profile.background}
@@ -331,12 +346,18 @@ export default function App() {
                     )}
                   </>
                 )}
-                <p>{challenge.explanation.certainty}</p>
-                {challenge.scientificSource.map((s) => (
-                  <a key={s.url} href={s.url} target="_blank" rel="noreferrer">
-                    {s.title}
-                  </a>
-                ))}
+                {!profile && <p>{challenge.explanation.certainty}</p>}
+                {!profile &&
+                  challenge.scientificSource.map((s) => (
+                    <a
+                      key={s.url}
+                      href={s.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {s.title}
+                    </a>
+                  ))}
               </details>
             </>
           )}

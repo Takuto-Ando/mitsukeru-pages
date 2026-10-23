@@ -1,3 +1,4 @@
+import { artwork, assetPath } from "../content/artwork";
 import { scenes, clipStrokes, type Scene } from "../content/scenes";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { useState, useId } from "react";
@@ -19,18 +20,17 @@ export function SketchComparison({
 }) {
   const [mode, setMode] = useState<"drawing" | "answer" | "overlay">("drawing");
   const clipId = useId();
+  const art = artwork[scene.id];
   const reduce = useReducedMotion();
   return (
-    <div className="sketch-comparison">
-      <p>
-        自分の描いた線で、動物の姿が完成したね。比較するときは「重ねる」を押してね。
-      </p>
+    <div className="sketch-comparison completion-panel">
+      <p>自分で描いた線を、そのまま残して見くらべよう。</p>
       <div className="comparison-modes" role="group" aria-label="比較の表示">
         {(
           [
-            ["drawing", "自分の線"],
-            ["overlay", "重ねる"],
-            ["answer", "正解"],
+            ["drawing", "自分の絵"],
+            ["overlay", "重ね合わせ"],
+            ["answer", "お手本"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -49,7 +49,7 @@ export function SketchComparison({
         viewBox="0 0 600 400"
         preserveAspectRatio="none"
         role="img"
-        aria-label="ヤギの横長の瞳孔の模式図"
+        aria-label={scene.label + "の描画とお手本"}
         data-mode={mode}
       >
         <defs>
@@ -59,12 +59,14 @@ export function SketchComparison({
         </defs>
         <SceneBase scene={scene} completed />
         <g clipPath={`url(#${clipId})`}>
-          <g
+          <motion.g
+            animate={{ opacity: mode === "answer" ? 0 : 1 }}
+            transition={{ duration: reduce ? 0 : 0.2 }}
             data-testid="user-lines"
             visibility={mode === "answer" ? "hidden" : "visible"}
           >
             <SketchLines strokes={clipStrokes(strokes, scene)} />
-          </g>
+          </motion.g>
           <motion.g
             data-testid="answer-shape"
             visibility={mode === "drawing" ? "hidden" : "visible"}
@@ -76,7 +78,14 @@ export function SketchComparison({
               delay: reduce ? 0 : 0.35,
             }}
           >
-            {profile ? (
+            {art?.answer ? (
+              <image
+                href={assetPath(art.answer)}
+                width="600"
+                height="400"
+                preserveAspectRatio="none"
+              />
+            ) : profile ? (
               <path
                 d={scene.answerPath}
                 fill="none"
@@ -104,7 +113,9 @@ export function SketchComparison({
       </svg>
       <p className="comparison-legend">
         <span>ターコイズ：自分の線</span>
-        <span>半透明の黒：正解の模式図</span>
+        <span>
+          {profile ? "オレンジ：提案のお手本" : "半透明の黒：瞳孔のお手本"}
+        </span>
       </p>
       <p className="result-caption">
         模式図は一例です。形の完全一致を求めず、実物で見えた特徴を確かめよう。

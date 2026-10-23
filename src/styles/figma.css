@@ -376,3 +376,61 @@ body {
 .figma-shell .animal-selector h2 {
   font-size: 20px;
 }
+.artwork-status {
+  font-size: 12px;
+  line-height: 1.8;
+  color: #756d5f;
+  padding: 10px 12px;
+  background: #f3e9d7;
+  border-radius: 12px;
+}
+.completion-panel {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 24px #4c9b9210;
+}
+.completion-panel:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  animation: completion-glow 1.2s ease-out;
+}
+@keyframes completion-glow {
+  from {
+    box-shadow: inset 0 0 50px #f5c16e66;
+  }
+  to {
+    box-shadow: inset 0 0 0 transparent;
+  }
+}
+.explanation-asset {
+  display: block;
+  max-height: 210px;
+  max-width: 100%;
+  margin: auto;
+  object-fit: contain;
+}
+.asset-preview {
+  max-width: 900px;
+  padding: 24px;
+  margin: auto;
+}
+.asset-preview svg {
+  width: 100%;
+  background: #fff4dd;
+}
+.asset-preview label {
+  display: block;
+  margin: 12px 0;
+}
+.asset-preview pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .completion-panel:before {
+    animation: none;
+  }
+}

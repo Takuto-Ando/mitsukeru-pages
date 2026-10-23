@@ -1,3 +1,4 @@
+import { artwork, assetPath } from "../content/artwork";
 import type { Scene } from "../content/scenes";
 import { EyeOutline } from "../Illustrations";
 export function SceneRegions({ scene }: { scene: Scene }) {
@@ -22,9 +23,20 @@ export function SceneBase({
   scene: Scene;
   completed?: boolean;
 }) {
+  const art = artwork[scene.id];
+  const asset = completed
+    ? art?.completedBase || art?.incomplete
+    : art?.incomplete;
   return (
     <g data-testid="animal-background">
-      {scene.photo ? (
+      {asset ? (
+        <image
+          href={assetPath(asset)}
+          width="600"
+          height="400"
+          preserveAspectRatio="none"
+        />
+      ) : scene.photo ? (
         <image
           href={import.meta.env.BASE_URL + scene.photo}
           width="600"
@@ -41,7 +53,7 @@ export function SceneBase({
       ) : (
         <EyeOutline />
       )}
-      {(!completed || scene.photo) && (
+      {(!completed || scene.photo || (asset && !art?.completedBase)) && (
         <g fill="#fffef8" data-testid="blank-regions">
           <SceneRegions scene={scene} />
         </g>
