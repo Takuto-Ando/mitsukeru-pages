@@ -10,7 +10,20 @@ export function Eye({ answer = false }: { answer?: boolean }) {
       aria-hidden={answer ? undefined : true}
     >
       <EyeOutline />
-      {answer && <PupilShape />}
+      {answer ? (
+        <PupilShape />
+      ) : (
+        <rect
+          x="219"
+          y="190"
+          width="168"
+          height="59"
+          rx="13"
+          fill="#fffef8"
+          stroke="#4c9b92"
+          strokeDasharray="5 5"
+        />
+      )}
     </svg>
   );
 }
@@ -47,21 +60,22 @@ export function Celebration() {
 }
 
 export function EyeOutline() {
+  const base = import.meta.env.BASE_URL + "figma/2-26-";
   return (
     <g>
-      {" "}
-      <path
-        d="M60 203Q150 94 300 123Q455 98 540 203Q450 293 300 278Q146 294 60 203Z"
-        fill="#fffaf0"
-        stroke="#b8a58c"
-        strokeWidth="4"
+      <image
+        href={base + "imgEyeOuter.svg"}
+        x="29"
+        y="84"
+        width="543"
+        height="266"
       />
-      <path
-        d="M76 185Q155 75 302 102Q442 86 526 180"
-        fill="none"
-        stroke="#d9c3a4"
-        strokeWidth="3"
-        strokeLinecap="round"
+      <image
+        href={base + "imgEyeIris.svg"}
+        x="176"
+        y="120"
+        width="250"
+        height="194"
       />
     </g>
   );
@@ -70,7 +84,7 @@ export function EyeOutline() {
 // Placeholder artwork: replace this component with a calibrated SVG/image
 // within the same 600 × 400 coordinate system when formal assets arrive.
 export function PupilShape({ fill = "#4c4237" }: { fill?: string }) {
-  return <rect x="165" y="170" width="270" height="70" rx="13" fill={fill} />;
+  return <rect x="219" y="190" width="168" height="59" rx="13" fill={fill} />;
 }
 
 export function SketchLines({ strokes }: { strokes: Stroke[] }) {

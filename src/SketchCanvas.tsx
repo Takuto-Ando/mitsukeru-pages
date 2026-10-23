@@ -25,8 +25,10 @@ export function SketchCanvas({
   strokes,
   onChange,
   template = "eye",
+  backdrop,
 }: {
   template?: "eye" | "blank";
+  backdrop?: React.ReactNode;
   strokes: Stroke[];
   onChange: (next: Stroke[]) => void;
 }) {
@@ -96,7 +98,7 @@ export function SketchCanvas({
         <span>見えた部分を描こう</span>
       </div>
       <div className={"drawing-paper " + (draft.length ? "is-drawing" : "")}>
-        {template === "eye" && <Eye />}
+        {backdrop || (template === "eye" && <Eye />)}
         <canvas
           ref={ref}
           data-testid="canvas"

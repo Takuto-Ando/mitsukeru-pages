@@ -30,6 +30,13 @@ export interface Challenge {
   tags: string[];
 }
 export interface Evaluation {
+  debug?: {
+    cue: string;
+    width: number;
+    height: number;
+    strokes: number;
+    automaticJudging: string;
+  };
   status?: "correct" | "uncertain" | "retry";
   passed: boolean;
   message: string;

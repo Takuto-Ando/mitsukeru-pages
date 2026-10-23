@@ -1,13 +1,17 @@
 import { AnimalSelector } from "./components/AnimalSelector";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, ArrowRight, ScanLine } from "lucide-react";
-import { animalMedia } from "./content/media";
+import { Camera, CameraOff, ScanLine } from "lucide-react";
+import { speciesRecognizer } from "./recognition/species";
+import { motion, useReducedMotion } from "motion/react";
 export function CameraView({
   onSelect,
 }: {
   onSelect: (photo?: string, id?: string) => void;
 }) {
-  const [selectedImage, setSelectedImage] = useState("");
+  const [captured, setCaptured] = useState("");
+  const [manual, setManual] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const reduce = useReducedMotion();
   const video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
     generation = useRef(0);
@@ -56,32 +60,39 @@ export function CameraView({
   useEffect(() => {
     void start();
   }, []);
-  function select(id = "goat") {
-    let photo: string | undefined;
-    if (status === "live" && video.current?.videoWidth) {
+  async function capture() {
+    if (busy || !video.current?.videoWidth || status !== "live") return;
+    setBusy(true);
+    try {
       const canvas = document.createElement("canvas");
-      const scale = Math.min(1, 1200 / video.current.videoWidth);
-      canvas.width = video.current.videoWidth * scale;
-      canvas.height = video.current.videoHeight * scale;
-      try {
-        canvas
-          .getContext("2d")
-          ?.drawImage(video.current, 0, 0, canvas.width, canvas.height);
-        photo = canvas.toDataURL("image/jpeg", 0.8);
-      } catch {
-        photo = undefined;
+      const scale = Math.min(
+        1,
+        1200 / Math.max(video.current.videoWidth, video.current.videoHeight),
+      );
+      canvas.width = Math.round(video.current.videoWidth * scale);
+      canvas.height = Math.round(video.current.videoHeight * scale);
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("canvas");
+      context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
+      const image = canvas.toDataURL("image/jpeg", 0.8);
+      setCaptured(image);
+      const result = await speciesRecognizer.recognize(image);
+      if (result.status === "recognized") onSelect(image, result.groupId);
+      else {
+        setMessage(result.reason);
+        setManual(true);
       }
+    } catch {
+      setMessage("撮影できませんでした。カメラをもう一度試してください。");
+    } finally {
+      setBusy(false);
     }
-    onSelect(selectedImage || photo, id);
   }
   return (
     <div className="camera-page">
       <div className="screen-title">
-        <span className="eyebrow">まずは、目の前のどうぶつ。</span>
-        <h1>だれを観察する？</h1>
-        <p>
-          カメラを向けたら、下から動物を選んでね。選ぶとその場の写真を撮ります。
-        </p>
+        <h1>どの動物を見ている？</h1>
+        <p>実物から少し離れて、シャッターボタンで写真を撮ろう。</p>
       </div>
       <div className="camera-frame">
         <video
@@ -120,65 +131,42 @@ export function CameraView({
           </button>
         </p>
       )}
-      <label className="primary photo-input">
-        写真を撮る・画像を選ぶ
-        <input
-          className="visually-hidden-input"
-          type="file"
-          accept="image/*"
-          onChange={async (event) => {
-            const file = event.target.files?.[0];
-            event.target.value = "";
-            if (!file) return;
-            if (file.size > 12 * 1024 * 1024) {
-              setMessage("12MB以下の画像を選んでください。");
-              return;
-            }
-            try {
-              const bitmap = await createImageBitmap(file);
-              const canvas = document.createElement("canvas");
-              const scale = Math.min(
-                1,
-                1200 / Math.max(bitmap.width, bitmap.height),
-              );
-              canvas.width = bitmap.width * scale;
-              canvas.height = bitmap.height * scale;
-              canvas
-                .getContext("2d")
-                ?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-              bitmap.close();
-              setSelectedImage(canvas.toDataURL("image/jpeg", 0.8));
-              setMessage("写真を読み込みました。動物は自分で選んでください。");
-            } catch {
-              setMessage(
-                "この画像は読み込めませんでした。JPEGやPNGを選んでください。",
-              );
-            }
-          }}
-        />
-      </label>
-      {selectedImage && (
-        <img
+      {captured && (
+        <motion.img
+          key={captured}
+          initial={reduce ? false : { opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2 }}
           className="selected-photo"
-          src={selectedImage}
-          alt="選択した観察写真"
+          src={captured}
+          alt="撮影した動物の写真"
         />
       )}
-      <AnimalSelector onSelect={(id) => select(id)} />
-      <p className="manual-note">この初期版は、どうぶつを手動で選びます。</p>
-      <button className="animal-choice" onClick={() => select()}>
-        <img src={animalMedia.goat.src} alt="ヤギのイラスト" />
-        <div>
-          <small>今回のかんさつ</small>
-          <strong>ヤギ</strong>
-          <span>目の中の、ひみつを見つけよう。</span>
-        </div>
-        <ArrowRight size={23} />
+      <button
+        className="primary"
+        disabled={status !== "live" || busy}
+        onClick={() => void capture()}
+      >
+        {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>
+      {status === "failed" && !manual && (
+        <button className="text-button" onClick={() => setManual(true)}>
+          カメラが使えないので手動で選ぶ
+        </button>
+      )}
+      {manual && (
+        <>
+          <p role="status">
+            {captured
+              ? "動物を自動認識できませんでした。"
+              : "カメラが利用できないため、写真なしで続けます。"}{" "}
+            自動認識モデルは未導入です。
+          </p>
+          <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
+        </>
+      )}
       <p className="quiet-note">
-        動物の自動認識は、まだありません。
-        <br />
-        見えにくいときは、動物が動くのを待ってみよう。
+        写真は端末内だけで扱い、外部に送信しません。描くときは実物を観察してね。
       </p>
     </div>
   );

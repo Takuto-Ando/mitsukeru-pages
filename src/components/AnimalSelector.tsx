@@ -21,7 +21,7 @@ export function AnimalSelector({
                 {g.part} ／{" "}
                 {g.evaluation === "horizontal"
                   ? "ヤギの判定対応"
-                  : "自己確認・お手本準備中"}
+                  : "自己確認・提案お手本"}
               </small>
             </span>
           </button>

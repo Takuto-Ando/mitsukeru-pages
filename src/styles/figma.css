@@ -1,0 +1,316 @@
+.figma-shell {
+  --teal: #4c9b92;
+  --cream: #f8f4e9;
+  --ink: #403b36;
+  --line: #e6dfd0;
+  max-width: 393px;
+  margin: auto;
+  padding: env(safe-area-inset-top) 24px
+    calc(28px + env(safe-area-inset-bottom));
+  color: var(--ink);
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  min-height: 100dvh;
+  background: var(--cream);
+}
+body {
+  background: #f8f4e9;
+}
+.figma-header {
+  padding: 24px 0 30px;
+}
+.figma-header button {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--teal);
+  padding: 0;
+  position: relative;
+  letter-spacing: 0.02em;
+}
+.figma-header img {
+  position: absolute;
+  left: -15px;
+  top: 12px;
+  width: 9px;
+  height: 9px;
+}
+.figma-flow {
+  position: relative;
+  color: #ed9873;
+  font-size: 13px;
+  margin: 0 0 22px;
+  min-height: 24px;
+}
+.figma-mascot {
+  position: absolute;
+  right: 35px;
+  top: -15px;
+  width: 65px;
+  height: 54px;
+}
+.figma-mascot img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+}
+.figma-shell h1 {
+  font-size: 25px;
+  line-height: 1.5;
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+}
+.figma-shell h2 {
+  font-size: 21px;
+}
+.figma-support {
+  color: #817e72;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.center {
+  text-align: center;
+}
+.figma-shell .primary {
+  background: var(--teal);
+  border-radius: 22px;
+  box-shadow: none;
+  min-height: 62px;
+  width: 100%;
+  justify-content: center;
+  font-size: 19px;
+  margin: 14px 0;
+}
+.figma-shell .primary:disabled {
+  opacity: 0.45;
+}
+.figma-note {
+  font-size: 12px;
+  line-height: 1.8;
+  border-radius: 15px;
+  background: #ddece6;
+  color: #4c766c;
+  text-align: center;
+  padding: 6px 14px;
+  margin: 24px auto 0;
+  max-width: 85%;
+  position: relative;
+  z-index: 1;
+}
+.figma-shell .camera-frame {
+  height: 392px;
+  border: 15px solid #b9d8cd;
+  border-radius: 30px;
+  background: #8fb9aa;
+  margin-top: 32px;
+  aspect-ratio: auto;
+}
+.figma-shell .camera-fallback {
+  background: #8fb9aa;
+}
+.figma-shell .screen-title {
+  text-align: left;
+  margin: 0;
+}
+.figma-shell .screen-title p {
+  font-size: 14px;
+  color: #817e72;
+}
+.figma-shell .camera-page {
+  padding: 0;
+}
+.figma-shell .camera-tag {
+  background: #fffef8;
+  color: var(--teal);
+  bottom: 16px;
+  top: auto;
+  border-radius: 15px;
+}
+.figma-shell .sketch-card {
+  margin-top: 0;
+  background: #fffef8;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  padding: 15px;
+  box-shadow: none;
+}
+.figma-shell .paper-top {
+  display: none;
+}
+.figma-shell .drawing-paper {
+  aspect-ratio: 329/310;
+  background: #fff4dd;
+  border-radius: 21px;
+  height: auto;
+}
+.figma-shell .tools {
+  flex-wrap: wrap;
+  padding: 12px 0 0;
+  gap: 4px;
+}
+.figma-shell .tools button {
+  font-size: 12px;
+  padding: 8px 4px;
+  min-height: 44px;
+}
+.figma-shell .tools svg {
+  width: 15px;
+}
+.figma-shell .tools span {
+  display: none;
+}
+.figma-shell .paper-prompt {
+  top: 10px;
+  bottom: auto;
+  color: var(--teal);
+  font-size: 12px;
+}
+.figma-shell .figma-discovery {
+  color: var(--teal);
+  font-size: 32px;
+  text-align: center;
+}
+.figma-shell .celebration {
+  height: 40px;
+  margin: 0 auto;
+  transform: scale(0.5);
+}
+.figma-shell .sketch-comparison {
+  background: #fffef8;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  padding: 15px;
+  margin: 0 0 24px;
+}
+.figma-shell .sketch-comparison > p:first-child {
+  font-size: 14px;
+  text-align: center;
+}
+.figma-shell .comparison-overlay {
+  aspect-ratio: 329/310;
+  background: #fff4dd;
+  border: 0;
+}
+.figma-shell .comparison-modes button {
+  font-size: 12px;
+}
+.figma-shell .comparison-legend {
+  font-size: 11px;
+}
+.figma-shell .result-caption {
+  font-size: 11px;
+}
+.figma-science {
+  margin-top: 40px;
+  background: #ddece6;
+  border-radius: 27px;
+  position: relative;
+  height: 259px;
+  padding: 12px 0;
+  text-align: center;
+  color: var(--teal);
+}
+.figma-science .eye-template {
+  position: static;
+  width: 100%;
+  height: 200px;
+}
+.figma-explanation {
+  padding: 18px;
+  background: #fffef8;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  margin-top: 18px;
+}
+.figma-explanation h2 {
+  margin: 0 0 15px;
+}
+.figma-explanation p {
+  font-size: 14px;
+  color: #817e72;
+  line-height: 1.9;
+}
+.figma-feedback {
+  padding: 12px;
+  border-radius: 16px;
+  background: #ddece6;
+}
+.figma-shell details {
+  font-size: 12px;
+  margin-top: 20px;
+}
+.figma-shell .animal-grid {
+  grid-template-columns: 1fr;
+}
+.figma-shell .selected-photo {
+  max-width: 100%;
+}
+@media (max-width: 350px) {
+  .figma-shell {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .figma-shell h1 {
+    font-size: 22px;
+  }
+  .figma-header button {
+    font-size: 20px;
+  }
+  .figma-mascot {
+    right: 8px;
+  }
+}
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("../../public/fonts/ZenMaruGothic-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("../../public/fonts/ZenMaruGothic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+.figma-mascot object {
+  display: block;
+  width: 100%;
+  height: 55px;
+  pointer-events: none;
+}
+.figma-shell .comparison-overlay {
+  aspect-ratio: 327/183;
+}
+.figma-science .figma-learn-eye {
+  display: block;
+  width: 100%;
+  height: 210px;
+}
+.figma-confetti {
+  position: relative;
+  height: 0;
+  pointer-events: none;
+}
+.figma-confetti img {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -35px;
+  left: 15px;
+}
+.figma-confetti img:nth-child(2) {
+  left: auto;
+  right: 15px;
+  top: -60px;
+}
+.figma-confetti img:nth-child(3) {
+  left: auto;
+  right: 10px;
+  top: 15px;
+  width: 8px;
+  height: 8px;
+}
+.figma-confetti img:nth-child(4) {
+  top: 20px;
+  width: 8px;
+  height: 8px;
+}

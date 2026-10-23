@@ -1,0 +1,9 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="298" height="206" viewBox="0 0 298 206" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="eye / outer">
+<path d="M298 103C298 159.885 231.29 206 149 206C66.7096 206 0 159.885 0 103C0 46.1147 66.7096 0 149 0C231.29 0 298 46.1147 298 103Z" fill="#F1DFBD"/>
+<mask id="stroke0_0_11" fill="white">
+<path d="M298 103C298 159.885 231.29 206 149 206C66.7096 206 0 159.885 0 103C0 46.1147 66.7096 0 149 0C231.29 0 298 46.1147 298 103Z"/>
+</mask>
+<path d="M298 103C298 159.885 231.29 206 149 206C66.7096 206 0 159.885 0 103C0 46.1147 66.7096 0 149 0C231.29 0 298 46.1147 298 103Z" stroke-width="8" stroke="#403B36" mask="url(#stroke0_0_11)"/>
+</g>
+</svg>

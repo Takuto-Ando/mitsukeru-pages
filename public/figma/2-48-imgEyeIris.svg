@@ -1,0 +1,12 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="106.922" height="117.296" viewBox="0 0 106.922 117.296" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="eye / iris">
+<use xlink:href="#stroke0_0_10" fill="#C79562"/>
+<mask id="stroke1_0_10" fill="white">
+<use xlink:href="#stroke0_0_10"/>
+</mask>
+<path d="M106.922 58.6482C106.922 91.0387 82.987 117.296 53.4612 117.296C23.9354 117.296 0 91.0387 0 58.6482C0 26.2577 23.9354 0 53.4612 0C82.987 0 106.922 26.2577 106.922 58.6482Z" stroke-width="4" stroke="#403B36" mask="url(#stroke1_0_10)"/>
+</g>
+<defs>
+<path id="stroke0_0_10" d="M106.922 58.6482C106.922 91.0387 82.987 117.296 53.4612 117.296C23.9354 117.296 0 91.0387 0 58.6482C0 26.2577 23.9354 0 53.4612 0C82.987 0 106.922 26.2577 106.922 58.6482Z"/>
+</defs>
+</svg>

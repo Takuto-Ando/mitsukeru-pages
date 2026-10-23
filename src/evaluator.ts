@@ -51,6 +51,7 @@ export function evaluateObservation(
       cells.set(`${Math.round(p.x / 3)},${Math.round(p.y / 3)}`, p);
   }
   const points = [...cells.values()];
+  let measured = { width: 0, height: 0 };
   const result = (
     status: "correct" | "uncertain" | "retry",
     message: string,
@@ -60,6 +61,12 @@ export function evaluateObservation(
     passed: status === "correct",
     message,
     suggestion,
+    debug: {
+      cue: "horizontal",
+      ...measured,
+      strokes: strokes.length,
+      automaticJudging: "horizontal-feature heuristic",
+    },
   });
   if (!points.length)
     return result(
@@ -76,6 +83,7 @@ export function evaluateObservation(
   };
   const width = extent("x"),
     height = extent("y");
+  measured = { width, height };
   if (width < parameters.minWidth && height < parameters.minWidth)
     return result(
       "uncertain",
