@@ -246,83 +246,51 @@ export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 export const tasksForGroup = (id: string) =>
   tasks.filter((t) => t.groupId === id);
 
-// Calibrated against the generated artwork, not the prompt coordinates.
-const calibrated: Record<string, number[][]> = {
-  goat: [[190, 155, 230, 80]],
-  sheep: [[190, 155, 230, 80]],
-  mandrill: [
-    [280, 115, 70, 115],
-    [370, 115, 65, 115],
-  ],
-  elephant: [[185, 5, 230, 95]],
-  capuchin: [[350, 35, 230, 285]],
-  macaque: [
-    [165, 105, 65, 95],
-    [230, 100, 65, 95],
-  ],
-  badger: [
-    [200, 125, 75, 165],
-    [330, 125, 75, 165],
-  ],
-  zebra: [[175, 245, 275, 125]],
-  giraffe: [[375, 220, 115, 100]],
-  hippo: [
-    [195, 140, 55, 60],
-    [310, 140, 55, 60],
-  ],
-  fennec: [[205, 205, 285, 135]],
-  gorilla: [[180, 5, 245, 110]],
-  donkey: [
-    [215, 100, 280, 38],
-    [245, 100, 45, 145],
-  ],
-  meerkat: [
-    [240, 105, 90, 95],
-    [390, 105, 90, 95],
-  ],
-  deer: [[195, 115, 310, 105]],
-  "giraffe-hoof": [[185, 235, 325, 135]],
-  "hippo-body": [[175, 50, 340, 90]],
-  "fennec-tail": [[350, 210, 240, 140]],
+// Simple, short drawing activities use the earlier generous observation windows.
+// Fine-detail raster coordinates stay in Git history; their JPG originals are retained.
+const simpleWindows: Record<string, number[][]> = {
+  sheep: [[190, 165, 230, 110]],
+  elephant: [[170, 45, 260, 130]],
+  gorilla: [[155, 35, 290, 125]],
+  "giraffe-hoof": [[180, 195, 240, 145]],
+  "hippo-body": [[175, 75, 335, 120]],
+  "fennec-tail": [[320, 200, 230, 150]],
 };
 for (const task of tasks) {
-  if (calibrated[task.id])
-    task.scene = {
-      ...task.scene,
-      regions: calibrated[task.id].map(([x, y, width, height]) => ({
-        x: x / 600,
-        y: y / 400,
-        width: width / 600,
-        height: height / 400,
-      })),
-    };
+  const original = scenes[task.id];
+  const windows = simpleWindows[task.id];
+  task.scene = {
+    ...task.scene,
+    regions: windows
+      ? windows.map(([x, y, width, height]) => ({
+          x: x / 600,
+          y: y / 400,
+          width: width / 600,
+          height: height / 400,
+        }))
+      : original.regions,
+  };
   const eyes: Record<string, number[][]> = {
     lemur: [
-      [200, 150, 40, 38],
-      [320, 150, 40, 38],
+      [219, 159, 32, 42],
+      [349, 159, 32, 42],
     ],
     badger: [
-      [225, 165, 35, 35],
-      [340, 165, 35, 35],
+      [219, 159, 32, 42],
+      [349, 159, 32, 42],
     ],
     meerkat: [
-      [267, 125, 40, 42],
-      [420, 125, 40, 42],
+      [219, 159, 32, 42],
+      [349, 159, 32, 42],
     ],
   };
   if (eyes[task.id])
-    task.scene = {
-      ...task.scene,
-      maskHoles: eyes[task.id].map(([x, y, width, height]) => ({
-        x: x / 600,
-        y: y / 400,
-        width: width / 600,
-        height: height / 400,
-      })),
-    };
+    task.scene.maskHoles = eyes[task.id].map(([x, y, width, height]) => ({
+      x: x / 600,
+      y: y / 400,
+      width: width / 600,
+      height: height / 400,
+    }));
   if (["goat", "sheep"].includes(task.id))
-    task.scene = {
-      ...task.scene,
-      answerPath: "M205 180Q305 168 405 180L405 207Q305 219 205 207Z",
-    };
+    task.scene.answerPath = "M205 205Q305 190 405 205L405 235Q305 250 205 235Z";
 }

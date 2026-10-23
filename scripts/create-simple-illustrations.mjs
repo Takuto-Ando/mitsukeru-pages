@@ -1,0 +1,45 @@
+// Deterministic, editable SVGs based on the earlier observation templates.
+import fs from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
+const cache={};
+function load(file){file=path.resolve(file);if(cache[file])return cache[file];const exports={};cache[file]=exports;const js=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;new Function('exports','require',js)(exports,p=>load(path.resolve(path.dirname(file),p+'.ts')));return exports;}
+const {profiles}=load('src/content/profiles.ts');
+const {tasks}=load('src/content/tasks.ts');
+const ink='#665b50',cream='#fbf4e6';
+const p=(d,fill='#dfc399',width=6)=>`<path d="${d}" fill="${fill}" stroke="${ink}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+const eye=(x,y)=>`<ellipse cx="${x}" cy="${y}" rx="10" ry="14" fill="${ink}"/><circle cx="${x-3}" cy="${y-5}" r="3" fill="white"/>`;
+const face=(id)=>{
+ const color={mandrill:'#ac8b67',lemur:'#c4c5ba',badger:'#c9bc9f',meerkat:'#e3c495',gorilla:'#aaa59c'}[id];
+ const ears=id==='lemur'?p('M168 145Q95 35 155 52L240 106M432 145Q505 35 445 52L360 106',color):id==='meerkat'?p('M174 160Q118 85 180 92L220 122M426 160Q482 85 420 92L380 122',color):p('M170 155Q105 105 151 85Q187 77 218 125M430 155Q495 105 449 85Q413 77 382 125',color);
+ const head=id==='gorilla'?'M170 180Q168 90 235 88Q300 35 345 88Q435 115 430 180L445 275Q414 347 300 355Q186 347 155 275Z':'M170 135Q192 74 300 80Q408 74 430 135Q472 245 387 308Q339 348 300 345Q261 348 213 308Q128 245 170 135Z';
+ return ears+p(head,color)+p('M230 240Q300 206 370 240L354 294Q300 330 246 294Z','#f1dfbd',4)+eye(235,id==='mandrill'?100:180)+eye(365,id==='mandrill'?100:180)+p(id==='mandrill'?'M286 136Q300 120 314 136L322 246Q300 266 278 246Z':'M282 272Q300 262 318 272L300 287Z',id==='mandrill'?'#df795f':ink,3)+p('M300 288V301M279 304Q300 316 321 304','none',3);
+};
+const body={
+ mandrill:face('mandrill'),lemur:face('lemur'),badger:face('badger'),meerkat:face('meerkat'),gorilla:face('gorilla'),
+ goat:p('M100 221Q186 113 303 122Q420 128 510 221Q416 317 303 313Q186 315 100 221Z','#f1dfb9')+`<ellipse cx="304" cy="219" rx="117" ry="87" fill="#dfb85e" stroke="${ink}" stroke-width="5"/>`+p('M118 190Q180 105 243 120M388 123Q453 139 492 191','none',4)+p('M70 95Q67 43 103 35L94 86M124 87Q123 34 157 30L147 88','#c9b78d',4)+p('M55 102L24 88L51 132Q51 164 106 172Q157 164 158 129L184 90L151 103Q106 71 55 102','#e5cfaa',4)+eye(78,126)+eye(130,126),
+ sheep:p('M90 220Q190 125 303 123Q420 125 520 220Q420 312 303 315Q190 310 90 220Z','#f5e6c8')+`<ellipse cx="304" cy="219" rx="117" ry="87" fill="#dfb85e" stroke="${ink}" stroke-width="5"/>`+p('M50 109Q20 74 43 66Q29 35 65 40Q78 15 103 38Q130 14 148 42Q183 31 177 65Q201 85 165 110','#ede0c5',4)+p('M58 90Q104 67 154 91L151 134Q106 177 61 134Z','#d8c3a0',4)+eye(83,113)+eye(130,113),
+ gibbon:p('M50 64Q300 50 550 64','none',12)+p('M253 205Q300 183 347 205L354 309Q330 342 300 320Q265 342 246 309Z','#a99b80')+p('M262 302L249 350Q270 367 288 350L301 324M338 302L351 350Q330 367 312 350L301 324','#b9a991')+p('M252 155Q250 105 301 102Q351 105 349 155Q348 198 300 200Q252 198 252 155Z','#eee0c5')+eye(280,149)+eye(320,149)+p('M282 174Q300 186 318 174','none',3),
+ elephant:p('M218 134Q100 76 100 200Q99 290 207 294M382 134Q500 76 500 200Q501 290 393 294','#cecec2')+p('M198 160Q207 45 261 76Q288 85 301 124Q319 83 347 76Q409 45 402 160L405 266Q355 322 300 313Q245 322 195 266Z','#dcdcd0')+p('M275 231L270 324Q273 370 322 357L348 337L327 319Q303 340 307 313L325 231','#dcdcd0')+eye(230,201)+eye(370,201),
+ capuchin:p('M170 193Q127 214 149 274L247 286Q289 257 270 202Z','#b59873')+p('M185 150Q139 97 181 65Q242 37 277 96L270 153Q235 184 185 150Z','#856b50')+p('M180 105Q220 82 263 105L260 142Q220 171 181 139Z','#efdbb4')+eye(201,117)+eye(242,117)+p('M180 250L146 320M240 263L238 329M170 202L117 257','none',15)+p('M358 65L358 350','none',10),
+ macaque:p('M172 122Q300 65 428 122L440 289Q415 334 376 305L375 366L340 366L327 298L273 298L260 366L225 366L225 305Q185 331 160 285Z','#c9a681')+p('M414 132Q458 85 482 124Q508 166 470 185L432 165','#e7c7a3')+eye(465,141)+p('M287 285Q304 342 330 365','none',12),
+ zebra:p('M251 25L248 213M349 25L352 213','#f0e4cd')+p('M250 60L347 89M250 117L348 143M248 174L352 195','none',15)+p('M172 341Q300 357 428 341','none',3),
+ 'giraffe-hoof':p('M250 25L246 209M350 25L354 209','#e7c68d')+p('M265 56L294 51L304 80L274 92ZM318 113L344 119L341 149L314 146ZM254 166L283 163L289 192L255 203','#bd895a',3),
+ giraffe:p('M166 75L208 118L357 119L448 202Q411 253 285 249L239 355L175 355L217 217L184 137Z','#e6c58b')+p('M229 113L222 66M336 116L348 65','none',12)+p('M192 116Q135 69 130 102L179 140M352 121Q414 76 409 112L369 150','#d8ae73',4)+eye(285,168)+p('M195 226L221 235L211 264L183 258ZM173 304L196 291L212 316L184 336ZM232 142L257 135L266 156L242 169Z','#b98453',3)+p('M470 85L501 357','none',5),
+ hippo:p('M168 134Q139 54 185 69Q221 69 216 113M384 113Q379 69 415 69Q461 54 432 134','#bea9aa')+p('M160 124Q300 70 440 124L462 231Q452 289 300 292Q148 289 138 231Z','#ceb8b5')+eye(198,126)+eye(402,126)+p('M167 250Q300 276 433 250','none',4)+p('M35 312Q120 290 205 312T375 312T545 312','none',8),
+ 'hippo-body':p('M174 163Q110 121 73 173L50 228Q55 276 173 259L215 285L233 352L273 352L280 288L422 288L437 352L477 352L486 274Q557 214 509 155Q392 87 174 163Z','#c9b1b2')+eye(140,186)+p('M86 219L93 219M178 167Q166 137 151 155','none',5),
+ fennec:p('M241 35L238 181M359 35L362 181','#e4cba6')+p('M155 340Q302 353 445 340','none',3)+p('M90 136L43 35Q68 17 112 88L156 39Q176 67 135 145Q128 173 90 166Z','#dfc297',4)+eye(91,131)+p('M106 150L118 150','none',5),
+ 'fennec-tail':p('M176 171Q275 121 352 180L354 276L318 287L310 354L280 354L273 282L207 278L199 354L170 354Z','#e0c298')+p('M127 169L89 53Q105 29 151 112L199 47Q226 73 182 173Q162 194 127 169Z','#e8d0ad')+eye(140,153)+p('M143 177L159 177','none',6),
+ donkey:p('M112 175Q300 104 495 171L495 274L456 291L445 359L413 359L410 289L210 291L194 359L161 359L166 284L112 268Z','#c8c4b2')+p('M110 175L88 109L77 48Q101 29 121 112L135 45Q160 27 156 126L179 174Q148 210 110 175Z','#d6d0bc')+eye(119,146)+p('M499 195Q547 235 526 292','none',10),
+ deer:p('M97 182Q291 91 505 180L488 281L436 293L427 357L400 357L401 294L220 295L206 357L180 357L183 278L113 277Z','#d3ad7b')+p('M109 183L87 117L55 89L48 60L95 90L130 60L151 73L122 131L154 163Z','#dfbc8b')+eye(95,129)+p('M90 83L74 28M124 79L139 27','none',6)
+};
+for(const t of tasks){
+ const id=t.id;const isEye=['goat','sheep'].includes(id);
+ const d=isEye?'M205 205Q305 190 405 205L405 235Q305 250 205 235Z':id==='elephant'?'M198 163Q207 45 261 76Q288 85 301 124Q319 83 347 76Q409 45 402 163':profiles[id]?.answer||t.scene.answerPath;
+ const shape=`<path d="${d}" fill="${isEye?'#595544':'none'}" stroke="${isEye?'#595544':'#c18151'}" stroke-width="${isEye?4:13}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ const background=body[id]||p(profiles[id]?.background||'');
+ const svg=inner=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" rx="30" fill="${cream}"/>${inner}</svg>`;
+ fs.writeFileSync(`public/illustrations/simple/${id}.svg`,svg(background));
+ fs.writeFileSync(`public/illustrations/simple/${id}-answer.svg`,`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">${shape}</svg>`);
+ fs.writeFileSync(`public/illustrations/simple/${id}-explanation.svg`,svg(background+shape));
+}

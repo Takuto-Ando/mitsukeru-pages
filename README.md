@@ -1,5 +1,7 @@
 # ズーケッチ
 
+現在は、子どもが1〜3分程度で形や模様を描き足すことを目指した、シンプルでかわいいSVGイラストを使用しています。細密な画像は参照用として保管しています。所要時間は目安で、時間制限は設けません。
+
 動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
 写真を撮る → 特徴を描く → お手本と見くらべる → 解説を読む、の4段階です。16グループ・20課題を登録しています。模様や輪郭の課題は自己確認を標準とし、自動判定の正解と本人による確認を内部データで区別します。
@@ -42,7 +44,7 @@ npm run test:e2e:preview
 | 色・余白・文字・ボタン | `src/styles/figma.css`, `src/styles/tokens.css` |
 | 20課題の問い・解説・判定方式・校正済みマスク | `src/content/tasks.ts` |
 | イラストの登録・差し替え | `src/content/artwork.ts` |
-| 専用イラスト20枚 | `public/illustrations/zooketch/` |
+| 専用イラスト20枚 | `public/illustrations/simple/`（細密版は `public/illustrations/zooketch/` に保管） |
 | 背景と空欄 | `src/components/ObservationScene.tsx` |
 | タッチ入力・Undo・消去・拡大 | `src/SketchCanvas.tsx` |
 | 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |

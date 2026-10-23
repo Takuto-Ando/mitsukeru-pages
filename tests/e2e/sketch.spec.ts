@@ -69,7 +69,7 @@ for (const t of tasks)
       .locator(".eye-template image")
       .first()
       .getAttribute("href");
-    expect(href).toContain(`zooketch/${t.id}.jpg`);
+    expect(href).toContain(`simple/${t.id}.svg`);
     expect((await page.request.get(href!)).ok()).toBe(true);
     await expect(
       page.getByRole("button", { name: "こたえあわせ →" }),

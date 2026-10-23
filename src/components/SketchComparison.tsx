@@ -116,7 +116,11 @@ export function SketchComparison({
       </svg>
       <p className="comparison-legend">
         <span>ターコイズ：自分の線</span>
-        <span>{profile ? "半透明：お手本" : "半透明の黒：瞳孔のお手本"}</span>
+        <span>
+          {["goat", "sheep"].includes(scene.id)
+            ? "半透明の黒：瞳孔のお手本"
+            : "半透明：お手本"}
+        </span>
       </p>
       <p className="result-caption">
         そっくりでなくても大丈夫。実物で見つけた形を見くらべよう。

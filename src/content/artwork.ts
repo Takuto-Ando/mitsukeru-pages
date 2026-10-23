@@ -32,8 +32,7 @@ export const artwork: Record<string, Artwork> = Object.fromEntries(
     ["deer", "ニホンジカの背中"],
   ].map(([id, alt]) => [id, { status: "awaiting", alt }]),
 );
-// Generated natural-history prototypes. Visual review is recorded separately;
-// not promoted to specialist-reviewed educational artwork.
+// The detailed JPGs remain available for future use; the default is editable SVG.
 for (const id of [
   ...Object.keys(artwork),
   "sheep",
@@ -41,17 +40,19 @@ for (const id of [
   "hippo-body",
   "fennec-tail",
 ]) {
-  const path = `illustrations/zooketch/${id}.jpg`;
+  const base = `illustrations/simple/${id}`;
   artwork[id] = {
     status: "draft",
     alt: artwork[id]?.alt || id,
-    incomplete: path,
-    completedBase: path,
-    explanation: path,
-    answer: ["goat", "sheep"].includes(id) ? undefined : path,
+    incomplete: base + ".svg",
+    completedBase: base + ".svg",
+    answer: base + "-answer.svg",
+    explanation: base + "-explanation.svg",
     maskInApp: true,
-    blankFill: ["goat", "sheep"].includes(id) ? "transparent" : "#f8f4e9",
-    credit: "本制作で生成した観察イラスト",
+    blankFill: ["elephant", "gorilla", "hippo-body"].includes(id)
+      ? "#fbf4e6"
+      : "transparent",
+    credit: "本制作の編集可能な観察イラスト",
   };
 }
 // Put future photo / professionally reviewed replacements here by task ID.

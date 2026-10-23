@@ -3,7 +3,6 @@ import { motion, useReducedMotion } from "motion/react";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
-import { SceneBase } from "./components/ObservationScene";
 import { Mascot } from "./components/Mascot";
 import { DrawingCollection } from "./components/DrawingCollection";
 import { useButtonMotion } from "./components/useButtonMotion";
@@ -274,7 +273,7 @@ export default function App() {
                     </div>
                   )}
                   <p className="figma-note">
-                    上手に描かなくて大丈夫。見えた形を少しだけ。
+                    1〜3分くらいで、見えた形を少しだけ。上手に描かなくて大丈夫。
                   </p>
                   {photo && (
                     <details>
@@ -449,28 +448,12 @@ export default function App() {
                       role="img"
                       aria-label={task.explanation.name + "の解説イラスト"}
                     >
-                      {!["goat", "sheep"].includes(task.id) ? (
-                        <image
-                          href={assetPath(artwork[task.id].explanation!)}
-                          width="600"
-                          height="400"
-                          preserveAspectRatio="none"
-                        />
-                      ) : (
-                        <SceneBase scene={scene} completed />
-                      )}
-                      {["goat", "sheep"].includes(task.id) && (
-                        <path
-                          d={
-                            scene.answerPath ||
-                            "M205 205Q305 190 405 205L405 235Q305 250 205 235Z"
-                          }
-                          fill="#283d39"
-                          stroke="#283d39"
-                          strokeWidth="8"
-                          strokeLinecap="round"
-                        />
-                      )}
+                      <image
+                        href={assetPath(artwork[task.id].explanation!)}
+                        width="600"
+                        height="400"
+                        preserveAspectRatio="none"
+                      />
                     </svg>
                   </motion.div>
                   <div className="figma-explanation">
