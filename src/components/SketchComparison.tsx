@@ -21,10 +21,11 @@ export function SketchComparison({
   const [mode, setMode] = useState<"drawing" | "answer" | "overlay">("drawing");
   const clipId = useId();
   const art = artwork[scene.id];
+  void profile;
   const reduce = useReducedMotion();
   return (
     <div className="sketch-comparison completion-panel">
-      <p>自分で描いた線を、そのまま残して見くらべよう。</p>
+      <p>自分の線と、お手本を見くらべよう。</p>
       <div className="comparison-modes" role="group" aria-label="比較の表示">
         {(
           [
@@ -85,11 +86,13 @@ export function SketchComparison({
                 height="400"
                 preserveAspectRatio="none"
               />
-            ) : profile ? (
+            ) : scene.answerPath ? (
               <path
                 d={scene.answerPath}
-                fill="none"
-                stroke="#db7747"
+                fill={["goat", "sheep"].includes(scene.id) ? "#242e2b" : "none"}
+                stroke={
+                  ["goat", "sheep"].includes(scene.id) ? "#242e2b" : "#db7747"
+                }
                 strokeWidth="9"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -113,12 +116,10 @@ export function SketchComparison({
       </svg>
       <p className="comparison-legend">
         <span>ターコイズ：自分の線</span>
-        <span>
-          {profile ? "オレンジ：提案のお手本" : "半透明の黒：瞳孔のお手本"}
-        </span>
+        <span>{profile ? "半透明：お手本" : "半透明の黒：瞳孔のお手本"}</span>
       </p>
       <p className="result-caption">
-        模式図は一例です。形の完全一致を求めず、実物で見えた特徴を確かめよう。
+        そっくりでなくても大丈夫。実物で見つけた形を見くらべよう。
       </p>
     </div>
   );

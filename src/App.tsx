@@ -1,109 +1,39 @@
-import { DrawingCollection } from "./components/DrawingCollection";
-import {
-  readCollection,
-  writeCollection,
-  emptyCollection,
-  type CollectionData,
-} from "./collection/storage";
-import { artwork, assetPath } from "./content/artwork";
-import { useState, useRef, useEffect } from "react";
-import { createFeedbackAudio } from "./audio";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
+import { SceneBase } from "./components/ObservationScene";
 import { Mascot } from "./components/Mascot";
-
+import { DrawingCollection } from "./components/DrawingCollection";
+import { useButtonMotion } from "./components/useButtonMotion";
+import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
-import { challenges } from "./content/challenges";
+import { tasksForGroup, taskById } from "./content/tasks";
+import { clipStrokes } from "./content/scenes";
+import { evaluateProfile } from "./content/profiles";
 import { evaluateObservation } from "./evaluator";
-import { profiles, evaluateProfile } from "./content/profiles";
+import { researchRecorder as research } from "./research/recorder";
+import { createFeedbackAudio } from "./audio";
+import {
+  emptyCollection,
+  readCollection,
+  writeCollection,
+  type CollectionData,
+} from "./collection/storage";
 import type { Stroke, Evaluation } from "./types";
 import "./styles/figma.css";
-import { scenes, clipStrokes } from "./content/scenes";
-import { useButtonMotion } from "./components/useButtonMotion";
+
 export default function App() {
   useButtonMotion();
-  const [collectionOpen, setCollectionOpen] = useState(false);
-  const [collection, setCollection] = useState<CollectionData>(emptyCollection);
-  const [storageError, setStorageError] = useState("");
-  const [storageReady, setStorageReady] = useState(false);
-  const [savedId, setSavedId] = useState<string>();
-  useEffect(() => {
-    try {
-      setCollection(readCollection(localStorage));
-      setStorageReady(true);
-    } catch {
-      setStorageError(
-        "保存データを読み込めませんでした。既存のデータを守るため、保存を停止しています。",
-      );
-    }
-  }, []);
-  function commitCollection(data: CollectionData) {
-    if (!storageReady) return false;
-    try {
-      writeCollection(localStorage, data);
-      setCollection(data);
-      setStorageError("");
-      return true;
-    } catch (error) {
-      setStorageError(
-        error instanceof Error && error.message.includes("保存")
-          ? error.message
-          : "保存できませんでした。空き容量やブラウザの保存設定を確認してください。",
-      );
-      return false;
-    }
-  }
-  function latestCollection() {
-    try {
-      return readCollection(localStorage);
-    } catch {
-      setStorageError(
-        "保存データを読み込めませんでした。上書きせずに停止しました。",
-      );
-      return undefined;
-    }
-  }
-  function saveDrawing() {
-    const latest = latestCollection();
-    if (!latest) return;
-    if (savedId || !strokes.length) return;
-    const id =
-      Date.now().toString(36) +
-      "-" +
-      crypto.getRandomValues(new Uint32Array(3)).join("-");
-    // Store visible vector lines only, never the camera photo or model output.
-    const visible = clipStrokes(strokes, scene).map((s) =>
-      s.map((p) => ({
-        x: Math.round(p.x * 100) / 100,
-        y: Math.round(p.y * 100) / 100,
-      })),
-    );
-    if (!visible.length) return;
-    if (
-      commitCollection({
-        version: 1,
-        drawings: [
-          {
-            id,
-            groupId,
-            createdAt: new Date().toISOString(),
-            strokes: visible,
-            outcome: feedback?.passed ? "correct" : "self-confirmed",
-          },
-          ...latest.drawings,
-        ],
-      })
-    )
-      setSavedId(id);
-  }
-  const [step, setStep] = useState(0),
-    [groupId, setGroupId] = useState("goat"),
-    [photo, setPhoto] = useState("");
-  const [strokes, setStrokes] = useState<Stroke[]>([]),
-    [feedback, setFeedback] = useState<Evaluation>(),
-    [hint, setHint] = useState(false);
+  const reduce = useReducedMotion();
+  const activeTask = useRef<string | undefined>(undefined);
+  const [step, setStep] = useState(0);
+  const [taskId, setTaskId] = useState("goat");
+  const [photo, setPhoto] = useState("");
+  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [feedback, setFeedback] = useState<Evaluation>();
+  const [hint, setHint] = useState(false);
   const [sound, setSound] = useState(false);
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -111,57 +41,165 @@ export default function App() {
   if (!audio.current)
     audio.current = createFeedbackAudio(() => soundRef.current);
   useEffect(() => () => audio.current?.dispose(), []);
-  const reduce = useReducedMotion();
-  const challenge = challenges[0];
-  const group = groups.find((g) => g.id === groupId)!;
-  const profile = profiles[groupId];
-  const scene = scenes[groupId];
-  const art = artwork[groupId];
-  function restart() {
-    setCollectionOpen(false);
-    setSavedId(undefined);
-    setStrokes([]);
-    setFeedback(undefined);
-    setHint(false);
-    setPhoto("");
-    setStep(0);
-    window.scrollTo(0, 0);
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collection, setCollection] = useState<CollectionData>(emptyCollection);
+  const [storageReady, setStorageReady] = useState(false);
+  const [storageError, setStorageError] = useState("");
+  const [savedId, setSavedId] = useState<string>();
+  const task = taskById[taskId],
+    scene = task.scene,
+    profile = task.profile;
+  const group = groups.find((g) => g.id === task.groupId)!;
+  useEffect(() => {
+    try {
+      setCollection(readCollection(localStorage));
+      setStorageReady(true);
+    } catch {
+      setStorageError(
+        "保存した絵を読み込めませんでした。上書きせずに残しています。",
+      );
+    }
+  }, []);
+  function commit(data: CollectionData) {
+    if (!storageReady) return false;
+    try {
+      writeCollection(localStorage, data);
+      setCollection(data);
+      setStorageError("");
+      return true;
+    } catch {
+      setStorageError(
+        "保存できませんでした。空き容量やブラウザの保存設定を確認してください。",
+      );
+      return false;
+    }
+  }
+  function latest() {
+    try {
+      return readCollection(localStorage);
+    } catch {
+      setStorageError(
+        "保存した絵を読み込めませんでした。上書きを止めています。",
+      );
+      return undefined;
+    }
+  }
+  function save() {
+    const data = latest();
+    if (!data || savedId || !feedback?.passed) return;
+    const visible = clipStrokes(strokes, scene).map((s) =>
+      s.map((p) => ({
+        x: Math.round(p.x * 100) / 100,
+        y: Math.round(p.y * 100) / 100,
+      })),
+    );
+    if (!visible.length) return;
+    const id =
+      Date.now().toString(36) +
+      "-" +
+      crypto.getRandomValues(new Uint32Array(3)).join("-");
+    if (
+      commit({
+        version: 1,
+        drawings: [
+          {
+            id,
+            groupId: task.groupId,
+            taskId,
+            createdAt: new Date().toISOString(),
+            strokes: visible,
+            outcome:
+              feedback.method === "automatic" ? "correct" : "self-confirmed",
+          },
+          ...data.drawings,
+        ],
+      })
+    )
+      setSavedId(id);
   }
   function next(value: number) {
     setStep(value);
     window.scrollTo(0, 0);
+    if (value === 3) research.record(taskId, "explanation");
+  }
+  function selectTask(id: string) {
+    if (activeTask.current) research.record(activeTask.current, "end");
+    activeTask.current = undefined;
+    setTaskId(id);
+    setStrokes([]);
+    setHint(false);
+    setFeedback(undefined);
+    setSavedId(undefined);
+    research.record(id, "start");
+    activeTask.current = id;
+  }
+  function restart() {
+    if (activeTask.current) research.record(activeTask.current, "end");
+    activeTask.current = undefined;
+    setCollectionOpen(false);
+    setPhoto("");
+    setStrokes([]);
+    setFeedback(undefined);
+    setHint(false);
+    setSavedId(undefined);
+    next(0);
+  }
+  function celebrate() {
+    audio.current?.unlock();
+    audio.current?.success();
+  }
+  function confirm() {
+    setFeedback({
+      passed: true,
+      status: "correct",
+      method: "self-confirmed",
+      message: "見くらべて、確かめたね。",
+    });
+    research.record(taskId, "self-confirmation");
+    celebrate();
   }
   function answer() {
+    const visible = clipStrokes(strokes, scene);
+    if (!visible.length) return;
+    if (!task.automatic) {
+      setFeedback({
+        passed: false,
+        status: "uncertain",
+        method: "comparison",
+        message: "見えた形を見くらべよう。",
+      });
+      research.record(taskId, "judgment", "comparison");
+      next(2);
+      return;
+    }
     const result = profile
-      ? evaluateProfile(clipStrokes(strokes, scene), profile, scene)
-      : evaluateObservation(
-          clipStrokes(strokes, scene),
-          challenge.observationParameters,
-        );
+      ? evaluateProfile(visible, profile, scene)
+      : evaluateObservation(visible);
+    result.method = "automatic";
     setFeedback(result);
+    research.record(taskId, "judgment", "automatic:" + result.status);
     if (result.passed) {
-      audio.current?.unlock();
-      audio.current?.success();
+      celebrate();
       next(2);
     }
   }
   return (
     <div className="figma-shell">
       <header className="figma-header">
-        <button onClick={restart}>
+        <button onClick={restart} aria-label="ズーケッチ 撮影に戻る">
           <img
             src={import.meta.env.BASE_URL + "figma/2-2-imgLogoDot.svg"}
             alt=""
           />
-          みつけるスケッチ
+          ズーケッチ
         </button>
         <button
           className="collection-link"
+          aria-expanded={collectionOpen}
           onClick={() => {
             setCollectionOpen(!collectionOpen);
             window.scrollTo(0, 0);
           }}
-          aria-expanded={collectionOpen}
         >
           描いた動物 ({collection.drawings.length})
         </button>
@@ -173,11 +211,11 @@ export default function App() {
             drawings={collection.drawings}
             onBack={() => setCollectionOpen(false)}
             onDelete={(id) => {
-              const latest = latestCollection();
-              if (!latest) return false;
-              const ok = commitCollection({
+              const data = latest();
+              if (!data) return false;
+              const ok = commit({
                 version: 1,
-                drawings: latest.drawings.filter((d) => d.id !== id),
+                drawings: data.drawings.filter((d) => d.id !== id),
               });
               if (ok && savedId === id) setSavedId(undefined);
               return ok;
@@ -187,50 +225,57 @@ export default function App() {
           <>
             <div className="figma-flow">
               {
-                ["01 / OBSERVE", "02 / DRAW", "03 / DISCOVER", "04 / LEARN"][
-                  step
-                ]
+                [
+                  "01 / 写真を撮る",
+                  "02 / 特徴を描く",
+                  "03 / 見くらべる",
+                  "04 / 発見を知る",
+                ][step]
               }
               <Mascot step={step} />
             </div>
             <motion.section
               key={step}
-              initial={reduce ? false : { opacity: 0, y: 8 }}
+              initial={reduce ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.3 }}
             >
               {step === 0 ? (
                 <CameraView
                   onSelect={(image, id) => {
-                    setSavedId(undefined);
                     setPhoto(image || "");
-                    setGroupId(id || "goat");
+                    selectTask(id || "goat");
                     next(1);
                   }}
                 />
               ) : step === 1 ? (
                 <>
-                  <h1>
-                    {profile
-                      ? profile.part + "を描こう"
-                      : "目の中を描いてみよう。"}
-                  </h1>
-                  <p className="figma-support">
-                    {profile
-                      ? profile.question
-                      : "ヤギの瞳の黒い部分は、どんな形？"}
+                  <div className="task-heading">
+                    <span>{group.name}</span>
+                    <span>ひとつだけ、よく見よう</span>
+                  </div>
+                  <h1>{task.part}を描こう</h1>
+                  <p className="figma-support">{task.question}</p>
+                  {tasksForGroup(group.id).length > 1 && (
+                    <div
+                      className="task-switch"
+                      role="group"
+                      aria-label="観察する部位"
+                    >
+                      {tasksForGroup(group.id).map((t) => (
+                        <button
+                          key={t.id}
+                          aria-pressed={taskId === t.id}
+                          onClick={() => selectTask(t.id)}
+                        >
+                          {t.part}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <p className="figma-note">
+                    上手に描かなくて大丈夫。見えた形を少しだけ。
                   </p>
-                  <p className="figma-note">まちがえても大丈夫♪</p>
-                  {!profile && (
-                    <p className="quiet-note">
-                      ヤギ・ヒツジのうち、ヤギの課題です。ヒツジ個別のお手本は確認中です。
-                    </p>
-                  )}
-                  {profile && (
-                    <p className="quiet-note">
-                      提案課題です。特徴で判定し、迷ったときは自分で確かめます。
-                    </p>
-                  )}
                   {photo && (
                     <details>
                       <summary>撮影した写真を確認</summary>
@@ -241,51 +286,54 @@ export default function App() {
                       />
                     </details>
                   )}
-                  <p className="artwork-status" role="note">
-                    {art.status === "reviewed"
-                      ? "観察イラスト"
-                      : "専用イラストは制作待ちです。現在は配置確認用の提案図を表示しています。"}
-                  </p>
                   <SketchCanvas
+                    key={taskId}
                     scene={scene}
+                    onDrawingActivity={(active) =>
+                      research.record(
+                        taskId,
+                        active ? "drawing-start" : "drawing-end",
+                      )
+                    }
                     strokes={strokes}
-                    onChange={(s) => {
-                      setSavedId(undefined);
-                      setStrokes(s);
+                    onChange={(value) => {
+                      research.record(
+                        taskId,
+                        value.length < strokes.length ? "revision" : "drawing",
+                      );
+                      setStrokes(value);
                       setFeedback(undefined);
+                      setSavedId(undefined);
                     }}
                   />
                   <button
                     className="text-button"
-                    onClick={() => setHint(!hint)}
+                    onClick={() => {
+                      if (!hint) research.record(taskId, "hint");
+                      setHint(!hint);
+                    }}
                   >
                     ✧ ヒント
                   </button>
-                  {hint && (
-                    <p role="note">{profile?.hint || challenge.hint[0]}</p>
-                  )}
+                  {hint && <p role="note">{task.hint}</p>}
                   {feedback && !feedback.passed && (
                     <div role="status" className="figma-feedback">
                       <p>{feedback.message}</p>
                       <p>{feedback.suggestion}</p>
-                      {new URLSearchParams(location.search).has("debug") && (
-                        <details>
-                          <summary>判定デバッグ</summary>
-                          <pre>{JSON.stringify(feedback.debug, null, 2)}</pre>
-                        </details>
-                      )}
                       <button className="primary" onClick={() => next(2)}>
                         {feedback.status === "uncertain"
-                          ? profile
-                            ? "うん、実物でも見えた"
-                            : "うん、横長に見えた"
+                          ? "見えた形をお手本と比べる"
                           : "お手本で確かめる"}
                       </button>
+                      {import.meta.env.DEV &&
+                        new URLSearchParams(location.search).has("debug") && (
+                          <details>
+                            <summary>判定デバッグ</summary>
+                            <pre>{JSON.stringify(feedback, null, 2)}</pre>
+                          </details>
+                        )}
                     </div>
                   )}
-                  <p className="figma-support center">
-                    上手に描かなくても大丈夫。
-                  </p>
                   <button
                     className="primary"
                     disabled={!strokes.length}
@@ -297,21 +345,20 @@ export default function App() {
               ) : step === 2 ? (
                 <>
                   <motion.h1
+                    key={feedback?.passed ? "complete" : "compare"}
                     className="figma-discovery"
                     initial={reduce ? false : { scale: 0.9 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 250, damping: 14 }}
                   >
                     {feedback?.passed
-                      ? art.status === "reviewed"
-                        ? "完成！ だいはっけん！"
-                        : "特徴を見つけたね！"
+                      ? "完成！ だいはっけん！"
                       : "見えた形を確かめよう"}
                   </motion.h1>
                   {feedback?.passed && (
                     <div className="figma-confetti" aria-hidden="true">
                       {!reduce &&
-                        [0, 1, 2, 3, 4, 5].map((i) => (
+                        Array.from({ length: 10 }, (_, i) => (
                           <motion.span
                             className="discovery-star"
                             key={i}
@@ -319,11 +366,11 @@ export default function App() {
                             animate={{
                               opacity: [0, 1, 0],
                               scale: [0.3, 1.2, 0.8],
-                              rotate: (i % 2 ? 1 : -1) * 75,
-                              x: (i - 2.5) * 38,
-                              y: -20 - Math.sin(i) * 35,
+                              rotate: i * 37,
+                              x: (i - 4.5) * 29,
+                              y: -25 - Math.sin(i) * 45,
                             }}
-                            transition={{ duration: 1.1, delay: i * 0.05 }}
+                            transition={{ duration: 1.2, delay: i * 0.035 }}
                           >
                             ✦
                           </motion.span>
@@ -344,31 +391,35 @@ export default function App() {
                   )}
                   <p className="center">
                     <strong>
-                      {profile
-                        ? group.name + "の" + profile.part
-                        : "ヤギの瞳は横長だった！"}
+                      {group.name}の{task.part}
                     </strong>
                   </p>
                   <p className="figma-note">
                     {feedback?.passed
                       ? "よく見てたね！ ✳"
-                      : "あなたの観察と見比べよう"}
+                      : "あなたの観察と見くらべよう"}
                   </p>
                   <SketchComparison
                     strokes={strokes}
-                    answer={group.answer}
-                    profile={profile}
                     scene={scene}
+                    profile={profile}
+                    answer={group.answer}
                   />
-                  <p className="figma-support center">
-                    {profile
-                      ? "少し違っていても、見つけた特徴が大切だよ。"
-                      : "少し違っていても、横長に気づけたね。"}
-                  </p>
+                  {!feedback?.passed && (
+                    <div className="self-check">
+                      <p>実物とお手本を見くらべて、気づいたところはあった？</p>
+                      <button className="primary" onClick={confirm}>
+                        見くらべて、確かめた！
+                      </button>
+                      <button className="text-button" onClick={() => next(1)}>
+                        もう少し観察して描く
+                      </button>
+                    </div>
+                  )}
                   <button
                     className="primary collection-save"
-                    disabled={!!savedId || !storageReady || !strokes.length}
-                    onClick={saveDrawing}
+                    disabled={!!savedId || !storageReady || !feedback?.passed}
+                    onClick={save}
                   >
                     {savedId ? "保存したよ！" : "この動物を保存する"}
                   </button>
@@ -377,130 +428,64 @@ export default function App() {
                       ? "「描いた動物」から、いつでも見返せるよ。"
                       : "自分の絵をこの端末に残せます。撮影写真は保存しません。"}
                   </p>
-                  <button className="primary" onClick={() => next(3)}>
-                    {profile ? "特徴について知ろう →" : "どうして横長なの？ →"}
+                  <button
+                    className="primary"
+                    disabled={!feedback?.passed}
+                    onClick={() => next(3)}
+                  >
+                    特徴について知ろう →
                   </button>
                 </>
               ) : (
                 <>
-                  <h1>
-                    {profile
-                      ? profile.part + "の手がかり"
-                      : "どうして横長なの？"}
-                  </h1>
-                  <p className="figma-support">
-                    見つけた形には、ちゃんと理由がある。
-                  </p>
+                  <h1>{task.explanation.name}</h1>
                   <motion.div
                     className="figma-science"
-                    initial={reduce ? false : { opacity: 0, y: 8 }}
+                    initial={reduce ? false : { opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                   >
-                    {art.explanation ? (
-                      <img
-                        className="explanation-asset"
-                        src={assetPath(art.explanation)}
-                        alt={art.alt}
-                      />
-                    ) : profile ? (
-                      <svg viewBox="0 0 600 400" className="eye-template">
-                        <path
-                          d={profile.background}
-                          fill="none"
-                          stroke="#b8a58c"
-                          strokeWidth="4"
-                        />
-                        <path
-                          d={profile.answer}
-                          fill="none"
-                          stroke="#4c9b92"
-                          strokeWidth="9"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        viewBox="0 0 355 225"
-                        className="figma-learn-eye"
-                        aria-label="ヤギの瞳孔の模式図"
-                        role="img"
-                      >
+                    <svg
+                      viewBox="0 0 600 400"
+                      role="img"
+                      aria-label={task.explanation.name + "の解説イラスト"}
+                    >
+                      {!["goat", "sheep"].includes(task.id) ? (
                         <image
-                          href={
-                            import.meta.env.BASE_URL +
-                            "figma/2-74-imgEyeOuter.svg"
+                          href={assetPath(artwork[task.id].explanation!)}
+                          width="600"
+                          height="400"
+                          preserveAspectRatio="none"
+                        />
+                      ) : (
+                        <SceneBase scene={scene} completed />
+                      )}
+                      {["goat", "sheep"].includes(task.id) && (
+                        <path
+                          d={
+                            scene.answerPath ||
+                            "M205 205Q305 190 405 205L405 235Q305 250 205 235Z"
                           }
-                          x="51"
-                          y="28"
-                          width="250.32"
-                          height="173.04"
+                          fill="#283d39"
+                          stroke="#283d39"
+                          strokeWidth="8"
+                          strokeLinecap="round"
                         />
-                        <image
-                          href={
-                            import.meta.env.BASE_URL +
-                            "figma/2-74-imgEyeIris.svg"
-                          }
-                          x="118.59"
-                          y="51.36"
-                          width="115.147"
-                          height="126.319"
-                        />
-                        <rect
-                          x="141.12"
-                          y="104.14"
-                          width="72.59"
-                          height="22.495"
-                          rx="10"
-                          fill="#242e2b"
-                        />
-                      </svg>
-                    )}
-                    <strong>{profile?.part || "ヤギの瞳孔"}</strong>
+                      )}
+                    </svg>
                   </motion.div>
                   <div className="figma-explanation">
-                    <h2>
-                      {profile ? "分かっていること" : "まわりを広く見るため！"}
-                    </h2>
-                    <p>{profile ? group.fact : challenge.explanation.role}</p>
-                    <p>
-                      {profile
-                        ? "部位の働きは確認中の内容を含みます。模式図は提案課題で、元カードの再現ではありません。"
-                        : challenge.explanation.ecology}
-                    </p>
+                    <h2>よく見ると…</h2>
+                    <p>{task.explanation.form}</p>
+                    <h2>くらしとのつながり</h2>
+                    <p>{task.explanation.ecology}</p>
                   </div>
-                  <p className="figma-note">
-                    {profile?.next || challenge.explanation.question}
-                  </p>
+                  <p className="figma-note">{task.next}</p>
                   <button className="primary" onClick={() => next(1)}>
                     もう一度、本物を見てみよう ↗
                   </button>
                   <button className="text-button" onClick={restart}>
                     次の動物を撮る
                   </button>
-                  <details>
-                    <summary>解説の出典・判定の状態</summary>
-                    {profile && (
-                      <>
-                        <p>
-                          この課題は描いた特徴の広がり・向き・曲がりなどで判定します。曖昧な場合は自分で確かめられます。
-                        </p>
-                        {group.source && (
-                          <a href={group.source}>京都市動物園の公式図鑑</a>
-                        )}
-                      </>
-                    )}
-                    {!profile && <p>{challenge.explanation.certainty}</p>}
-                    {!profile &&
-                      challenge.scientificSource.map((s) => (
-                        <a
-                          key={s.url}
-                          href={s.url}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {s.title}
-                        </a>
-                      ))}
-                  </details>
                 </>
               )}
             </motion.section>

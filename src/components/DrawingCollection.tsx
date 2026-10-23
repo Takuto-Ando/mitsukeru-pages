@@ -2,14 +2,16 @@ import { useId, useState } from "react";
 import type { DrawingRecord } from "../collection/storage";
 import { groups } from "../content/groups";
 import { scenes } from "../content/scenes";
-import { profiles } from "../content/profiles";
+import { taskById } from "../content/tasks";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import { SketchComparison } from "./SketchComparison";
 
 function Thumbnail({ drawing }: { drawing: DrawingRecord }) {
   const clip = useId();
-  const scene = scenes[drawing.groupId];
+  const scene =
+    taskById[drawing.taskId || drawing.groupId]?.scene ||
+    scenes[drawing.groupId];
   return (
     <svg
       viewBox="0 0 600 400"
@@ -68,11 +70,13 @@ export function DrawingCollection({
           <h2>{group.name}</h2>
           <SketchComparison
             strokes={drawing.strokes}
-            scene={scenes[group.id]}
-            profile={profiles[group.id]}
+            scene={
+              taskById[drawing.taskId || group.id]?.scene || scenes[group.id]
+            }
+            profile={taskById[drawing.taskId || group.id]?.profile}
             answer={group.answer}
           />
-          <p>{group.fact}</p>
+          <p>{taskById[drawing.taskId || group.id]?.explanation.form}</p>
         </div>
       ) : (
         <div className="collection-grid">

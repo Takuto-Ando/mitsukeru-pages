@@ -5,6 +5,7 @@ export interface Scene {
   id: string;
   label: string;
   regions: Region[];
+  maskHoles?: Region[];
   background?: string;
   photo?: string;
   answerPath?: string;
@@ -69,6 +70,26 @@ export const scenes: Record<string, Scene> = Object.fromEntries(
     },
   ]),
 );
+// Subtract protected landmarks (eyes) from editable regions using disjoint rectangles.
+// SVG, Canvas, input validation and saved vectors use the same effective mask.
+export function drawingRegions(scene: Scene): Region[] {
+  let regions = scene.regions;
+  for (const h of scene.maskHoles || [])
+    regions = regions.flatMap((r) => {
+      const x0 = Math.max(r.x, h.x),
+        y0 = Math.max(r.y, h.y),
+        x1 = Math.min(r.x + r.width, h.x + h.width),
+        y1 = Math.min(r.y + r.height, h.y + h.height);
+      if (x1 <= x0 || y1 <= y0) return [r];
+      return [
+        { x: r.x, y: r.y, width: r.width, height: y0 - r.y },
+        { x: r.x, y: y1, width: r.width, height: r.y + r.height - y1 },
+        { x: r.x, y: y0, width: x0 - r.x, height: y1 - y0 },
+        { x: x1, y: y0, width: r.x + r.width - x1, height: y1 - y0 },
+      ].filter((v) => v.width > 0 && v.height > 0);
+    });
+  return regions;
+}
 export function scenePoint(
   x: number,
   y: number,
@@ -85,7 +106,7 @@ export function scenePoint(
 export function clipStrokes(strokes: Stroke[], scene: Scene): Stroke[] {
   const result: Stroke[] = [];
   for (const stroke of strokes)
-    for (const r of scene.regions) {
+    for (const r of drawingRegions(scene)) {
       let run: Stroke = [];
       const flush = () => {
         if (run.length > 1) result.push(run);

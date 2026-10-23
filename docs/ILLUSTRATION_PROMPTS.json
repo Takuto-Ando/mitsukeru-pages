@@ -1,0 +1,106 @@
+{
+  "specialistReviewed": false,
+  "encoding": "Generated PNGs encoded as JPEG quality 82; no semantic image editing outside image_gen",
+  "assets": [
+    {
+      "id": "mandrill",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Frontal adult male mandrill face, red central nose and natural blue ridged cheeks. Head fills (130,35)-(470,365). Blue cheek ridges at rectangles (170,105)-(250,265) and (350,105)-(430,265). Black eyes above them, detailed ochre beard. Small full-body portrait in upper left. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "gibbon",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. White-handed gibbon hanging from a horizontal branch y=65. Head center(300,150), torso(255,200)-(345,320), long arms extending from shoulders(255,220) through (170,180) to hand(120,75), and shoulder(345,220) via(420,170) to hand(475,75). White hands grasp branch. Black fur, pale face ring. Whole animal identifiable. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "lemur",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Frontal ring-tailed lemur portrait, head(140,55)-(460,345), large triangular ears, orange eyes at(235,180),(365,180), dark eye patches within(185,125)-(285,240),(315,125)-(415,240). Pale muzzle nose center(300,305), distinctive ringed tail visible off side. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "elephant",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Asian elephant frontal portrait with two rounded domes on head, small Asian elephant ears, detailed wrinkled grey skin, trunk down center. Head forehead upper contour from(180,150) via(225,70),(270,90),(300,130),(330,90),(375,70) to(420,150). Head dominates x100-500 y40-380. No African elephant anatomy. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "capuchin",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Tufted capuchin monkey on branch. Recognizable dark cap, tan face at(220,125), torso(140,170)-(275,280). Long prehensile tail from(260,260) curves through(440,360),(465,200),(400,130),(385,190),(425,175), inside target box(255,110)-(495,370). Distinct natural monkey anatomy. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "macaque",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Rhesus macaque rear three-quarter view with head turned toward viewer near(420,100). Natural tawny fur and red bare paired rump patches within(175,140)-(295,290) and(305,140)-(425,290). Hindlegs continue to y370. Accurate nonsexual scientific field-guide anatomy. Neutral zoo educational illustration. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "badger",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Japanese badger frontal face, broad grey-brown furry head from(150,65) to(450,350). Nose(300,330), small rounded ears. Dark facial stripe through left eye within(170,100)-(290,310), right stripe within(310,100)-(430,310). Anatomically correct elongated muzzle and small eyes. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "zebra",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Close-up side view of ONE zebra lower leg and single solid undivided hoof. Striped white and black lower leg from x245-355 y10-210, hoof broad wedge from(245,210) via(205,250),(195,325),(405,325),(355,210). Do not make cloven hoof. Small full-body zebra at(20,20)-(155,150). Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "giraffe",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Giraffe head in side view, accurate ossicones, ears, patterned long neck. Head x140-420 y50-250. Mouth at(395,235), long dark bluish tongue extends into box(380,215)-(500,355) bending to(475,310),(430,300). Leafy twig at x515. Show full tongue within bounds, educational detail. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "hippo",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Hippopotamus face front-on at water level. Broad grey pink wrinkled muzzle x130-470 y100-250, two nostrils centered(242,180),(357,180), eyes high at(190,120),(410,120), tiny ears. Waterline y260. Small full-body hippo in lower corner. No cartoon geometric face. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "fennec",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Detailed fennec fox front paw close-up, sandy fur on leg x240-360 y20-190 and rounded furry paw from(200,190)-(400,330), short toes and claws, anatomical paw not human hand. Small full-body fennec portrait with very large ears at(20,15)-(170,160). Warm ivory background. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "gorilla",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Western gorilla frontal head portrait, textured dark face, deep expressive eyes centered y220, broad flat nose y270. Top head contour from(170,180) through(190,115),(235,90),(295,55),(330,100),(410,125) to(430,180). Black fur and natural musculature. Portrait fills x120-480 y40-370. Adult male, no exaggerated cartoon. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "donkey",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Donkey three-quarter dorsal view, grey short fur, long ears at(150,60), neck left, torso x100-500 y130-310. Dark dorsal stripe horizontal in image from(145,225)-(465,225), shoulder stripe perpendicular from(225,135)-(225,310), creating natural cross markings. Legs below torso, unmistakably donkey, anatomically plausible. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "meerkat",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Frontal meerkat face close-up, sandy fur, rounded ears, pointed dark nose at(300,310). Head x150-450 y70-340. Dark eye patches within(180,140)-(290,225) and(310,140)-(420,225). Detailed real eyes, slender muzzle, small full standing meerkat portrait at upper left. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "deer",
+      "tool": "built-in image_gen",
+      "prompt": "One individual production natural-history illustration asset for a zoo observation app. Landscape 3:2. Coordinates below refer to a 600x400 logical frame and scale proportionally to final image. Sika deer in summer coat, recognizable whole animal side view, head/neck on left outside x160, legs below y290, reddish brown back/torso occupies(100,120)-(510,300). Natural white small spots concentrated within(160,155)-(445,280). No antler exaggeration. Fine coat texture. Style consistent across collection: sophisticated detailed hand-painted watercolor and colored pencil, natural realistic anatomy, fine fur/skin details, soft warm ivory #f8f4e9 background, soft natural shadows, warm muted tones. NOT icon, NOT emoji, NOT simple flat shapes. No text, no labels, no border, no UI. Keep important body parts inside canvas. This is anatomical educational artwork for all ages."
+    },
+    {
+      "id": "sheep",
+      "tool": "built-in image_gen",
+      "prompt": "One detailed natural-history watercolor and colored-pencil illustration, warm ivory #f8f4e9 background, realistic anatomy and refined fine fur detail, consistent zoo museum field guide style for children and adults. Landscape 3:2. No text labels borders UI. Coordinates on conceptual 600x400 frame scale proportionally. Close-up of one sheep eye with curly wool around it and small sheep head portrait top-left. Golden amber iris centered(305,215), eyelids from(70,100)-(540,320). Entire rectangle(190,165)-(420,275) is golden amber iris WITHOUT pupil, intentionally incomplete for drawing horizontal pupil. Not a cartoon, not geometric shapes."
+    },
+    {
+      "id": "giraffe-hoof",
+      "tool": "built-in image_gen",
+      "prompt": "One detailed natural-history watercolor and colored-pencil illustration, warm ivory #f8f4e9 background, realistic anatomy and refined fine fur detail, consistent zoo museum field guide style for children and adults. Landscape 3:2. No text labels borders UI. Coordinates on conceptual 600x400 frame scale proportionally. Giraffe lower front leg and CLOVEN HOOF close-up: tan white polygonal patterned leg x245-355 y20-210. Two distinct toes with central cleft x300 y245-330. Hoof outer contour within(190,200)-(410,340). Small full-body giraffe portrait at upper left. Correct cloven giraffe hoof, unlike zebra. Not a cartoon, not geometric shapes."
+    },
+    {
+      "id": "hippo-body",
+      "tool": "built-in image_gen",
+      "prompt": "One detailed natural-history watercolor and colored-pencil illustration, warm ivory #f8f4e9 background, realistic anatomy and refined fine fur detail, consistent zoo museum field guide style for children and adults. Landscape 3:2. No text labels borders UI. Coordinates on conceptual 600x400 frame scale proportionally. Whole hippopotamus side view, head to left x50-210 y130-270, eyes ears and nostrils high. Massive rounded barrel back x170-510 y95-275, short four legs down to y355, small tail on right. Important back contour crosses box(175,75)-(510,195), grey pink skin wrinkles. Thin waterline at y290. Not a cartoon, not geometric shapes."
+    },
+    {
+      "id": "fennec-tail",
+      "tool": "built-in image_gen",
+      "prompt": "One detailed natural-history watercolor and colored-pencil illustration, warm ivory #f8f4e9 background, realistic anatomy and refined fine fur detail, consistent zoo museum field guide style for children and adults. Landscape 3:2. No text labels borders UI. Coordinates on conceptual 600x400 frame scale proportionally. Whole fennec fox side view with huge ears, head left x60-200 y40-185, sandy torso x170-335 y150-275, slender legs below. Long furry bushy tail from(325,230) curves down and right through(420,310) to black tip(515,270), entirely within box(320,200)-(550,350). Accurate desert fox anatomy. Not a cartoon, not geometric shapes."
+    },
+    {
+      "id": "goat",
+      "tool": "built-in image_gen",
+      "prompt": "Create one production educational natural-history illustration for a Japanese zoo observation app. Landscape 3:2, ideal 1536x1024, no text, no labels, no border. Warm ivory background #f8f4e9, finely painted fur, accurate anatomy, restrained museum field-guide watercolor and colored-pencil style, realistic adult goat. Subject: extreme close-up of ONE goat eye, detailed golden amber iris, horizontal rectangular pupil. Frame coordinates conceptual 600x400: eye from (70,100) to (540,320), circular iris centered (305,215) radius 85, pupil horizontally from (205,200) to (405,240). Show fine fur and eyelids around eye so identifiable as goat; small anatomical goat head portrait at upper left (30,15)-(135,100), subtle no border. Important: entire center region rectangle (190,165)-(420,275) must be smooth golden amber iris ONLY with NO pupil/no black marks: this is intentionally unfinished pupil sketch activity, not a normal completed eye. Keep iris anatomy outside target. Do not use flat geometric cartoon shapes. Deliver final single illustration image."
+    }
+  ]
+}

@@ -480,3 +480,138 @@ body {
 .collection-save {
   margin-top: 16px;
 }
+
+/* Zooketch: typography and observation share the same calm display surface. */
+.figma-shell {
+  max-width: 480px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.figma-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 0 32px;
+}
+.figma-header button {
+  font-size: 25px;
+  white-space: nowrap;
+}
+.figma-header .collection-link {
+  margin-top: 0;
+  font-size: 12px;
+}
+.figma-shell h1 {
+  font-size: clamp(24px, 6.5vw, 30px);
+  line-height: 1.5;
+  letter-spacing: 0.025em;
+}
+.task-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: #6b827b;
+  font-size: 12px;
+}
+.task-heading span:first-child {
+  font-weight: 700;
+  color: #327d74;
+}
+.task-switch {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.task-switch button {
+  border: 1px solid #ddd9cc;
+  border-radius: 18px;
+  padding: 10px 12px;
+  font-size: 13px;
+  min-height: 44px;
+}
+.task-switch button[aria-pressed="true"] {
+  background: #dceee6;
+  border-color: #4c9b92;
+}
+.figma-shell .sketch-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.figma-shell .drawing-paper,
+.figma-shell .comparison-overlay {
+  aspect-ratio: 3 / 2;
+  border-radius: 24px;
+  background: #f8f4e9;
+  overflow: hidden;
+}
+.figma-shell .drawing-paper {
+  border: 1px solid #e6dfd0;
+}
+.figma-shell .tools {
+  justify-content: space-around;
+  padding: 14px 0;
+}
+.figma-shell .tools button {
+  font-size: 12px;
+  padding: 8px 6px;
+  border-radius: 14px;
+}
+.figma-shell .paper-prompt {
+  top: auto;
+  bottom: 8px;
+  background: #f8f4e9ed;
+  padding: 5px 9px;
+  border-radius: 12px;
+}
+.figma-shell .primary {
+  min-height: 54px;
+  border-radius: 20px;
+}
+.self-check {
+  padding: 16px;
+  background: #e6efe5;
+  border-radius: 24px;
+  margin: 18px 0;
+}
+.self-check p {
+  font-size: 14px;
+  line-height: 1.9;
+}
+.figma-shell .figma-science {
+  padding: 0;
+  overflow: hidden;
+  background: #f8f4e9;
+}
+.figma-science svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.figma-explanation {
+  line-height: 1.95;
+}
+.figma-explanation h2 {
+  font-size: 17px;
+  margin-top: 24px;
+}
+@media (max-width: 350px) {
+  .figma-shell {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .figma-header button {
+    font-size: 22px;
+  }
+  .figma-header .collection-link {
+    font-size: 11px;
+    padding: 8px;
+  }
+}
+.asset-review-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr));gap:16px; }
+.asset-review-grid article { border:1px solid #ddd; border-radius:16px; padding:12px; }
+.asset-review-grid svg { width:100%; aspect-ratio:3/2; }
+.scene-stage { position:absolute; inset:0; width:100%; height:100%; }
+.figma-shell .zoom-toggle { min-height:44px; font-size:12px; padding:10px 0; display:block; margin-left:auto; }

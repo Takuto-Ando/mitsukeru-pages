@@ -56,3 +56,21 @@ test("複数領域間に線を橋渡ししない", () => {
 });
 test("画面幅が変わっても正規化位置は同じ", () =>
   expect(scenePoint(50, 25, 100, 50)).toEqual(scenePoint(150, 75, 300, 150)));
+
+test("保護した目の上だけに描いた線は可視描画にならない", () => {
+  const scene = {
+    ...scenes.goat,
+    maskHoles: [{ x: 0.4, y: 0.5, width: 0.1, height: 0.1 }],
+  };
+  expect(
+    clipStrokes(
+      [
+        [
+          { x: 250, y: 210 },
+          { x: 280, y: 225 },
+        ],
+      ],
+      scene,
+    ),
+  ).toEqual([]);
+});

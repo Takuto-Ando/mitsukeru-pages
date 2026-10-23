@@ -1,3 +1,4 @@
+import { taskById } from "../content/tasks";
 import { groups } from "../content/groups";
 import type { Stroke } from "../types";
 
@@ -5,6 +6,7 @@ export const collectionKey = "mitsukeru.collection.v1";
 export interface DrawingRecord {
   id: string;
   groupId: string;
+  taskId?: string;
   createdAt: string;
   strokes: Stroke[];
   outcome: "correct" | "self-confirmed";
@@ -39,6 +41,7 @@ export function readCollection(
       typeof d.id !== "string" ||
       ids.has(d.id) ||
       !groups.some((g) => g.id === d.groupId) ||
+      (d.taskId !== undefined && taskById[d.taskId]?.groupId !== d.groupId) ||
       !Number.isFinite(Date.parse(d.createdAt)) ||
       !["correct", "self-confirmed"].includes(d.outcome) ||
       !Array.isArray(d.strokes) ||

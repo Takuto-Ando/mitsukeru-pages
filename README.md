@@ -1,124 +1,29 @@
-# みつけるスケッチ
+# ズーケッチ
 
-専用イラストは全16グループで制作待ちです。素材の受け入れ仕様・個別の状態は [ASSETS.md](ASSETS.md) を参照してください。開発サーバーの `?assets=1` で配置プレビューを開けます。
+動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
-**Figma反映版の現状・変更箇所・未対応は [CURRENT_WORK.md](CURRENT_WORK.md) を参照してください。以下の過去版の機能説明より同文書を優先します。現在は4ステップをApp.tsxで管理し、ファイル選択は廃止しました。ヤギ以外15グループの専用提案テンプレートと比較は追加済みですが、自動判定は未検証で自己確認に進みます。**
+写真を撮る → 特徴を描く → お手本と見くらべる → 解説を読む、の4段階です。16グループ・20課題を登録しています。模様や輪郭の課題は自己確認を標準とし、自動判定の正解と本人による確認を内部データで区別します。
 
-「動物を見つける」から「動物の中にある発見を見つける」へ。動物を選び、特徴を指で描き、自分の線とお手本を比較して、生態の手がかりを知るスマートフォン向けWebアプリです。提供モックの色と画面を引き継いでいます。正式UIは今後Figmaから反映します。
-
-React / TypeScript / Vite / Motion / Canvas API。バックエンド・APIキー不要。iOS Safari 16.4以降を対象とします。ログイン、ポイント、ランキングはありません。描いた動物を端末内に保存し、見返す機能があります（[保存仕様](COLLECTION.md)）。
-
-## 今回の追加
-
-- 描いた動物を保存・一覧・再比較・個別削除。[COLLECTION.md](COLLECTION.md)
-- 撮影後の簡易AI候補選択。[RECOGNITION.md](RECOGNITION.md)
-- Safari版とiPhoneアプリ版の保存はそれぞれ独立。画像・描画をサーバーへ送信しません。
-
-## 実装と確認状況
-
-| 項目 | 現在の状態 |
-| --- | --- |
-| 16グループ選択・観察課題 | 実装済み。提供資料画像からの暫定組み合わせ。正式30カードとの一致は未確認 |
-| Canvas | 指・ペン・マウス、Undo、ひと筆単位の消しゴム、全消去 |
-| ヤギの形状判定 | 横長を優先する寛容な判定。横長楕円・開いた輪郭・歪み・重ね描きに対応 |
-| ヤギの答え合わせ | 正解演出、線の保持、半透明お手本が0.8秒で出現、自分の絵／重ねる／お手本切替 |
-| その他15グループ | 課題ごとの特徴ヒューリスティック判定・提案お手本・比較。実際の子どもの描画による精度検証は未実施 |
-| ヒツジ | ヤギと同じ選択グループ。現在はヤギの体験へ案内。ヒツジ個別課題は未実装 |
-| 解説 | 京都市動物園の図鑑の確認済み事項＋未確認事項を明示。ヤギの瞳孔の働きは研究論文に基づく説明 |
-| 写真・簡易識別 | カメラで撮影し、端末内CLIPで16グループの候補を提示。必ずユーザー確認。ファイル選択なし。[仕様・精度の制限](RECOGNITION.md) |
-| GitHub Pages | main更新でActionsから公開。公開先は本文下部を参照 |
-| iOSデモ | Capacitorプロジェクトあり。過去版のSimulator・実機インストールは確認済み。今回版の実機確認は未実施 |
-
-参照箇所・16課題の状態は [CONTENT_STATUS.md](CONTENT_STATUS.md)、判定方針は [OBSERVATION_JUDGING.md](OBSERVATION_JUDGING.md) を参照してください。公式掲載は当日の展示・観察可能性を保証しません。
+公開先：[GitHub Pages](https://takuto-ando.github.io/mitsukeru-pages/)
 
 ## Macで起動
 
-このREADMEと同じフォルダで実行します。Node.js 24を使用します。作業MacはM2・macOS 27.0.1、既存のNode 24.22.0 / npm 11.19.1を使用し、NodeやHomebrewの再導入はしていません。
+Node.js 24とnpmを使います。
 
 ```sh
 npm ci
 npm run dev
 ```
 
-http://localhost:5175/ を開きます。停止はControl+C。依存の追加・変更がなければ毎回の `npm ci` は不要です。既に5175が使用中なら既存サーバを終了するか `npm run dev -- --port 5176` にしてください。
-
-```sh
-npm run build
-npm run preview
-```
-
-本番ファイルは `dist/`、プレビューは http://localhost:4175/ 。HTMLのダブルクリックでは動作しません。
+表示されたローカルURLを開きます。React / TypeScript / Vite / Motion / Canvas APIを使用します。バックエンド・APIキーは不要です。
 
 ## iPhoneで確認
 
-1. MacとiPhoneを同じWi-Fiに接続し、Macで `npm run dev` を続けます。
-2. ターミナルのNetwork欄のWi-Fi側URL（`http://MacのIP:5175/`）をiPhone Safariで開きます。iPhoneのlocalhostは使いません。
-3. 動物を選択します。ヤギでは「見えたかたちを描く」→指で横長の輪郭→「これで答える」→表示切替→「どうして横長なの？」を試します。
-4. 円・横線は「横長に見えた？」と確認します。縦長でも解説へ進めます。その他動物は未対応表示と自己確認を試します。
-5. 回転、Undo、画面のスクロール、カメラ拒否後の手動選択も確認します。
+公開URLをSafariで開き、カメラを許可します。「識別モデルを先にダウンロード」で準備してから撮影すると、候補が絞れた場合は自動で描画へ進みます。初回モデル約150MB以上、Wi-Fi推奨。写真は端末内で処理します。識別不能・権限拒否時も下の手動選択で進めます。
 
-LANのHTTPではライブカメラを利用できない場合があります。ライブカメラにはGitHub Pages等のHTTPSが必要です。ファイル選択は設けていません。カメラを利用できない場合も手動で動物を選べます。
+同じWi-FiでMacの `http://MacのIP:5175/` に接続してレイアウトと描画を確認できます。ただしライブカメラにはHTTPSが必要です。Macのスリープ、VPN、Wi-Fiの端末間通信制限にも注意してください。対象はiPhone Safari 16.4以降です。WebKitでの自動テストと実機テストは区別します。
 
-接続できない場合はWi-Fiの端末間通信制限、VPN、Macのスリープ、ファイアウォールのNode受信許可を確認してください。撮影写真はメモリ内だけで扱い、アップロードせず、再読込で消えます。保存ボタンで残した描画はlocalStorageから復元します。
-
-WebKit自動テストはiPhone実機Safariの代用ではありません。今回の更新の実機タッチ・カメラ・画面回転は、上記手順で最終確認が必要です。
-
-## GitHub Pagesへ公開
-
-このフォルダの**中身（package.json、src、.github等）をリポジトリのルート**に配置します。`node_modules/`、`dist/`、署名・証明書はコミットしません。
-
-1. GitHubで公開先リポジトリを用意します。
-2. このフォルダでGit管理を始め、リモートを設定してmainにpushします（既存Git管理があれば初期化は不要）。以下のURLは自分の公開先へ置換します。
-
-```sh
-git init -b main
-git add .
-git commit -m "Build observation sketch app"
-git remote add origin https://github.com/OWNER/REPOSITORY.git
-git push -u origin main
-```
-
-3. GitHubのSettings → Pages → Build and deployment → Sourceを **GitHub Actions** に設定します。
-4. Actionsの **Publish Web app** を実行します。以後mainへのpushでテスト・ビルド・公開が自動実行されます。
-
-`.github/workflows/pages.yml` がリポジトリ名から `/REPOSITORY/` を設定してビルドします。画面遷移はhash方式なので直接アクセスで404になりません。素材URLは `import.meta.env.BASE_URL` を使っています。
-
-ユーザーサイト（OWNER.github.ioというリポジトリ）や独自ドメインでルート公開する場合は、Settings → Secrets and variables → Actions → Variablesに **PAGES_BASE_PATH = /** を追加し、再実行します。独自ドメイン自体はSettings → Pagesで設定し、DNSを設定します。必要に応じて `public/CNAME` を追加します。コード内のURL置換は不要です。ドメイン名が決まるまではCNAMEを作成していません。
-
-サブパスをローカルで試す場合：
-
-```sh
-VITE_BASE_PATH=/demo-repo/ npm run build
-VITE_BASE_PATH=/demo-repo/ npm run preview
-```
-
-http://localhost:4175/demo-repo/ を開き、素材・選択・描画を確認します。自動テストは `VITE_BASE_PATH=/demo-repo/ E2E_BASE_PATH=/demo-repo/ npm run test:e2e:preview` で実行できます。通常版へ戻すには環境変数なしで再ビルドします。iOS同梱版ではbaseを `/` にしてください。
-
-## Figmaの反映・コンテンツの差し替え
-
-| 編集対象 | 主なファイル |
-| --- | --- |
-| 色・書体等のFigma変数 | `src/styles/tokens.css` |
-| 余白・配置・レスポンシブ | `src/style.css` |
-| 導入・観察・描画・正解・解説 | `src/screens/HomeScreen.tsx` / `ObserveScreen.tsx` / `DrawScreen.tsx` / `ResultScreen.tsx` / `LearnScreen.tsx` |
-| 他動物の共通観察体験 | `src/screens/OtherObservation.tsx` |
-| 動物選択部品 | `src/components/AnimalSelector.tsx` |
-| 答え合わせ部品 | `src/components/SketchComparison.tsx` |
-| タッチ入力、消しゴム、Undo | `src/SketchCanvas.tsx` |
-| 16グループ・課題・出典・実装状態 | `src/content/groups.ts` |
-| ヤギの判定パラメータ・解説 | `src/content/challenges.ts` |
-| 判定アルゴリズム | `src/evaluator.ts` |
-| ヤギの表示素材 | `src/content/media.ts` |
-| カメラと画像読込 | `src/CameraView.tsx` |
-| 画面遷移・状態管理 | `src/App.tsx` |
-
-写真は `public/photos/` に配置し、ヤギは `media.ts` のsrc・alt・kind・credit、他動物は `groups.ts` の `groupPhotos` に登録します。例： `mandrill: { path: "photos/mandrill.jpg", alt: "マンドリルの顔", credit: "撮影者名" }`。baseを含まない相対パスにします。素材ごとの権利・クレジットも確認してください。
-
-お手本は現在 `Illustrations.tsx` の `PupilShape` にある仮SVGです。正式素材は `groups.ts` の `answer.asset` に `answers/goat.svg` のようなパスを指定すると差し替わります。**600×400の論理座標と同じフレーム**で書き出してください。ユーザーの描画へ自動でフィットさせたり、一致率を採点したりしません。
-
-`evaluation: "self"` と `answer.kind: "pending"` は未実装です。新しい判定を追加する際はデータだけ変更して対応済みにせず、判定関数・画面分岐・お手本・テストを追加してください。AI認識の入口はCameraView、モデルの実行は `src/recognition/species.worker.ts`、候補ラベルと閾値は `src/recognition/labels.ts` です。候補を利用者に確認してからグループIDを確定します。
-
-## テスト
+## 検証
 
 ```sh
 npm test
@@ -127,27 +32,47 @@ npm run build
 npm run test:e2e:preview
 ```
 
-単体テストは形状10パターン・外れ点・課題別閾値・音声設定を確認します。E2EはChromiumとWebKit、幅320〜1440pxで選択・タッチ型入力・描画・判定・正解演出・重ね合わせ・解説・写真読込・未実装表示を確認します。実ブラウザのタッチ注入はChromiumのみで、WebKitでは当該1件を意図的にスキップします。
+20課題をChromium／WebKitで操作し、画像・描画・比較・自己確認・解説・再観察を確認します。タッチ注入とカメラモックはChromiumのみです。撮影からの自動遷移テストは推論Workerをモックしています。実モデルによる検証範囲は [RECOGNITION.md](RECOGNITION.md) に記載しています。スクリーンショットは `test-results/` に出力します。
 
-## iOSデモ
+## Figmaへ合わせて編集する場所
 
-[IOS_DEMO.md](IOS_DEMO.md) を参照してください。
+| 内容 | ファイル |
+| --- | --- |
+| 4ステップ・見出し・操作 | `src/App.tsx` |
+| 色・余白・文字・ボタン | `src/styles/figma.css`, `src/styles/tokens.css` |
+| 20課題の問い・解説・判定方式・校正済みマスク | `src/content/tasks.ts` |
+| イラストの登録・差し替え | `src/content/artwork.ts` |
+| 専用イラスト20枚 | `public/illustrations/zooketch/` |
+| 背景と空欄 | `src/components/ObservationScene.tsx` |
+| タッチ入力・Undo・消去・拡大 | `src/SketchCanvas.tsx` |
+| 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |
+| ヤギの判定／他の特徴判定 | `src/evaluator.ts`, `src/profileEvaluator.ts` |
+
+現段階のUIは既存の配色・マスコットを継承しています。新しいFigmaファイルを読み取った、あるいは正式UIに一致したという扱いにはしていません。
+
+## 素材・出典・研究記録
+
+- [ASSETS.md](ASSETS.md)：20課題の素材・判定・確認状況と差し替え仕様。
+- [docs/CONTENT_SOURCES.md](docs/CONTENT_SOURCES.md)：公式資料で確認した内容と未確認の働き。
+- [docs/ILLUSTRATION_PROMPTS.json](docs/ILLUSTRATION_PROMPTS.json)：画像生成に使ったプロンプト。素材は本制作のための生成画像で、専門家監修済みではありません。
+- [RESEARCH.md](RESEARCH.md)：説明・同意後に限り有効化する、初期状態で無効の研究記録。
+- [COLLECTION.md](COLLECTION.md)：以前の依頼で追加した端末内の絵の保存。Safariとアプリは別領域です。新たな収集ゲームやポイントは追加していません。
+
+## GitHub Pagesで公開
+
+mainへのpushで `.github/workflows/` の既存ワークフローがビルド・テスト・公開します。GitHub Settings → Pages → SourceをGitHub Actionsに設定してください。
+
+リポジトリ名からViteのbaseを設定するため、公開URLをUIコードへ固定しません。独自ドメインではRepository variable `PAGES_BASE_PATH=/` とPagesのCustom domainを設定します。
+
+## iPhoneアプリへ反映
 
 ```sh
 npm run ios:sync
 npm run ios:open
 ```
 
-Webの変更を実機アプリへ反映するには毎回syncし、Xcodeで接続先iPhoneを選びRunします。Safari版は再ビルド・公開後に再読み込みします。
+このフォルダの `ios/App/App.xcodeproj` を使用します。Xcodeで接続したiPhoneを選びRunしてください。アプリ名はズーケッチ、bundle IDは維持しています。Web公開だけではインストール済みのアプリは更新されません。今回の同期・ビルドと、実機転送・実機動作確認は別です。
 
-## この公開リポジトリ
+## VS Code
 
-公開先は https://takuto-ando.github.io/mitsukeru-pages/ 。mainの更新を自動公開します。iOSネイティブプロジェクトもこのリポジトリのios/で管理します。WebとiOSは同じsrc/を使います。
-
-## VS Codeでデバッグ
-
-このフォルダ（mitsukeru-pages）をVS Codeで開き、F5 →「Webアプリをデバッグ（Chrome）」を選びます。Viteを5180番で起動し、Chromeを開きます。既存の5175番のプレビューとは別です。ChromeとNode.js・npmが必要です。VS Code標準のJavaScript Debuggerを使うため追加拡張は不要です。
-
-`src/App.tsx`（画面と回答）、`src/SketchCanvas.tsx`（指の入力）、`src/evaluator.ts`（ヤギの判定）の行番号の左をクリックするとブレークポイントを設定できます。画面で操作するとそこで停止し、変数・呼び出し履歴を確認できます。「判定の単体テストをデバッグ」も選択できます。
-
-停止はShift+F5。Viteが残る場合はターミナルでControl+C、または「タスク: タスクの終了」で停止します。VS Codeの変更はローカルに即反映されますが、iPhoneアプリには「タスク: タスクの実行 → iOSへ最新Webを同期」を実行した後、同じフォルダのXcodeプロジェクトでRunが必要です。公開Web版はmainへpushすると更新されます。
+このフォルダを開き、F5で「Webアプリをデバッグ（Chrome）」を選ぶと、5180番で開きます。通常の5175番とは別です。ブレークポイントは `src/App.tsx`、`src/SketchCanvas.tsx`、判定モジュールに設定できます。

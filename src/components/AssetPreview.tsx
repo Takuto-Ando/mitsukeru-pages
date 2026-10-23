@@ -1,13 +1,51 @@
 import { useState } from "react";
-import { groups } from "../content/groups";
-import { scenes } from "../content/scenes";
+import { tasks, taskById } from "../content/tasks";
 import { artwork } from "../content/artwork";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 export function AssetPreview() {
   const [id, setId] = useState("goat"),
     [complete, setComplete] = useState(false),
     [mask, setMask] = useState(true);
-  const scene = scenes[id];
+  const scene = taskById[id].scene;
+  if (new URLSearchParams(location.search).get("assets") === "all")
+    return (
+      <main className="asset-review-grid">
+        {tasks.map((t) => (
+          <article key={t.id}>
+            <h2>
+              {t.id} / {t.part}
+            </h2>
+            <svg viewBox="0 0 600 400">
+              <image
+                href={import.meta.env.BASE_URL + artwork[t.id].explanation}
+                width="600"
+                height="400"
+                preserveAspectRatio="none"
+              />
+              {[100, 200, 300, 400, 500].map((x) => (
+                <g key={x}>
+                  <path d={`M${x} 0V400`} stroke="#277e7888" />
+                  <text x={x} y="15" fontSize="14">
+                    {x}
+                  </text>
+                </g>
+              ))}
+              {[100, 200, 300].map((y) => (
+                <g key={y}>
+                  <path d={`M0 ${y}H600`} stroke="#277e7888" />
+                  <text x="0" y={y} fontSize="14">
+                    {y}
+                  </text>
+                </g>
+              ))}
+              <g fill="#277e7811" stroke="#277e78">
+                <SceneRegions scene={t.scene} />
+              </g>
+            </svg>
+          </article>
+        ))}
+      </main>
+    );
   return (
     <main className="asset-preview">
       <h1>観察素材の配置確認</h1>
@@ -15,9 +53,9 @@ export function AssetPreview() {
       <label>
         動物
         <select value={id} onChange={(e) => setId(e.target.value)}>
-          {groups.map((g) => (
+          {tasks.map((g) => (
             <option key={g.id} value={g.id}>
-              {g.name}
+              {g.groupId} / {g.part}
             </option>
           ))}
         </select>

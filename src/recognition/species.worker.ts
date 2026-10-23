@@ -30,9 +30,13 @@ async function createClassifier() {
     },
   );
 }
-self.onmessage = async (event: MessageEvent<{ photo: string }>) => {
+self.onmessage = async (event: MessageEvent<{ photo?: string }>) => {
   try {
     classifier ??= await createClassifier();
+    if (!event.data.photo) {
+      postMessage({ type: "result", result: { status: "ready" } });
+      return;
+    }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
     const output = await classifier(
       event.data.photo,

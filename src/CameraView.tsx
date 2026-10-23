@@ -12,6 +12,7 @@ export function CameraView({
 }) {
   const [captured, setCaptured] = useState("");
   const [busy, setBusy] = useState(false);
+  const [modelReady, setModelReady] = useState(speciesRecognizer.isReady());
   const [recognizing, setRecognizing] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const reduce = useReducedMotion();
@@ -25,7 +26,7 @@ export function CameraView({
   useEffect(
     () => () => {
       generation.current++;
-      speciesRecognizer.cancel();
+      speciesRecognizer.release();
       stream.current?.getTracks().forEach((track) => track.stop());
     },
     [],
@@ -81,32 +82,61 @@ export function CameraView({
       const image = canvas.toDataURL("image/jpeg", 0.8);
       setCaptured(image);
       setCandidates([]);
-      setMessage(
-        "写真を撮りました。AIで候補を探すか、下から動物を選んでください。",
-      );
+      await recognize(image);
     } catch {
       setMessage("撮影できませんでした。カメラをもう一度試してください。");
     } finally {
       setBusy(false);
     }
   }
-  async function recognize() {
+  async function recognize(image = captured) {
     const request = generation.current;
     setRecognizing(true);
     setCandidates([]);
     setMessage("初回モデルを読込中です。手動選択もできます。");
     try {
-      const result = await speciesRecognizer.recognize(captured, (text) => {
+      const result = await speciesRecognizer.recognize(image, (text) => {
         if (request === generation.current) setMessage(text);
       });
       if (request !== generation.current) return;
       if (result.status === "candidates") {
+        setModelReady(true);
+        const [first, second] = result.candidates;
+        if (
+          first &&
+          first.score >= 0.55 &&
+          first.score - (second?.score ?? 0) >= 0.12
+        ) {
+          onSelect(image, first.groupId);
+          return;
+        }
         setCandidates(result.candidates);
         setMessage("AIの候補です。実物と写真を見て確定してください。");
-      } else setMessage(result.reason);
+      } else if (result.status !== "ready") setMessage(result.reason);
     } finally {
-      if (request === generation.current) setRecognizing(false);
+      if (request === generation.current) {
+        setRecognizing(false);
+        setModelReady(speciesRecognizer.isReady());
+      }
     }
+  }
+  async function prepare() {
+    const request = generation.current;
+    setRecognizing(true);
+    setMessage("モデルを準備しています…");
+    const result = await speciesRecognizer.prepare((text) => {
+      if (request === generation.current) setMessage(text);
+    });
+    if (request !== generation.current) return;
+    setModelReady(result.status === "ready");
+    setMessage(
+      result.status === "ready"
+        ? "準備できました。撮影すると自動で識別します。"
+        : result.status === "unavailable" || result.status === "unknown"
+          ? result.reason
+          : "準備を確認してください。",
+    );
+    setRecognizing(false);
   }
   return (
     <div className="camera-page">
@@ -147,7 +177,11 @@ export function CameraView({
         <p className="camera-message" role="status">
           {message}
           {status === "failed" && (
-            <button className="text-button" onClick={() => void start()}>
+            <button
+              className="text-button"
+              disabled={recognizing}
+              onClick={() => void start()}
+            >
               カメラをもう一度試す
             </button>
           )}
@@ -171,6 +205,27 @@ export function CameraView({
       >
         {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>
+      <button
+        className="text-button"
+        disabled={recognizing || modelReady}
+        onClick={() => void prepare()}
+      >
+        {modelReady ? "識別モデル準備済み" : "識別モデルを先にダウンロード"}
+      </button>
+      <p className="quiet-note">
+        撮影すると自動で識別し、候補が絞れたら描画へ進みます。初回は約150MB以上。Wi-Fiで先に準備できます。
+      </p>
+      {recognizing && !captured && (
+        <button
+          className="text-button"
+          onClick={() => {
+            speciesRecognizer.cancel();
+            setModelReady(false);
+          }}
+        >
+          準備をやめる
+        </button>
+      )}
       {captured && (
         <>
           <button
@@ -209,7 +264,7 @@ export function CameraView({
         </section>
       )}
       <p className="quiet-note">
-        簡易AIは間違えることがあります。動物名は自分で確定します。
+        簡易AIは間違えることがあります。違う動物ならタイトルを押して戻り、下から選び直せます。
       </p>
       {captured && <p role="status">撮影した写真を見て、動物を選んでね。</p>}
       <AnimalSelector onSelect={(id) => onSelect(captured, id)} />

@@ -1,10 +1,10 @@
 import { artwork, assetPath } from "../content/artwork";
-import type { Scene } from "../content/scenes";
+import { drawingRegions, type Scene } from "../content/scenes";
 import { EyeOutline } from "../Illustrations";
 export function SceneRegions({ scene }: { scene: Scene }) {
   return (
     <>
-      {scene.regions.map((r, i) => (
+      {drawingRegions(scene).map((r, i) => (
         <rect
           key={i}
           x={r.x * 600}
@@ -53,8 +53,11 @@ export function SceneBase({
       ) : (
         <EyeOutline />
       )}
-      {(!completed || scene.photo || (asset && !art?.completedBase)) && (
-        <g fill="#fffef8" data-testid="blank-regions">
+      {(art?.maskInApp ||
+        !completed ||
+        scene.photo ||
+        (asset && !art?.completedBase)) && (
+        <g fill={art?.blankFill || "#fffef8"} data-testid="blank-regions">
           <SceneRegions scene={scene} />
         </g>
       )}

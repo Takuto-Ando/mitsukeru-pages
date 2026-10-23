@@ -1,7 +1,13 @@
 import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Eraser, Undo2, RotateCcw } from "lucide-react";
-import { scenes, clipStrokes, scenePoint, type Scene } from "./content/scenes";
+import {
+  drawingRegions,
+  scenes,
+  clipStrokes,
+  scenePoint,
+  type Scene,
+} from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
 import type { Point, Stroke } from "./types";
 
@@ -27,7 +33,9 @@ export function SketchCanvas({
   strokes,
   onChange,
   scene = scenes.goat,
+  onDrawingActivity,
 }: {
+  onDrawingActivity?: (active: boolean) => void;
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
   scene?: Scene;
@@ -35,12 +43,37 @@ export function SketchCanvas({
   onChange: (next: Stroke[]) => void;
 }) {
   const reduce = useReducedMotion();
+  const [zoom, setZoom] = useState(false);
+  const [moving, setMoving] = useState(false);
   const last = clipStrokes(strokes, scene).at(-1)?.at(-1);
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
   const [draft, setDraft] = useState<Stroke>([]),
     [erase, setErase] = useState(false);
+  useEffect(
+    () => () => {
+      if (active.current !== null) onDrawingActivity?.(false);
+    },
+    [],
+  );
+  useEffect(() => {
+    if (reduce) return;
+    const timer = setTimeout(() => {
+      if (active.current === null) {
+        setMoving(true);
+        setZoom(true);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [reduce]);
+  const center = scene.regions.reduce(
+    (sum, r) => ({
+      x: sum.x + (r.x + r.width / 2) / scene.regions.length,
+      y: sum.y + (r.y + r.height / 2) / scene.regions.length,
+    }),
+    { x: 0, y: 0 },
+  );
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
@@ -51,7 +84,7 @@ export function SketchCanvas({
     if (!context) return;
     context.scale(ratio, ratio);
     context.beginPath();
-    for (const r of scene.regions)
+    for (const r of drawingRegions(scene))
       context.rect(r.x * 600, r.y * 400, r.width * 600, r.height * 400);
     context.clip();
     context.lineWidth = 7;
@@ -89,6 +122,7 @@ export function SketchCanvas({
     );
   }
   function cancel() {
+    if (active.current !== null) onDrawingActivity?.(false);
     active.current = null;
     current.current = [];
     setDraft([]);
@@ -103,81 +137,103 @@ export function SketchCanvas({
         <span>見えた部分を描こう</span>
       </div>
       <div className={"drawing-paper " + (draft.length ? "is-drawing" : "")}>
-        <svg
-          className="eye-template"
-          viewBox="0 0 600 400"
-          preserveAspectRatio="none"
-          aria-label={scene.label + "を描き足すイラスト"}
-          role="img"
+        <motion.div
+          className="scene-stage"
+          initial={false}
+          animate={{ scale: zoom ? 1.18 : 1 }}
+          transition={{ duration: reduce ? 0 : 0.5, ease: "easeInOut" }}
+          style={{ transformOrigin: `${center.x * 100}% ${center.y * 100}%` }}
+          onAnimationComplete={() => setMoving(false)}
         >
-          <SceneBase scene={scene} />
-        </svg>
-        <canvas
-          ref={ref}
-          data-testid="canvas"
-          aria-label="観察した形を描くキャンバス"
-          onPointerDown={(event) => {
-            if (
-              active.current !== null ||
-              !event.isPrimary ||
-              event.button !== 0
-            )
-              return;
-            event.preventDefault();
-            active.current = event.pointerId;
-            event.currentTarget.setPointerCapture(event.pointerId);
-            const position = point(event);
-            if (erase) eraseAt(position);
-            else {
-              current.current = [position];
-              setDraft(current.current);
-            }
-          }}
-          onPointerMove={(event) => {
-            if (active.current !== event.pointerId) return;
-            const position = point(event);
-            if (erase) eraseAt(position);
-            else {
-              current.current = [...current.current, position];
-              setDraft(current.current);
-            }
-          }}
-          onPointerUp={(event) => {
-            if (active.current !== event.pointerId) return;
-            if (!erase && current.current.length > 1) {
-              const next = [...current.current, point(event)];
-              if (clipStrokes([next], scene).length)
-                onChange([...strokes, next]);
-            }
-            cancel();
-          }}
-          onPointerCancel={(event) => {
-            if (active.current === event.pointerId) cancel();
-          }}
-          onLostPointerCapture={(event) => {
-            if (active.current === event.pointerId) cancel();
-          }}
-        />
-        {!reduce && last && (
-          <motion.span
-            key={strokes.length}
-            className="stroke-sparkle"
-            style={{ left: `${last.x / 6}%`, top: `${last.y / 4}%` }}
-            initial={{ opacity: 0, scale: 0.5, y: 0 }}
-            animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 1], y: -24 }}
-            transition={{ duration: 0.65 }}
-            aria-hidden="true"
+          <svg
+            className="eye-template"
+            viewBox="0 0 600 400"
+            preserveAspectRatio="none"
+            aria-label={scene.label + "を描き足すイラスト"}
+            role="img"
           >
-            ✦
-          </motion.span>
-        )}
-        {!strokes.length && !draft.length && (
-          <span className="paper-prompt">
-            <Pencil size={15} />
-            ここに、見えたかたちを。
-          </span>
-        )}
+            <SceneBase scene={scene} />
+          </svg>
+          <canvas
+            ref={ref}
+            data-testid="canvas"
+            aria-label="観察した形を描くキャンバス"
+            onPointerDown={(event) => {
+              if (
+                moving ||
+                active.current !== null ||
+                !event.isPrimary ||
+                event.button !== 0
+              )
+                return;
+              event.preventDefault();
+              active.current = event.pointerId;
+              onDrawingActivity?.(true);
+              event.currentTarget.setPointerCapture(event.pointerId);
+              const position = point(event);
+              if (erase) eraseAt(position);
+              else {
+                current.current = [position];
+                setDraft(current.current);
+              }
+            }}
+            onPointerMove={(event) => {
+              if (active.current !== event.pointerId) return;
+              const position = point(event);
+              if (erase) eraseAt(position);
+              else {
+                current.current = [...current.current, position];
+                setDraft(current.current);
+              }
+            }}
+            onPointerUp={(event) => {
+              if (active.current !== event.pointerId) return;
+              if (!erase && current.current.length > 1) {
+                const next = [...current.current, point(event)];
+                if (clipStrokes([next], scene).length)
+                  onChange([...strokes, next]);
+              }
+              cancel();
+            }}
+            onPointerCancel={(event) => {
+              if (active.current === event.pointerId) cancel();
+            }}
+            onLostPointerCapture={(event) => {
+              if (active.current === event.pointerId) cancel();
+            }}
+          />
+          {!reduce && last && (
+            <motion.span
+              key={strokes.length}
+              className="stroke-sparkle"
+              style={{ left: `${last.x / 6}%`, top: `${last.y / 4}%` }}
+              initial={{ opacity: 0, scale: 0.5, y: 0 }}
+              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 1], y: -24 }}
+              transition={{ duration: 0.65 }}
+              aria-hidden="true"
+            >
+              ✦
+            </motion.span>
+          )}
+          {!strokes.length && !draft.length && (
+            <span className="paper-prompt">
+              <Pencil size={15} />
+              ここに、見えたかたちを。
+            </span>
+          )}
+        </motion.div>
       </div>
+      <button
+        className="text-button zoom-toggle"
+        aria-pressed={zoom}
+        disabled={moving}
+        onClick={() => {
+          setMoving(!reduce);
+          setZoom(!zoom);
+        }}
+      >
+        {zoom ? "全体のイラストを見る" : "描く場所を大きく見る"}
+      </button>
       <div className="tools" aria-label="描画ツール">
         <button aria-pressed={!erase} onClick={() => setErase(false)}>
           <Pencil size={19} />
