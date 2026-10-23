@@ -229,3 +229,33 @@ test("実タッチイベント・素材読込・reduced motion", async ({
   expect(assets.every(Boolean)).toBe(true);
   await session.detach();
 });
+
+test("ボタンが94%に縮みSpringで戻り、正解は半透明の黒", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await select(page, "goat");
+  const button = page.getByRole("button", { name: "✧ ヒント", exact: true });
+  await button.scrollIntoViewIfNeeded();
+  const bounds = (await button.boundingBox())!;
+  await page.mouse.move(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+  await page.mouse.down();
+  await expect
+    .poll(() =>
+      button.evaluate((e) => new DOMMatrix(getComputedStyle(e).transform).a),
+    )
+    .toBeLessThan(0.96);
+  await page.mouse.up();
+  await expect
+    .poll(() =>
+      button.evaluate((e) => new DOMMatrix(getComputedStyle(e).transform).a),
+    )
+    .toBeGreaterThan(0.99);
+  await draw(page);
+  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await expect(
+    page.getByTestId("answer-shape").locator("rect"),
+  ).toHaveAttribute("fill", "#242e2b");
+  await expect(page.getByTestId("answer-shape")).toHaveCSS("opacity", "0.4");
+});
