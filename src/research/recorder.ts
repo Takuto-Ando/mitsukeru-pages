@@ -1,3 +1,4 @@
+import { summarizeResearch } from "./summaries";
 export interface ResearchEvent {
   taskId: string;
   event:
@@ -33,17 +34,22 @@ export function createResearchRecorder(clock: () => number = () => Date.now()) {
       events = [];
     },
     record(taskId: string, event: ResearchEvent["event"], detail?: string) {
-      if (enabled)
+      if (enabled) {
+        const at = clock();
         events.push({
           taskId,
           event,
-          at: new Date(clock()).toISOString(),
-          elapsedMs: clock() - started,
+          at: new Date(at).toISOString(),
+          elapsedMs: at - started,
           detail,
         });
+      }
     },
     export() {
       return enabled ? structuredClone(events) : [];
+    },
+    summaries() {
+      return enabled ? summarizeResearch(events) : [];
     },
     get enabled() {
       return enabled;

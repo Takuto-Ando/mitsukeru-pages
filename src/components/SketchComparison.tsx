@@ -9,8 +9,12 @@ import type { Stroke } from "../types";
 export function SketchComparison({
   strokes,
   scene = scenes.goat,
+  note,
+  completed = false,
 }: {
   strokes: Stroke[];
+  note?: string;
+  completed?: boolean;
   scene?: Scene;
   profile?: { background: string; answer: string };
   answer: ObservationGroup["answer"];
@@ -22,7 +26,7 @@ export function SketchComparison({
   const height = scene.frameHeight || 400;
   return (
     <div className="sketch-comparison completion-panel">
-      <p>完成した動物と、自分の線を見くらべよう。</p>
+      <p>{note || "完成した動物と、自分の線を見くらべよう。"}</p>
       <div className="comparison-modes" role="group" aria-label="比較の表示">
         {(
           [
@@ -40,8 +44,11 @@ export function SketchComparison({
           </button>
         ))}
       </div>
-      <svg
+      <motion.svg
         className="comparison-overlay"
+        initial={false}
+        animate={completed && !reduce ? { scale: [1, 1.025, 1] } : { scale: 1 }}
+        transition={{ duration: reduce ? 0 : 0.7, ease: "easeOut" }}
         viewBox={`0 0 600 ${height}`}
         style={{ aspectRatio: `600 / ${height}` }}
         preserveAspectRatio="none"
@@ -91,7 +98,7 @@ export function SketchComparison({
             <SketchLines strokes={clipStrokes(strokes, scene)} />
           </motion.g>
         </g>
-      </svg>
+      </motion.svg>
       <p className="comparison-legend">
         <span>ターコイズ：自分の線</span>
         <span>完成した動物：お手本</span>

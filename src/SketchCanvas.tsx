@@ -9,6 +9,10 @@ import {
   type Scene,
 } from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
+import type { DrawingAction } from "./drawing/history";
+import { DrawingOverview } from "./components/DrawingOverview";
+import { drawingFocus } from "./drawing/focus";
+import { TargetRegions } from "./components/TargetRegions";
 import type { Point, Stroke } from "./types";
 
 function segmentDistance(point: Point, start: Point, end: Point) {
@@ -34,16 +38,25 @@ export function SketchCanvas({
   onChange,
   scene = scenes.goat,
   onDrawingActivity,
+  onUndo,
+  canUndo,
+  showTarget = false,
 }: {
   onDrawingActivity?: (active: boolean) => void;
+  onUndo?: () => void;
+  canUndo?: boolean;
+  showTarget?: boolean;
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
   scene?: Scene;
   strokes: Stroke[];
-  onChange: (next: Stroke[]) => void;
+  onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const reduce = useReducedMotion();
   const frameHeight = scene.frameHeight || 400;
+  const focus = drawingFocus(scene);
+  const [large, setLarge] = useState(true);
+  const [moving, setMoving] = useState(false);
   const last = clipStrokes(strokes, scene).at(-1)?.at(-1);
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
@@ -56,38 +69,62 @@ export function SketchCanvas({
     },
     [],
   );
+  const paintFrame = useRef<number | undefined>(undefined);
+  const paintState = useRef({ strokes, draft, scene });
+  paintState.current = { strokes, draft, scene };
+  useEffect(
+    () => () => {
+      if (paintFrame.current !== undefined)
+        cancelAnimationFrame(paintFrame.current);
+      paintFrame.current = undefined;
+    },
+    [],
+  );
   useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 3);
-    canvas.width = 600 * ratio;
-    canvas.height = frameHeight * ratio;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-    context.scale(ratio, ratio);
-    context.beginPath();
-    for (const r of drawingRegions(scene))
-      context.rect(
-        r.x * 600,
-        r.y * frameHeight,
-        r.width * 600,
-        r.height * frameHeight,
-      );
-    context.clip();
-    context.lineWidth = 7;
-    context.lineCap = "round";
-    context.lineJoin = "round";
-    context.strokeStyle = "#277e78";
-    for (const stroke of [...strokes, draft]) {
-      if (!stroke.length) continue;
+    if (paintFrame.current !== undefined) return;
+    paintFrame.current = requestAnimationFrame(() => {
+      paintFrame.current = undefined;
+      const { strokes, draft, scene } = paintState.current;
+      const canvas = ref.current;
+      if (!canvas) return;
+      const ratio = Math.min(window.devicePixelRatio || 1, 3);
+      if (
+        canvas.width !== 600 * ratio ||
+        canvas.height !== frameHeight * ratio
+      ) {
+        canvas.width = 600 * ratio;
+        canvas.height = frameHeight * ratio;
+      }
+      const context = canvas.getContext("2d");
+      if (!context) return;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, 600, frameHeight);
+      context.save();
       context.beginPath();
-      context.moveTo(stroke[0].x, stroke[0].y);
-      for (const point of stroke.slice(1)) context.lineTo(point.x, point.y);
-      context.stroke();
-    }
+      for (const r of drawingRegions(scene))
+        context.rect(
+          r.x * 600,
+          r.y * frameHeight,
+          r.width * 600,
+          r.height * frameHeight,
+        );
+      context.clip();
+      context.lineWidth = 7;
+      context.lineCap = "round";
+      context.lineJoin = "round";
+      context.strokeStyle = "#277e78";
+      for (const stroke of [...strokes, draft]) {
+        if (!stroke.length) continue;
+        context.beginPath();
+        context.moveTo(stroke[0].x, stroke[0].y);
+        for (const point of stroke.slice(1)) context.lineTo(point.x, point.y);
+        context.stroke();
+      }
+      context.restore();
+    });
   }, [strokes, draft, scene]);
-  function point(event: React.PointerEvent<HTMLCanvasElement>): Point {
-    const rect = event.currentTarget.getBoundingClientRect();
+  function point(event: { clientX: number; clientY: number }): Point {
+    const rect = ref.current!.getBoundingClientRect();
     return scenePoint(
       event.clientX - rect.left,
       event.clientY - rect.top,
@@ -98,16 +135,14 @@ export function SketchCanvas({
   }
 
   function eraseAt(position: Point) {
-    onChange(
-      strokes.filter(
-        (stroke) =>
-          !stroke.some(
-            (end, index) =>
-              index > 0 &&
-              segmentDistance(position, stroke[index - 1], end) < 23,
-          ),
-      ),
+    const next = strokes.filter(
+      (stroke) =>
+        !stroke.some(
+          (end, index) =>
+            index > 0 && segmentDistance(position, stroke[index - 1], end) < 23,
+        ),
     );
+    if (next.length !== strokes.length) onChange(next, "erase");
   }
   function cancel() {
     if (active.current !== null) onDrawingActivity?.(false);
@@ -122,13 +157,37 @@ export function SketchCanvas({
           <i />
           かんさつスケッチ
         </span>
-        <span>見えた部分を描こう</span>
+        <button
+          type="button"
+          className="drawing-view-toggle"
+          aria-pressed={large}
+          disabled={moving}
+          onClick={() => {
+            setMoving(!reduce);
+            setLarge(!large);
+          }}
+        >
+          {large ? "全体で描く" : "大きく描く"}
+        </button>
       </div>
       <div
         className={"drawing-paper " + (draft.length ? "is-drawing" : "")}
         style={{ aspectRatio: `600 / ${frameHeight}` }}
       >
-        <div className="scene-stage" data-testid="full-animal-stage">
+        <motion.div
+          className="scene-stage"
+          data-testid="full-animal-stage"
+          data-view={large ? "focus" : "whole"}
+          initial={false}
+          animate={
+            large
+              ? { scale: focus.scale, x: `${focus.x}%`, y: `${focus.y}%` }
+              : { scale: 1, x: "0%", y: "0%" }
+          }
+          transition={{ duration: reduce ? 0 : 0.35, ease: "easeInOut" }}
+          style={{ transformOrigin: "0 0" }}
+          onAnimationComplete={() => setMoving(false)}
+        >
           <svg
             className="eye-template"
             viewBox={`0 0 600 ${frameHeight}`}
@@ -137,6 +196,13 @@ export function SketchCanvas({
             role="img"
           >
             <SceneBase scene={scene} />
+            {(showTarget || (!strokes.length && !draft.length)) && (
+              <TargetRegions
+                scene={scene}
+                reduce={!!reduce}
+                displayScale={large ? focus.scale : 1}
+              />
+            )}
           </svg>
           <canvas
             ref={ref}
@@ -144,6 +210,7 @@ export function SketchCanvas({
             aria-label="観察した形を描くキャンバス"
             onPointerDown={(event) => {
               if (
+                moving ||
                 active.current !== null ||
                 !event.isPrimary ||
                 event.button !== 0
@@ -165,7 +232,11 @@ export function SketchCanvas({
               const position = point(event);
               if (erase) eraseAt(position);
               else {
-                current.current = [...current.current, position];
+                const samples = event.nativeEvent.getCoalescedEvents?.() || [];
+                current.current = [
+                  ...current.current,
+                  ...(samples.length ? samples.map(point) : [position]),
+                ];
                 setDraft(current.current);
               }
             }}
@@ -183,7 +254,7 @@ export function SketchCanvas({
                     x: next[1].x + (next[1].x < 600 ? 0.01 : -0.01),
                   };
                 if (clipStrokes([next], scene).length)
-                  onChange([...strokes, next]);
+                  onChange([...strokes, next], "draw");
               }
               cancel();
             }}
@@ -210,13 +281,8 @@ export function SketchCanvas({
               ✦
             </motion.span>
           )}
-          {!strokes.length && !draft.length && (
-            <span className="paper-prompt">
-              <Pencil size={15} />
-              ここに、見えたかたちを。
-            </span>
-          )}
-        </div>
+        </motion.div>
+        <DrawingOverview scene={scene} strokes={[...strokes, draft]} />
       </div>
       <div className="tools" aria-label="描画ツール">
         <button aria-pressed={!erase} onClick={() => setErase(false)}>
@@ -229,8 +295,10 @@ export function SketchCanvas({
         </button>
         <span />
         <button
-          disabled={!strokes.length}
-          onClick={() => onChange(strokes.slice(0, -1))}
+          disabled={!(canUndo ?? !!strokes.length)}
+          onClick={() =>
+            onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
+          }
         >
           <Undo2 size={19} />
           ひとつ戻す
@@ -238,7 +306,7 @@ export function SketchCanvas({
         <button
           disabled={!strokes.length}
           onClick={() => {
-            onChange([]);
+            onChange([], "clear");
             setErase(false);
           }}
         >

@@ -615,3 +615,19 @@ body {
 .asset-review-grid svg { width:100%; aspect-ratio:3/2; }
 .scene-stage { position:absolute; inset:0; width:100%; height:100%; }
 .figma-shell .zoom-toggle { min-height:44px; font-size:12px; padding:10px 0; display:block; margin-left:auto; }
+
+/* A single editable stage, with a live whole-animal overview in the same frame. */
+.drawing-overview { position:absolute; z-index:3; bottom:10px; right:10px; width:clamp(76px,25%,100px); pointer-events:none; background:#fffaf0; border:1px solid #e0d7c4; border-radius:16px; box-shadow:0 3px 10px #53493912; overflow:hidden; }
+.drawing-overview svg { display:block; width:100%; }
+.drawing-overview span { display:block; text-align:center; color:#6c7667; font-size:10px; padding:0 0 5px; }
+.figma-shell .paper-top { display:flex; justify-content:space-between; align-items:center; margin:0 0 8px; }
+.figma-shell .paper-top .drawing-view-toggle { display:block; min-height:44px; padding:8px 12px; border-radius:14px; background:#e2eee7; color:#327d74; font-size:12px; }
+
+/* Keep the drawing and its tools within easy reach on a portrait phone. */
+.figma-shell[data-step="1"] .figma-header { padding:16px 0 18px; }
+.figma-shell[data-step="1"] .figma-flow { margin-bottom:12px; }
+.figma-shell[data-step="1"] .task-switch { margin:10px 0; }
+.figma-shell[data-step="1"] .figma-note { margin-top:12px; }
+.figma-shell[data-step="1"] .figma-support { margin:8px 0; }
+.figma-shell[data-step="1"] .paper-top { margin-top:8px; }
+.figma-shell[data-step="1"] .tools { padding:8px 0; }

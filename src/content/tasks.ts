@@ -19,6 +19,8 @@ export interface ObservationTask {
   next: string;
   method: JudgingMethod;
   automatic: boolean;
+  allowAbsent?: boolean;
+  comparisonNote?: string;
   scene: Scene;
   profile?: Profile;
   explanation: { name: string; form: string; ecology: string; role?: string };
@@ -74,7 +76,7 @@ const forms: Record<string, [string, string, string?]> = {
   giraffe: [
     "長い舌",
     "口から出る舌を、先までたどってみよう。食べるときに曲がり方が変わります。",
-    "キリンはサバンナに暮らす背の高い動物。食べる瞬間に、口と舌がどう動くか見てみよう。",
+    "キリンは長い舌で葉をつかんで食べます。食べる瞬間に、舌の曲がり方を見てみよう。",
   ],
   hippo: [
     "顔の上の鼻の穴",
@@ -138,6 +140,11 @@ export const tasks: ObservationTask[] = groups.map((g) => {
   return {
     id: g.id,
     groupId: g.id,
+    allowAbsent: g.id === "deer",
+    comparisonNote:
+      g.id === "deer"
+        ? "お手本は夏の模様。いま見えた姿と見くらべよう。"
+        : undefined,
     part: g.id === "elephant" ? "頭の輪郭" : p?.part || "瞳孔",
     question:
       g.id === "elephant"

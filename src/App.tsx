@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
@@ -20,7 +20,8 @@ import {
   writeCollection,
   type CollectionData,
 } from "./collection/storage";
-import type { Stroke, Evaluation } from "./types";
+import { drawingHistory, emptyDrawing } from "./drawing/history";
+import type { Evaluation } from "./types";
 import "./styles/figma.css";
 
 export default function App() {
@@ -30,7 +31,12 @@ export default function App() {
   const [step, setStep] = useState(0);
   const [taskId, setTaskId] = useState("goat");
   const [photo, setPhoto] = useState("");
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [drawing, dispatchDrawing] = useReducer(
+    drawingHistory,
+    undefined,
+    emptyDrawing,
+  );
+  const strokes = drawing.present;
   const [feedback, setFeedback] = useState<Evaluation>();
   const [hint, setHint] = useState(false);
   const [sound, setSound] = useState(false);
@@ -126,7 +132,7 @@ export default function App() {
     if (activeTask.current) research.record(activeTask.current, "end");
     activeTask.current = undefined;
     setTaskId(id);
-    setStrokes([]);
+    dispatchDrawing({ type: "reset" });
     setHint(false);
     setFeedback(undefined);
     setSavedId(undefined);
@@ -138,7 +144,7 @@ export default function App() {
     activeTask.current = undefined;
     setCollectionOpen(false);
     setPhoto("");
-    setStrokes([]);
+    dispatchDrawing({ type: "reset" });
     setFeedback(undefined);
     setHint(false);
     setSavedId(undefined);
@@ -184,7 +190,7 @@ export default function App() {
     }
   }
   return (
-    <div className="figma-shell">
+    <div className="figma-shell" data-step={step}>
       <header className="figma-header">
         <button onClick={restart} aria-label="ズーケッチ 撮影に戻る">
           <img
@@ -296,18 +302,29 @@ export default function App() {
                       )
                     }
                     strokes={strokes}
-                    onChange={(value) => {
+                    showTarget={hint}
+                    canUndo={drawing.past.length > 0}
+                    onUndo={() => {
+                      dispatchDrawing({ type: "undo" });
+                      research.record(taskId, "revision", "undo");
+                      setFeedback(undefined);
+                      setSavedId(undefined);
+                    }}
+                    onChange={(value, action) => {
                       research.record(
                         taskId,
-                        value.length < strokes.length ? "revision" : "drawing",
+                        action === "draw" ? "drawing" : "revision",
+                        action,
                       );
-                      setStrokes(value);
+                      dispatchDrawing({ type: "commit", strokes: value });
                       setFeedback(undefined);
                       setSavedId(undefined);
                     }}
                   />
                   <button
                     className="text-button"
+                    aria-expanded={hint}
+                    aria-controls="observation-hint"
                     onClick={() => {
                       if (!hint) research.record(taskId, "hint");
                       setHint(!hint);
@@ -315,7 +332,11 @@ export default function App() {
                   >
                     ✧ ヒント
                   </button>
-                  {hint && <p role="note">{task.hint}</p>}
+                  {hint && (
+                    <p id="observation-hint" role="note">
+                      {task.hint}
+                    </p>
+                  )}
                   {feedback && !feedback.passed && (
                     <div role="status" className="figma-feedback">
                       <p>{feedback.message}</p>
@@ -333,6 +354,27 @@ export default function App() {
                           </details>
                         )}
                     </div>
+                  )}
+                  {task.allowAbsent && !strokes.length && (
+                    <button
+                      className="text-button"
+                      onClick={() => {
+                        setFeedback({
+                          status: "uncertain",
+                          passed: false,
+                          method: "comparison",
+                          message: "いま見えた姿を確かめよう。",
+                        });
+                        research.record(
+                          taskId,
+                          "judgment",
+                          "comparison:observed-absent",
+                        );
+                        next(2);
+                      }}
+                    >
+                      模様が見えないので、見くらべる
+                    </button>
                   )}
                   <button
                     className="primary"
@@ -404,6 +446,8 @@ export default function App() {
                     scene={scene}
                     profile={profile}
                     answer={group.answer}
+                    note={task.comparisonNote}
+                    completed={feedback?.passed}
                   />
                   {!feedback?.passed && (
                     <div className="self-check">
@@ -418,7 +462,12 @@ export default function App() {
                   )}
                   <button
                     className="primary collection-save"
-                    disabled={!!savedId || !storageReady || !feedback?.passed}
+                    disabled={
+                      !!savedId ||
+                      !storageReady ||
+                      !feedback?.passed ||
+                      !strokes.length
+                    }
                     onClick={save}
                   >
                     {savedId ? "保存したよ！" : "この動物を保存する"}

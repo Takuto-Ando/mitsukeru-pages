@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
+import { finishIllustration } from "./illustration-finishing.mjs";
 import { body, face, p, eye } from "./animal-parts.mjs";
 const cache = {};
 function load(f) {
@@ -54,7 +55,10 @@ function goat(sheep = false) {
         "M260 305Q245 270 282 265Q285 230 325 250Q350 225 376 250Q411 230 430 260Q470 245 480 280Q519 281 505 319Q530 350 503 376Q516 412 478 423Q466 457 431 438Q400 465 375 442Q342 461 320 437Q283 448 279 412Q246 402 262 367Q239 340 260 305",
         "#eee1c3",
       )
-    : p("M250 300Q340 249 465 291Q520 325 490 416Q386 462 277 413Z", "#e4cba6");
+    : p(
+        "M250 300C314 261 394 262 465 291Q520 325 490 416Q386 462 277 413Q264 370 250 300Z",
+        "#e4cba6",
+      );
   const legs =
     p(
       "M288 397L278 548L316 548L333 423M433 416L453 548L490 548L474 393",
@@ -83,7 +87,7 @@ function goat(sheep = false) {
     "#e1c49a",
   );
   const head = p(
-    "M113 130Q197 91 281 139L305 270Q270 341 167 340Q94 324 86 254Z",
+    "M113 130Q197 91 281 139Q297 201 305 270Q270 341 167 340Q94 324 86 254Q99 192 113 130Z",
     sheep ? "#ded1b5" : "#e8d0ad",
   );
   const mane = sheep
@@ -329,7 +333,7 @@ for (const t of tasks) {
   if (!base) throw Error(id);
   const feature = features(t);
   const root = (s, mode) =>
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-full-animal="${id}" data-illustration="${mode}"><rect width="600" height="600" rx="28" fill="${cream}"/>${s}</svg>`;
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-full-animal="${id}" data-illustration="${mode}"><rect width="600" height="600" rx="28" fill="${cream}"/>${finishIllustration(id, s, t.scene)}</svg>`;
   let incomplete = base;
   // Missing contour only: preserve the animal's body colour, erase its ink contour in the target.
   if (["elephant", "gorilla", "hippo-body"].includes(id)) {

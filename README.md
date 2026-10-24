@@ -1,6 +1,6 @@
 # ズーケッチ
 
-かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。部位の拡大表示や自動ズームは行いません。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
+かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。描く場所を大きく表示し、同じ画面の全身プレビューで体とのつながりを確認できます。「全体で描く／大きく描く」で切り替えられます。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
 
 動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
@@ -47,8 +47,10 @@ npm run test:e2e:preview
 | 専用イラスト20枚 | `public/illustrations/whole/`（未完成図・完成図の計40枚） |
 | 全身の配置・描画マスク | `src/content/fullBodyLayouts.ts` |
 | SVGの再生成 | `scripts/create-whole-illustrations.mjs` |
+| 全身プレビュー・描画範囲の案内 | `src/components/DrawingOverview.tsx`, `src/components/TargetRegions.tsx` |
+| 全体／拡大の座標・描画の履歴 | `src/drawing/focus.ts`, `src/drawing/history.ts` |
 | 背景と空欄 | `src/components/ObservationScene.tsx` |
-| タッチ入力・Undo・消去 | `src/SketchCanvas.tsx` |
+| タッチ入力・消去・復元可能なUndo | `src/SketchCanvas.tsx` |
 | 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |
 | ヤギの判定／他の特徴判定 | `src/evaluator.ts`, `src/profileEvaluator.ts` |
 

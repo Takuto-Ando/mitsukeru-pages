@@ -27,7 +27,7 @@ async function select(page: Page, id = "goat") {
 }
 async function draw(page: Page, id = "goat", vertical = false) {
   const c = page.getByTestId("canvas");
-  await c.scrollIntoViewIfNeeded();
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await c.boundingBox())!;
   for (const r of tasks.find((t) => t.id === id)!.scene.regions) {
     const cx = (r.x + r.width / 2) * 600,
@@ -201,6 +201,12 @@ test("保存失敗を保存済みにしない", async ({ page }) => {
 });
 test("320〜430px・開発メモ非表示・ファイル入力なし", async ({ page }) => {
   await select(page);
+  expect(
+    await page.evaluate(
+      () =>
+        typeof (window as unknown as { zooketchStudy?: unknown }).zooketchStudy,
+    ),
+  ).toBe("undefined");
   for (const width of [320, 393, 430]) {
     await page.setViewportSize({ width, height: 852 });
     await expect(page.getByTestId("canvas")).toBeVisible();
@@ -226,7 +232,7 @@ test("タッチ入力で描画・マスク外は回答不可", async ({
   );
   await select(page);
   const c = page.getByTestId("canvas");
-  await c.scrollIntoViewIfNeeded();
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await c.boundingBox())!;
   const session = await context.newCDPSession(page);
   const pt = (x: number, y: number) => ({
@@ -341,20 +347,32 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   });
 });
 
-test("全身を保ち、部位の自動ズーム・時間案内を出さない", async ({ page }) => {
+test("全身プレビューと大きな描画、表示切替でも座標が一致する", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await select(page);
   await page.waitForTimeout(1000);
-  await expect(
-    page.getByRole("button", {
-      name: /全体のイラストを見る|描く場所を大きく見る/,
-    }),
-  ).toHaveCount(0);
-  await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
-  await expect(page.getByTestId("full-animal-stage")).toHaveCSS(
-    "transform",
-    "none",
+  await expect(page.getByTestId("drawing-overview")).toBeVisible();
+  await expect(page.getByTestId("full-animal-stage")).toHaveAttribute(
+    "data-view",
+    "focus",
   );
+  await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
+  await draw(page);
+  await page.getByRole("button", { name: "全体で描く", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "大きく描く", exact: true }),
+  ).toBeEnabled();
+  await expect(page.getByTestId("full-animal-stage")).toHaveAttribute(
+    "data-view",
+    "whole",
+  );
+  await expect(page.getByTestId("drawing-overview")).toBeVisible();
+  await page.getByRole("button", { name: "大きく描く", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "全体で描く", exact: true }),
+  ).toBeEnabled();
   const c = (await page.getByTestId("canvas").boundingBox())!,
     b = (await page.locator(".eye-template").boundingBox())!;
   expect(Math.abs(c.x - b.x)).toBeLessThan(1);
@@ -379,7 +397,7 @@ test("全身を保ち、部位の自動ズーム・時間案内を出さない",
 test("点をひとつ描けて、全身版の線を再読込後も保存できる", async ({ page }) => {
   await select(page, "deer");
   const c = page.getByTestId("canvas");
-  await c.scrollIntoViewIfNeeded();
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await c.boundingBox())!,
     r = tasks.find((t) => t.id === "deer")!.scene.regions[0];
   await page.mouse.click(
@@ -403,4 +421,87 @@ test("点をひとつ描けて、全身版の線を再読込後も保存でき�
     "viewBox",
     "0 0 600 600",
   );
+});
+
+test("消しゴム・全消去からUndoで復元し、空欄の案内をヒントで再表示", async ({
+  page,
+}) => {
+  await select(page);
+  await expect(page.getByTestId("drawing-target")).toBeVisible();
+  await draw(page);
+  await expect(page.getByTestId("drawing-target")).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.getByTestId("canvas").evaluate((node) => {
+        const canvas = node as HTMLCanvasElement,
+          scale = canvas.width / 600;
+        return canvas
+          .getContext("2d")!
+          .getImageData(
+            Math.round(263.2 * scale),
+            Math.round(220 * scale),
+            1,
+            1,
+          ).data[3];
+      }),
+    )
+    .toBeGreaterThan(0);
+  await page.getByRole("button", { name: "✧ ヒント", exact: true }).click();
+  await expect(page.getByTestId("drawing-target")).toBeVisible();
+  await page.getByRole("button", { name: "描き直す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "消しゴム", exact: true }).click();
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
+  const b = (await page.getByTestId("canvas").boundingBox())!;
+  const r = tasks.find((t) => t.id === "goat")!.scene.regions[0];
+  await page.mouse.click(
+    b.x + (r.x + r.width * 0.86) * b.width,
+    b.y + (r.y + r.height / 2) * b.height,
+  );
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+});
+
+test("シカは模様が見えない観察も尊重し、空白のヤギを回答扱いしない", async ({
+  page,
+}) => {
+  await select(page, "deer");
+  await page
+    .getByRole("button", { name: "模様が見えないので、見くらべる" })
+    .click();
+  await expect(
+    page.getByText("お手本は夏の模様。いま見えた姿と見くらべよう。"),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  await expect(
+    page.getByRole("button", { name: "この動物を保存する" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "特徴について知ろう →" }).click();
+  await expect(
+    page.getByText(tasks.find((t) => t.id === "deer")!.explanation.form, {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "次の動物を撮る" }).click();
+  await page
+    .locator(".animal-grid")
+    .getByRole("button", { name: /ヤギ/ })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "模様が見えないので、見くらべる" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
 });

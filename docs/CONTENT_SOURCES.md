@@ -30,3 +30,7 @@
 - Field Museum of Natural History, *The Giraffe in History and Art*: https://libsysdigi.library.illinois.edu/oca/Books2008-01/giraffeinhistory27lauf/giraffeinhistory27lauf.pdf ：ひづめが二分する形態。現代の飼育・健康についての指針として使っていない。
 
 顔の模様や輪郭について、機能・適応的理由の根拠を確認できない部分は、形の観察と確認済みの生態を分けて示します。生態がその模様の「理由」であると結び付けていません。正式な全30カードの同定・再現、生成画像の解剖学的な専門監修は完了していません。
+
+## 今回の再確認
+
+2026-10-24、京都市動物園の図鑑一覧とキリン・フサオマキザル・フェネックのページを再確認。キリンの舌で葉を取る説明は、San Francisco Zooの上記ページ「Fascinating facts」の舌と上唇による採食の説明で補足しました。シカは季節で斑点がない観察も比較・自己確認へ進め、お手本が夏の模様であることを表示します。

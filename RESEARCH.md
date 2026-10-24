@@ -25,7 +25,10 @@ window.zooketchStudy.enable({ obtained: true })
 
 ```js
 window.zooketchStudy.export() // JSON化できるイベント配列のコピー
+window.zooketchStudy.summaries() // 各試行の時間・描画時間・やり直し・ヒント・判定・自己確認・解説閲覧
 window.zooketchStudy.disable() // 無効化し、メモリ内の記録も消去
 ```
 
 必要な保存は研究実施者が定めた方法で行います。再読込でメモリ内の研究記録は失われます。アンケート・参加者管理・自動アップロードは追加していません。既存の「絵の保存」と研究記録は別です。
+
+集計は課題のstartごとに別の試行として扱い、同じ動物の再挑戦を混ぜません。durationMsはstart〜end、drawingMsは接触開始〜終了の合計です。終了していない試行のdurationMsは未定義です。描画・修正の詳細はdraw／erase／clear／undoを区別します。シカの模様が見えない選択はcomparison:observed-absentとして記録し、機械判定の正解に変換しません。
