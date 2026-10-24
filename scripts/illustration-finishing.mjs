@@ -99,23 +99,7 @@ export function finishIllustration(id, content, scene) {
         `<rect x="${r.x * 600}" y="${r.y * 600}" width="${r.width * 600}" height="${r.height * 600}" fill="black"/>`,
     )
     .join("");
-  const colors = [
-    ...new Set(
-      [...content.matchAll(/fill="(#[a-fA-F0-9]{6})"/g)].map((m) => m[1]),
-    ),
-  ].filter((c) => !["#665b50", "#4d4b40", "#f8efda", "#5b858e"].includes(c));
-  const definitions = colors
-    .map(
-      (color) =>
-        `<linearGradient id="coat-${color.slice(1)}" x1="0" x2=".6" y1="0" y2="1"><stop stop-color="${color}"/><stop offset=".55" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity=".85"/></linearGradient>`,
-    )
-    .join("");
   let painted = content;
-  for (const color of colors)
-    painted = painted.replaceAll(
-      `fill="${color}"`,
-      `fill="url(#coat-${color.slice(1)})"`,
-    );
   painted = painted.replaceAll('stroke-width="6"', 'stroke-width="4.5"');
-  return `<defs>${definitions}<mask id="detail-mask"><rect width="600" height="600" fill="white"/>${cut}</mask></defs>${painted}<g mask="url(#detail-mask)" data-coat-details="${id}">${coatDetails[id] || ""}</g>`;
+  return `<defs><mask id="detail-mask"><rect width="600" height="600" fill="white"/>${cut}</mask></defs>${painted}<g mask="url(#detail-mask)" data-coat-details="${id}">${coatDetails[id] || ""}</g>`;
 }

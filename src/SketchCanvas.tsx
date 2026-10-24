@@ -1,4 +1,3 @@
-import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Pencil, Eraser, Undo2, RotateCcw } from "lucide-react";
 import {
@@ -10,8 +9,6 @@ import {
 } from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
 import type { DrawingAction } from "./drawing/history";
-import { DrawingOverview } from "./components/DrawingOverview";
-import { drawingFocus } from "./drawing/focus";
 import { TargetRegions } from "./components/TargetRegions";
 import type { Point, Stroke } from "./types";
 
@@ -52,12 +49,7 @@ export function SketchCanvas({
   strokes: Stroke[];
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
-  const reduce = useReducedMotion();
   const frameHeight = scene.frameHeight || 400;
-  const focus = drawingFocus(scene);
-  const [large, setLarge] = useState(true);
-  const [moving, setMoving] = useState(false);
-  const last = clipStrokes(strokes, scene).at(-1)?.at(-1);
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
@@ -157,36 +149,15 @@ export function SketchCanvas({
           <i />
           かんさつスケッチ
         </span>
-        <button
-          type="button"
-          className="drawing-view-toggle"
-          aria-pressed={large}
-          disabled={moving}
-          onClick={() => {
-            setMoving(!reduce);
-            setLarge(!large);
-          }}
-        >
-          {large ? "全体で描く" : "大きく描く"}
-        </button>
       </div>
       <div
         className={"drawing-paper " + (draft.length ? "is-drawing" : "")}
         style={{ aspectRatio: `600 / ${frameHeight}` }}
       >
-        <motion.div
+        <div
           className="scene-stage"
           data-testid="full-animal-stage"
-          data-view={large ? "focus" : "whole"}
-          initial={false}
-          animate={
-            large
-              ? { scale: focus.scale, x: `${focus.x}%`, y: `${focus.y}%` }
-              : { scale: 1, x: "0%", y: "0%" }
-          }
-          transition={{ duration: reduce ? 0 : 0.35, ease: "easeInOut" }}
-          style={{ transformOrigin: "0 0" }}
-          onAnimationComplete={() => setMoving(false)}
+          data-view="whole"
         >
           <svg
             className="eye-template"
@@ -197,11 +168,7 @@ export function SketchCanvas({
           >
             <SceneBase scene={scene} />
             {(showTarget || (!strokes.length && !draft.length)) && (
-              <TargetRegions
-                scene={scene}
-                reduce={!!reduce}
-                displayScale={large ? focus.scale : 1}
-              />
+              <TargetRegions scene={scene} />
             )}
           </svg>
           <canvas
@@ -210,7 +177,6 @@ export function SketchCanvas({
             aria-label="観察した形を描くキャンバス"
             onPointerDown={(event) => {
               if (
-                moving ||
                 active.current !== null ||
                 !event.isPrimary ||
                 event.button !== 0
@@ -265,24 +231,7 @@ export function SketchCanvas({
               if (active.current === event.pointerId) cancel();
             }}
           />
-          {!reduce && last && (
-            <motion.span
-              key={strokes.length}
-              className="stroke-sparkle"
-              style={{
-                left: `${last.x / 6}%`,
-                top: `${(last.y / frameHeight) * 100}%`,
-              }}
-              initial={{ opacity: 0, scale: 0.5, y: 0 }}
-              animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 1], y: -24 }}
-              transition={{ duration: 0.65 }}
-              aria-hidden="true"
-            >
-              ✦
-            </motion.span>
-          )}
-        </motion.div>
-        <DrawingOverview scene={scene} strokes={[...strokes, draft]} />
+        </div>
       </div>
       <div className="tools" aria-label="描画ツール">
         <button aria-pressed={!erase} onClick={() => setErase(false)}>

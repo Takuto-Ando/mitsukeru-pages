@@ -1,6 +1,6 @@
 # ズーケッチ
 
-かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。描く場所を大きく表示し、同じ画面の全身プレビューで体とのつながりを確認できます。「全体で描く／大きく描く」で切り替えられます。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
+かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。全身を表示したまま描き、ズームや別の描画画面は設けません。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
 
 動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
@@ -21,7 +21,7 @@ npm run dev
 
 ## iPhoneで確認
 
-公開URLをSafariで開き、カメラを許可します。「識別モデルを先にダウンロード」で準備してから撮影すると、候補が絞れた場合は自動で描画へ進みます。初回モデル約150MB以上、Wi-Fi推奨。写真は端末内で処理します。識別不能・権限拒否時も下の手動選択で進めます。
+公開URLをSafariで開き、カメラを許可します。「撮影の設定」を開き、「識別モデルを先にダウンロード」で準備してから撮影すると、候補が絞れた場合は自動で描画へ進みます。初回モデル約150MB以上、Wi-Fi推奨。写真は端末内で処理します。識別不能・権限拒否時も下の手動選択で進めます。
 
 同じWi-FiでMacの `http://MacのIP:5175/` に接続してレイアウトと描画を確認できます。ただしライブカメラにはHTTPSが必要です。Macのスリープ、VPN、Wi-Fiの端末間通信制限にも注意してください。対象はiPhone Safari 16.4以降です。WebKitでの自動テストと実機テストは区別します。
 
@@ -41,20 +41,20 @@ npm run test:e2e:preview
 | 内容 | ファイル |
 | --- | --- |
 | 4ステップ・見出し・操作 | `src/App.tsx` |
-| 色・余白・文字・ボタン | `src/styles/figma.css`, `src/styles/tokens.css` |
+| 色・余白・文字・ボタン | `src/styles/cards.css`, `src/styles/tokens.css` |
 | 20課題の問い・解説・判定方式・校正済みマスク | `src/content/tasks.ts` |
 | イラストの登録・差し替え | `src/content/artwork.ts` |
 | 専用イラスト20枚 | `public/illustrations/whole/`（未完成図・完成図の計40枚） |
 | 全身の配置・描画マスク | `src/content/fullBodyLayouts.ts` |
 | SVGの再生成 | `scripts/create-whole-illustrations.mjs` |
-| 全身プレビュー・描画範囲の案内 | `src/components/DrawingOverview.tsx`, `src/components/TargetRegions.tsx` |
-| 全体／拡大の座標・描画の履歴 | `src/drawing/focus.ts`, `src/drawing/history.ts` |
+| 描画範囲の案内 | `src/components/TargetRegions.tsx` |
+| 描画操作の履歴 | `src/drawing/history.ts` |
 | 背景と空欄 | `src/components/ObservationScene.tsx` |
 | タッチ入力・消去・復元可能なUndo | `src/SketchCanvas.tsx` |
 | 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |
 | ヤギの判定／他の特徴判定 | `src/evaluator.ts`, `src/profileEvaluator.ts` |
 
-現段階のUIは既存の配色・マスコットを継承しています。新しいFigmaファイルを読み取った、あるいは正式UIに一致したという扱いにはしていません。
+現在のUIは参照作品のカードに見られる単色の色面・余白・文字組みを参考に再構成しています。参照先・近似色・独自実装の範囲は [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) に記録しました。新しいFigmaファイルや原版PDFを読み取ったという扱いにはしていません。旧 `src/style.css` と `src/styles/figma.css` は履歴参照用で、現在の起動経路では読み込みません。
 
 ## 素材・出典・研究記録
 

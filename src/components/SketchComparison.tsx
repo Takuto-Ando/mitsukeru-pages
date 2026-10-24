@@ -47,8 +47,12 @@ export function SketchComparison({
       <motion.svg
         className="comparison-overlay"
         initial={false}
-        animate={completed && !reduce ? { scale: [1, 1.025, 1] } : { scale: 1 }}
-        transition={{ duration: reduce ? 0 : 0.7, ease: "easeOut" }}
+        animate={
+          completed && !reduce
+            ? { rotateY: [-5, 0], opacity: [0.8, 1] }
+            : { rotateY: 0, opacity: 1 }
+        }
+        transition={{ duration: reduce ? 0 : 0.32, ease: "easeOut" }}
         viewBox={`0 0 600 ${height}`}
         style={{ aspectRatio: `600 / ${height}` }}
         preserveAspectRatio="none"

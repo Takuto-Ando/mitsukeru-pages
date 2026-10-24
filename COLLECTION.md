@@ -17,6 +17,6 @@
 - `src/collection/storage.ts`：保存形式、読込検証、容量制限。
 - `src/components/DrawingCollection.tsx`：一覧、比較、削除確認。
 - `src/App.tsx`：保存ボタンと体験への復帰。
-- `src/styles/figma.css`：一覧と保存ボタンのスタイル。
+- `src/styles/cards.css`：一覧と保存ボタンのスタイル。
 
 新規分は全身座標600×600で保存します。`src/collection/drawingScene.ts` が旧保存分を判別し、保持している旧部位図と旧マスクで表示します。今後も構図や座標を変える場合は既存版の表示を維持してください。

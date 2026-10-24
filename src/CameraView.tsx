@@ -142,7 +142,7 @@ export function CameraView({
     <div className="camera-page">
       <div className="screen-title">
         <h1>どの動物を見ている？</h1>
-        <p>写真を撮っても、下から動物を選んでも始められるよ。</p>
+        <p>動物を撮るか、下から選んでね。</p>
       </div>
       <div className="camera-frame">
         <video
@@ -168,7 +168,9 @@ export function CameraView({
             <span>動物から少し離れて、そっと観察しよう。</span>
           </div>
         )}
-        <ScanLine className="viewfinder" aria-hidden="true" />
+        {status === "live" && (
+          <ScanLine className="viewfinder" aria-hidden="true" />
+        )}
         <span className="camera-tag">
           {status === "live" ? "カメラで観察中" : "かんさつカメラ"}
         </span>
@@ -190,8 +192,8 @@ export function CameraView({
       {captured && (
         <motion.img
           key={captured}
-          initial={reduce ? false : { opacity: 0, scale: 0.98 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={reduce ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
           className="selected-photo"
           src={captured}
@@ -199,55 +201,55 @@ export function CameraView({
         />
       )}
       <button
-        className="primary"
+        className="shutter-button"
         disabled={status !== "live" || busy || recognizing}
         onClick={() => void capture()}
       >
         {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>
-      <button
-        className="text-button"
-        disabled={recognizing || modelReady}
-        onClick={() => void prepare()}
-      >
-        {modelReady ? "識別モデル準備済み" : "識別モデルを先にダウンロード"}
-      </button>
-      <p className="quiet-note">
-        撮影すると自動で識別し、候補が絞れたら描画へ進みます。初回は約150MB以上。Wi-Fiで先に準備できます。
-      </p>
-      {recognizing && !captured && (
+      <details className="recognition-settings">
+        <summary>撮影の設定</summary>
         <button
           className="text-button"
-          onClick={() => {
-            speciesRecognizer.cancel();
-            setModelReady(false);
-          }}
+          disabled={recognizing || modelReady}
+          onClick={() => void prepare()}
         >
-          準備をやめる
+          {modelReady ? "識別モデル準備済み" : "識別モデルを先にダウンロード"}
         </button>
-      )}
-      {captured && (
-        <>
+        <p className="quiet-note">
+          初回は約150MB以上。Wi-Fiで先に準備できます。撮影後、候補が絞れたら描画へ進みます。
+        </p>
+        {recognizing && !captured && (
           <button
-            className="primary"
-            disabled={recognizing}
-            onClick={() => void recognize()}
+            className="text-button"
+            onClick={() => {
+              speciesRecognizer.cancel();
+              setModelReady(false);
+            }}
           >
-            {recognizing ? "候補を探しています…" : "AIで候補を探す"}
+            準備をやめる
           </button>
-          {recognizing && (
+        )}
+        {captured && (
+          <>
             <button
               className="text-button"
-              onClick={() => speciesRecognizer.cancel()}
+              disabled={recognizing}
+              onClick={() => void recognize()}
             >
-              検索をやめる
+              {recognizing ? "候補を探しています…" : "AIで候補を探す"}
             </button>
-          )}
-          <p className="quiet-note">
-            初回は約150MB以上のモデルをダウンロードします。Wi-Fiをおすすめします。写真は端末内で処理します。
-          </p>
-        </>
-      )}
+            {recognizing && (
+              <button
+                className="text-button"
+                onClick={() => speciesRecognizer.cancel()}
+              >
+                検索をやめる
+              </button>
+            )}
+          </>
+        )}
+      </details>
       {candidates.length > 0 && (
         <section aria-label="AIの候補">
           <h2>この動物かな？</h2>
@@ -263,13 +265,10 @@ export function CameraView({
           <p>違うときは、下から選んでね。</p>
         </section>
       )}
-      <p className="quiet-note">
-        簡易AIは間違えることがあります。違う動物ならタイトルを押して戻り、下から選び直せます。
-      </p>
       {captured && <p role="status">撮影した写真を見て、動物を選んでね。</p>}
       <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
       <p className="quiet-note">
-        写真は端末内だけで扱い、外部に送信しません。描くときは実物を観察してね。
+        写真は端末内で処理します。描くときは実物を見てね。
       </p>
     </div>
   );

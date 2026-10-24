@@ -3,9 +3,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
-import { Mascot } from "./components/Mascot";
 import { DrawingCollection } from "./components/DrawingCollection";
-import { useButtonMotion } from "./components/useButtonMotion";
 import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
@@ -22,10 +20,9 @@ import {
 } from "./collection/storage";
 import { drawingHistory, emptyDrawing } from "./drawing/history";
 import type { Evaluation } from "./types";
-import "./styles/figma.css";
+import "./styles/cards.css";
 
 export default function App() {
-  useButtonMotion();
   const reduce = useReducedMotion();
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
@@ -193,10 +190,11 @@ export default function App() {
     <div className="figma-shell" data-step={step}>
       <header className="figma-header">
         <button onClick={restart} aria-label="ズーケッチ 撮影に戻る">
-          <img
-            src={import.meta.env.BASE_URL + "figma/2-2-imgLogoDot.svg"}
-            alt=""
-          />
+          <span className="brand-mark" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
           ズーケッチ
         </button>
         <button
@@ -229,23 +227,28 @@ export default function App() {
           />
         ) : (
           <>
-            <div className="figma-flow">
-              {
-                [
-                  "01 / 写真を撮る",
-                  "02 / 特徴を描く",
-                  "03 / 見くらべる",
-                  "04 / 発見を知る",
-                ][step]
-              }
-              <Mascot step={step} />
-            </div>
+            <nav className="card-flow" aria-label="観察の進み方">
+              <ol>
+                {["撮る", "描く", "比べる", "知る"].map((label, index) => (
+                  <li
+                    key={label}
+                    aria-current={step === index ? "step" : undefined}
+                  >
+                    {label}
+                  </li>
+                ))}
+              </ol>
+            </nav>
             <motion.section
+              className="activity-card"
               key={step}
-              initial={reduce ? false : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+              initial={reduce || step !== 1 ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
             >
+              <div className="card-caption">
+                {step === 0 ? "どうぶつの観察カード" : group.name}
+              </div>
               {step === 0 ? (
                 <CameraView
                   onSelect={(image, id) => {
@@ -258,7 +261,6 @@ export default function App() {
                 <>
                   <div className="task-heading">
                     <span>{group.name}</span>
-                    <span>ひとつだけ、よく見よう</span>
                   </div>
                   <h1>{task.part}を描こう</h1>
                   <p className="figma-support">{task.question}</p>
@@ -280,7 +282,7 @@ export default function App() {
                     </div>
                   )}
                   <p className="figma-note">
-                    見えた形を、空いているところに描こう。上手に描かなくて大丈夫。
+                    空いているところに、見えた形を描こう。
                   </p>
                   {photo && (
                     <details>
@@ -330,7 +332,7 @@ export default function App() {
                       setHint(!hint);
                     }}
                   >
-                    ✧ ヒント
+                    ヒント
                   </button>
                   {hint && (
                     <p id="observation-hint" role="note">
@@ -386,51 +388,11 @@ export default function App() {
                 </>
               ) : step === 2 ? (
                 <>
-                  <motion.h1
-                    key={feedback?.passed ? "complete" : "compare"}
-                    className="figma-discovery"
-                    initial={reduce ? false : { scale: 0.9 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 250, damping: 14 }}
-                  >
+                  <h1 className="figma-discovery">
                     {feedback?.passed
                       ? "完成！ だいはっけん！"
                       : "見えた形を確かめよう"}
-                  </motion.h1>
-                  {feedback?.passed && (
-                    <div className="figma-confetti" aria-hidden="true">
-                      {!reduce &&
-                        Array.from({ length: 10 }, (_, i) => (
-                          <motion.span
-                            className="discovery-star"
-                            key={i}
-                            initial={{ opacity: 0, scale: 0.3, x: 0, y: 0 }}
-                            animate={{
-                              opacity: [0, 1, 0],
-                              scale: [0.3, 1.2, 0.8],
-                              rotate: i * 37,
-                              x: (i - 4.5) * 29,
-                              y: -25 - Math.sin(i) * 45,
-                            }}
-                            transition={{ duration: 1.2, delay: i * 0.035 }}
-                          >
-                            ✦
-                          </motion.span>
-                        ))}
-                      {["Orange", "Teal", "Gold", "Coral"].map((c, i) => (
-                        <motion.img
-                          key={c}
-                          src={
-                            import.meta.env.BASE_URL +
-                            `figma/2-48-imgConfetti${c}.svg`
-                          }
-                          initial={reduce ? false : { opacity: 0, y: -12 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.06 }}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  </h1>
                   <p className="center">
                     <strong>
                       {group.name}の{task.part}
@@ -438,7 +400,7 @@ export default function App() {
                   </p>
                   <p className="figma-note">
                     {feedback?.passed
-                      ? "よく見てたね！ ✳"
+                      ? "よく見てたね！"
                       : "あなたの観察と見くらべよう"}
                   </p>
                   <SketchComparison
@@ -488,11 +450,7 @@ export default function App() {
               ) : (
                 <>
                   <h1>{task.explanation.name}</h1>
-                  <motion.div
-                    className="figma-science"
-                    initial={reduce ? false : { opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
+                  <div className="figma-science">
                     <svg
                       viewBox={`0 0 600 ${scene.frameHeight || 400}`}
                       role="img"
@@ -505,7 +463,7 @@ export default function App() {
                         preserveAspectRatio="none"
                       />
                     </svg>
-                  </motion.div>
+                  </div>
                   <div className="figma-explanation">
                     <h2>よく見ると…</h2>
                     <p>{task.explanation.form}</p>

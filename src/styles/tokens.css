@@ -1,15 +1,48 @@
-/* Existing supplied design values; replace with Figma variables. */
+/* Approximate palette observed in the reference portfolio, not sampled source values.
+   Semantic tokens can map directly to future Figma variables. */
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("../../public/fonts/ZenMaruGothic-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("../../public/fonts/ZenMaruGothic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
 :root {
-  font-family:
-    "Hiragino Maru Gothic ProN", "Hiragino Kaku Gothic ProN", "Noto Sans JP",
-    Meiryo, sans-serif;
-  color: #464637;
-  background: #fffbef;
+  --color-teal: #75a99b;
+  --color-teal-ink: #315f54;
+  --color-coral: #ca7d61;
+  --color-mustard: #c4a052;
+  --color-paper: #faf7ec;
+  --color-surface: #fffdf5;
+  --color-ink: #514638;
+  --color-muted: #796f60;
+  --color-rule: #d8d0bc;
+  --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  --type-small: 0.75rem;
+  --type-body: 0.875rem;
+  --type-title: 1.375rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --radius-card: 8px;
+  --radius-control: 4px;
+  --stroke-card: 2px;
+  --teal: var(--color-teal);
+  --orange: var(--color-coral);
+  --yellow: var(--color-mustard);
+  --ink: var(--color-ink);
+  --cream: var(--color-paper);
+  --line: var(--color-rule);
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-paper);
   font-synthesis: none;
-  --teal: #287e79;
-  --orange: #db7747;
-  --yellow: #f4cc65;
-  --ink: #464637;
-  --cream: #fffbef;
-  --line: #e7e2d2;
 }

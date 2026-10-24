@@ -1,10 +1,10 @@
 # 全身のイラストと完成図
 
-全16グループ・20課題で、動物全体を同じ構図のまま表示します。対象部位の抜けたところに描き足し、完成した動物のイラストと見くらべます。描画時には同じ図の対象部位を拡大し、小窓の全身プレビューも同時に表示します。別構図の拡大素材には切り替えません。
+全16グループ・20課題で、動物全体を同じ構図のまま表示します。対象部位の抜けたところに描き足し、完成した動物のイラストと見くらべます。全身の同じ構図で直接描きます。ズームや小窓は使用しません。
 
 - `public/illustrations/whole/{taskId}.svg`：対象の特徴だけが欠けた全身図。
 - `public/illustrations/whole/{taskId}-complete.svg`：自然な色で特徴を含めた完成図。お手本と解説で使います。
-- `scripts/create-whole-illustrations.mjs`：全40枚を再生成。`scripts/animal-parts.mjs` のベクター部品と `scripts/illustration-finishing.mjs` の種別の毛並み・陰影を使います。
+- `scripts/create-whole-illustrations.mjs`：全40枚を再生成。`scripts/animal-parts.mjs` のベクター部品と `scripts/illustration-finishing.mjs` の種別の輪郭・毛並みを使います。
 - `src/content/fullBodyLayouts.ts`：600×600の全身座標で配置・空欄・対応する形を管理。
 - `src/content/tasks.ts`：正規化したマスクと保護領域を生成。Canvas・可視線・お手本は同じフレームです。
 - 通常の表示は生成SVGです。旧部位図の `simple/` は過去の保存描画のため保持し、細密JPGの `zooketch/` は参照用です。
@@ -44,7 +44,7 @@
 
 ## 確認範囲
 
-`artwork.status` は `draft` です。今回は編集可能なデフォルメ全身図の輪郭・種別の毛並み・陰影を整えた版です。写実的な精密画への全点置換は未完了で、専門家監修済みでもありません。正式教材にする前の解剖学的監修と、子どもの実描画による評価は未実施です。解説の出典は `docs/CONTENT_SOURCES.md` を参照してください。
+`artwork.status` は `draft` です。今回は編集可能なデフォルメ全身図の輪郭・種別の輪郭・毛並みを整えた版です。写実的な精密画への全点置換は未完了で、専門家監修済みでもありません。正式教材にする前の解剖学的監修と、子どもの実描画による評価は未実施です。解説の出典は `docs/CONTENT_SOURCES.md` を参照してください。
 
 ## 素材の差し替え
 

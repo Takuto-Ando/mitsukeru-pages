@@ -331,6 +331,7 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
   await expect(page.locator(".animal-grid button")).toHaveCount(16);
+  await page.getByText("撮影の設定", { exact: true }).click();
   await page
     .getByRole("button", { name: "識別モデルを先にダウンロード" })
     .click();
@@ -347,32 +348,25 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   });
 });
 
-test("全身プレビューと大きな描画、表示切替でも座標が一致する", async ({
+test("紙のカードで全身に直接描き、余計なズームや装飾を出さない", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await select(page);
-  await page.waitForTimeout(1000);
-  await expect(page.getByTestId("drawing-overview")).toBeVisible();
-  await expect(page.getByTestId("full-animal-stage")).toHaveAttribute(
-    "data-view",
-    "focus",
-  );
-  await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
-  await draw(page);
-  await page.getByRole("button", { name: "全体で描く", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "大きく描く", exact: true }),
-  ).toBeEnabled();
+  await expect(page.getByTestId("drawing-overview")).toHaveCount(0);
   await expect(page.getByTestId("full-animal-stage")).toHaveAttribute(
     "data-view",
     "whole",
   );
-  await expect(page.getByTestId("drawing-overview")).toBeVisible();
-  await page.getByRole("button", { name: "大きく描く", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "全体で描く", exact: true }),
-  ).toBeEnabled();
+    page.getByRole("button", { name: /全体で描く|大きく描く/ }),
+  ).toHaveCount(0);
+  await expect(page.locator(".figma-confetti, .figma-mascot")).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "観察の進み方" }),
+  ).not.toContainText(/01|02|03|04/);
+  await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
+  await expect(page.locator(".activity-card")).toHaveCSS("box-shadow", "none");
   const c = (await page.getByTestId("canvas").boundingBox())!,
     b = (await page.locator(".eye-template").boundingBox())!;
   expect(Math.abs(c.x - b.x)).toBeLessThan(1);
@@ -446,7 +440,7 @@ test("消しゴム・全消去からUndoで復元し、空欄の案内をヒン�
       }),
     )
     .toBeGreaterThan(0);
-  await page.getByRole("button", { name: "✧ ヒント", exact: true }).click();
+  await page.getByRole("button", { name: "ヒント", exact: true }).click();
   await expect(page.getByTestId("drawing-target")).toBeVisible();
   await page.getByRole("button", { name: "描き直す", exact: true }).click();
   await expect(
