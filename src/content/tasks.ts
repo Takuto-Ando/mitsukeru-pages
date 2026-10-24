@@ -1,3 +1,5 @@
+import { fullBodyLayouts } from "./fullBodyLayouts";
+import partScenes from "./partScenes";
 import { groups } from "./groups";
 import { scenes, type Scene } from "./scenes";
 import { profiles, type Profile } from "./profiles";
@@ -246,51 +248,34 @@ export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 export const tasksForGroup = (id: string) =>
   tasks.filter((t) => t.groupId === id);
 
-// Simple, short drawing activities use the earlier generous observation windows.
-// Fine-detail raster coordinates stay in Git history; their JPG originals are retained.
-const simpleWindows: Record<string, number[][]> = {
-  sheep: [[190, 165, 230, 110]],
-  elephant: [[170, 45, 260, 130]],
-  gorilla: [[155, 35, 290, 125]],
-  "giraffe-hoof": [[180, 195, 240, 145]],
-  "hippo-body": [[175, 75, 335, 120]],
-  "fennec-tail": [[320, 200, 230, 150]],
-};
+// Position the missing part within a full-animal illustration, never a close-up.
 for (const task of tasks) {
-  const original = scenes[task.id];
-  const windows = simpleWindows[task.id];
+  const layout = fullBodyLayouts[task.id];
+  const prior = partScenes[task.id as keyof typeof partScenes];
+  const rectangles =
+    layout.windows ||
+    prior.regions.map((r) => [
+      r.x * 600,
+      r.y * 400,
+      r.width * 600,
+      r.height * 400,
+    ]);
+  const region = ([x, y, width, height]: number[]) => ({
+    x: (x * layout.scale + layout.x) / 600,
+    y: (y * layout.scale + layout.y) / 600,
+    width: (width * layout.scale) / 600,
+    height: (height * layout.scale) / 600,
+  });
   task.scene = {
     ...task.scene,
-    regions: windows
-      ? windows.map(([x, y, width, height]) => ({
-          x: x / 600,
-          y: y / 400,
-          width: width / 600,
-          height: height / 400,
-        }))
-      : original.regions,
+    frameHeight: 600,
+    answerAsset: `illustrations/whole/${task.id}-complete.svg`,
+    regions: rectangles.map(region),
+    maskHoles: undefined,
   };
-  const eyes: Record<string, number[][]> = {
-    lemur: [
-      [219, 159, 32, 42],
-      [349, 159, 32, 42],
-    ],
-    badger: [
-      [219, 159, 32, 42],
-      [349, 159, 32, 42],
-    ],
-    meerkat: [
-      [219, 159, 32, 42],
-      [349, 159, 32, 42],
-    ],
-  };
-  if (eyes[task.id])
-    task.scene.maskHoles = eyes[task.id].map(([x, y, width, height]) => ({
-      x: x / 600,
-      y: y / 400,
-      width: width / 600,
-      height: height / 400,
-    }));
-  if (["goat", "sheep"].includes(task.id))
-    task.scene.answerPath = "M205 205Q305 190 405 205L405 235Q305 250 205 235Z";
+  if ("maskHoles" in prior && prior.maskHoles)
+    task.scene.maskHoles = prior.maskHoles.map((r) =>
+      region([r.x * 600, r.y * 400, r.width * 600, r.height * 400]),
+    );
+  if (layout.answerPath) task.scene.answerPath = layout.answerPath;
 }

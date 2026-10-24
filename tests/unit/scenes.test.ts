@@ -74,3 +74,18 @@ test("保護した目の上だけに描いた線は可視描画にならない",
     ),
   ).toEqual([]);
 });
+
+import { taskById } from "../../src/content/tasks";
+test("全身版の足先を600の高さでクリップし、画面サイズに依存しない", () => {
+  const scene = taskById.zebra.scene;
+  const strokes = [
+    [
+      { x: 180, y: 530 },
+      { x: 220, y: 550 },
+    ],
+  ];
+  expect(clipStrokes(strokes, scene)).toEqual(strokes);
+  const point = scenePoint(110, 275, 300, 300, 600);
+  expect(point.x).toBeCloseTo(220);
+  expect(point.y).toBeCloseTo(550);
+});

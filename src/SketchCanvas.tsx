@@ -43,8 +43,7 @@ export function SketchCanvas({
   onChange: (next: Stroke[]) => void;
 }) {
   const reduce = useReducedMotion();
-  const [zoom, setZoom] = useState(false);
-  const [moving, setMoving] = useState(false);
+  const frameHeight = scene.frameHeight || 400;
   const last = clipStrokes(strokes, scene).at(-1)?.at(-1);
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
@@ -58,34 +57,22 @@ export function SketchCanvas({
     [],
   );
   useEffect(() => {
-    if (reduce) return;
-    const timer = setTimeout(() => {
-      if (active.current === null) {
-        setMoving(true);
-        setZoom(true);
-      }
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [reduce]);
-  const center = scene.regions.reduce(
-    (sum, r) => ({
-      x: sum.x + (r.x + r.width / 2) / scene.regions.length,
-      y: sum.y + (r.y + r.height / 2) / scene.regions.length,
-    }),
-    { x: 0, y: 0 },
-  );
-  useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
     const ratio = Math.min(window.devicePixelRatio || 1, 3);
     canvas.width = 600 * ratio;
-    canvas.height = 400 * ratio;
+    canvas.height = frameHeight * ratio;
     const context = canvas.getContext("2d");
     if (!context) return;
     context.scale(ratio, ratio);
     context.beginPath();
     for (const r of drawingRegions(scene))
-      context.rect(r.x * 600, r.y * 400, r.width * 600, r.height * 400);
+      context.rect(
+        r.x * 600,
+        r.y * frameHeight,
+        r.width * 600,
+        r.height * frameHeight,
+      );
     context.clip();
     context.lineWidth = 7;
     context.lineCap = "round";
@@ -106,6 +93,7 @@ export function SketchCanvas({
       event.clientY - rect.top,
       rect.width,
       rect.height,
+      frameHeight,
     );
   }
 
@@ -136,18 +124,14 @@ export function SketchCanvas({
         </span>
         <span>見えた部分を描こう</span>
       </div>
-      <div className={"drawing-paper " + (draft.length ? "is-drawing" : "")}>
-        <motion.div
-          className="scene-stage"
-          initial={false}
-          animate={{ scale: zoom ? 1.18 : 1 }}
-          transition={{ duration: reduce ? 0 : 0.5, ease: "easeInOut" }}
-          style={{ transformOrigin: `${center.x * 100}% ${center.y * 100}%` }}
-          onAnimationComplete={() => setMoving(false)}
-        >
+      <div
+        className={"drawing-paper " + (draft.length ? "is-drawing" : "")}
+        style={{ aspectRatio: `600 / ${frameHeight}` }}
+      >
+        <div className="scene-stage" data-testid="full-animal-stage">
           <svg
             className="eye-template"
-            viewBox="0 0 600 400"
+            viewBox={`0 0 600 ${frameHeight}`}
             preserveAspectRatio="none"
             aria-label={scene.label + "を描き足すイラスト"}
             role="img"
@@ -160,7 +144,6 @@ export function SketchCanvas({
             aria-label="観察した形を描くキャンバス"
             onPointerDown={(event) => {
               if (
-                moving ||
                 active.current !== null ||
                 !event.isPrimary ||
                 event.button !== 0
@@ -188,8 +171,17 @@ export function SketchCanvas({
             }}
             onPointerUp={(event) => {
               if (active.current !== event.pointerId) return;
-              if (!erase && current.current.length > 1) {
+              if (!erase && current.current.length >= 1) {
                 const next = [...current.current, point(event)];
+                if (
+                  next.length === 2 &&
+                  next[0].x === next[1].x &&
+                  next[0].y === next[1].y
+                )
+                  next[1] = {
+                    ...next[1],
+                    x: next[1].x + (next[1].x < 600 ? 0.01 : -0.01),
+                  };
                 if (clipStrokes([next], scene).length)
                   onChange([...strokes, next]);
               }
@@ -206,7 +198,10 @@ export function SketchCanvas({
             <motion.span
               key={strokes.length}
               className="stroke-sparkle"
-              style={{ left: `${last.x / 6}%`, top: `${last.y / 4}%` }}
+              style={{
+                left: `${last.x / 6}%`,
+                top: `${(last.y / frameHeight) * 100}%`,
+              }}
               initial={{ opacity: 0, scale: 0.5, y: 0 }}
               animate={{ opacity: [0, 1, 0], scale: [0.5, 1.3, 1], y: -24 }}
               transition={{ duration: 0.65 }}
@@ -221,19 +216,8 @@ export function SketchCanvas({
               ここに、見えたかたちを。
             </span>
           )}
-        </motion.div>
+        </div>
       </div>
-      <button
-        className="text-button zoom-toggle"
-        aria-pressed={zoom}
-        disabled={moving}
-        onClick={() => {
-          setMoving(!reduce);
-          setZoom(!zoom);
-        }}
-      >
-        {zoom ? "全体のイラストを見る" : "描く場所を大きく見る"}
-      </button>
       <div className="tools" aria-label="描画ツール">
         <button aria-pressed={!erase} onClick={() => setErase(false)}>
           <Pencil size={19} />

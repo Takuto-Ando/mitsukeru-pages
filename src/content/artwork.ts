@@ -1,10 +1,11 @@
 export interface Artwork {
   blankFill?: string;
   maskInApp?: boolean;
+  reference?: string;
   status: "awaiting" | "draft" | "reviewed";
-  incomplete?: string; // 600 × 400, feature removed; never the unmasked answer
+  incomplete?: string; // scene frame, feature removed; never the unmasked answer
   completedBase?: string; // same frame, no target feature: user lines complete it
-  answer?: string; // isolated feature, transparent background, same frame
+  answer?: string; // legacy answer image; reference holds the complete animal
   explanation?: string;
   alt: string;
   credit?: string;
@@ -32,7 +33,7 @@ export const artwork: Record<string, Artwork> = Object.fromEntries(
     ["deer", "ニホンジカの背中"],
   ].map(([id, alt]) => [id, { status: "awaiting", alt }]),
 );
-// The detailed JPGs remain available for future use; the default is editable SVG.
+// Full-animal illustrations: the answer is a complete coloured animal, not a line layer.
 for (const id of [
   ...Object.keys(artwork),
   "sheep",
@@ -40,19 +41,18 @@ for (const id of [
   "hippo-body",
   "fennec-tail",
 ]) {
-  const base = `illustrations/simple/${id}`;
+  const base = `illustrations/whole/${id}`;
   artwork[id] = {
     status: "draft",
     alt: artwork[id]?.alt || id,
     incomplete: base + ".svg",
     completedBase: base + ".svg",
-    answer: base + "-answer.svg",
-    explanation: base + "-explanation.svg",
+    reference: base + "-complete.svg",
+    answer: base + "-complete.svg",
+    explanation: base + "-complete.svg",
     maskInApp: true,
-    blankFill: ["elephant", "gorilla", "hippo-body"].includes(id)
-      ? "#fbf4e6"
-      : "transparent",
-    credit: "本制作の編集可能な観察イラスト",
+    blankFill: "transparent",
+    credit: "本制作の編集可能な全身イラスト",
   };
 }
 // Put future photo / professionally reviewed replacements here by task ID.

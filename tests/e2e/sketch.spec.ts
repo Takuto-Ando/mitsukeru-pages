@@ -69,8 +69,16 @@ for (const t of tasks)
       .locator(".eye-template image")
       .first()
       .getAttribute("href");
-    expect(href).toContain(`simple/${t.id}.svg`);
-    expect((await page.request.get(href!)).ok()).toBe(true);
+    expect(href).toContain(`whole/${t.id}.svg`);
+    const source = await (await page.request.get(href!)).text();
+    expect(source).toContain(`data-full-animal="${t.id}"`);
+    const correct = await (
+      await page.request.get(
+        new URL(`illustrations/whole/${t.id}-complete.svg`, page.url()).href,
+      )
+    ).text();
+    expect(correct).toContain('data-illustration="complete"');
+    expect(correct).not.toContain("#c18151");
     await expect(
       page.getByRole("button", { name: "こたえあわせ →" }),
     ).toBeDisabled();
@@ -242,11 +250,11 @@ test("タッチ入力で描画・マスク外は回答不可", async ({
   ).toBeDisabled();
   await session.send("Input.dispatchTouchEvent", {
     type: "touchStart",
-    touchPoints: [pt(0.35, 0.5)],
+    touchPoints: [pt(0.29, 0.34)],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchMove",
-    touchPoints: [pt(0.65, 0.55)],
+    touchPoints: [pt(0.44, 0.4)],
   });
   await session.send("Input.dispatchTouchEvent", {
     type: "touchEnd",
@@ -333,21 +341,66 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   });
 });
 
-test("自動ズーム後もCanvasとイラストの共通座標を保つ", async ({ page }) => {
+test("全身を保ち、部位の自動ズーム・時間案内を出さない", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await select(page);
+  await page.waitForTimeout(1000);
   await expect(
-    page.getByRole("button", { name: "全体のイラストを見る" }),
-  ).toBeEnabled();
-  const canvas = page.getByTestId("canvas"),
-    image = page.locator(".eye-template");
-  const c = (await canvas.boundingBox())!,
-    b = (await image.boundingBox())!;
+    page.getByRole("button", {
+      name: /全体のイラストを見る|描く場所を大きく見る/,
+    }),
+  ).toHaveCount(0);
+  await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
+  await expect(page.getByTestId("full-animal-stage")).toHaveCSS(
+    "transform",
+    "none",
+  );
+  const c = (await page.getByTestId("canvas").boundingBox())!,
+    b = (await page.locator(".eye-template").boundingBox())!;
   expect(Math.abs(c.x - b.x)).toBeLessThan(1);
-  expect(Math.abs(c.width - b.width)).toBeLessThan(1);
+  expect(Math.abs(c.height - c.width)).toBeLessThan(1);
+  expect(Math.abs(c.height - b.height)).toBeLessThan(1);
   await draw(page);
   await compare(page);
+  await page.getByRole("button", { name: "お手本", exact: true }).click();
+  await expect(page.getByTestId("answer-shape")).toHaveAttribute(
+    "data-answer-kind",
+    "complete-animal",
+  );
   await expect(
-    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
-  ).toBeVisible();
+    page.getByTestId("answer-shape").locator("image"),
+  ).toHaveAttribute("href", /whole\/goat-complete.svg/);
+  await expect(page.getByTestId("user-lines")).toHaveAttribute(
+    "visibility",
+    "hidden",
+  );
+});
+
+test("点をひとつ描けて、全身版の線を再読込後も保存できる", async ({ page }) => {
+  await select(page, "deer");
+  const c = page.getByTestId("canvas");
+  await c.scrollIntoViewIfNeeded();
+  const b = (await c.boundingBox())!,
+    r = tasks.find((t) => t.id === "deer")!.scene.regions[0];
+  await page.mouse.click(
+    b.x + (r.x + r.width / 2) * b.width,
+    b.y + (r.y + r.height / 2) * b.height,
+  );
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await compare(page);
+  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  await page.getByRole("button", { name: "この動物を保存する" }).click();
+  const data = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("mitsukeru.collection.v1")!),
+  );
+  expect(data.drawings[0].sceneVersion).toBe(2);
+  await page.reload();
+  await page.getByRole("button", { name: "描いた動物 (1)" }).click();
+  await page.getByRole("button", { name: "ニホンジカの絵を見返す" }).click();
+  await expect(page.locator(".comparison-overlay")).toHaveAttribute(
+    "viewBox",
+    "0 0 600 600",
+  );
 });

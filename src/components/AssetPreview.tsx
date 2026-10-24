@@ -15,22 +15,25 @@ export function AssetPreview() {
             <h2>
               {t.id} / {t.part}
             </h2>
-            <svg viewBox="0 0 600 400">
+            <svg
+              viewBox={`0 0 600 ${t.scene.frameHeight || 400}`}
+              style={{ aspectRatio: `600 / ${t.scene.frameHeight || 400}` }}
+            >
               <image
                 href={import.meta.env.BASE_URL + artwork[t.id].explanation}
                 width="600"
-                height="400"
+                height={t.scene.frameHeight || 400}
                 preserveAspectRatio="none"
               />
               {[100, 200, 300, 400, 500].map((x) => (
                 <g key={x}>
-                  <path d={`M${x} 0V400`} stroke="#277e7888" />
+                  <path d={`M${x} 0V600`} stroke="#277e7888" />
                   <text x={x} y="15" fontSize="14">
                     {x}
                   </text>
                 </g>
               ))}
-              {[100, 200, 300].map((y) => (
+              {[100, 200, 300, 400, 500].map((y) => (
                 <g key={y}>
                   <path d={`M0 ${y}H600`} stroke="#277e7888" />
                   <text x="0" y={y} fontSize="14">
@@ -49,7 +52,7 @@ export function AssetPreview() {
   return (
     <main className="asset-preview">
       <h1>観察素材の配置確認</h1>
-      <p>開発用プレビュー。全素材は600×400、マスクは0〜1の正規化座標です。</p>
+      <p>開発用プレビュー。全身版は600×600、マスクは0〜1の正規化座標です。</p>
       <label>
         動物
         <select value={id} onChange={(e) => setId(e.target.value)}>
@@ -77,7 +80,7 @@ export function AssetPreview() {
         マスク境界
       </label>
       <p>素材状態：{artwork[id].status}</p>
-      <svg viewBox="0 0 600 400">
+      <svg viewBox={`0 0 600 ${scene.frameHeight || 400}`}>
         <SceneBase scene={scene} completed={complete} />
         {mask && (
           <g fill="#4c9b9233" stroke="#4c9b92" strokeDasharray="5 4">

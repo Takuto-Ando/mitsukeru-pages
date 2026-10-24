@@ -105,6 +105,7 @@ export default function App() {
             id,
             groupId: task.groupId,
             taskId,
+            sceneVersion: 2,
             createdAt: new Date().toISOString(),
             strokes: visible,
             outcome:
@@ -273,7 +274,7 @@ export default function App() {
                     </div>
                   )}
                   <p className="figma-note">
-                    1〜3分くらいで、見えた形を少しだけ。上手に描かなくて大丈夫。
+                    見えた形を、空いているところに描こう。上手に描かなくて大丈夫。
                   </p>
                   {photo && (
                     <details>
@@ -444,14 +445,14 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                   >
                     <svg
-                      viewBox="0 0 600 400"
+                      viewBox={`0 0 600 ${scene.frameHeight || 400}`}
                       role="img"
                       aria-label={task.explanation.name + "の解説イラスト"}
                     >
                       <image
                         href={assetPath(artwork[task.id].explanation!)}
                         width="600"
-                        height="400"
+                        height={scene.frameHeight || 400}
                         preserveAspectRatio="none"
                       />
                     </svg>

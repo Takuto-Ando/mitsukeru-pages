@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { DrawingRecord } from "../collection/storage";
 import { groups } from "../content/groups";
-import { scenes } from "../content/scenes";
+import { drawingScene } from "../collection/drawingScene";
 import { taskById } from "../content/tasks";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
@@ -9,12 +9,10 @@ import { SketchComparison } from "./SketchComparison";
 
 function Thumbnail({ drawing }: { drawing: DrawingRecord }) {
   const clip = useId();
-  const scene =
-    taskById[drawing.taskId || drawing.groupId]?.scene ||
-    scenes[drawing.groupId];
+  const scene = drawingScene(drawing);
   return (
     <svg
-      viewBox="0 0 600 400"
+      viewBox={`0 0 600 ${scene.frameHeight || 400}`}
       role="img"
       aria-label={scene.label + "に描き足した絵"}
     >
@@ -70,9 +68,7 @@ export function DrawingCollection({
           <h2>{group.name}</h2>
           <SketchComparison
             strokes={drawing.strokes}
-            scene={
-              taskById[drawing.taskId || group.id]?.scene || scenes[group.id]
-            }
+            scene={drawingScene(drawing)}
             profile={taskById[drawing.taskId || group.id]?.profile}
             answer={group.answer}
           />

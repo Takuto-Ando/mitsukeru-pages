@@ -6,6 +6,7 @@ import {
   writeCollection,
   type DrawingRecord,
 } from "../../src/collection/storage";
+import { drawingScene } from "../../src/collection/drawingScene";
 const drawing: DrawingRecord = {
   id: "one",
   groupId: "goat",
@@ -74,6 +75,38 @@ describe("端末内の描画保存", () => {
       expect(() => readCollection(s)).toThrow();
       expect(s.getItem(collectionKey)).toBe(value);
     }
+  });
+  it("全身版の足先も保存し、旧版には旧座標の図を適用する", () => {
+    const s = memory();
+    const whole: DrawingRecord = {
+      ...drawing,
+      id: "whole",
+      groupId: "zebra",
+      taskId: "zebra",
+      sceneVersion: 2,
+      strokes: [
+        [
+          { x: 170, y: 520 },
+          { x: 220, y: 560 },
+        ],
+      ],
+    };
+    writeCollection(s, { version: 1, drawings: [drawing, whole] });
+    const [old, current] = readCollection(s).drawings;
+    expect(drawingScene(old).frameHeight || 400).toBe(400);
+    expect(drawingScene(old).artworkOverride?.incomplete).toBe(
+      "illustrations/simple/goat.svg",
+    );
+    expect(drawingScene(current).frameHeight).toBe(600);
+    expect(current.strokes).toEqual(whole.strokes);
+    s.setItem(
+      collectionKey,
+      JSON.stringify({
+        version: 1,
+        drawings: [{ ...whole, sceneVersion: undefined }],
+      }),
+    );
+    expect(() => readCollection(s)).toThrow();
   });
   it("容量不足は呼び出し側に通知する", () => {
     expect(() =>

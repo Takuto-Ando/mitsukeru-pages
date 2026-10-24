@@ -1,6 +1,6 @@
 # ズーケッチ
 
-現在は、子どもが1〜3分程度で形や模様を描き足すことを目指した、シンプルでかわいいSVGイラストを使用しています。細密な画像は参照用として保管しています。所要時間は目安で、時間制限は設けません。
+かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。部位の拡大表示や自動ズームは行いません。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
 
 動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
@@ -44,9 +44,11 @@ npm run test:e2e:preview
 | 色・余白・文字・ボタン | `src/styles/figma.css`, `src/styles/tokens.css` |
 | 20課題の問い・解説・判定方式・校正済みマスク | `src/content/tasks.ts` |
 | イラストの登録・差し替え | `src/content/artwork.ts` |
-| 専用イラスト20枚 | `public/illustrations/simple/`（細密版は `public/illustrations/zooketch/` に保管） |
+| 専用イラスト20枚 | `public/illustrations/whole/`（未完成図・完成図の計40枚） |
+| 全身の配置・描画マスク | `src/content/fullBodyLayouts.ts` |
+| SVGの再生成 | `scripts/create-whole-illustrations.mjs` |
 | 背景と空欄 | `src/components/ObservationScene.tsx` |
-| タッチ入力・Undo・消去・拡大 | `src/SketchCanvas.tsx` |
+| タッチ入力・Undo・消去 | `src/SketchCanvas.tsx` |
 | 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |
 | ヤギの判定／他の特徴判定 | `src/evaluator.ts`, `src/profileEvaluator.ts` |
 

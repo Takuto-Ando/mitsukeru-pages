@@ -3,6 +3,8 @@ import type { Point, Stroke } from "../types";
 export type Region = { x: number; y: number; width: number; height: number };
 export interface Scene {
   id: string;
+  frameHeight?: number;
+  artworkOverride?: import("./artwork").Artwork;
   label: string;
   regions: Region[];
   maskHoles?: Region[];
@@ -95,15 +97,17 @@ export function scenePoint(
   y: number,
   width: number,
   height: number,
+  logicalHeight = 400,
 ): Point {
   return {
     x: Math.max(0, Math.min(1, x / width)) * 600,
-    y: Math.max(0, Math.min(1, y / height)) * 400,
+    y: Math.max(0, Math.min(1, y / height)) * logicalHeight,
   };
 }
 // Clip segments, rather than clamping points: outside input cannot create a
 // false connecting line, affect judging, or make an empty answer submittable.
 export function clipStrokes(strokes: Stroke[], scene: Scene): Stroke[] {
+  const frameHeight = scene.frameHeight || 400;
   const result: Stroke[] = [];
   for (const stroke of strokes)
     for (const r of drawingRegions(scene)) {
@@ -124,8 +128,8 @@ export function clipStrokes(strokes: Stroke[], scene: Scene): Stroke[] {
           qs = [
             a.x - r.x * 600,
             (r.x + r.width) * 600 - a.x,
-            a.y - r.y * 400,
-            (r.y + r.height) * 400 - a.y,
+            a.y - r.y * frameHeight,
+            (r.y + r.height) * frameHeight - a.y,
           ];
         for (let j = 0; j < 4; j++) {
           if (ps[j] === 0) {

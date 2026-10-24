@@ -8,9 +8,9 @@ export function SceneRegions({ scene }: { scene: Scene }) {
         <rect
           key={i}
           x={r.x * 600}
-          y={r.y * 400}
+          y={r.y * (scene.frameHeight || 400)}
           width={r.width * 600}
-          height={r.height * 400}
+          height={r.height * (scene.frameHeight || 400)}
         />
       ))}
     </>
@@ -23,7 +23,7 @@ export function SceneBase({
   scene: Scene;
   completed?: boolean;
 }) {
-  const art = artwork[scene.id];
+  const art = scene.artworkOverride || artwork[scene.id];
   const asset = completed
     ? art?.completedBase || art?.incomplete
     : art?.incomplete;
@@ -33,14 +33,14 @@ export function SceneBase({
         <image
           href={assetPath(asset)}
           width="600"
-          height="400"
+          height={scene.frameHeight || 400}
           preserveAspectRatio="none"
         />
       ) : scene.photo ? (
         <image
           href={import.meta.env.BASE_URL + scene.photo}
           width="600"
-          height="400"
+          height={scene.frameHeight || 400}
           preserveAspectRatio="none"
         />
       ) : scene.background ? (

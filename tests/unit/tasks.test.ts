@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 import { artwork } from "../../src/content/artwork";
@@ -15,6 +15,15 @@ test("16グループ20課題、別部位を別IDと固有素材・マスクで�
     expect(t.explanation.form.length).toBeGreaterThan(10);
     expect(t.explanation.ecology.length).toBeGreaterThan(10);
     expect(existsSync("public/" + artwork[t.id].incomplete)).toBe(true);
+    expect(t.scene.frameHeight).toBe(600);
+    const reference = artwork[t.id].reference!;
+    expect(reference).toBe(artwork[t.id].explanation);
+    const complete = readFileSync("public/" + reference, "utf8");
+    expect(complete).toContain('data-illustration="complete"');
+    expect(complete).toContain('viewBox="0 0 600 600"');
+    expect(complete).not.toBe(
+      readFileSync("public/" + artwork[t.id].incomplete, "utf8"),
+    );
     expect(t.scene.regions.length).toBeGreaterThan(0);
     for (const r of t.scene.regions)
       expect(

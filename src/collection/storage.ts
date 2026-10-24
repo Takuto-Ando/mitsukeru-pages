@@ -7,6 +7,7 @@ export interface DrawingRecord {
   id: string;
   groupId: string;
   taskId?: string;
+  sceneVersion?: 2;
   createdAt: string;
   strokes: Stroke[];
   outcome: "correct" | "self-confirmed";
@@ -43,6 +44,7 @@ export function readCollection(
       !groups.some((g) => g.id === d.groupId) ||
       (d.taskId !== undefined && taskById[d.taskId]?.groupId !== d.groupId) ||
       !Number.isFinite(Date.parse(d.createdAt)) ||
+      (d.sceneVersion !== undefined && d.sceneVersion !== 2) ||
       !["correct", "self-confirmed"].includes(d.outcome) ||
       !Array.isArray(d.strokes) ||
       !d.strokes.length ||
@@ -58,7 +60,7 @@ export function readCollection(
               p.x < 0 ||
               p.x > 600 ||
               p.y < 0 ||
-              p.y > 400,
+              p.y > (d.sceneVersion === 2 ? 600 : 400),
           ),
       )
     )

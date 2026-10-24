@@ -100,8 +100,8 @@ export function evaluateFeatures(
         (p) =>
           p.x >= r.x * 600 &&
           p.x <= (r.x + r.width) * 600 &&
-          p.y >= r.y * 400 &&
-          p.y <= (r.y + r.height) * 400,
+          p.y >= r.y * (scene.frameHeight || 400) &&
+          p.y <= (r.y + r.height) * (scene.frameHeight || 400),
       ),
     ),
   );

@@ -125,3 +125,21 @@ for (const [id, p] of Object.entries(profiles))
       ).passed,
     ).toBe(false);
   });
+
+import { taskById } from "../../src/content/tasks";
+for (const id of ["gibbon", "hippo"]) {
+  test(`${id}: 全身座標でも各領域内の特徴を評価する`, () => {
+    const scene = taskById[id].scene;
+    const strokes = scene.regions.map((r) =>
+      rect(
+        r.x * 600 + 5,
+        r.y * 600 + 5,
+        r.width * 600 - 10,
+        r.height * 600 - 10,
+      ),
+    );
+    expect(
+      evaluateProfile(clipStrokes(strokes, scene), profiles[id], scene).status,
+    ).toBe("correct");
+  });
+}
