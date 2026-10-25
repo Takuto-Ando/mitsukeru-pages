@@ -40,6 +40,21 @@
 | 実装済み | 4ステップ体験（撮影・描画・比較・解説）、16グループ20課題、段階的観察ヒント、比較スライダー（Pointer/Touch/Keyboard）、IndexedDB観察ノート、旧localStorageデータ移行、単体PNG・比較PNG出力、同意式の研究用イベントログ、10指標算出（`analyzeStudy`）、JSON/CSVエクスポート、同意撤回・ログ削除 |
 | 未実装（MVP対象外） | 外部サーバーへの研究ログ自動送信、アカウント同期・端末間クラウド共有、個体識別モデルの本番統合（インターフェースのみ `src/recognition/individual.ts` に定義）、専門家による全イラストの監修、iPhone実機でのフィールド観察調査・アンケート実施 |
 
+## 無料でiPhoneのホーム画面から使う
+
+Apple Developer Programへの登録やTestFlightは不要です。
+
+1. iPhoneのSafariで[ズーケッチ](https://takuto-ando.github.io/mitsukeru-pages/)を開く。
+2. 共有メニューから「ホーム画面に追加」を選ぶ。見当たらなければメニューの「表示を増やす」などを開く。
+3. 「Webアプリとして開く」があればオンにして、「追加」を押す。
+4. ホーム画面のズーケッチから開き、カメラを許可する。
+
+初回は通信できる状態で「通信・オフライン」の準備完了を確認してください。ホーム画面版でもモデル取得・カメラ権限の初回準備が必要です。Xcodeから入れたアプリの観察ノートは自動では移りません。元のアプリや保存データを削除する必要はありません。
+
+ホーム画面用180px、Manifest用192/512pxアイコンは既存のSVGマークから生成しています。`node scripts/create-app-icons.mjs` で再生成できます。
+
+[Appleのホーム画面追加手順](https://support.apple.com/ja-jp/guide/iphone/iphea86e5236/ios)。TestFlight配布を選ぶ場合には[Apple Developer Programへの登録](https://developer.apple.com/jp/programs/enroll/)が別途必要です。
+
 ## Macで起動
 
 Node.js 24とnpmを使います。

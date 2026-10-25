@@ -23,6 +23,7 @@ export function offlinePlugin(): Plugin {
           else if (
             name === "index.html" ||
             name === "icon.svg" ||
+            name.startsWith("icons/") ||
             name.startsWith("assets/") ||
             name.startsWith("fonts/") ||
             name.startsWith("illustrations/whole/") ||
@@ -49,6 +50,18 @@ export function offlinePlugin(): Plugin {
         background_color: "#faf7ec",
         theme_color: "#277e78",
         icons: [
+          {
+            src: base + "icons/icon-192.png",
+            sizes: "192x192",
+            type: "image/png",
+            purpose: "any",
+          },
+          {
+            src: base + "icons/icon-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any",
+          },
           {
             src: base + "icon.svg",
             sizes: "any",
