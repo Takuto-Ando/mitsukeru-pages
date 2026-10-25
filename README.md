@@ -6,7 +6,7 @@
 
 写真を撮る → 特徴を描く → お手本と見くらべる → 解説を読む、の4段階です。16グループ・20課題を登録しています。模様や輪郭の課題は自己確認を標準とし、自動判定の正解と本人による確認を内部データで区別します。
 
-公開先：[GitHub Pages](https://takuto-ando.github.io/mitsukeru-pages/)
+公開先：[ズーケッチ](https://zooketch.pages.dev/)（Cloudflare Pages）。[従来のGitHub Pages](https://takuto-ando.github.io/mitsukeru-pages/)も維持しています。
 
 ## 追加された観察体験・研究評価機能
 
@@ -210,3 +210,7 @@ npm run ios:open
 ### 認識モデルの候補比較（当面18種）
 
 [18種の認識評価ツール](tools/recognition/README.md)を追加しました。`npm run recognition:lab -- species`で対象一覧、`check`で写真データの検査、`evaluate`で種別精度・対象外の誤受理・保留・推論時間を集計します。`recognition:current`は既存の公開用Workerをローカルで動かし、実際のtest写真の結果を生成します。現在のアプリのモデル・ラベル・しきい値は維持しています。候補モデルの学習や、18種の識別精度検証は写真データが準備できてから実施します。
+
+### Cloudflare Pages用のビルド
+
+`npm run build:cloudflare` でルートURL用の公開ファイルを作れます。既存GitHub Pagesと認識処理は維持します。大きなWASMはCloudflare限定のHTTP gzip配信とし、元バイト列の一致とサイズ制限をビルド時に検査します。[公開・検証・ノート移行の手順](docs/CLOUDFLARE_PAGES.md)を参照してください。`https://zooketch.pages.dev/` は2026-10-26に公開・実配信を確認しました。現在Cloudflareは直接アップロード方式です。main更新時の自動デプロイは従来のGitHub Pagesだけで、Cloudflareには専用ビルドの再アップロードが必要です。

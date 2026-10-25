@@ -1,4 +1,5 @@
 import type { Plugin, ResolvedConfig } from "vite";
+import { prepareCloudflareAssets } from "./cloudflare-assets";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
@@ -14,6 +15,15 @@ export function offlinePlugin(): Plugin {
       if (config.command !== "build") return;
       const dir = config.build.outDir,
         base = config.base;
+      if (process.env.DEPLOY_TARGET === "cloudflare") {
+        if (base !== "/")
+          throw Error("Cloudflare Pagesはルートbaseでビルドしてください");
+        const compressed = await prepareCloudflareAssets(dir);
+        for (const file of compressed)
+          console.log(
+            `Cloudflare HTTP gzip: ${file.path} ${file.originalBytes} → ${file.storedBytes} bytes`,
+          );
+      }
       const files: string[] = [];
       async function scan(path: string) {
         for (const entry of await readdir(path, { withFileTypes: true })) {
@@ -38,7 +48,13 @@ export function offlinePlugin(): Plugin {
       for (const f of files) hash.update(await readFile(join(dir, f)));
       const version = hash.digest("hex").slice(0, 16);
       const prefix = `zooketch-shell-${base}-`;
-      const urls = files.map((f) => base + f);
+      const urls = files.map(
+        (f) =>
+          base +
+          (process.env.DEPLOY_TARGET === "cloudflare" && f.endsWith(".wasm.gz")
+            ? f.slice(0, -3)
+            : f),
+      );
       const manifest = {
         id: base,
         name: "ズーケッチ",
@@ -100,7 +116,15 @@ self.addEventListener('fetch', event => {
   const request=event.request, url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin||!url.pathname.startsWith(BASE))return;
   if(request.mode==='navigate') {
-    event.respondWith(fetch(request).catch(()=>caches.open(CACHE).then(c=>c.match(BASE+'index.html'))));
+    event.respondWith(fetch(request).catch(async()=>{
+      const cached=await (await caches.open(CACHE)).match(BASE+'index.html');
+      if(!cached)return Response.error();
+      // Pages redirects /index.html to /. A cached redirected Response cannot
+      // satisfy a navigation whose redirect mode is manual (Safari/Chromium).
+      const headers=new Headers(cached.headers);
+      headers.delete('Content-Encoding'); headers.delete('Content-Length');
+      return new Response(cached.body,{status:200,headers});
+    }));
   } else if(URLS.includes(url.pathname)) {
     event.respondWith(caches.open(CACHE).then(async c=>(await c.match(url.pathname))||fetch(request)));
   }
