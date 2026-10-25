@@ -31,3 +31,7 @@
 - [EfficientNet-Lite0のモデルカード](https://huggingface.co/timm/efficientnet_lite0.ra_in1k)
 - [timm公式学習スクリプト](https://huggingface.co/docs/timm/main/en/training_script)
 - [ONNX Runtime Webの公開手順・WASM配布](https://onnxruntime.ai/docs/tutorials/web/deploy.html)
+
+## 2026-10-26：まず18種で進める
+
+ユーザーの指定により、現在の認識ラベルにある18種を当面の対象とする。対象一覧、写真の分割・重複検査、現行Workerでの一括推論、モデル共通の評価集計を [開発ツール](../tools/recognition/README.md) に追加した。モデル追加学習と候補への切り替えは未実施。18種の専用写真データを準備してから、現行CLIPを基準として比較する。

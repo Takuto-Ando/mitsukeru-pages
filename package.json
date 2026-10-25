@@ -14,7 +14,9 @@
     "ios:sync": "VITE_BASE_PATH=/ npm run build && cap sync ios",
     "ios:open": "cap open ios",
     "ios:run": "npm run ios:sync && cap run ios",
-    "ios:demo": "npm run ios:sync && node scripts/ios-demo.mjs"
+    "ios:demo": "npm run ios:sync && node scripts/ios-demo.mjs",
+    "recognition:lab": "node tools/recognition/cli.mjs",
+    "recognition:current": "node tools/recognition/run-current.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.4.3",

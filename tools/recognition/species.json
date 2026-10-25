@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "scope": "現在の認識ラベルにある18種。正式な30種リストとは別。",
+  "species": [
+    { "id": "mandrill", "name": "マンドリル", "groupId": "mandrill" },
+    { "id": "gibbon", "name": "シロテテナガザル", "groupId": "gibbon" },
+    { "id": "lemur", "name": "ワオキツネザル", "groupId": "lemur" },
+    {
+      "id": "bush-dog",
+      "name": "ヤブイヌ",
+      "groupId": "bush-dog",
+      "drawingAvailable": false
+    },
+    { "id": "goat", "name": "ヤギ", "groupId": "goat" },
+    { "id": "sheep", "name": "ヒツジ", "groupId": "goat" },
+    { "id": "elephant", "name": "アジアゾウ", "groupId": "elephant" },
+    { "id": "capuchin", "name": "フサオマキザル", "groupId": "capuchin" },
+    { "id": "macaque", "name": "アカゲザル", "groupId": "macaque" },
+    { "id": "badger", "name": "ニホンアナグマ", "groupId": "badger" },
+    { "id": "zebra", "name": "シマウマ", "groupId": "zebra" },
+    { "id": "giraffe", "name": "キリン", "groupId": "giraffe" },
+    { "id": "hippo", "name": "カバ", "groupId": "hippo" },
+    { "id": "fennec", "name": "フェネック", "groupId": "fennec" },
+    { "id": "gorilla", "name": "ニシゴリラ", "groupId": "gorilla" },
+    { "id": "donkey", "name": "ロバ", "groupId": "donkey" },
+    { "id": "meerkat", "name": "ミーアキャット", "groupId": "meerkat" },
+    { "id": "deer", "name": "ニホンジカ", "groupId": "deer" }
+  ]
+}
