@@ -884,3 +884,242 @@ test("同意前の描画を研究の1回目へ遡って保存しない", async (
     page.getByRole("region", { name: "2回の描画の比較" }),
   ).toHaveCount(0);
 });
+
+test("ノートをバックアップし、削除後に復元・重複回避・不正ファイル拒否ができる", async ({
+  page,
+}) => {
+  await select(page);
+  await draw(page);
+  await compare(page);
+  const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
+  if (await confirm.count()) await confirm.click();
+  await page
+    .getByRole("button", { name: "観察を保存する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "観察ノート (1)", exact: true })
+    .click();
+  await page
+    .getByText("ノートのバックアップ・保存容量", { exact: true })
+    .click();
+  const downloaded = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "ノートをバックアップ", exact: true })
+    .click();
+  const path = await (await downloaded).path();
+  const { readFile } = await import("node:fs/promises");
+  const data = await readFile(path!);
+  const backup = JSON.parse(data.toString());
+  expect(backup.observations).toHaveLength(1);
+  expect(backup.observations[0].ownPng).toMatch(/^data:image\/png/);
+  await page.getByRole("button", { name: "削除", exact: true }).click();
+  await page.getByRole("button", { name: "削除する", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "観察ノート (0)", exact: true }),
+  ).toBeVisible();
+  const fileInput = page.getByLabel("観察ノートのバックアップファイル", {
+    exact: true,
+  });
+  await fileInput.setInputFiles({
+    name: "notes.json",
+    mimeType: "application/json",
+    buffer: data,
+  });
+  await expect(
+    page.getByText("1件を確認しました。追加予定 1件・既存と同じ記録 0件。", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  // Selecting a file alone must never write to IndexedDB.
+  await expect(
+    page.getByRole("button", { name: "観察ノート (0)", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "確認して追加する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "観察ノート (1)", exact: true }),
+  ).toBeVisible();
+  await fileInput.setInputFiles({
+    name: "notes.json",
+    mimeType: "application/json",
+    buffer: data,
+  });
+  await page
+    .getByRole("button", { name: "確認して追加する", exact: true })
+    .click();
+  await expect(
+    page.getByText("0件を復元しました。既存の1件はそのまま残しました。", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await fileInput.setInputFiles({
+    name: "broken.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      '{"format":"zooketch-observation-notes","version":1,"observations":[{}]}',
+    ),
+  });
+  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "確認して追加する", exact: true }),
+  ).toHaveCount(0);
+  // A storage error after the first addition must roll back the entire import.
+  await page.evaluate(() => {
+    const add = IDBObjectStore.prototype.add;
+    let calls = 0;
+    IDBObjectStore.prototype.add = function (value, key) {
+      if (this.name === "observations" && ++calls === 2)
+        throw new DOMException("test quota", "QuotaExceededError");
+      return key === undefined
+        ? add.call(this, value)
+        : add.call(this, value, key);
+    };
+  });
+  const two = {
+    ...backup,
+    observations: [
+      { ...backup.observations[0], id: "new-1" },
+      { ...backup.observations[0], id: "new-2" },
+    ],
+  };
+  await fileInput.setInputFiles({
+    name: "two.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(two)),
+  });
+  await page
+    .getByRole("button", { name: "確認して追加する", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "今ある記録は残しています。",
+  );
+  await page.reload();
+  await page
+    .getByRole("button", { name: "観察ノート (1)", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "ヤギ・ヒツジの絵を見返す", exact: true })
+    .click();
+  await expect(page.getByRole("slider")).toBeVisible();
+});
+
+test("画面を離れるとカメラを停止し、戻ると再開・撮影中断から手動復帰できる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(HTMLMediaElement.prototype, "srcObject", {
+      configurable: true,
+      get() {
+        return null;
+      },
+      set() {},
+    });
+    HTMLMediaElement.prototype.play = () => Promise.resolve();
+    window.Worker = class {
+      onmessage: ((event: { data: unknown }) => void) | null = null;
+      terminate() {}
+      postMessage() {
+        Object.assign(window, {
+          finishModel: () =>
+            this.onmessage?.({
+              data: { type: "result", result: { status: "ready" } },
+            }),
+        });
+      }
+    } as unknown as typeof Worker;
+    let calls = 0,
+      stopped = 0;
+    let track: { onended: ((e: Event) => void) | null; stop: () => void };
+    Object.assign(window, {
+      cameraState: () => ({ calls, stopped }),
+      endCamera: () => track.onended?.(new Event("ended")),
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          calls++;
+          track = {
+            onended: null,
+            stop: () => {
+              stopped++;
+            },
+          };
+          return { getTracks: () => [track], getVideoTracks: () => [track] };
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  await expect(
+    page.getByRole("button", { name: "シャッター", exact: true }),
+  ).toBeEnabled();
+  await page.getByText("撮影の設定", { exact: true }).click();
+  await page
+    .getByRole("button", { name: "識別モデルを先にダウンロード", exact: true })
+    .click();
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(
+    page.getByRole("button", { name: "シャッター", exact: true }),
+  ).toBeDisabled();
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as unknown as { cameraState: () => { stopped: number } }
+        ).cameraState().stopped,
+    ),
+  ).toBe(1);
+  await page.evaluate(() => {
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(page.getByText("カメラで観察中", { exact: true })).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as unknown as { cameraState: () => { calls: number } }
+        ).cameraState().calls,
+    ),
+  ).toBe(2);
+  await page.evaluate(() =>
+    (window as unknown as { finishModel: () => void }).finishModel(),
+  );
+  await expect(
+    page.getByRole("button", { name: "識別モデル準備済み", exact: true }),
+  ).toBeVisible();
+  await page.evaluate(() =>
+    (window as unknown as { endCamera: () => void }).endCamera(),
+  );
+  await expect(
+    page.getByRole("button", { name: "カメラを再開する", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "カメラを再開する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "シャッター", exact: true }),
+  ).toBeEnabled();
+  expect(
+    await page.evaluate(
+      () =>
+        (
+          window as unknown as { cameraState: () => { calls: number } }
+        ).cameraState().calls,
+    ),
+  ).toBe(3);
+});

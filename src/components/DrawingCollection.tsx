@@ -1,3 +1,4 @@
+import { NotebookTools } from "./NotebookTools";
 import { useEffect, useId, useState } from "react";
 import { groups } from "../content/groups";
 import { drawingScene } from "../collection/drawingScene";
@@ -129,6 +130,7 @@ export function DrawingCollection({
       </button>
       <h1>観察ノート</h1>
       <p>{drawings.length}枚の観察カードを保存しています。</p>
+      <NotebookTools drawings={drawings} onRestored={onUpdate} />
       <p className="quiet-note">
         このブラウザ・アプリの中だけに保存します。SafariとiPhoneアプリの保存は別々です。撮影写真や位置情報は保存しません。
       </p>

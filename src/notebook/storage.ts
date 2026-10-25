@@ -120,3 +120,30 @@ export async function updateObservationImages(
   };
   await done;
 }
+
+// Add only absent IDs. Concurrent tabs and re-imports never overwrite existing notes.
+export async function restoreObservations(records: ObservationRecord[]) {
+  const converted = await Promise.all(records.map(toStorable));
+  const db = await database(),
+    tx = db.transaction("observations", "readwrite"),
+    done = transactionDone(tx);
+  let added = 0,
+    skipped = 0;
+  for (const record of converted) {
+    const store = tx.objectStore("observations"),
+      request = store.get(record.id as IDBValidKey);
+    request.onsuccess = () => {
+      try {
+        if (request.result) skipped++;
+        else {
+          store.add(record);
+          added++;
+        }
+      } catch {
+        tx.abort();
+      }
+    };
+  }
+  await done;
+  return { added, skipped };
+}

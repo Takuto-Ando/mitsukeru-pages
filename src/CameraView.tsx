@@ -24,21 +24,34 @@ export function CameraView({
   const reduce = useReducedMotion();
   const video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
-    generation = useRef(0);
-  const [status, setStatus] = useState<"waiting" | "live" | "failed">(
-      "waiting",
-    ),
+    generation = useRef(0),
+    cameraGeneration = useRef(0),
+    cameraPending = useRef(false),
+    needsResume = useRef(false);
+  const [status, setStatus] = useState<
+      "waiting" | "live" | "paused" | "failed"
+    >("waiting"),
     [message, setMessage] = useState("");
   useEffect(
     () => () => {
       generation.current++;
+      cameraGeneration.current++;
       speciesRecognizer.release();
-      stream.current?.getTracks().forEach((track) => track.stop());
+      stopCamera();
     },
     [],
   );
+  function stopCamera() {
+    stream.current?.getTracks().forEach((track) => {
+      track.onended = null;
+      track.stop();
+    });
+    stream.current = null;
+    if (video.current) video.current.srcObject = null;
+  }
   async function start() {
-    const request = ++generation.current;
+    const request = ++cameraGeneration.current;
+    cameraPending.current = true;
     setStatus("waiting");
     setMessage("");
     try {
@@ -47,29 +60,67 @@ export function CameraView({
         video: { facingMode: { ideal: "environment" } },
         audio: false,
       });
-      if (request !== generation.current) {
+      if (request !== cameraGeneration.current) {
         media.getTracks().forEach((track) => track.stop());
         return;
       }
-      stream.current?.getTracks().forEach((track) => track.stop());
+      stopCamera();
       stream.current = media;
+      needsResume.current = false;
+      media.getVideoTracks?.().forEach((track) => {
+        track.onended = () => {
+          if (request !== cameraGeneration.current) return;
+          needsResume.current = true;
+          setStatus("paused");
+          setMessage(
+            "カメラが止まりました。再開するか、下から動物を選べます。",
+          );
+        };
+      });
       if (video.current) {
         video.current.srcObject = media;
         await video.current.play();
       }
-      if (request === generation.current) setStatus("live");
+      if (request === cameraGeneration.current) setStatus("live");
     } catch {
-      if (request !== generation.current) return;
-      stream.current?.getTracks().forEach((track) => track.stop());
-      stream.current = null;
+      if (request !== cameraGeneration.current) return;
+      stopCamera();
+      needsResume.current = false;
       setStatus("failed");
       setMessage(
         "カメラを使えなくても大丈夫。下から動物を選んで、同じ体験を始められます。",
       );
+    } finally {
+      if (request === cameraGeneration.current) cameraPending.current = false;
     }
   }
   useEffect(() => {
     void start();
+    const pause = () => {
+      if (stream.current || cameraPending.current || needsResume.current) {
+        needsResume.current = true;
+        cameraGeneration.current++;
+        cameraPending.current = false;
+        stopCamera();
+        setStatus("paused");
+        setMessage("カメラを休止しています。戻ったら再開できます。");
+      }
+    };
+    const resume = () => {
+      if (!document.hidden && needsResume.current) {
+        needsResume.current = false;
+        void start();
+      }
+    };
+    const visibility = () => (document.hidden ? pause() : resume());
+    document.addEventListener("visibilitychange", visibility);
+    window.addEventListener("pagehide", pause);
+    window.addEventListener("pageshow", resume);
+    return () => {
+      document.removeEventListener("visibilitychange", visibility);
+      window.removeEventListener("pagehide", pause);
+      window.removeEventListener("pageshow", resume);
+    };
   }, []);
   async function capture() {
     if (busy || !video.current?.videoWidth || status !== "live") return;
@@ -174,9 +225,11 @@ export function CameraView({
               <Camera size={38} />
             )}
             <strong>
-              {status === "failed"
-                ? "手動で始められるよ"
-                : "カメラを準備しています"}
+              {status === "paused"
+                ? "カメラを再開できます"
+                : status === "failed"
+                  ? "手動で始められるよ"
+                  : "カメラを準備しています"}
             </strong>
             <span>動物から少し離れて、そっと観察しよう。</span>
           </div>
@@ -191,13 +244,11 @@ export function CameraView({
       {message && (
         <p className="camera-message" role="status">
           {message}
-          {status === "failed" && (
-            <button
-              className="text-button"
-              disabled={recognizing}
-              onClick={() => void start()}
-            >
-              カメラをもう一度試す
+          {(status === "failed" || status === "paused") && (
+            <button className="text-button" onClick={() => void start()}>
+              {status === "paused"
+                ? "カメラを再開する"
+                : "カメラをもう一度試す"}
             </button>
           )}
         </p>

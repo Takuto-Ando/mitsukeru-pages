@@ -215,24 +215,33 @@ export async function composeCardPng(
   }
 }
 
-export async function savePng(blob: Blob, name: string) {
+export const savePng = (blob: Blob, name: string) => saveFile(blob, name);
+
+export async function saveFile(blob: Blob, name: string) {
   if (
-    !/iPhone|iPad|iPod/.test(navigator.userAgent) &&
+    !(
+      /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+      (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+    ) &&
     "download" in HTMLAnchorElement.prototype
   ) {
     downloadBlob(blob, name);
-    return;
+    return true;
   }
-  const file = new File([blob], name, { type: "image/png" });
+  const file = new File([blob], name, {
+    type: blob.type || "application/octet-stream",
+  });
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title: "ズーケッチの観察" });
-      return;
+      return true;
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
+      if (error instanceof DOMException && error.name === "AbortError")
+        return false;
     }
   }
   downloadBlob(blob, name);
+  return true;
 }
 
 export function downloadBlob(blob: Blob, name: string) {
