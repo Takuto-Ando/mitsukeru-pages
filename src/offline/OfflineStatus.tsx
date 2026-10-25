@@ -16,20 +16,43 @@ export function OfflineStatus() {
       return;
     }
     let alive = true;
+    const cleanups = new Set<() => void>();
+    let closeStatus: (() => void) | undefined;
     const check = () => {
+      if (!alive) return;
+      closeStatus?.();
       const worker = navigator.serviceWorker.controller;
       if (!worker) return;
       const channel = new MessageChannel();
-      channel.port1.onmessage = (e) => {
+      const close = () => {
+        clearTimeout(timeout);
+        channel.port1.onmessage = null;
         channel.port1.close();
+        channel.port2.close();
+      };
+      const timeout = window.setTimeout(() => {
+        close();
         if (alive)
           setMessage(
-            e.data.ready
+            "準備状況を確認できませんでした。オンラインで開き直してください。",
+          );
+      }, 10000);
+      closeStatus = close;
+      channel.port1.onmessage = (e) => {
+        close();
+        if (alive)
+          setMessage(
+            e.data?.ready
               ? "オフライン準備完了（観察・ノート）"
               : "素材の準備が未完了です。オンラインで開き直してください。",
           );
       };
-      worker.postMessage("offline-status", [channel.port2]);
+      try {
+        worker.postMessage("offline-status", [channel.port2]);
+      } catch {
+        close();
+        if (alive) setMessage("オフライン準備を確認できませんでした。");
+      }
     };
     void navigator.serviceWorker
       .register(import.meta.env.BASE_URL + "sw.js", {
@@ -39,13 +62,19 @@ export function OfflineStatus() {
       .then((reg) => {
         if (!alive) return;
         if (reg.waiting) setWaiting(reg.waiting);
-        reg.addEventListener("updatefound", () => {
+        const update = () => {
           const installing = reg.installing;
-          installing?.addEventListener("statechange", () => {
-            if (alive && installing.state === "installed" && reg.waiting)
+          const changed = () => {
+            if (alive && installing?.state === "installed" && reg.waiting)
               setWaiting(reg.waiting);
-          });
-        });
+          };
+          installing?.addEventListener("statechange", changed);
+          cleanups.add(() =>
+            installing?.removeEventListener("statechange", changed),
+          );
+        };
+        reg.addEventListener("updatefound", update);
+        cleanups.add(() => reg.removeEventListener("updatefound", update));
         check();
         void navigator.serviceWorker.ready.then(check);
       })
@@ -58,6 +87,8 @@ export function OfflineStatus() {
     navigator.serviceWorker.addEventListener("controllerchange", check);
     return () => {
       alive = false;
+      closeStatus?.();
+      cleanups.forEach((cleanup) => cleanup());
       navigator.serviceWorker.removeEventListener("controllerchange", check);
     };
   }, []);

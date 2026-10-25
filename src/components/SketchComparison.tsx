@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { artwork, assetPath } from "../content/artwork";
 import { scenes, clipStrokes, type Scene } from "../content/scenes";
@@ -36,6 +36,10 @@ export function SketchComparison({
     reduce = useReducedMotion();
   const drag = useRef<{ id: number; from: number } | undefined>(undefined),
     value = useRef(position);
+  const userLines = useMemo(
+    () => <SketchLines strokes={clipStrokes(strokes, scene)} />,
+    [strokes, scene],
+  );
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
   const set = (n: number) => {
@@ -149,7 +153,7 @@ export function SketchComparison({
                 animate={{ opacity: mode === "answer" ? 0 : 1 }}
                 transition={{ duration: reduce ? 0 : 0.2 }}
               >
-                <SketchLines strokes={clipStrokes(strokes, scene)} />
+                {userLines}
               </motion.g>
             </g>
           </g>
@@ -168,7 +172,11 @@ export function SketchComparison({
               if (drag.current || !e.isPrimary || e.button !== 0) return;
               e.preventDefault();
               drag.current = { id: e.pointerId, from: value.current };
-              e.currentTarget.setPointerCapture(e.pointerId);
+              try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+              } catch {
+                /* Pointer already ended. */
+              }
               point(e);
             }}
             onPointerMove={(e) => {

@@ -54,44 +54,38 @@ export function SketchCanvas({
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
-  const [draft, setDraft] = useState<Stroke>([]),
+  const [drawing, setDrawing] = useState(false),
     [erase, setErase] = useState(false);
-  useEffect(
-    () => () => {
-      if (active.current !== null)
-        onDrawingActivity?.(false, activeTool.current);
-    },
-    [],
-  );
+  const callbacks = useRef({ onChange, onDrawingActivity });
+  callbacks.current = { onChange, onDrawingActivity };
+  const working = useRef(strokes);
+  const committed = useRef(strokes);
+  committed.current = strokes;
+  if (active.current === null) working.current = strokes;
   const paintFrame = useRef<number | undefined>(undefined);
-  const paintState = useRef({ strokes, draft, scene });
-  paintState.current = { strokes, draft, scene };
-  useEffect(
-    () => () => {
-      if (paintFrame.current !== undefined)
-        cancelAnimationFrame(paintFrame.current);
-      paintFrame.current = undefined;
-    },
-    [],
-  );
-  useEffect(() => {
+  const paintState = useRef({ scene, frameHeight });
+  paintState.current = { scene, frameHeight };
+  function paint() {
     if (paintFrame.current !== undefined) return;
     paintFrame.current = requestAnimationFrame(() => {
       paintFrame.current = undefined;
-      const { strokes, draft, scene } = paintState.current;
+      const { scene, frameHeight } = paintState.current;
       const canvas = ref.current;
       if (!canvas) return;
+      // Allocate pixels for the displayed size, retaining logical 600-unit coordinates.
       const ratio = Math.min(window.devicePixelRatio || 1, 3);
-      if (
-        canvas.width !== 600 * ratio ||
-        canvas.height !== frameHeight * ratio
-      ) {
-        canvas.width = 600 * ratio;
-        canvas.height = frameHeight * ratio;
+      const width = Math.max(
+        1,
+        Math.round(canvas.getBoundingClientRect().width * ratio),
+      );
+      const height = Math.max(1, Math.round((width * frameHeight) / 600));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
       }
       const context = canvas.getContext("2d");
       if (!context) return;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.setTransform(width / 600, 0, 0, height / frameHeight, 0, 0);
       context.clearRect(0, 0, 600, frameHeight);
       context.save();
       context.beginPath();
@@ -107,46 +101,98 @@ export function SketchCanvas({
       context.lineCap = "round";
       context.lineJoin = "round";
       context.strokeStyle = "#277e78";
-      for (const stroke of [...strokes, draft]) {
-        if (!stroke.length) continue;
+      const draw = (stroke: Stroke) => {
+        if (!stroke.length) return;
         context.beginPath();
         context.moveTo(stroke[0].x, stroke[0].y);
-        for (const point of stroke.slice(1)) context.lineTo(point.x, point.y);
+        for (let i = 1; i < stroke.length; i++)
+          context.lineTo(stroke[i].x, stroke[i].y);
         context.stroke();
-      }
+      };
+      for (const stroke of working.current) draw(stroke);
+      draw(current.current);
       context.restore();
     });
-  }, [strokes, draft, scene]);
-  function point(event: { clientX: number; clientY: number }): Point {
-    const rect = ref.current!.getBoundingClientRect();
+  }
+  useEffect(() => {
+    paint();
+  }, [strokes, scene]);
+  useEffect(() => {
+    const observer = new ResizeObserver(paint);
+    if (ref.current) observer.observe(ref.current);
+    window.addEventListener("resize", paint);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", paint);
+      if (paintFrame.current !== undefined)
+        cancelAnimationFrame(paintFrame.current);
+      paintFrame.current = undefined;
+      if (active.current !== null)
+        callbacks.current.onDrawingActivity?.(false, activeTool.current);
+    };
+  }, []);
+  function point(
+    event: { clientX: number; clientY: number },
+    rect = ref.current!.getBoundingClientRect(),
+  ): Point {
     return scenePoint(
       event.clientX - rect.left,
       event.clientY - rect.top,
-      rect.width,
-      rect.height,
+      rect.width || 1,
+      rect.height || 1,
       frameHeight,
     );
   }
-
+  function append(position: Point) {
+    const previous = current.current.at(-1);
+    // Discard sub-pixel duplicates, without smoothing away the observed shape.
+    if (
+      !previous ||
+      Math.hypot(position.x - previous.x, position.y - previous.y) >= 0.5
+    )
+      current.current.push(position);
+  }
   function eraseAt(position: Point) {
-    const next = strokes.filter(
+    working.current = working.current.filter(
       (stroke) =>
         !stroke.some(
           (end, index) =>
             index > 0 && segmentDistance(position, stroke[index - 1], end) < 23,
         ),
     );
-    if (next.length !== strokes.length) onChange(next, "erase");
+    paint();
   }
-  function cancel() {
-    if (active.current !== null) onDrawingActivity?.(false, activeTool.current);
+  function finish() {
+    if (active.current === null) return;
+    const pointerId = active.current;
     active.current = null;
+    if (activeTool.current === "eraser") {
+      if (working.current.length !== committed.current.length)
+        callbacks.current.onChange(working.current, "erase");
+    } else if (current.current.length) {
+      const next = current.current;
+      if (next.length === 1)
+        next.push({
+          ...next[0],
+          x: next[0].x + (next[0].x < 600 ? 0.01 : -0.01),
+        });
+      if (clipStrokes([next], scene).length) {
+        working.current = [...working.current, next];
+        callbacks.current.onChange(working.current, "draw");
+      }
+    }
     current.current = [];
-    setDraft([]);
+    setDrawing(false);
+    callbacks.current.onDrawingActivity?.(false, activeTool.current);
+    if (ref.current?.hasPointerCapture(pointerId))
+      ref.current.releasePointerCapture(pointerId);
+    paint();
   }
+  const finishRef = useRef(finish);
+  finishRef.current = finish;
   useEffect(() => {
     const hide = () => {
-      if (document.hidden) cancel();
+      if (document.hidden) finishRef.current();
     };
     document.addEventListener("visibilitychange", hide);
     return () => document.removeEventListener("visibilitychange", hide);
@@ -160,7 +206,7 @@ export function SketchCanvas({
         </span>
       </div>
       <div
-        className={"drawing-paper " + (draft.length ? "is-drawing" : "")}
+        className={"drawing-paper " + (drawing ? "is-drawing" : "")}
         style={{ aspectRatio: `600 / ${frameHeight}` }}
       >
         <div
@@ -176,7 +222,7 @@ export function SketchCanvas({
             role="img"
           >
             <SceneBase scene={scene} />
-            {(showTarget || (!strokes.length && !draft.length)) && (
+            {(showTarget || (!strokes.length && !drawing)) && (
               <TargetRegions scene={scene} />
             )}
           </svg>
@@ -195,50 +241,41 @@ export function SketchCanvas({
               active.current = event.pointerId;
               activeTool.current = erase ? "eraser" : "pen";
               onDrawingActivity?.(true, activeTool.current);
-              event.currentTarget.setPointerCapture(event.pointerId);
+              try {
+                event.currentTarget.setPointerCapture(event.pointerId);
+              } catch {
+                /* The pointer may already have ended. */
+              }
               const position = point(event);
-              if (erase) eraseAt(position);
+              if (activeTool.current === "eraser") eraseAt(position);
               else {
                 current.current = [position];
-                setDraft(current.current);
+                setDrawing(true);
+                paint();
               }
             }}
             onPointerMove={(event) => {
               if (active.current !== event.pointerId) return;
-              const position = point(event);
-              if (erase) eraseAt(position);
-              else {
-                const samples = event.nativeEvent.getCoalescedEvents?.() || [];
-                current.current = [
-                  ...current.current,
-                  ...(samples.length ? samples.map(point) : [position]),
-                ];
-                setDraft(current.current);
+              const rect = event.currentTarget.getBoundingClientRect();
+              const samples = event.nativeEvent.getCoalescedEvents?.() || [];
+              const events = samples.length ? samples : [event];
+              for (const sample of events) {
+                const position = point(sample, rect);
+                if (activeTool.current === "eraser") eraseAt(position);
+                else append(position);
               }
+              paint();
             }}
             onPointerUp={(event) => {
               if (active.current !== event.pointerId) return;
-              if (!erase && current.current.length >= 1) {
-                const next = [...current.current, point(event)];
-                if (
-                  next.length === 2 &&
-                  next[0].x === next[1].x &&
-                  next[0].y === next[1].y
-                )
-                  next[1] = {
-                    ...next[1],
-                    x: next[1].x + (next[1].x < 600 ? 0.01 : -0.01),
-                  };
-                if (clipStrokes([next], scene).length)
-                  onChange([...strokes, next], "draw");
-              }
-              cancel();
+              if (activeTool.current === "pen") append(point(event));
+              finish();
             }}
             onPointerCancel={(event) => {
-              if (active.current === event.pointerId) cancel();
+              if (active.current === event.pointerId) finish();
             }}
             onLostPointerCapture={(event) => {
-              if (active.current === event.pointerId) cancel();
+              if (active.current === event.pointerId) finish();
             }}
           />
         </div>

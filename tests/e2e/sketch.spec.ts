@@ -1123,3 +1123,160 @@ test("画面を離れるとカメラを停止し、戻ると再開・撮影中�
     ),
   ).toBe(3);
 });
+
+test("中断した筆跡を保持し、消しゴムの一往復を一度のUndoで戻せる", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await select(page);
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
+  const canvas = page.getByTestId("canvas");
+  const region = tasks.find((t) => t.id === "goat")!.scene.regions[0];
+  const box = (await canvas.boundingBox())!;
+  const x = box.x + (region.x + region.width * 0.25) * box.width;
+  const y = box.y + (region.y + region.height * 0.5) * box.height;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 15, y + 5, { steps: 12 });
+  // Simulate a browser taking over the pointer (notification/app interruption).
+  await canvas.evaluate((node) =>
+    node.dispatchEvent(
+      new PointerEvent("pointercancel", { pointerId: 1, bubbles: true }),
+    ),
+  );
+  await page.mouse.up();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await page.mouse.move(x + 25, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 35, y + 5, { steps: 8 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "消しゴム", exact: true }).click();
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 35, y + 5, { steps: 15 });
+  await page.mouse.up();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  // Erase both again: one undo must have restored both strokes.
+  await page.mouse.click(x + 35, y + 5);
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await page.mouse.click(x, y);
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+  expect(errors).toEqual([]);
+});
+
+test("長い筆跡でも描画・画面幅変更・Undoを継続できる", async ({ page }) => {
+  await select(page);
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
+  const canvas = page.getByTestId("canvas");
+  await canvas.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const send = (type: string, x: number, y: number) =>
+      node.dispatchEvent(
+        new PointerEvent(type, {
+          pointerId: 7,
+          isPrimary: true,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+          clientX: box.left + x * box.width,
+          clientY: box.top + y * box.height,
+          bubbles: true,
+        }),
+      );
+    send("pointerdown", 0.43, 0.36);
+    for (let i = 0; i < 6000; i++) {
+      const angle = i * 0.02;
+      send(
+        "pointermove",
+        0.44 + Math.cos(angle) * 0.05,
+        0.365 + Math.sin(angle) * 0.015,
+      );
+    }
+    send("pointerup", 0.49, 0.365);
+  });
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await page.setViewportSize({ width: 430, height: 852 });
+  await expect
+    .poll(() =>
+      canvas.evaluate((node) => {
+        const c = node as HTMLCanvasElement;
+        return Math.abs(
+          c.width -
+            Math.round(
+              c.getBoundingClientRect().width * Math.min(devicePixelRatio, 3),
+            ),
+        );
+      }),
+    )
+    .toBeLessThanOrEqual(1);
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+});
+
+test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見返せる", async ({
+  page,
+}) => {
+  await select(page);
+  await draw(page);
+  await compare(page);
+  const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
+  if (await confirm.count()) await confirm.click();
+  await page
+    .getByRole("button", { name: "観察を保存する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！", exact: true }),
+  ).toBeVisible();
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("zooketch.observation-notebook", 1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction("observations", "readwrite");
+      const store = tx.objectStore("observations");
+      const request = store.getAll();
+      request.onsuccess = () => {
+        for (let i = 0; i < 24; i++)
+          store.add({ ...request.result[0], id: `pagination-${i}` });
+      };
+      tx.oncomplete = () => resolve();
+      tx.onabort = () => reject(tx.error);
+    });
+    db.close();
+  });
+  await page.reload();
+  await page
+    .getByRole("button", { name: "観察ノート (25)", exact: true })
+    .click();
+  await expect(page.locator(".collection-card")).toHaveCount(12);
+  await page
+    .getByRole("button", { name: "もっと見る（残り13枚）", exact: true })
+    .click();
+  await expect(page.locator(".collection-card")).toHaveCount(24);
+  await page
+    .getByRole("button", { name: "もっと見る（残り1枚）", exact: true })
+    .click();
+  await expect(page.locator(".collection-card")).toHaveCount(25);
+  await page.locator(".collection-open").last().click();
+  await expect(
+    page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
+  ).toBeVisible();
+});

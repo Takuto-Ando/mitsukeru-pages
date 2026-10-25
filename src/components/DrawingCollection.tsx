@@ -69,6 +69,7 @@ export function DrawingCollection({
   onUpdate?: () => Promise<void> | void;
 }) {
   const [selected, setSelected] = useState<string>();
+  const [visibleCount, setVisibleCount] = useState(12);
   const [deleting, setDeleting] = useState<string>();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState("");
@@ -208,7 +209,7 @@ export function DrawingCollection({
         </div>
       ) : (
         <div className="collection-grid">
-          {drawings.map((d) => (
+          {drawings.slice(0, visibleCount).map((d) => (
             <article className="collection-card" key={d.id}>
               <button
                 className="collection-open"
@@ -264,6 +265,14 @@ export function DrawingCollection({
             </article>
           ))}
         </div>
+      )}
+      {!drawing && drawings.length > visibleCount && (
+        <button
+          className="text-button"
+          onClick={() => setVisibleCount((count) => count + 12)}
+        >
+          もっと見る（残り{drawings.length - visibleCount}枚）
+        </button>
       )}
     </section>
   );
