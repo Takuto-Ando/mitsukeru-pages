@@ -39,7 +39,7 @@ export function SketchCanvas({
   canUndo,
   showTarget = false,
 }: {
-  onDrawingActivity?: (active: boolean) => void;
+  onDrawingActivity?: (active: boolean, tool: "pen" | "eraser") => void;
   onUndo?: () => void;
   canUndo?: boolean;
   showTarget?: boolean;
@@ -50,6 +50,7 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
+  const activeTool = useRef<"pen" | "eraser">("pen");
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
@@ -57,7 +58,8 @@ export function SketchCanvas({
     [erase, setErase] = useState(false);
   useEffect(
     () => () => {
-      if (active.current !== null) onDrawingActivity?.(false);
+      if (active.current !== null)
+        onDrawingActivity?.(false, activeTool.current);
     },
     [],
   );
@@ -137,11 +139,18 @@ export function SketchCanvas({
     if (next.length !== strokes.length) onChange(next, "erase");
   }
   function cancel() {
-    if (active.current !== null) onDrawingActivity?.(false);
+    if (active.current !== null) onDrawingActivity?.(false, activeTool.current);
     active.current = null;
     current.current = [];
     setDraft([]);
   }
+  useEffect(() => {
+    const hide = () => {
+      if (document.hidden) cancel();
+    };
+    document.addEventListener("visibilitychange", hide);
+    return () => document.removeEventListener("visibilitychange", hide);
+  }, []);
   return (
     <div className="sketch-card">
       <div className="paper-top">
@@ -184,7 +193,8 @@ export function SketchCanvas({
                 return;
               event.preventDefault();
               active.current = event.pointerId;
-              onDrawingActivity?.(true);
+              activeTool.current = erase ? "eraser" : "pen";
+              onDrawingActivity?.(true, activeTool.current);
               event.currentTarget.setPointerCapture(event.pointerId);
               const position = point(event);
               if (erase) eraseAt(position);

@@ -30,7 +30,14 @@ test("16グループ20課題、別部位を別IDと固有素材・マスクで�
         r.x >= 0 && r.y >= 0 && r.x + r.width <= 1 && r.y + r.height <= 1,
       ).toBe(true);
     expect(t.scene.answerPath || t.id === "goat").toBeTruthy();
+    expect(t.hints?.length).toBeGreaterThanOrEqual(2);
   }
+  const allHints = tasks.flatMap((t) => t.hints || []);
+  expect(new Set(allHints).size).toBe(allHints.length);
+  expect(tasks.find((t) => t.id === "goat")?.hints).toEqual([
+    "目の真ん中を見てみよう。",
+    "縦と横、どちらに長いかな？",
+  ]);
 });
 test("模様は比較確認を標準とし、全課題に判定方法がある", () => {
   for (const t of tasks) {

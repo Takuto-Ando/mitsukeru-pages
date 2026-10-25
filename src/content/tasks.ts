@@ -1,3 +1,4 @@
+import { observationHints } from "./hints";
 import { fullBodyLayouts } from "./fullBodyLayouts";
 import partScenes from "./partScenes";
 import { groups } from "./groups";
@@ -16,6 +17,7 @@ export interface ObservationTask {
   part: string;
   question: string;
   hint: string;
+  hints?: string[];
   next: string;
   method: JudgingMethod;
   automatic: boolean;
@@ -257,6 +259,11 @@ export const tasksForGroup = (id: string) =>
 
 // Position the missing part within a full-animal illustration, never a close-up.
 for (const task of tasks) {
+  task.hints = observationHints[task.id];
+  if (task.id === "sheep") {
+    task.method = "orientation";
+    task.automatic = true;
+  }
   const layout = fullBodyLayouts[task.id];
   const prior = partScenes[task.id as keyof typeof partScenes];
   const rectangles =

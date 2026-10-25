@@ -1,5 +1,15 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { captureStudyDrawing, type StudyDrawing } from "./research/pairs";
+import { StudyPairView } from "./components/StudyPairView";
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { OfflineStatus } from "./offline/OfflineStatus";
+import { ReadAloud, SpeechSettings, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
@@ -8,22 +18,47 @@ import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
-import { evaluateProfile } from "./content/profiles";
-import { evaluateObservation } from "./evaluator";
-import { researchRecorder as research } from "./research/recorder";
-import { createFeedbackAudio } from "./audio";
+import { drawingEvaluator } from "./domain";
+
 import {
-  emptyCollection,
-  readCollection,
-  writeCollection,
-  type CollectionData,
-} from "./collection/storage";
+  recordStudy,
+  setStudyContext,
+  studyStatus,
+  subscribeStudy,
+  currentStudyContext,
+} from "./research/study";
+import { StudyControls } from "./components/StudyControls";
+import {
+  initializeNotebook,
+  loadObservations,
+  addObservation,
+  deleteObservation,
+  observationMetadata,
+} from "./notebook/storage";
+import {
+  composeObservationImages,
+  composeCardPng,
+  savePng,
+} from "./notebook/images";
+import type { ObservationRecord } from "./notebook/types";
+import { createFeedbackAudio } from "./audio";
 import { drawingHistory, emptyDrawing } from "./drawing/history";
 import type { Evaluation } from "./types";
 import "./styles/cards.css";
 
 export default function App() {
   const reduce = useReducedMotion();
+  const study = useSyncExternalStore(subscribeStudy, studyStatus);
+  const [studyPhase, setStudyPhase] = useState<"before" | "after">("before");
+  const [beforeDrawing, setBeforeDrawing] = useState<StudyDrawing>();
+  const pairId = useRef(crypto.randomUUID());
+  useEffect(() => {
+    if (!study.collecting) {
+      setBeforeDrawing(undefined);
+      setStudyPhase("before");
+    }
+  }, [study.collecting]);
+  const taskGeneration = useRef(0);
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
   const [taskId, setTaskId] = useState("goat");
@@ -35,7 +70,8 @@ export default function App() {
   );
   const strokes = drawing.present;
   const [feedback, setFeedback] = useState<Evaluation>();
-  const [hint, setHint] = useState(false);
+  const [hintLevel, setHintLevel] = useState(0);
+  const hint = hintLevel > 0;
   const [sound, setSound] = useState(false);
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -44,7 +80,10 @@ export default function App() {
     audio.current = createFeedbackAudio(() => soundRef.current);
   useEffect(() => () => audio.current?.dispose(), []);
   const [collectionOpen, setCollectionOpen] = useState(false);
-  const [collection, setCollection] = useState<CollectionData>(emptyCollection);
+  const [collection, setCollection] = useState<ObservationRecord[]>([]);
+  const [saving, setSaving] = useState(false);
+  const savingLock = useRef(false);
+  const completedAttempt = useRef(false);
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState("");
   const [savedId, setSavedId] = useState<string>();
@@ -52,43 +91,28 @@ export default function App() {
     scene = task.scene,
     profile = task.profile;
   const group = groups.find((g) => g.id === task.groupId)!;
+  const context = currentStudyContext();
+  const studyTaskEnabled =
+    study.collecting &&
+    study.comparisonStudy &&
+    context.taskId === taskId &&
+    context.phase === studyPhase &&
+    context.pairId === pairId.current;
   useEffect(() => {
-    try {
-      setCollection(readCollection(localStorage));
-      setStorageReady(true);
-    } catch {
-      setStorageError(
-        "保存した絵を読み込めませんでした。上書きせずに残しています。",
-      );
-    }
+    initializeNotebook()
+      .then((data) => {
+        setCollection(data);
+        setStorageReady(true);
+      })
+      .catch(() => {
+        setStorageError(
+          "観察ノートを開けませんでした。元の保存データは消していません。保存容量やブラウザの設定を確認してください。",
+        );
+      });
   }, []);
-  function commit(data: CollectionData) {
-    if (!storageReady) return false;
-    try {
-      writeCollection(localStorage, data);
-      setCollection(data);
-      setStorageError("");
-      return true;
-    } catch {
-      setStorageError(
-        "保存できませんでした。空き容量やブラウザの保存設定を確認してください。",
-      );
-      return false;
-    }
-  }
-  function latest() {
-    try {
-      return readCollection(localStorage);
-    } catch {
-      setStorageError(
-        "保存した絵を読み込めませんでした。上書きを止めています。",
-      );
-      return undefined;
-    }
-  }
-  function save() {
-    const data = latest();
-    if (!data || savedId || !feedback?.passed) return;
+  async function save() {
+    if (savingLock.current || savedId || !feedback?.passed || !storageReady)
+      return;
     const visible = clipStrokes(strokes, scene).map((s) =>
       s.map((p) => ({
         x: Math.round(p.x * 100) / 100,
@@ -96,56 +120,167 @@ export default function App() {
       })),
     );
     if (!visible.length) return;
-    const id =
-      Date.now().toString(36) +
-      "-" +
-      crypto.getRandomValues(new Uint32Array(3)).join("-");
-    if (
-      commit({
-        version: 1,
-        drawings: [
-          {
-            id,
-            groupId: task.groupId,
-            taskId,
-            sceneVersion: 2,
-            createdAt: new Date().toISOString(),
-            strokes: visible,
-            outcome:
-              feedback.method === "automatic" ? "correct" : "self-confirmed",
-          },
-          ...data.drawings,
-        ],
-      })
-    )
-      setSavedId(id);
+    const generation = taskGeneration.current,
+      logContext = currentStudyContext();
+    savingLock.current = true;
+    setSaving(true);
+    setStorageError("");
+    try {
+      const record = observationMetadata({
+        id: crypto.randomUUID(),
+        groupId: task.groupId,
+        taskId,
+        sceneVersion: 2,
+        createdAt: new Date().toISOString(),
+        strokes: visible,
+        outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
+      });
+      const images = await composeObservationImages(scene, visible);
+      await addObservation({ ...record, ...images });
+      setCollection(await loadObservations());
+      if (generation === taskGeneration.current) setSavedId(record.id);
+      recordStudy("observation_saved", {}, logContext);
+    } catch {
+      setStorageError(
+        "観察を保存できませんでした。空き容量やブラウザの設定を確認し、もう一度試してください。",
+      );
+    } finally {
+      savingLock.current = false;
+      setSaving(false);
+    }
   }
+  async function exportCurrentPng(kind: "own" | "comparison") {
+    const visible = clipStrokes(strokes, scene);
+    if (!visible.length || saving) return;
+    setSaving(true);
+    setStorageError("");
+    try {
+      const images = await composeObservationImages(scene, visible);
+      const date = new Date().toISOString().slice(0, 10);
+      await savePng(
+        await composeCardPng(
+          kind === "own" ? images.ownPng : images.comparisonPng,
+          {
+            animalName: group.name,
+            taskName: task.part,
+            createdAt: new Date().toISOString(),
+            explanation: task.explanation,
+          },
+          kind === "comparison",
+        ),
+        `zooketch-${taskId}-${date}-${kind === "own" ? "sketch" : "comparison"}.png`,
+      );
+    } catch {
+      setStorageError(
+        "PNG画像を保存できませんでした。もう一度試してください。",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+  useEffect(() => {
+    if (step !== 3 || collectionOpen) return;
+    const logContext = currentStudyContext();
+    let opened = false;
+    const show = () => {
+      if (!document.hidden && studyStatus().collecting) {
+        recordStudy("explanation_opened", {}, logContext);
+        opened = true;
+      }
+    };
+    const hide = () => {
+      if (opened) {
+        recordStudy("explanation_closed", {}, logContext);
+        opened = false;
+      }
+    };
+    const visibility = () => (document.hidden ? hide() : show());
+    show();
+    document.addEventListener("visibilitychange", visibility);
+    if (!completedAttempt.current) {
+      recordStudy("challenge_completed");
+      completedAttempt.current = true;
+    }
+    return () => {
+      hide();
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, [step, taskId, collectionOpen]);
   function next(value: number) {
+    stopSpeech();
     setStep(value);
     window.scrollTo(0, 0);
-    if (value === 3) research.record(taskId, "explanation");
+    if (value === 2) recordStudy("comparison_opened");
   }
   function selectTask(id: string) {
-    if (activeTask.current) research.record(activeTask.current, "end");
+    taskGeneration.current++;
+    if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
     setTaskId(id);
+    setBeforeDrawing(undefined);
+    setStudyPhase("before");
+    pairId.current = crypto.randomUUID();
     dispatchDrawing({ type: "reset" });
-    setHint(false);
+    setHintLevel(0);
     setFeedback(undefined);
     setSavedId(undefined);
-    research.record(id, "start");
+    setStudyContext(
+      taskById[id].groupId,
+      id,
+      study.collecting && study.comparisonStudy ? "before" : undefined,
+      study.collecting && study.comparisonStudy ? pairId.current : undefined,
+    );
+    completedAttempt.current = false;
+    recordStudy("challenge_opened");
     activeTask.current = id;
   }
   function restart() {
-    if (activeTask.current) research.record(activeTask.current, "end");
+    taskGeneration.current++;
+    if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
     setCollectionOpen(false);
+    setBeforeDrawing(undefined);
+    setStudyPhase("before");
     setPhoto("");
     dispatchDrawing({ type: "reset" });
     setFeedback(undefined);
-    setHint(false);
+    setHintLevel(0);
     setSavedId(undefined);
+    setStudyContext();
     next(0);
+  }
+  async function startSecondDrawing() {
+    if (!feedback || saving) return;
+    setSaving(true);
+    setStorageError("");
+    recordStudy("explanation_closed");
+    const generation = taskGeneration.current;
+    try {
+      const before = await captureStudyDrawing(scene, strokes, feedback);
+      if (
+        generation !== taskGeneration.current ||
+        !studyStatus().collecting ||
+        !studyStatus().comparisonStudy
+      )
+        return;
+      setBeforeDrawing(before);
+      setStudyPhase("after");
+      recordStudy("challenge_left");
+      setStudyContext(task.groupId, taskId, "after", pairId.current);
+      completedAttempt.current = false;
+      recordStudy("challenge_opened");
+      dispatchDrawing({ type: "reset" });
+      setHintLevel(0);
+      setFeedback(undefined);
+      setSavedId(undefined);
+      next(1);
+    } catch {
+      setStorageError(
+        "1回目の記録を保存できませんでした。もう一度試してください。",
+      );
+    } finally {
+      setSaving(false);
+    }
   }
   function celebrate() {
     audio.current?.unlock();
@@ -158,12 +293,16 @@ export default function App() {
       method: "self-confirmed",
       message: "見くらべて、確かめたね。",
     });
-    research.record(taskId, "self-confirmation");
+    recordStudy("evaluation_completed", {
+      method: "self-confirmed",
+      status: "correct",
+    });
     celebrate();
   }
   function answer() {
     const visible = clipStrokes(strokes, scene);
     if (!visible.length) return;
+    recordStudy("drawing_submitted", { empty: false });
     if (!task.automatic) {
       setFeedback({
         passed: false,
@@ -171,16 +310,20 @@ export default function App() {
         method: "comparison",
         message: "見えた形を見くらべよう。",
       });
-      research.record(taskId, "judgment", "comparison");
+      recordStudy("evaluation_completed", {
+        method: "comparison",
+        status: "uncertain",
+      });
       next(2);
       return;
     }
-    const result = profile
-      ? evaluateProfile(visible, profile, scene)
-      : evaluateObservation(visible);
+    const result = drawingEvaluator.evaluate(task, visible);
     result.method = "automatic";
     setFeedback(result);
-    research.record(taskId, "judgment", "automatic:" + result.status);
+    recordStudy("evaluation_completed", {
+      method: "automatic",
+      status: result.status,
+    });
     if (result.passed) {
       celebrate();
       next(2);
@@ -205,24 +348,30 @@ export default function App() {
             window.scrollTo(0, 0);
           }}
         >
-          描いた動物 ({collection.drawings.length})
+          観察ノート ({collection.length})
         </button>
       </header>
       <main>
         {storageError && <p role="alert">{storageError}</p>}
         {collectionOpen ? (
           <DrawingCollection
-            drawings={collection.drawings}
+            drawings={collection}
             onBack={() => setCollectionOpen(false)}
-            onDelete={(id) => {
-              const data = latest();
-              if (!data) return false;
-              const ok = commit({
-                version: 1,
-                drawings: data.drawings.filter((d) => d.id !== id),
-              });
-              if (ok && savedId === id) setSavedId(undefined);
-              return ok;
+            onUpdate={async () => {
+              setCollection(await loadObservations());
+            }}
+            onDelete={async (id) => {
+              try {
+                await deleteObservation(id);
+                setCollection(await loadObservations());
+                if (savedId === id) setSavedId(undefined);
+                return true;
+              } catch {
+                setStorageError(
+                  "観察を削除できませんでした。もう一度試してください。",
+                );
+                return false;
+              }
             }}
           />
         ) : (
@@ -251,7 +400,17 @@ export default function App() {
               </div>
               {step === 0 ? (
                 <CameraView
-                  onSelect={(image, id) => {
+                  onSelect={(image, id, method) => {
+                    recordStudy(
+                      "animal_identified",
+                      { method: method || "manual" },
+                      {
+                        animalId:
+                          taskById[id || "goat"]?.groupId || id || "goat",
+                        taskId: undefined,
+                        attemptId: undefined,
+                      },
+                    );
                     setPhoto(image || "");
                     selectTask(id || "goat");
                     next(1);
@@ -263,7 +422,16 @@ export default function App() {
                     <span>{group.name}</span>
                   </div>
                   <h1>{task.part}を描こう</h1>
+                  {studyTaskEnabled && (
+                    <p className="quiet-note">
+                      {studyPhase === "before" ? "1回目" : "2回目"}のスケッチ
+                    </p>
+                  )}
+                  <button className="text-button" onClick={restart}>
+                    動物を選び直す
+                  </button>
                   <p className="figma-support">{task.question}</p>
+                  <ReadAloud id="question" text={task.question} />
                   {tasksForGroup(group.id).length > 1 && (
                     <div
                       className="task-switch"
@@ -297,10 +465,10 @@ export default function App() {
                   <SketchCanvas
                     key={taskId}
                     scene={scene}
-                    onDrawingActivity={(active) =>
-                      research.record(
-                        taskId,
-                        active ? "drawing-start" : "drawing-end",
+                    onDrawingActivity={(active, tool) =>
+                      recordStudy(
+                        active ? "drawing_started" : "drawing_stopped",
+                        { tool },
                       )
                     }
                     strokes={strokes}
@@ -308,37 +476,53 @@ export default function App() {
                     canUndo={drawing.past.length > 0}
                     onUndo={() => {
                       dispatchDrawing({ type: "undo" });
-                      research.record(taskId, "revision", "undo");
+                      recordStudy("drawing_undo");
                       setFeedback(undefined);
                       setSavedId(undefined);
                     }}
                     onChange={(value, action) => {
-                      research.record(
-                        taskId,
-                        action === "draw" ? "drawing" : "revision",
-                        action,
-                      );
+                      if (action === "clear") recordStudy("drawing_cleared");
+                      if (action === "erase") recordStudy("drawing_erased");
                       dispatchDrawing({ type: "commit", strokes: value });
                       setFeedback(undefined);
                       setSavedId(undefined);
                     }}
                   />
-                  <button
-                    className="text-button"
-                    aria-expanded={hint}
-                    aria-controls="observation-hint"
-                    onClick={() => {
-                      if (!hint) research.record(taskId, "hint");
-                      setHint(!hint);
-                    }}
-                  >
-                    ヒント
-                  </button>
-                  {hint && (
-                    <p id="observation-hint" role="note">
-                      {task.hint}
-                    </p>
-                  )}
+                  <div className="observation-hints">
+                    <button
+                      className="text-button"
+                      aria-expanded={hint}
+                      aria-controls="observation-hint"
+                      disabled={hintLevel >= (task.hints?.length || 0)}
+                      onClick={() => {
+                        const level = hintLevel + 1;
+                        setHintLevel(level);
+                        recordStudy("hint_opened", { hintLevel: level });
+                      }}
+                    >
+                      {hintLevel === 0
+                        ? "ヒントを見る"
+                        : hintLevel < (task.hints?.length || 0)
+                          ? "次のヒントを見る"
+                          : "ヒントを表示中"}
+                    </button>
+                    {hint && (
+                      <ol id="observation-hint" role="note">
+                        {task.hints?.slice(0, hintLevel).map((text) => (
+                          <li key={text}>{text}</li>
+                        ))}
+                      </ol>
+                    )}
+                    {hint && (
+                      <ReadAloud
+                        id="hints"
+                        text={
+                          task.hints?.slice(0, hintLevel).join("。") ||
+                          task.hint
+                        }
+                      />
+                    )}
+                  </div>
                   {feedback && !feedback.passed && (
                     <div role="status" className="figma-feedback">
                       <p>{feedback.message}</p>
@@ -367,11 +551,14 @@ export default function App() {
                           method: "comparison",
                           message: "いま見えた姿を確かめよう。",
                         });
-                        research.record(
-                          taskId,
-                          "judgment",
-                          "comparison:observed-absent",
-                        );
+                        recordStudy("drawing_submitted", {
+                          empty: true,
+                          reason: "observed-absent",
+                        });
+                        recordStudy("evaluation_completed", {
+                          method: "comparison",
+                          status: "uncertain",
+                        });
                         next(2);
                       }}
                     >
@@ -393,6 +580,14 @@ export default function App() {
                       ? "完成！ だいはっけん！"
                       : "見えた形を確かめよう"}
                   </h1>
+                  <ReadAloud
+                    id="result"
+                    text={
+                      feedback?.passed
+                        ? "完成！ だいはっけん！ よく見てたね！"
+                        : "見えた形を確かめよう。あなたの観察と見くらべよう。"
+                    }
+                  />
                   <p className="center">
                     <strong>
                       {group.name}の{task.part}
@@ -410,6 +605,9 @@ export default function App() {
                     answer={group.answer}
                     note={task.comparisonNote}
                     completed={feedback?.passed}
+                    onSliderCommit={(from, to, via) =>
+                      recordStudy("comparison_slider_moved", { from, to, via })
+                    }
                   />
                   {!feedback?.passed && (
                     <div className="self-check">
@@ -428,15 +626,20 @@ export default function App() {
                       !!savedId ||
                       !storageReady ||
                       !feedback?.passed ||
+                      saving ||
                       !strokes.length
                     }
-                    onClick={save}
+                    onClick={() => void save()}
                   >
-                    {savedId ? "保存したよ！" : "この動物を保存する"}
+                    {savedId
+                      ? "保存したよ！"
+                      : saving
+                        ? "観察を保存中…"
+                        : "観察を保存する"}
                   </button>
                   <p className="quiet-note" role="status">
                     {savedId
-                      ? "「描いた動物」から、いつでも見返せるよ。"
+                      ? "「観察ノート」から、いつでも見返せるよ。"
                       : "自分の絵をこの端末に残せます。撮影写真は保存しません。"}
                   </p>
                   <button
@@ -450,6 +653,15 @@ export default function App() {
               ) : (
                 <>
                   <h1>{task.explanation.name}</h1>
+                  <ReadAloud
+                    id="explanation"
+                    text={[
+                      task.explanation.name,
+                      task.explanation.form,
+                      task.explanation.ecology,
+                      task.next,
+                    ].join("。")}
+                  />
                   <div className="figma-science">
                     <svg
                       viewBox={`0 0 600 ${scene.frameHeight || 400}`}
@@ -471,9 +683,67 @@ export default function App() {
                     <p>{task.explanation.ecology}</p>
                   </div>
                   <p className="figma-note">{task.next}</p>
-                  <button className="primary" onClick={() => next(1)}>
-                    もう一度、本物を見てみよう ↗
+                  <button
+                    className="primary collection-save"
+                    disabled={
+                      !!savedId ||
+                      saving ||
+                      !storageReady ||
+                      !feedback?.passed ||
+                      !strokes.length
+                    }
+                    onClick={() => void save()}
+                  >
+                    {savedId
+                      ? "保存したよ！"
+                      : saving
+                        ? "観察を保存中…"
+                        : "観察を保存する"}
                   </button>
+                  {strokes.length > 0 && (
+                    <div className="png-actions">
+                      <button
+                        className="primary collection-save"
+                        disabled={saving}
+                        onClick={() => void exportCurrentPng("own")}
+                      >
+                        自分の絵をPNGで保存
+                      </button>
+                      <button
+                        className="primary collection-save"
+                        disabled={saving}
+                        onClick={() => void exportCurrentPng("comparison")}
+                      >
+                        比較画像をPNGで保存
+                      </button>
+                    </div>
+                  )}
+                  {studyTaskEnabled ? (
+                    studyPhase === "before" ? (
+                      <button
+                        className="primary"
+                        disabled={saving}
+                        onClick={() => void startSecondDrawing()}
+                      >
+                        同じ特徴をもう一度描く
+                      </button>
+                    ) : (
+                      beforeDrawing &&
+                      feedback && (
+                        <StudyPairView
+                          id={pairId.current}
+                          scene={scene}
+                          before={beforeDrawing}
+                          strokes={strokes}
+                          evaluation={feedback}
+                        />
+                      )
+                    )
+                  ) : (
+                    <button className="primary" onClick={() => next(1)}>
+                      もう一度、本物を見てみよう ↗
+                    </button>
+                  )}
                   <button className="text-button" onClick={restart}>
                     次の動物を撮る
                   </button>
@@ -494,6 +764,9 @@ export default function App() {
         >
           効果音 {sound ? "ON" : "OFF"}
         </button>
+        <SpeechSettings />
+        <OfflineStatus />
+        <StudyControls />
       </main>
     </div>
   );

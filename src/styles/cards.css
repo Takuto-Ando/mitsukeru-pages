@@ -317,6 +317,22 @@ main > .text-button {
   margin-top: 8px;
   color: var(--color-muted);
 }
+.observation-hints {
+  margin: 10px 0;
+}
+.observation-hints ol {
+  margin: 6px 0 0;
+  padding: 10px 12px 10px 28px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-rule);
+  border-left: 4px solid var(--color-mustard);
+  border-radius: var(--radius-control);
+  font-size: var(--type-small);
+  line-height: 1.75;
+}
+.observation-hints li + li {
+  margin-top: 4px;
+}
 .figma-feedback,
 .self-check {
   padding: 12px;
@@ -341,7 +357,7 @@ main > .text-button {
 }
 .comparison-modes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   border-top: 1px solid var(--color-rule);
   border-bottom: 1px solid var(--color-rule);
   margin-bottom: 12px;
@@ -349,13 +365,21 @@ main > .text-button {
 .comparison-modes button {
   min-width: 0;
   border-radius: 0;
-  font-size: 12px;
+  font-size: 11px;
   padding: 8px 2px;
   border-bottom: 3px solid transparent;
+  white-space: nowrap;
 }
 .comparison-modes [aria-pressed="true"] {
   border-bottom-color: var(--color-mustard);
   background: #f5edd7;
+}
+.comparison-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
 }
 .comparison-overlay {
   display: block;
@@ -363,6 +387,45 @@ main > .text-button {
   height: auto;
   background: var(--color-paper);
   transform-origin: left center;
+}
+.comparison-slider {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: ew-resize;
+  z-index: 3;
+}
+.comparison-slider:focus-visible {
+  outline: 3px solid var(--color-mustard);
+  outline-offset: -3px;
+}
+.comparison-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-ink);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.comparison-divider > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-ink);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
 }
 .comparison-legend {
   display: flex;
@@ -389,7 +452,8 @@ main > .text-button {
   width: 100%;
   height: auto;
 }
-.figma-explanation h2 {
+.figma-explanation h2,
+.figma-explanation h3 {
   font-size: 14px;
   color: var(--color-teal-ink);
   margin: 16px 0 6px;
@@ -585,6 +649,10 @@ summary {
 .collection-open strong {
   font-size: 12px;
 }
+.collection-part {
+  font-size: 11px;
+  color: var(--color-teal-ink);
+}
 .collection-open time {
   font-size: 10px;
   color: var(--color-muted);
@@ -592,6 +660,79 @@ summary {
 .collection-save {
   background: var(--color-paper);
   color: var(--color-teal-ink);
+}
+.png-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.png-actions .primary {
+  margin: 0;
+  font-size: 12px;
+  padding: 8px 6px;
+}
+.notebook-detail h2 {
+  text-align: center;
+  margin: 8px 0 4px;
+}
+.study-controls {
+  margin-top: 16px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-rule);
+  color: var(--color-muted);
+  font-size: 11px;
+}
+.study-controls summary {
+  font-size: 11px;
+  color: var(--color-muted);
+  min-height: 36px;
+}
+.study-controls p {
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 6px 0;
+}
+.participant-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  font-size: 11px;
+  color: var(--color-ink);
+}
+.participant-field input {
+  padding: 6px 8px;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-size: 12px;
+}
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 12px;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+.consent-check input {
+  margin-top: 3px;
+}
+.study-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.study-export button {
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-paper);
+  padding: 6px 10px;
+  font-size: 11px;
 }
 .asset-preview {
   padding: 24px;
@@ -632,6 +773,13 @@ summary {
   .collection-link {
     font-size: 10px;
   }
+  .png-actions {
+    grid-template-columns: 1fr;
+  }
+  .comparison-modes button {
+    font-size: 10px;
+    padding: 8px 1px;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -650,3 +798,13 @@ summary::after {
 details[open] > summary::after {
   content: "−";
 }
+
+.read-aloud { font-size: 12px; }
+.offline-status, .speech-settings { margin: 12px 0; font-size: 12px; }
+.speech-settings label { display: block; margin: 10px 0; }
+.speech-settings select { padding: 8px; margin-left: 12px; border: 1px solid var(--color-rule); background: var(--color-paper); }
+.study-pair { border-top: 1px solid var(--color-rule); padding-top: 12px; margin-top: 16px; }
+.study-pair-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.study-pair-images figure { margin: 0; }
+.study-pair-images img { display: block; width: 100%; }
+.study-pair-images figcaption { text-align: center; font-size: 12px; }

@@ -1,12 +1,44 @@
 # ズーケッチ
 
-かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。全身を表示したまま描き、ズームや別の描画画面は設けません。答え合わせは自然な色で完成した動物のイラストを表示し、「重ね合わせ」ではその上に自分の線を残します。所要時間の案内は表示しません。
+かわいい全身のSVGイラストを表示し、欠けた部位だけに直接描き足します。全身を表示したまま描き、ズームや別の描画画面は設けません。答え合わせは自然な色で完成した動物のイラストを表示し、「左右で比べる（比較スライダー）」や「重ね合わせ」で自分の線とお手本を見くらべます。所要時間の案内や点数・一致率は表示しません。
 
 動物の身体の一部分を観察し、描き足して発見するスマートフォン向けプロトタイプです。
 
 写真を撮る → 特徴を描く → お手本と見くらべる → 解説を読む、の4段階です。16グループ・20課題を登録しています。模様や輪郭の課題は自己確認を標準とし、自動判定の正解と本人による確認を内部データで区別します。
 
 公開先：[GitHub Pages](https://takuto-ando.github.io/mitsukeru-pages/)
+
+## 追加された観察体験・研究評価機能
+
+1. **段階的な観察ヒント（`src/content/hints.ts`, `src/App.tsx`）**
+   - 描画画面の「ヒントを見る」→「次のヒントを見る」で、答えそのものではなく実物のどこに注目すればよいかを2段階で提示します。
+   - 20課題すべてに固有の観察ヒントを設定しています。ヒントを見ても見なくても正解・比較へ進めます。
+2. **正解比較スライダー（`src/components/SketchComparison.tsx`）**
+   - 1枚の動物イラスト上で、左側＝自分の描画、右側＝お手本イラストをSVG `clipPath` で切り替え表示します（初期位置50%）。
+   - Pointer Events（マウス・タッチ）およびキーボード（左右矢印・Home・End）にに対応し、画面サイズ変更時の位置固定をブラウザテストで確認しています。
+   - 絵の上手さを採点するものではなく、特徴の違いや共通点を自分で発見するための機能です。点数や一致率は表示しません。
+3. **観察ノートとPNG画像書き出し（`src/notebook/`, `src/components/DrawingCollection.tsx`）**
+   - 解説画面・比較画面の「観察を保存する」から任意でIndexedDB（`zooketch.observation-notebook`）へ保存できます。
+   - 保存項目：記録ID、課題ID、動物名、観察課題名、観察日時、ユーザーの描画（線データおよび合成PNG）、お手本との比較PNG、解説文章、シーン情報。
+   - 旧 `localStorage`（`mitsukeru.collection.v1`）の保存データがある場合は、起動時に消さずにIndexedDBへ1回移行します。
+   - 自分の絵（単体PNG）と、自分の絵・お手本を並べた完成比較画像（PNG）を個別に保存・共有できます。
+4. **研究用の観察記録（`src/research/study.ts`, `src/research/analysis.ts`, `src/components/StudyControls.tsx`）**
+   - 画面下部の目立たない折りたたみ（「研究への参加・記録」）から、事前説明と明示的な同意を得た場合のみ記録を開始します。同意しなくても通常どおり全機能を利用できます。
+   - 同意撤回時はブラウザ内の研究ログを即時全削除します（観察ノートは残ります）。
+   - 撮影写真、描画画像、GPS位置情報、氏名・メールアドレスは収集せず、外部サーバーへの自動送信も行いません。識別には個人情報と結びつかない匿名の参加者コードを使用します。
+   - 利用者・研究者の明示的な操作でJSON（イベント詳細＋分析集計）およびCSVとして書き出せます。
+
+### 研究評価における重要な注意事項
+
+- **測定名称の厳密化**：アプリを操作していない時間が、必ずしも動物を実際に見ている時間とは限りません。そのため本研究ログでは「観察時間」と断定せず、「課題開始から最初の描画までの経過時間（`firstDrawingElapsedMs`）」「描画に要した時間（`drawingMs`）」「解説画面の閲覧時間（`explanationMs`）」など、操作から測定可能な名称を使用しています。
+- **外部調査との組み合わせ**：研究参加者の実際の動物観察行動（視線、滞在、会話、実物の観察有無など）を評価するには、本アプリの操作ログだけでなく、**別途の行動観察調査やアンケート・インタビュー等を組み合わせる必要があります**。
+
+## 実装済み機能と未実装範囲の区別
+
+| 区分 | 内容 |
+| --- | --- |
+| 実装済み | 4ステップ体験（撮影・描画・比較・解説）、16グループ20課題、段階的観察ヒント、比較スライダー（Pointer/Touch/Keyboard）、IndexedDB観察ノート、旧localStorageデータ移行、単体PNG・比較PNG出力、同意式の研究用イベントログ、10指標算出（`analyzeStudy`）、JSON/CSVエクスポート、同意撤回・ログ削除 |
+| 未実装（MVP対象外） | 外部サーバーへの研究ログ自動送信、アカウント同期・端末間クラウド共有、個体識別モデルの本番統合（インターフェースのみ `src/recognition/individual.ts` に定義）、専門家による全イラストの監修、iPhone実機でのフィールド観察調査・アンケート実施 |
 
 ## Macで起動
 
@@ -17,13 +49,11 @@ npm ci
 npm run dev
 ```
 
-表示されたローカルURLを開きます。React / TypeScript / Vite / Motion / Canvas APIを使用します。バックエンド・APIキーは不要です。
+表示されたローカルURLを開きます。React / TypeScript / Vite / Motion / Canvas API / IndexedDBを使用します。バックエンド・APIキーは不要です。
 
 ## iPhoneで確認
 
 公開URLをSafariで開き、カメラを許可します。「撮影の設定」を開き、「識別モデルを先にダウンロード」で準備してから撮影すると、候補が絞れた場合は自動で描画へ進みます。初回モデル約150MB以上、Wi-Fi推奨。写真は端末内で処理します。識別不能・権限拒否時も下の手動選択で進めます。
-
-同じWi-FiでMacの `http://MacのIP:5175/` に接続してレイアウトと描画を確認できます。ただしライブカメラにはHTTPSが必要です。Macのスリープ、VPN、Wi-Fiの端末間通信制限にも注意してください。対象はiPhone Safari 16.4以降です。WebKitでの自動テストと実機テストは区別します。
 
 ## 検証
 
@@ -34,51 +64,101 @@ npm run build
 npm run test:e2e:preview
 ```
 
-20課題をChromium／WebKitで操作し、画像・描画・比較・自己確認・解説・再観察を確認します。タッチ注入とカメラモックはChromiumのみです。撮影からの自動遷移テストは推論Workerをモックしています。実モデルによる検証範囲は [RECOGNITION.md](RECOGNITION.md) に記載しています。スクリーンショットは `test-results/` に出力します。
+20課題をChromium／WebKitで操作し、画像・段階的ヒント・描画・比較スライダー・自己確認・解説・観察ノート（IndexedDB保存・再読込・PNG保存・削除）・研究同意とJSON/CSVエクスポートを確認します。
 
-## Figmaへ合わせて編集する場所
+## 主要ファイル一覧
 
 | 内容 | ファイル |
 | --- | --- |
 | 4ステップ・見出し・操作 | `src/App.tsx` |
-| 色・余白・文字・ボタン | `src/styles/cards.css`, `src/styles/tokens.css` |
+| 色・余白・文字・ボタン（MIKECA調トークン・カードUI） | `src/styles/cards.css`, `src/styles/tokens.css` |
 | 20課題の問い・解説・判定方式・校正済みマスク | `src/content/tasks.ts` |
-| イラストの登録・差し替え | `src/content/artwork.ts` |
+| 20課題固有の段階的観察ヒント | `src/content/hints.ts` |
+| 自分の線とお手本の比較スライダー・重ね合わせ | `src/components/SketchComparison.tsx` |
+| 観察ノート一覧・詳細・PNG出力 | `src/components/DrawingCollection.tsx` |
+| IndexedDB保存・旧データ移行・PNG合成 | `src/notebook/database.ts`, `src/notebook/storage.ts`, `src/notebook/images.ts`, `src/notebook/types.ts` |
+| 研究用イベント記録・同意管理・JSON/CSV出力 | `src/research/study.ts`, `src/research/analysis.ts`, `src/components/StudyControls.tsx` |
 | 専用イラスト20枚 | `public/illustrations/whole/`（未完成図・完成図の計40枚） |
-| 全身の配置・描画マスク | `src/content/fullBodyLayouts.ts` |
-| SVGの再生成 | `scripts/create-whole-illustrations.mjs` |
-| 描画範囲の案内 | `src/components/TargetRegions.tsx` |
-| 描画操作の履歴 | `src/drawing/history.ts` |
-| 背景と空欄 | `src/components/ObservationScene.tsx` |
 | タッチ入力・消去・復元可能なUndo | `src/SketchCanvas.tsx` |
-| 自分の線とお手本の比較 | `src/components/SketchComparison.tsx` |
 | ヤギの判定／他の特徴判定 | `src/evaluator.ts`, `src/profileEvaluator.ts` |
 
-現在のUIは参照作品のカードに見られる単色の色面・余白・文字組みを参考に再構成しています。参照先・近似色・独自実装の範囲は [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) に記録しました。新しいFigmaファイルや原版PDFを読み取ったという扱いにはしていません。旧 `src/style.css` と `src/styles/figma.css` は履歴参照用で、現在の起動経路では読み込みません。
-
-## 素材・出典・研究記録
+## 素材・出典・研究記録ドキュメント
 
 - [ASSETS.md](ASSETS.md)：20課題の素材・判定・確認状況と差し替え仕様。
+- [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)：MIKECA参照の配色・余白・文字組みルール。
 - [docs/CONTENT_SOURCES.md](docs/CONTENT_SOURCES.md)：公式資料で確認した内容と未確認の働き。
-- [docs/ILLUSTRATION_PROMPTS.json](docs/ILLUSTRATION_PROMPTS.json)：画像生成に使ったプロンプト。素材は本制作のための生成画像で、専門家監修済みではありません。
-- [RESEARCH.md](RESEARCH.md)：説明・同意後に限り有効化する、初期状態で無効の研究記録。
-- [COLLECTION.md](COLLECTION.md)：以前の依頼で追加した端末内の絵の保存。Safariとアプリは別領域です。新たな収集ゲームやポイントは追加していません。
+- [RESEARCH.md](RESEARCH.md)：研究用イベントログの仕様、算出指標、プライバシー保護。
+- [COLLECTION.md](COLLECTION.md)：観察ノート（IndexedDB）の保存仕様と旧データ移行。
 
-## GitHub Pagesで公開
 
-mainへのpushで `.github/workflows/` の既存ワークフローがビルド・テスト・公開します。GitHub Settings → Pages → SourceをGitHub Actionsに設定してください。
+## 7機能の統合（2026-10-25）
 
-リポジトリ名からViteのbaseを設定するため、公開URLをUIコードへ固定しません。独自ドメインではRepository variable `PAGES_BASE_PATH=/` とPagesのCustom domainを設定します。
+通常の撮影→描画→比較→解説を維持しています。新しい依存ライブラリは追加していません。表示名は「ズーケッチ」です。既存のURL、アプリID、localStorageキー、IndexedDB名を維持し、保存済みの絵は削除しません。
 
-## iPhoneアプリへ反映
+| 機能 | 実装と範囲 |
+| --- | --- |
+| 写真AI推定 | ブラウザWorkerで量子化CLIPを実行。18種ラベル（17グループ相当）と対象外候補を比較。写真そのものを推論へ渡す。ヤギ・ヒツジは別種ラベルで、ヒツジは専用課題へ。曖昧・対象外・失敗時は手動選択。描画画面の「動物を選び直す」で訂正可能。 |
+| 描画判定 | `src/domain.ts` の DrawingEvaluator に集約。横長・両腕の広がり・尾の曲がり・舌の曲がり・鼻孔の配置を既存の個別ルールで判定。ヤギに加えてヒツジも横長判定。他の模様・輪郭は精度のない採点を行わず自己比較。 |
+| PNGカード | 動物名、特徴、観察日、短い解説、完成させた絵を高解像度PNGに合成。比較カードは左右に同倍率で配置。既存ノートの画像自体は変更せず、書き出す際にカード化。 |
+| オフライン | ビルド時のService Worker・Manifest。シェル、同梱イラスト、フォント、推論Worker/WASMを準備。「通信・オフライン」で準備完了を確認。モデル重みは別途初回取得。更新は描画中に強制反映せず、利用者が「最新版を開く」で適用。 |
+| 読み上げ | 課題、開示済みヒント、答え合わせ、解説に明示操作の読み上げボタン。停止、ON/OFF、3段階速度。日本語音声がなければ文章を維持して案内。自動読み上げなし。 |
+| 研究の2回描画 | 参加設定で追加チェック＋同意したときだけ有効。1回目の解説から同じ課題をもう一度描き、2枚を比較。画像と各回の操作指標を端末に記録、JSONに同梱。通常モードでは1回のみ。撤回で研究画像・ログを削除し、観察ノートは維持。 |
+| 個体識別基盤 | SpeciesRecognizer / IndividualRecognizer / ChallengeProvider / DrawingEvaluatorを分離。個体識別の実装は `supported:false`, `unknown`, `modelVersion:none`。個体を推測して返さない。 |
+
+### 対応範囲と未検証事項
+
+- **描画できる対象は既存16グループ・20課題**です。追加指定のヤブイヌはAI候補ラベルに含めていますが、専用イラスト・描画課題は未対応です。候補に出た場合も対応済み課題へ誤って進めません。正式な資料の課題として推測して追加していません。
+- CLIPは専用17グループ分類器ではなく、自由文ラベルを使うゼロショットモデルです。ラベルを用意したことと、各動物の識別精度を実証したことは異なります。全種・園内条件での精度評価は未実施。スコアは候補集合に依存し、校正済みの確率ではありません。対象外でも誤った候補が出る可能性があり、訂正を用意しています。
+- DrawingEvaluationのconfidenceは未校正を表す0です。判定方式はmethodで区別し、精度評価値や一致率を捏造しません。一般画面に表示しません。模様の自己確認を自動正解として扱いません。
+- 初回オフライン準備には通信と空き容量が必要です。ブラウザによるキャッシュ削除・容量制約は防げません。Safariとネイティブアプリの保存領域は別で、端末間同期はしません。
+- iPhone実機のカメラ、共有シート、OS日本語音声・オフライン読み上げの確認は別途必要です。WebKitテストは実機Safariの代用ではありません。
+- 個体識別モデル、未知個体の精度検証、全イラストの専門家監修は未実施です。
+
+### オフラインの使い方
+
+1. 通信できる状態で公開ページを開く。
+2. 画面下の「通信・オフライン」で「オフライン準備完了（観察・ノート）」を確認する。
+3. AIも使う場合は「撮影の設定」→「識別モデルを先にダウンロード」を完了する。モデルは約150MB以上。未取得・容量不足・実行失敗時は手動で選ぶ。
+4. Safariの「ホーム画面に追加」は任意。事前準備したブラウザで同じURLを開く。初回からオフラインでは利用できない。
+
+Service Workerは本番ビルドのhttp/https配信時だけ登録します。Capacitorでは素材をアプリに同梱し、WebのService Workerは登録しません。`VITE_BASE_PATH=/mitsukeru-pages/ npm run build` でサブディレクトリを指定し、独自ドメイン時は `/` に変更できます。
+
+### 実モデルの任意テスト
+
+```sh
+npm run build
+npm run preview -- --port 4176
+# 別のターミナル（初回はモデル取得の通信あり）
+MODEL_TEST_URL=http://127.0.0.1:4176/ node scripts/check-recognition.mjs
+```
+
+モデル提供元のトラの写真と京都市動物園公式ページのヤギ写真をブラウザ内の実Workerに渡し、対象外とヤギ候補で結果が変わることを確認します。さらに通信を切って新しいWorkerを作り、保存済みモデルからヤギを再推論します。固定ラベルを返すテスト用モックと区別しています。全対象動物の精度を保証する試験ではありません。画像をアプリ素材として配布しません。
+
+実装場所：`src/domain.ts`、`src/notebook/images.ts`、`scripts/offline-plugin.ts`、`src/offline/`、`src/speech/`、`src/recognition/`、`src/research/pairs.ts`、`src/components/StudyPairView.tsx`。
+参考：[モデル提供元](https://huggingface.co/Xenova/clip-vit-base-patch32)、[Transformers.jsのキャッシュ設定](https://huggingface.co/docs/transformers.js/api/env)。
+
+## GitHub PagesとiOSの更新
+
+`.github/workflows/pages.yml` がmain更新時にテスト・本番ビルド・Pages配信を行います。リポジトリのSettings → Pages → SourceをGitHub Actionsにします。通常はリポジトリ名からbaseを設定します。独自ドメインへの変更時はActions変数 `PAGES_BASE_PATH=/` を設定してください。アプリに公開URLをハードコードしていません。
+
+iPhoneアプリはWeb公開だけでは更新されません。同じプロジェクトで次を実行してから、Xcodeの接続実機を選んでRunします。
 
 ```sh
 npm run ios:sync
 npm run ios:open
 ```
 
-このフォルダの `ios/App/App.xcodeproj` を使用します。Xcodeで接続したiPhoneを選びRunしてください。アプリ名はズーケッチ、bundle IDは維持しています。Web公開だけではインストール済みのアプリは更新されません。今回の同期・ビルドと、実機転送・実機動作確認は別です。
+`ios:sync` はWebをアプリ用のbase `/` でビルドし、Capacitorへコピーします。Xcodeプロジェクトは `ios/App/App.xcodeproj` です。既存保存を保つため、bundle ID `jp.mitsukerusketch.demo` を変更したりアプリを削除したりしないでください。
 
-## VS Code
+`developer disk image could not be mounted` と `server not reachable` が出る場合は、MacからAppleの開発用サービスへの通信が必要な準備段階で止まっています。アプリのビルド成功とは別です。インターネット接続を確認してRunを再実行してください。転送・起動の成功が確認できるまで、更新済みとは扱いません。
 
-このフォルダを開き、F5で「Webアプリをデバッグ（Chrome）」を選ぶと、5180番で開きます。通常の5175番とは別です。ブレークポイントは `src/App.tsx`、`src/SketchCanvas.tsx`、判定モジュールに設定できます。
+
+### 最終検証記録（2026-10-25）
+
+- 単体テスト114件。既存の判定・描画履歴・マスク・旧データ移行を含む。
+- 本番ビルド＋GitHub Pagesと同じ `/mitsukeru-pages/` で、Chromium/WebKitの70件成功、2件はブラウザ固有のカメラモック・CDPのためスキップ。
+- 20課題の往復操作、320〜430px、タッチ、Undo/消去、描画保持、比較スライダー、PNG、日本語カードの目視、再読込後のノート、オフライン再読込とPNG書き出しを確認。
+- 研究の追加同意、2回の画像・個別指標、JSON内の画像とphase、撤回で研究記録を消してノートを残す動作、同意前に描いた絵を遡って記録しない動作を確認。
+- 読み上げの操作は合成音声APIをモックして検証。実際のOS日本語音声、iPhoneの共有シート、園内写真全種の認識精度は未検証。
+
+モデルの参照revisionは、重みだけでなくメタデータのURLテンプレートも固定しています（`species.worker.ts`）。使用ライブラリのメタデータ照会がmain版を参照し、オフラインでtokenizerを見失うことを防ぎます。Cache APIの保存失敗時や端末メモリ不足時には手動選択へ戻ります。

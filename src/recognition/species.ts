@@ -1,7 +1,12 @@
+import type { SpeciesRecognition } from "./contracts";
 import type { Candidate } from "./labels";
 export type SpeciesResult =
   | { status: "ready" }
-  | { status: "candidates"; candidates: Candidate[] }
+  | {
+      status: "candidates";
+      candidates: Candidate[];
+      recognition?: SpeciesRecognition;
+    }
   | { status: "unknown" | "unavailable"; reason: string };
 export interface SpeciesRecognizer {
   recognize(
@@ -75,7 +80,7 @@ async function run(
           reason: "簡易AIが停止しました。手動で選んでください。",
         });
       };
-      worker.postMessage({ photo });
+      worker.postMessage({ photo, offline: !navigator.onLine });
     } catch {
       cancel();
     }

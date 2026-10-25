@@ -7,6 +7,7 @@ import {
   type DrawingRecord,
 } from "../../src/collection/storage";
 import { drawingScene } from "../../src/collection/drawingScene";
+import { observationMetadata } from "../../src/notebook/storage";
 const drawing: DrawingRecord = {
   id: "one",
   groupId: "goat",
@@ -133,5 +134,16 @@ describe("端末内の描画保存", () => {
       }),
     ).toThrow();
     expect(readCollection(s).drawings).toHaveLength(1);
+  });
+  it("観察ノートのメタデータに動物名・課題名・解説・シーンを保持する", () => {
+    const meta = observationMetadata({
+      ...drawing,
+      taskId: "goat",
+      sceneVersion: 2,
+    });
+    expect(meta.animalName).toBe("ヤギ・ヒツジ");
+    expect(meta.taskName).toBe("瞳孔");
+    expect(meta.explanation.name).toBe("横長の瞳孔");
+    expect(meta.sceneSnapshot.frameHeight).toBe(600);
   });
 });

@@ -10,6 +10,7 @@ export default defineConfig({
     reducedMotion: "reduce",
   },
   webServer: {
+    env: { VITE_BASE_PATH: process.env.E2E_BASE_PATH || "/" },
     command: preview
       ? "npm run preview -- --host 127.0.0.1"
       : "npm run dev -- --host 127.0.0.1",

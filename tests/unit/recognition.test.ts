@@ -2,8 +2,8 @@ import { test, expect } from "vitest";
 import { chooseCandidates, animalLabels } from "../../src/recognition/labels";
 import { speciesRecognizer } from "../../src/recognition/species";
 import { individualRecognizer } from "../../src/recognition/individual";
-test("16グループとヒツジ別名を候補へ対応付ける", () => {
-  expect(new Set(animalLabels.map(([id]) => id)).size).toBe(16);
+test("17グループとヒツジ別名を候補へ対応付ける", () => {
+  expect(new Set(animalLabels.map(([id]) => id)).size).toBe(17);
   for (const [id, label] of animalLabels)
     expect(
       chooseCandidates([
@@ -42,5 +42,5 @@ test("写真なしでは推測せず個体識別も行わない", async () => {
   );
   expect(
     (await individualRecognizer.identify("test-photo", "goat")).status,
-  ).toBe("unsupported");
+  ).toBe("unknown");
 });

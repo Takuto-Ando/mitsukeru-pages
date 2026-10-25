@@ -1,7 +1,9 @@
+import { speciesModelVersion } from "./contracts";
 export const animalLabels = [
   ["mandrill", "a mandrill monkey"],
   ["gibbon", "a white-handed gibbon"],
   ["lemur", "a ring-tailed lemur"],
+  ["bush-dog", "a bush dog Speothos venaticus"],
   ["goat", "a goat"],
   ["goat", "a sheep"],
   ["elephant", "an Asian elephant"],
@@ -28,7 +30,7 @@ export const rejectionLabels = [
   "a landscape with no animal",
   "an unclear blurry photograph",
 ];
-export type Candidate = { groupId: string; score: number };
+export type Candidate = { groupId: string; score: number; speciesId?: string };
 export const recognitionThresholds = { minimum: 0.3, margin: 0.07 };
 export function chooseCandidates(
   output: { label: string; score: number }[],
@@ -55,5 +57,31 @@ export function chooseCandidates(
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
     .filter(([, score]) => score >= 0.08)
-    .map(([groupId, score]) => ({ groupId, score }));
+    .map(([groupId, score]) => ({
+      groupId,
+      score,
+      speciesId:
+        groupId === "goat" &&
+        valid.find((v) => labelMap.get(v.label) === groupId)?.label ===
+          "a sheep"
+          ? "sheep"
+          : groupId,
+    }));
+}
+
+export function recognitionFromOutput(
+  output: { label: string; score: number }[],
+) {
+  const candidates = chooseCandidates(output),
+    top = candidates[0];
+  return {
+    speciesId: top?.speciesId || null,
+    confidence: top?.score || 0,
+    status: !top
+      ? ("unknown" as const)
+      : top.score >= 0.55 && top.score - (candidates[1]?.score || 0) >= 0.12
+        ? ("identified" as const)
+        : ("uncertain" as const),
+    modelVersion: speciesModelVersion,
+  };
 }

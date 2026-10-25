@@ -1,3 +1,5 @@
+import { challengeProvider } from "./domain";
+import { recordStudy } from "./research/study";
 import { groups } from "./content/groups";
 import type { Candidate } from "./recognition/labels";
 import { AnimalSelector } from "./components/AnimalSelector";
@@ -8,7 +10,11 @@ import { motion, useReducedMotion } from "motion/react";
 export function CameraView({
   onSelect,
 }: {
-  onSelect: (photo?: string, id?: string) => void;
+  onSelect: (
+    photo?: string,
+    id?: string,
+    method?: "manual" | "automatic",
+  ) => void;
 }) {
   const [captured, setCaptured] = useState("");
   const [busy, setBusy] = useState(false);
@@ -81,6 +87,11 @@ export function CameraView({
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       setCaptured(image);
+      recordStudy(
+        "animal_photographed",
+        {},
+        { animalId: undefined, taskId: undefined, attemptId: undefined },
+      );
       setCandidates([]);
       await recognize(image);
     } catch {
@@ -105,9 +116,11 @@ export function CameraView({
         if (
           first &&
           first.score >= 0.55 &&
-          first.score - (second?.score ?? 0) >= 0.12
+          first.score - (second?.score ?? 0) >= 0.12 &&
+          challengeProvider.forSpecies(first.speciesId || first.groupId)
+            .length > 0
         ) {
-          onSelect(image, first.groupId);
+          onSelect(image, first.speciesId || first.groupId, "automatic");
           return;
         }
         setCandidates(result.candidates);
@@ -131,7 +144,7 @@ export function CameraView({
     setModelReady(result.status === "ready");
     setMessage(
       result.status === "ready"
-        ? "準備できました。撮影すると自動で識別します。"
+        ? "準備できました。撮影するとAIが推定します。違うときは選び直せます。"
         : result.status === "unavailable" || result.status === "unknown"
           ? result.reason
           : "準備を確認してください。",
@@ -257,9 +270,18 @@ export function CameraView({
             <button
               className="animal-choice"
               key={c.groupId}
-              onClick={() => onSelect(captured, c.groupId)}
+              disabled={
+                !challengeProvider.forSpecies(c.speciesId || c.groupId).length
+              }
+              onClick={() => onSelect(captured, c.speciesId || c.groupId)}
             >
-              {groups.find((g) => g.id === c.groupId)?.name} を観察する
+              {c.speciesId === "sheep"
+                ? "ヒツジ"
+                : groups.find((g) => g.id === c.groupId)?.name ||
+                  "ヤブイヌ（描画課題は未対応）"}{" "}
+              {challengeProvider.forSpecies(c.speciesId || c.groupId).length > 0
+                ? "を観察する"
+                : ""}
             </button>
           ))}
           <p>違うときは、下から選んでね。</p>
