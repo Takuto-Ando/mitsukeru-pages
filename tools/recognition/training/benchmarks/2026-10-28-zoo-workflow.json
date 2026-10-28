@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-28",
+  "kind": "zoo-training-workflow-integration-smoke",
+  "animalAccuracyClaim": false,
+  "intake": {
+    "syntheticImages": 57,
+    "checks": [
+      "group split coverage",
+      "EXIF rotation and removal",
+      "original bytes unchanged",
+      "existing output rejected",
+      "same decoded pixels rejected"
+    ]
+  },
+  "runner": {
+    "completed": true,
+    "candidates": 1,
+    "steps": [
+      "train 1 epoch",
+      "ONNX export and static INT8",
+      "weight-only compression",
+      "validation inference",
+      "WebKit benchmark",
+      "policy and comparison report"
+    ],
+    "testUsedForSelection": false,
+    "productionApproved": false
+  },
+  "pythonUnitTests": 19
+}

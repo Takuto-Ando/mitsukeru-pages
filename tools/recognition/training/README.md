@@ -224,3 +224,7 @@ work/recognition-venv/bin/python tools/recognition/training/pipeline.py predict 
 V4のFP32は約10.04MBで27/39。僅差の変化から量子化で精度が上がるとは一般化しない。検証写真はcheckpoint選択に使用しており、この表は独立した最終精度ではない。過去のテストを繰り返して新モデルの優位性を主張せず、新しい未使用写真での評価を次の採用条件とする。速度は模擬テンソルによる計算のみで、撮影から結果までの時間・iPhone実測ではない。
 
 [学習設定・全種の検証成績・速度測定](benchmarks/2026-10-28-v4-validation.json)。モデルは `work/model-v4-small-head-pilot-v1/export/` に保存し、Webアプリには同梱していない。
+
+## 動物園から提供される写真の取り込み
+
+ネット写真とは別に、[動物園写真の受け取りガイド](ZOO_PHOTO_GUIDE.md)と `zoo_dataset.py` / `experiment.py` を追加しました。CSVでの明示確認、個体と撮影セッションの結合、EXIF除去、3候補の逐次学習・比較表作成に対応。将来の写真の内容が未確認のため、最適モデルや精度は未確定です。

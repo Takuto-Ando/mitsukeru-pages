@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "seed": 42,
+  "batchSize": 8,
+  "candidates": [
+    { "id": "v4-head", "model": "v4-small", "epochs": 30, "warmupEpochs": 30 },
+    { "id": "v3-large-head", "model": "large", "epochs": 30, "warmupEpochs": 30 },
+    { "id": "v4-finetune", "model": "v4-small", "epochs": 10, "warmupEpochs": 2 }
+  ],
+  "limits": { "downloadMB": 8, "webkitP95Ms": 50, "validationMacroRecall": 0.7 }
+}
