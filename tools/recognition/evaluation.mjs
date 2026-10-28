@@ -19,6 +19,10 @@ export function validateManifest(data) {
     sessions = new Map();
   for (const s of data.samples) {
     assert(
+      s?.reviewStatus === undefined || s.reviewStatus === "approved",
+      "未確認・除外済みの写真は学習・評価に使用できません",
+    );
+    assert(
       s &&
         typeof s.id === "string" &&
         /^[a-zA-Z0-9_-]{1,100}$/.test(s.id) &&
@@ -213,6 +217,15 @@ export function evaluate(manifest, predictions) {
     autoConfirmRate: fraction(accepted, samples.length),
     autoConfirmPrecision: fraction(correct, accepted),
     knownAutoConfirmRecall: fraction(correct, known),
+    knownCandidateTop1Accuracy: fraction(
+      samples.filter(
+        (s) =>
+          s.speciesId !== "unknown" &&
+          ["identified", "uncertain"].includes(rows.get(s.id).status) &&
+          rows.get(s.id).speciesId === s.speciesId,
+      ).length,
+      known,
+    ),
     manualFallbackRate: fraction(samples.length - accepted, samples.length),
     unknownFalseAcceptRate: fraction(falseAccept, unknown),
     unknownRejectRate: fraction(unknownRejected, unknown),

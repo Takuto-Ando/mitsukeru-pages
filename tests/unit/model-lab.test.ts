@@ -79,6 +79,16 @@ test("未評価の種や対象外が欠ける場合はゼロ枚で明示する",
   expect(result.test.sheep).toBe(0);
   expect(result.test.unknown).toBe(0);
 });
+test("ネット収集した未確認写真を学習・評価へ混入させない", () => {
+  for (const reviewStatus of ["pending", "rejected"]) {
+    expect(() =>
+      validateManifest(manifest([{ ...sample("a"), reviewStatus }])),
+    ).toThrow(/未確認/);
+  }
+  expect(() =>
+    validateManifest(manifest([{ ...sample("a"), reviewStatus: "approved" }])),
+  ).not.toThrow();
+});
 test("自己保留と実行失敗を正解扱いせず、種別成績と対象外の誤受理を計算する", () => {
   const data = manifest([
     sample("goat"),
@@ -101,6 +111,7 @@ test("自己保留と実行失敗を正解扱いせず、種別成績と対象�
   const result = evaluate(data, predictions);
   expect(result.autoConfirmPrecision).toBe(0.5);
   expect(result.knownAutoConfirmRecall).toBe(1 / 3);
+  expect(result.knownCandidateTop1Accuracy).toBe(2 / 3);
   expect(result.unknownFalseAcceptRate).toBe(0.5);
   expect(result.unknownRejectRate).toBe(0.5);
   expect(result.manualFallbackRate).toBe(0.6);

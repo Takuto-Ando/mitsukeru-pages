@@ -17,7 +17,9 @@
     "ios:demo": "npm run ios:sync && node scripts/ios-demo.mjs",
     "recognition:lab": "node tools/recognition/cli.mjs",
     "recognition:current": "node tools/recognition/run-current.mjs",
-    "build:cloudflare": "DEPLOY_TARGET=cloudflare VITE_BASE_PATH=/ npm run build"
+    "build:cloudflare": "DEPLOY_TARGET=cloudflare VITE_BASE_PATH=/ npm run build",
+    "recognition:training:test": "python3 -m unittest discover -s tools/recognition/training -p 'test_*.py'",
+    "recognition:benchmark": "node tools/recognition/training/browser-benchmark.mjs"
   },
   "dependencies": {
     "@capacitor/core": "8.4.3",

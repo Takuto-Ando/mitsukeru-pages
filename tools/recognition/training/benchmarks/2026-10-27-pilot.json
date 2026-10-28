@@ -1,0 +1,2793 @@
+{
+  "date": "2026-10-27",
+  "kind": "exploratory-internet-photo-pilot",
+  "photos": 198,
+  "splitSummary": {
+    "seed": 42,
+    "counts": {
+      "train": {
+        "mandrill": 5,
+        "gibbon": 8,
+        "lemur": 5,
+        "bush-dog": 4,
+        "goat": 2,
+        "sheep": 4,
+        "elephant": 6,
+        "capuchin": 2,
+        "macaque": 2,
+        "badger": 8,
+        "zebra": 7,
+        "giraffe": 4,
+        "hippo": 6,
+        "fennec": 8,
+        "gorilla": 8,
+        "donkey": 6,
+        "meerkat": 3,
+        "deer": 5,
+        "unknown": 5
+      },
+      "validation": {
+        "mandrill": 1,
+        "gibbon": 3,
+        "lemur": 1,
+        "bush-dog": 3,
+        "goat": 3,
+        "sheep": 2,
+        "elephant": 4,
+        "capuchin": 2,
+        "macaque": 3,
+        "badger": 1,
+        "zebra": 3,
+        "giraffe": 3,
+        "hippo": 3,
+        "fennec": 1,
+        "gorilla": 1,
+        "donkey": 1,
+        "meerkat": 2,
+        "deer": 2,
+        "unknown": 11
+      },
+      "test": {
+        "mandrill": 5,
+        "gibbon": 1,
+        "lemur": 6,
+        "bush-dog": 3,
+        "goat": 1,
+        "sheep": 1,
+        "elephant": 1,
+        "capuchin": 1,
+        "macaque": 7,
+        "badger": 1,
+        "zebra": 2,
+        "giraffe": 2,
+        "hippo": 3,
+        "fennec": 1,
+        "gorilla": 1,
+        "donkey": 1,
+        "meerkat": 5,
+        "deer": 5,
+        "unknown": 3
+      }
+    },
+    "groups": 131,
+    "modelResultsUsedToSplit": false
+  },
+  "groundTruth": "Preliminary visual review + Commons titles/captions; not independently expert verified.",
+  "limitations": [
+    "Small uneven sample: some classes only one test photo.",
+    "Groups link photographers and suspected same individuals/scenes; full cross-source identity checks remain incomplete.",
+    "Overlap with upstream ImageNet/CLIP pretraining data was not audited.",
+    "Internet images do not establish Kyoto zoo field accuracy.",
+    "Weight-only compression was added after initial test reports were inspected; it has validation results only and needs a fresh independent test set.",
+    "Current CLIP returns no species for rejected images, so its candidate metric counts those as unsuccessful; it is not raw CLIP argmax accuracy."
+  ],
+  "deployed": false,
+  "currentApp": {
+    "version": 1,
+    "model": "clip-vit-base-patch32-q8/d15189d7028b43f1d3e65039190477f6af591c2a/labels-v2",
+    "testImages": 50,
+    "knownImages": 47,
+    "unknownImages": 3,
+    "autoConfirmRate": 0.62,
+    "autoConfirmPrecision": 0.6774193548387096,
+    "knownAutoConfirmRecall": 0.44680851063829785,
+    "knownCandidateTop1Accuracy": 0.5319148936170213,
+    "manualFallbackRate": 0.38,
+    "unknownFalseAcceptRate": 0,
+    "unknownRejectRate": 1,
+    "unavailable": 0,
+    "missingSpecies": [],
+    "perSpecies": [
+      {
+        "speciesId": "mandrill",
+        "support": 5,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "gibbon",
+        "support": 1,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "lemur",
+        "support": 6,
+        "autoConfirmed": 5,
+        "precision": 1,
+        "recall": 0.8333333333333334
+      },
+      {
+        "speciesId": "bush-dog",
+        "support": 3,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "goat",
+        "support": 1,
+        "autoConfirmed": 1,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "sheep",
+        "support": 1,
+        "autoConfirmed": 1,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "elephant",
+        "support": 1,
+        "autoConfirmed": 1,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "capuchin",
+        "support": 1,
+        "autoConfirmed": 10,
+        "precision": 0.1,
+        "recall": 1
+      },
+      {
+        "speciesId": "macaque",
+        "support": 7,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "badger",
+        "support": 1,
+        "autoConfirmed": 1,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "zebra",
+        "support": 2,
+        "autoConfirmed": 2,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "giraffe",
+        "support": 2,
+        "autoConfirmed": 2,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "hippo",
+        "support": 3,
+        "autoConfirmed": 2,
+        "precision": 0.5,
+        "recall": 0.3333333333333333
+      },
+      {
+        "speciesId": "fennec",
+        "support": 1,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "gorilla",
+        "support": 1,
+        "autoConfirmed": 1,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "speciesId": "donkey",
+        "support": 1,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "meerkat",
+        "support": 5,
+        "autoConfirmed": 0,
+        "precision": null,
+        "recall": 0
+      },
+      {
+        "speciesId": "deer",
+        "support": 5,
+        "autoConfirmed": 5,
+        "precision": 1,
+        "recall": 1
+      }
+    ],
+    "confusion": {
+      "mandrill": {
+        "(uncertain)": 4,
+        "capuchin": 1
+      },
+      "gibbon": {
+        "capuchin": 1
+      },
+      "lemur": {
+        "lemur": 5,
+        "(uncertain)": 1
+      },
+      "bush-dog": {
+        "hippo": 1,
+        "(unknown)": 2
+      },
+      "goat": {
+        "goat": 1
+      },
+      "sheep": {
+        "sheep": 1
+      },
+      "elephant": {
+        "elephant": 1
+      },
+      "capuchin": {
+        "capuchin": 1
+      },
+      "macaque": {
+        "capuchin": 7
+      },
+      "badger": {
+        "badger": 1
+      },
+      "zebra": {
+        "zebra": 2
+      },
+      "giraffe": {
+        "giraffe": 2
+      },
+      "hippo": {
+        "(unknown)": 1,
+        "(uncertain)": 1,
+        "hippo": 1
+      },
+      "fennec": {
+        "(uncertain)": 1
+      },
+      "gorilla": {
+        "gorilla": 1
+      },
+      "donkey": {
+        "(uncertain)": 1
+      },
+      "meerkat": {
+        "(unknown)": 4,
+        "(uncertain)": 1
+      },
+      "deer": {
+        "deer": 5
+      },
+      "unknown": {
+        "(unknown)": 3
+      }
+    },
+    "elapsedMs": {
+      "median": 1092.1000000014901,
+      "p95": 1126.7000000029802
+    },
+    "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+  },
+  "candidates": [
+    {
+      "run": "model-small-pilot-v1",
+      "precision": "fp32",
+      "trainingConfig": {
+        "epochs": 10,
+        "warmupEpochs": 2,
+        "batchSize": 8,
+        "headOnly": false,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.33796296296296297,
+      "bytes": 6152544,
+      "report": {
+        "version": 1,
+        "model": "8d1b2239939c9758c162d3edf7233713f68198f4a234469e927ac2400a2e58c3",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.425531914893617,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 7.556042000942398,
+          "p95": 9.758792002685368
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 4,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 0,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 0,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 0,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 1,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 3,
+          "total": 7
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 2,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 1,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 1,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 2,
+          "total": 5
+        },
+        "deer": {
+          "correct": 1,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-small-pilot-v1",
+      "precision": "int8",
+      "trainingConfig": {
+        "epochs": 10,
+        "warmupEpochs": 2,
+        "batchSize": 8,
+        "headOnly": false,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.33796296296296297,
+      "bytes": 1858230,
+      "report": {
+        "version": 1,
+        "model": "22dbbf2e32138b520e5c8b31db3b3e2f180bd53e79b84a9920d91e23ae985f96",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.02127659574468085,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 4.41037499695085,
+          "p95": 6.49162500485545
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 0,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 0,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 0,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 0,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 0,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 0,
+          "total": 7
+        },
+        "badger": {
+          "correct": 0,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 1,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 0,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 0,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 0,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 0,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 0,
+          "total": 5
+        },
+        "deer": {
+          "correct": 0,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-large-pilot-v1",
+      "precision": "fp32",
+      "trainingConfig": {
+        "epochs": 10,
+        "warmupEpochs": 2,
+        "batchSize": 8,
+        "headOnly": false,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.5277777777777778,
+      "bytes": 16887538,
+      "report": {
+        "version": 1,
+        "model": "f19df36aebf3acc992b17e8554f6c650735bbed79c303dc732b6bb012b0831a9",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.46808510638297873,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 14.35029099957319,
+          "p95": 17.87783399777254
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 1,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 0,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 5,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 1,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 0,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 1,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 2,
+          "total": 7
+        },
+        "badger": {
+          "correct": 0,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 1,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 1,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 1,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 5,
+          "total": 5
+        },
+        "deer": {
+          "correct": 0,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-large-pilot-v1",
+      "precision": "int8",
+      "trainingConfig": {
+        "epochs": 10,
+        "warmupEpochs": 2,
+        "batchSize": 8,
+        "headOnly": false,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.5277777777777778,
+      "bytes": 4706898,
+      "report": {
+        "version": 1,
+        "model": "cef332f26a7e9af00bd7edf4109739e4ec39d32aa3a2a9ca1b58c57ff172375c",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.3191489361702128,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 7.168500000261702,
+          "p95": 9.100874995056074
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 2,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 1,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 0,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 1,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 0,
+          "total": 7
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 2,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 0,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 0,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 3,
+          "total": 5
+        },
+        "deer": {
+          "correct": 0,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-small-head-pilot-v1",
+      "precision": "fp32",
+      "trainingConfig": {
+        "epochs": 30,
+        "warmupEpochs": 30,
+        "batchSize": 8,
+        "headOnly": true,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.5138888888888888,
+      "bytes": 6152544,
+      "report": {
+        "version": 1,
+        "model": "f7053a3240adb78f806fc66dd3f127422a11a83768113bff520401e0f5859ec9",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.6595744680851063,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 7.931958003609907,
+          "p95": 10.142708000785206
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 6,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 2,
+          "total": 3
+        },
+        "goat": {
+          "correct": 1,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 1,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 1,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 5,
+          "total": 7
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 2,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 1,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 1,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 0,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 3,
+          "total": 5
+        },
+        "deer": {
+          "correct": 3,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-small-head-pilot-v1",
+      "precision": "int8",
+      "trainingConfig": {
+        "epochs": 30,
+        "warmupEpochs": 30,
+        "batchSize": 8,
+        "headOnly": true,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.5138888888888888,
+      "bytes": 1858347,
+      "report": {
+        "version": 1,
+        "model": "7b1913f69e705395231d9324925b42cb2d4e63bbdf64871095f8469548e9e1ce",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.06382978723404255,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 4.3035839989897795,
+          "p95": 6.266707998292986
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 0,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 0,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 0,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 1,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 0,
+          "total": 7
+        },
+        "badger": {
+          "correct": 0,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 0,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 0,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 0,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 0,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 0,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 1,
+          "total": 5
+        },
+        "deer": {
+          "correct": 0,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-large-head-pilot-v1",
+      "precision": "fp32",
+      "trainingConfig": {
+        "epochs": 30,
+        "warmupEpochs": 30,
+        "batchSize": 8,
+        "headOnly": true,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.6527777777777778,
+      "bytes": 16887538,
+      "report": {
+        "version": 1,
+        "model": "bcd41150899f721890491a55e52e3cb4785d175a977628ace5818db0d3184476",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.7659574468085106,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 14.064625000173692,
+          "p95": 15.97241700073937
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 5,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 6,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 1,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 1,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 4,
+          "total": 7
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 2,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 2,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 1,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 1,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 5,
+          "total": 5
+        },
+        "deer": {
+          "correct": 2,
+          "total": 5
+        }
+      }
+    },
+    {
+      "run": "model-large-head-pilot-v1",
+      "precision": "int8",
+      "trainingConfig": {
+        "epochs": 30,
+        "warmupEpochs": 30,
+        "batchSize": 8,
+        "headOnly": true,
+        "recordedAfterRunFromExecutedCommand": true,
+        "optimizer": "AdamW",
+        "headLearningRate": 0.001,
+        "fineTuneLearningRate": 0.0001,
+        "weightDecay": 0.01
+      },
+      "bestValidationMacroRecallBeforeQuantization": 0.6527777777777778,
+      "bytes": 4706943,
+      "report": {
+        "version": 1,
+        "model": "8f3ae5c428875c1e8dd5dff72929c08d0d266128897285021a8143cbe136488e",
+        "testImages": 50,
+        "knownImages": 47,
+        "unknownImages": 3,
+        "autoConfirmRate": 0,
+        "autoConfirmPrecision": null,
+        "knownAutoConfirmRecall": 0,
+        "knownCandidateTop1Accuracy": 0.5957446808510638,
+        "manualFallbackRate": 1,
+        "unknownFalseAcceptRate": 0,
+        "unknownRejectRate": 0,
+        "unavailable": 0,
+        "missingSpecies": [],
+        "perSpecies": [
+          {
+            "speciesId": "mandrill",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gibbon",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "lemur",
+            "support": 6,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "bush-dog",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "goat",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "sheep",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "elephant",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "capuchin",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "macaque",
+            "support": 7,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "badger",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "zebra",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "giraffe",
+            "support": 2,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "hippo",
+            "support": 3,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "fennec",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "gorilla",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "donkey",
+            "support": 1,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "meerkat",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          },
+          {
+            "speciesId": "deer",
+            "support": 5,
+            "autoConfirmed": 0,
+            "precision": null,
+            "recall": 0
+          }
+        ],
+        "confusion": {
+          "mandrill": {
+            "(uncertain)": 5
+          },
+          "gibbon": {
+            "(uncertain)": 1
+          },
+          "lemur": {
+            "(uncertain)": 6
+          },
+          "bush-dog": {
+            "(uncertain)": 3
+          },
+          "goat": {
+            "(uncertain)": 1
+          },
+          "sheep": {
+            "(uncertain)": 1
+          },
+          "elephant": {
+            "(uncertain)": 1
+          },
+          "capuchin": {
+            "(uncertain)": 1
+          },
+          "macaque": {
+            "(uncertain)": 7
+          },
+          "badger": {
+            "(uncertain)": 1
+          },
+          "zebra": {
+            "(uncertain)": 2
+          },
+          "giraffe": {
+            "(uncertain)": 2
+          },
+          "hippo": {
+            "(uncertain)": 3
+          },
+          "fennec": {
+            "(uncertain)": 1
+          },
+          "gorilla": {
+            "(uncertain)": 1
+          },
+          "donkey": {
+            "(uncertain)": 1
+          },
+          "meerkat": {
+            "(uncertain)": 5
+          },
+          "deer": {
+            "(uncertain)": 5
+          },
+          "unknown": {
+            "(uncertain)": 3
+          }
+        },
+        "elapsedMs": {
+          "median": 7.339290998061188,
+          "p95": 9.11633299983805
+        },
+        "note": "精度は自動確定結果を種単位で集計。候補や実行失敗を正解扱いしない。未測定の率はnull。時間は実行環境に依存。"
+      },
+      "candidatePerLabel": {
+        "mandrill": {
+          "correct": 0,
+          "total": 5
+        },
+        "gibbon": {
+          "correct": 1,
+          "total": 1
+        },
+        "lemur": {
+          "correct": 6,
+          "total": 6
+        },
+        "bush-dog": {
+          "correct": 0,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 1
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 1
+        },
+        "elephant": {
+          "correct": 1,
+          "total": 1
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 1
+        },
+        "macaque": {
+          "correct": 1,
+          "total": 7
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 2,
+          "total": 2
+        },
+        "giraffe": {
+          "correct": 2,
+          "total": 2
+        },
+        "hippo": {
+          "correct": 2,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 1,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 1,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 5,
+          "total": 5
+        },
+        "deer": {
+          "correct": 3,
+          "total": 5
+        }
+      }
+    }
+  ],
+  "weightOnlyFollowup": {
+    "run": "model-large-head-pilot-v1",
+    "conversion": {
+      "kind": "weight-only-int8-fp32-compute",
+      "compressedTensors": 64,
+      "sourceSha256": "bcd41150899f721890491a55e52e3cb4785d175a977628ace5818db0d3184476",
+      "outputSha256": "41e17ec9bd6e69a42dd181aa598cc68c6d57a2e935c85e15de606420b2b2b16d",
+      "sourceBytes": 16887538,
+      "outputBytes": 4414708,
+      "calibrationPhotosUsed": false,
+      "note": "Download compression only. Runtime may expand weights to FP32; memory reduction is not guaranteed."
+    },
+    "validationKnownCorrect": 24,
+    "validationKnownTotal": 39,
+    "validationMacroRecall": 0.6527777777777778,
+    "policy": {
+      "version": 1,
+      "kind": "provisional-validation-policy",
+      "modelSha256": "41e17ec9bd6e69a42dd181aa598cc68c6d57a2e935c85e15de606420b2b2b16d",
+      "acceptanceEnabled": false,
+      "validationImages": 50,
+      "unknownImages": 11,
+      "supports": {
+        "mandrill": 1,
+        "gibbon": 3,
+        "lemur": 1,
+        "bush-dog": 3,
+        "goat": 3,
+        "sheep": 2,
+        "elephant": 4,
+        "capuchin": 2,
+        "macaque": 3,
+        "badger": 1,
+        "zebra": 3,
+        "giraffe": 3,
+        "hippo": 3,
+        "fennec": 1,
+        "gorilla": 1,
+        "donkey": 1,
+        "meerkat": 2,
+        "deer": 2
+      },
+      "testUsedForFitting": false,
+      "independentTestRequired": true,
+      "goals": {
+        "precisionWilsonLower95": 0.95,
+        "unknownAcceptWilsonUpper95": 0.05
+      },
+      "reason": "No threshold meets validation evidence goals; keep manual confirmation"
+    },
+    "browserTiming": {
+      "version": 1,
+      "kind": "synthetic-browser-compatibility-and-timing",
+      "animalAccuracyMeasured": false,
+      "environment": {
+        "engine": "webkit",
+        "platform": "darwin",
+        "arch": "arm64",
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+        "isPhysicalIPhone": false
+      },
+      "inputSize": [
+        3,
+        224,
+        224
+      ],
+      "artifacts": [
+        {
+          "name": "model.fp32.onnx",
+          "bytes": 16887538,
+          "prepareMs": 202,
+          "firstMs": 30,
+          "warmMedianMs": 22,
+          "warmP95Ms": 23,
+          "runs": 11
+        },
+        {
+          "name": "model.int8.onnx",
+          "bytes": 4706943,
+          "prepareMs": 70,
+          "firstMs": 42,
+          "warmMedianMs": 31,
+          "warmP95Ms": 31,
+          "runs": 11
+        },
+        {
+          "name": "model.weight-int8.onnx",
+          "bytes": 4414708,
+          "prepareMs": 29,
+          "firstMs": 22,
+          "warmMedianMs": 22,
+          "warmP95Ms": 23,
+          "runs": 11
+        }
+      ]
+    },
+    "testEvaluated": false,
+    "independentFinalTestPending": true
+  },
+  "followUpEvaluation": "2026-10-27-fresh-test.json"
+}

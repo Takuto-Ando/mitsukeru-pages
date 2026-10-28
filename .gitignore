@@ -13,3 +13,8 @@ work/
 
 # Local Cloudflare emulator state
 .wrangler/
+
+# Python development artifacts
+__pycache__/
+*.py[cod]
+.venv/

@@ -1,0 +1,8 @@
+# Verified on macOS arm64 / Python 3.13, 2026-10-27
+torch==2.14.1
+torchvision==0.29.1
+timm==1.0.30
+onnx==1.23.2
+onnxruntime==1.31.1
+numpy==2.5.4
+Pillow==12.3.0

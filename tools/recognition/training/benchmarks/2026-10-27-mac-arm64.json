@@ -1,0 +1,212 @@
+{
+  "measuredDate": "2026-10-27",
+  "scope": "Synthetic randomly initialized architecture tests; no animal accuracy measurement",
+  "hardware": "Apple M2",
+  "physicalIPhone": false,
+  "candidates": {
+    "small": {
+      "pythonCpu": {
+        "kind": "synthetic-pipeline-smoke-only",
+        "animalAccuracyMeasured": false,
+        "model": "mobilenetv3_small_100.lamb_in1k",
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "file": "model.fp32.onnx",
+            "bytes": 6152544,
+            "prepareMs": 6.890208998811431,
+            "firstMs": 5.1534160011215135,
+            "warmMedianMs": 4.929666996758897
+          },
+          {
+            "file": "model.int8.onnx",
+            "bytes": 1858131,
+            "prepareMs": 21.725165999669116,
+            "firstMs": 2.042375002929475,
+            "warmMedianMs": 1.706082999589853
+          }
+        ]
+      },
+      "webkit": {
+        "version": 1,
+        "kind": "synthetic-browser-compatibility-and-timing",
+        "animalAccuracyMeasured": false,
+        "environment": {
+          "engine": "webkit",
+          "platform": "darwin",
+          "arch": "arm64",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "isPhysicalIPhone": false
+        },
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "name": "model.fp32.onnx",
+            "bytes": 6152544,
+            "prepareMs": 166,
+            "firstMs": 16,
+            "warmMedianMs": 8.5,
+            "warmP95Ms": 9,
+            "runs": 11
+          },
+          {
+            "name": "model.int8.onnx",
+            "bytes": 1858131,
+            "prepareMs": 58,
+            "firstMs": 17,
+            "warmMedianMs": 11,
+            "warmP95Ms": 12,
+            "runs": 11
+          }
+        ]
+      },
+      "chromium": {
+        "version": 1,
+        "kind": "synthetic-browser-compatibility-and-timing",
+        "animalAccuracyMeasured": false,
+        "environment": {
+          "engine": "chromium",
+          "platform": "darwin",
+          "arch": "arm64",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+          "isPhysicalIPhone": false
+        },
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "name": "model.fp32.onnx",
+            "bytes": 6152544,
+            "prepareMs": 187.79999999701977,
+            "firstMs": 18.899999998509884,
+            "warmMedianMs": 8.399999998509884,
+            "warmP95Ms": 8.899999998509884,
+            "runs": 11
+          },
+          {
+            "name": "model.int8.onnx",
+            "bytes": 1858131,
+            "prepareMs": 55.399999998509884,
+            "firstMs": 21,
+            "warmMedianMs": 10.400000002235174,
+            "warmP95Ms": 10.699999995529652,
+            "runs": 11
+          }
+        ]
+      }
+    },
+    "large": {
+      "pythonCpu": {
+        "kind": "synthetic-pipeline-smoke-only",
+        "animalAccuracyMeasured": false,
+        "model": "mobilenetv3_large_100.ra_in1k",
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "file": "model.fp32.onnx",
+            "bytes": 16887538,
+            "prepareMs": 10.850749997189268,
+            "firstMs": 11.63591600197833,
+            "warmMedianMs": 11.421083996538073
+          },
+          {
+            "file": "model.int8.onnx",
+            "bytes": 4706880,
+            "prepareMs": 26.61620899743866,
+            "firstMs": 6.582124995475169,
+            "warmMedianMs": 4.5147499986342154
+          }
+        ]
+      },
+      "webkit": {
+        "version": 1,
+        "kind": "synthetic-browser-compatibility-and-timing",
+        "animalAccuracyMeasured": false,
+        "environment": {
+          "engine": "webkit",
+          "platform": "darwin",
+          "arch": "arm64",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+          "isPhysicalIPhone": false
+        },
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "name": "model.fp32.onnx",
+            "bytes": 16887538,
+            "prepareMs": 146,
+            "firstMs": 29,
+            "warmMedianMs": 21,
+            "warmP95Ms": 22,
+            "runs": 11
+          },
+          {
+            "name": "model.int8.onnx",
+            "bytes": 4706880,
+            "prepareMs": 68,
+            "firstMs": 39,
+            "warmMedianMs": 28.5,
+            "warmP95Ms": 30,
+            "runs": 11
+          }
+        ]
+      },
+      "chromium": {
+        "version": 1,
+        "kind": "synthetic-browser-compatibility-and-timing",
+        "animalAccuracyMeasured": false,
+        "environment": {
+          "engine": "chromium",
+          "platform": "darwin",
+          "arch": "arm64",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.8078.4 Safari/537.36",
+          "isPhysicalIPhone": false
+        },
+        "inputSize": [
+          3,
+          224,
+          224
+        ],
+        "artifacts": [
+          {
+            "name": "model.fp32.onnx",
+            "bytes": 16887538,
+            "prepareMs": 174.20000000298023,
+            "firstMs": 32.5,
+            "warmMedianMs": 22.850000001490116,
+            "warmP95Ms": 23.30000000447035,
+            "runs": 11
+          },
+          {
+            "name": "model.int8.onnx",
+            "bytes": 4706880,
+            "prepareMs": 69.60000000149012,
+            "firstMs": 36.69999999552965,
+            "warmMedianMs": 28.900000002235174,
+            "warmP95Ms": 32.399999998509884,
+            "runs": 11
+          }
+        ]
+      }
+    }
+  }
+}

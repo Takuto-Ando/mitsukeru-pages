@@ -214,3 +214,9 @@ npm run ios:open
 ### Cloudflare Pages用のビルド
 
 `npm run build:cloudflare` でルートURL用の公開ファイルを作れます。既存GitHub Pagesと認識処理は維持します。大きなWASMはCloudflare限定のHTTP gzip配信とし、元バイト列の一致とサイズ制限をビルド時に検査します。[公開・検証・ノート移行の手順](docs/CLOUDFLARE_PAGES.md)を参照してください。`https://zooketch.pages.dev/` は2026-10-26に公開・実配信を確認しました。現在Cloudflareは直接アップロード方式です。main更新時の自動デプロイは従来のGitHub Pagesだけで、Cloudflareには専用ビルドの再アップロードが必要です。
+
+### 軽量認識モデルの開発環境（2026-10-27）
+
+[学習・量子化・評価手順](tools/recognition/training/README.md)を追加。MobileNetV3 Small／Largeの追加学習、FP32／INT8出力、validationだけでの保留基準調整、独立test集計、ブラウザ速度測定を実行できる。Python依存・写真・候補重みは `work/` に隔離し、アプリには含めない。ネット写真は許可条件・出典を記録した確認待ち候補として収集し、未確認のまま学習しない。
+
+M2のWebKitで模擬入力を測定し、SmallはFP32約6.15MB・中央値8.5ms、INT8約1.86MB・11ms。容量と速度の利点が一致しないため両方を比較する。これは動物精度・iPhone速度ではない。その後、実写198枚で4候補を試験学習した。Largeの分類層のみ学習＋重み圧縮で約4.4MB、既知の検証写真24/39正答まで確認。その後、元の撮影者を除外した新しい写真で評価し、既知86枚中52枚正答（圧縮前54枚）。園内・iPhone実機の評価は未完了で、公開中の認識処理・モデルは維持する。

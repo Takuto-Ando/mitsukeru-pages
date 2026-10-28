@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-27",
+  "source": "Wikimedia Commons file metadata API",
+  "sourcePolicy": "CC0/Public domain/CC BY/CC BY-SA candidates; per-file terms and labels require review",
+  "downloaded": 234,
+  "perLabel": {
+    "badger": 12,
+    "bush-dog": 12,
+    "capuchin": 12,
+    "deer": 12,
+    "donkey": 12,
+    "elephant": 12,
+    "fennec": 12,
+    "gibbon": 12,
+    "giraffe": 12,
+    "goat": 12,
+    "gorilla": 12,
+    "hippo": 12,
+    "lemur": 12,
+    "macaque": 12,
+    "mandrill": 12,
+    "meerkat": 12,
+    "sheep": 10,
+    "unknown": 20,
+    "zebra": 12
+  },
+  "licenses": {
+    "CC BY 2.0": 9,
+    "CC BY 2.5": 4,
+    "CC BY 3.0": 6,
+    "CC BY 4.0": 19,
+    "CC BY-SA 2.0": 10,
+    "CC BY-SA 2.5": 3,
+    "CC BY-SA 3.0": 43,
+    "CC BY-SA 4.0": 110,
+    "CC0": 17,
+    "Public domain": 13
+  },
+  "screening": {
+    "scope": "Partial visual screening of badger, capuchin, gibbon, elephant, goat, sheep and bush-dog contact sheets. All retained images still require species/permission/group review.",
+    "rejected": 15,
+    "approved": 0
+  },
+  "excludedExamples": [
+    {
+      "id": "commons-181456845",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Cartel_%22Paso_de_Fauna_Silvestre%22_en_Ruiz_de_Montoya.jpg",
+      "reason": "Road sign, not live bush dog"
+    },
+    {
+      "id": "commons-30395184",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Capra_pyrenaica_victoriae,_juvenile_--_2013_--_Laguna_Grande,_Sierra_de_Gredos,_Espa%C3%B1a.jpg",
+      "reason": "Wild goat/ibex appearance; domestic goat identity not established"
+    },
+    {
+      "id": "commons-65623779",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Nilgiri_tahr_(Nilgiritragus_hylocrius)_female_head.jpg",
+      "reason": "Wild goat/ibex appearance; domestic goat identity not established"
+    },
+    {
+      "id": "commons-11949878",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:20101020_Sheep_shepherd_at_Vistonida_lake_Glikoneri_Rhodope_Prefecture_Thrace_Greece.jpg",
+      "reason": "Sheep scene returned by goat search"
+    },
+    {
+      "id": "commons-81792432",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:View_of_Tad_Lo_river_from_above,_with_temporary_footbridge_and_goats,_Laos.jpg",
+      "reason": "Landscape without a sufficiently identifiable target"
+    },
+    {
+      "id": "commons-76924741",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Lamb_-_Animal_Park_Muggensturm_01.jpg",
+      "reason": "Lamb returned by goat search"
+    },
+    {
+      "id": "commons-149995172",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Two_stone_window_frames_with_lying_goat_at_the_Khmer_Hindu_temple_of_Wat_Phou_Champasak_Laos.jpg",
+      "reason": "Architecture without target animal"
+    },
+    {
+      "id": "commons-426701",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Wassili_Grigorjewitsch_Perow_-_Hunters_resting.jpg",
+      "reason": "Painting"
+    },
+    {
+      "id": "commons-22490472",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:August_Friedrich_Albrecht_Schenck_-_Anguish_-_Google_Art_Project.jpg",
+      "reason": "Painting with other species"
+    },
+    {
+      "id": "commons-87380098",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Affiche_92_Les_derniers_hommes_%C3%A9l%C3%A9phants_Fr.jpg",
+      "reason": "Film poster, not a live animal photo"
+    },
+    {
+      "id": "commons-27080669",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Sapajus_macrocephalus.jpg",
+      "reason": "Target too obscured for reliable preliminary labeling"
+    },
+    {
+      "id": "commons-107138840",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Harpia_chega_ao_ninho_com_um_macaco-prego.jpg",
+      "reason": "Bird, not capuchin"
+    },
+    {
+      "id": "commons-135447146",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Parque_Nacional_de_Ubajara_Diego_Bento_(02).jpg",
+      "reason": "Landscape with no identifiable target animal"
+    },
+    {
+      "id": "commons-14761302",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Meles_(Genus).jpg",
+      "reason": "Illustrated anatomy comparison, not a live animal photo"
+    },
+    {
+      "id": "commons-137048128",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Skeletal_specimen_of_Badger.jpg",
+      "reason": "Skeleton display"
+    }
+  ],
+  "readyForTraining": false,
+  "deployed": false,
+  "note": "Photos and author attribution list remain local under ignored work/. No animal recognition accuracy measured; no training on pending photos."
+}
