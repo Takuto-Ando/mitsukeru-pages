@@ -9,7 +9,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 LABELS = [s['id'] for s in json.loads((ROOT / 'tools/recognition/species.json').read_text())['species']]
-MODELS = {'small': 'mobilenetv3_small_100.lamb_in1k', 'large': 'mobilenetv3_large_100.ra_in1k'}
+MODELS = {'v4-small': 'mobilenetv4_conv_small.e2400_r224_in1k', 'small': 'mobilenetv3_small_100.lamb_in1k', 'large': 'mobilenetv3_large_100.ra_in1k'}
 
 
 def write_json(path, data):

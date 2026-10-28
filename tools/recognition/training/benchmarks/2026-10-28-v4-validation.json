@@ -1,0 +1,483 @@
+{
+  "date": "2026-10-28",
+  "kind": "validation-only-candidate-selection",
+  "productionChanged": false,
+  "modelCard": "https://huggingface.co/timm/mobilenetv4_conv_small.e2400_r224_in1k",
+  "training": {
+    "version": 1,
+    "model": "mobilenetv4_conv_small.e2400_r224_in1k",
+    "labels": [
+      "mandrill",
+      "gibbon",
+      "lemur",
+      "bush-dog",
+      "goat",
+      "sheep",
+      "elephant",
+      "capuchin",
+      "macaque",
+      "badger",
+      "zebra",
+      "giraffe",
+      "hippo",
+      "fennec",
+      "gorilla",
+      "donkey",
+      "meerkat",
+      "deer"
+    ],
+    "preprocess": {
+      "input_size": [
+        3,
+        224,
+        224
+      ],
+      "interpolation": "bicubic",
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "crop_pct": 0.875,
+      "crop_mode": "center"
+    },
+    "trainedFromDataset": true,
+    "trainingCompleted": true,
+    "datasetManifestSha256": "f05eb7338d6bfea6dd2c3ddb793987e11b026006d4c2eee1b3e559b9aeb775bb",
+    "datasetSignature": "f60093df3413d7f7032e1551c7776543ff8135f4ec3463c63b4eca137e07eb24",
+    "seed": 42,
+    "device": "mps",
+    "trainImages": 93,
+    "validationImages": 39,
+    "testUsedForTraining": false,
+    "unknownTrainingImagesUsed": false,
+    "torchVersion": "2.14.1",
+    "timmVersion": "1.0.30",
+    "trainingConfig": {
+      "epochs": 30,
+      "warmupEpochs": 30,
+      "batchSize": 8,
+      "dropSingletonBatch": false,
+      "headOnly": true,
+      "optimizer": "AdamW",
+      "headLearningRate": 0.001,
+      "fineTuneLearningRate": 0.0001,
+      "weightDecay": 0.01
+    }
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "loss": 4.819886412671817,
+      "validationMacroRecall": 0.13425925925925924
+    },
+    {
+      "epoch": 2,
+      "loss": 3.3818945500158493,
+      "validationMacroRecall": 0.13425925925925924
+    },
+    {
+      "epoch": 3,
+      "loss": 2.54533286376666,
+      "validationMacroRecall": 0.19444444444444445
+    },
+    {
+      "epoch": 4,
+      "loss": 1.6328025415379515,
+      "validationMacroRecall": 0.23148148148148145
+    },
+    {
+      "epoch": 5,
+      "loss": 1.1978294503304265,
+      "validationMacroRecall": 0.38425925925925924
+    },
+    {
+      "epoch": 6,
+      "loss": 0.8874445233934669,
+      "validationMacroRecall": 0.4166666666666667
+    },
+    {
+      "epoch": 7,
+      "loss": 0.5291295448939005,
+      "validationMacroRecall": 0.4722222222222222
+    },
+    {
+      "epoch": 8,
+      "loss": 0.37266072582814,
+      "validationMacroRecall": 0.49074074074074076
+    },
+    {
+      "epoch": 9,
+      "loss": 0.2980295989301897,
+      "validationMacroRecall": 0.49074074074074076
+    },
+    {
+      "epoch": 10,
+      "loss": 0.21265027696086514,
+      "validationMacroRecall": 0.5462962962962963
+    },
+    {
+      "epoch": 11,
+      "loss": 0.18448297871697333,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 12,
+      "loss": 0.16279919589719466,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 13,
+      "loss": 0.12127264819398362,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 14,
+      "loss": 0.09367179906656666,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 15,
+      "loss": 0.09251394323123399,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 16,
+      "loss": 0.07167637500391212,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 17,
+      "loss": 0.05748981277468384,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 18,
+      "loss": 0.07427814074100987,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 19,
+      "loss": 0.04879314612637284,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 20,
+      "loss": 0.04311215521026683,
+      "validationMacroRecall": 0.5833333333333334
+    },
+    {
+      "epoch": 21,
+      "loss": 0.04069953643146061,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 22,
+      "loss": 0.03781091445876706,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 23,
+      "loss": 0.04824709655937328,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 24,
+      "loss": 0.03607292088770097,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 25,
+      "loss": 0.02976641205129444,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 26,
+      "loss": 0.024340681070762295,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 27,
+      "loss": 0.023699229823485497,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 28,
+      "loss": 0.025636751555226822,
+      "validationMacroRecall": 0.6111111111111112
+    },
+    {
+      "epoch": 29,
+      "loss": 0.023695841812158145,
+      "validationMacroRecall": 0.6666666666666666
+    },
+    {
+      "epoch": 30,
+      "loss": 0.023861410176401497,
+      "validationMacroRecall": 0.6111111111111112
+    }
+  ],
+  "validation": {
+    "fp32": {
+      "correct": 27,
+      "total": 39,
+      "perSpecies": {
+        "mandrill": {
+          "correct": 1,
+          "total": 1
+        },
+        "gibbon": {
+          "correct": 3,
+          "total": 3
+        },
+        "lemur": {
+          "correct": 1,
+          "total": 1
+        },
+        "bush-dog": {
+          "correct": 1,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 3
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 2
+        },
+        "elephant": {
+          "correct": 4,
+          "total": 4
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 2
+        },
+        "macaque": {
+          "correct": 3,
+          "total": 3
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 3,
+          "total": 3
+        },
+        "giraffe": {
+          "correct": 3,
+          "total": 3
+        },
+        "hippo": {
+          "correct": 2,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 0,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 2,
+          "total": 2
+        },
+        "deer": {
+          "correct": 1,
+          "total": 2
+        }
+      },
+      "macroRecall": 0.6666666666666666
+    },
+    "weight-int8": {
+      "correct": 28,
+      "total": 39,
+      "perSpecies": {
+        "mandrill": {
+          "correct": 1,
+          "total": 1
+        },
+        "gibbon": {
+          "correct": 3,
+          "total": 3
+        },
+        "lemur": {
+          "correct": 1,
+          "total": 1
+        },
+        "bush-dog": {
+          "correct": 1,
+          "total": 3
+        },
+        "goat": {
+          "correct": 0,
+          "total": 3
+        },
+        "sheep": {
+          "correct": 1,
+          "total": 2
+        },
+        "elephant": {
+          "correct": 4,
+          "total": 4
+        },
+        "capuchin": {
+          "correct": 0,
+          "total": 2
+        },
+        "macaque": {
+          "correct": 3,
+          "total": 3
+        },
+        "badger": {
+          "correct": 1,
+          "total": 1
+        },
+        "zebra": {
+          "correct": 3,
+          "total": 3
+        },
+        "giraffe": {
+          "correct": 3,
+          "total": 3
+        },
+        "hippo": {
+          "correct": 3,
+          "total": 3
+        },
+        "fennec": {
+          "correct": 0,
+          "total": 1
+        },
+        "gorilla": {
+          "correct": 1,
+          "total": 1
+        },
+        "donkey": {
+          "correct": 0,
+          "total": 1
+        },
+        "meerkat": {
+          "correct": 2,
+          "total": 2
+        },
+        "deer": {
+          "correct": 1,
+          "total": 2
+        }
+      },
+      "macroRecall": 0.6851851851851852
+    }
+  },
+  "compression": {
+    "kind": "weight-only-int8-fp32-compute",
+    "compressedTensors": 47,
+    "sourceSha256": "69cd570cfd20e58d630525ab1b087442ec518a7de6158e6ddbb29a9df27bcbc4",
+    "outputSha256": "3fd60c10f569324e52c07100895014c3b3428f27f7df505c6dd1e446e9e3ba2b",
+    "sourceBytes": 10037269,
+    "outputBytes": 2638562,
+    "calibrationPhotosUsed": false,
+    "note": "Download compression only. Runtime may expand weights to FP32; memory reduction is not guaranteed."
+  },
+  "browser": {
+    "version": 1,
+    "kind": "synthetic-browser-compatibility-and-timing",
+    "animalAccuracyMeasured": false,
+    "environment": {
+      "engine": "webkit",
+      "platform": "darwin",
+      "arch": "arm64",
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Safari/605.1.15",
+      "isPhysicalIPhone": false
+    },
+    "inputSize": [
+      3,
+      224,
+      224
+    ],
+    "artifacts": [
+      {
+        "name": "model.fp32.onnx",
+        "bytes": 10037269,
+        "prepareMs": 233,
+        "firstMs": 26,
+        "warmMedianMs": 15,
+        "warmP95Ms": 16,
+        "runs": 11
+      },
+      {
+        "name": "model.int8.onnx",
+        "bytes": 2837113,
+        "prepareMs": 56,
+        "firstMs": 29,
+        "warmMedianMs": 17,
+        "warmP95Ms": 24,
+        "runs": 11
+      },
+      {
+        "name": "model.weight-int8.onnx",
+        "bytes": 2638562,
+        "prepareMs": 20,
+        "firstMs": 18,
+        "warmMedianMs": 16,
+        "warmP95Ms": 17,
+        "runs": 11
+      }
+    ]
+  },
+  "policy": {
+    "version": 1,
+    "kind": "provisional-validation-policy",
+    "modelSha256": "3fd60c10f569324e52c07100895014c3b3428f27f7df505c6dd1e446e9e3ba2b",
+    "acceptanceEnabled": false,
+    "validationImages": 50,
+    "unknownImages": 11,
+    "supports": {
+      "mandrill": 1,
+      "gibbon": 3,
+      "lemur": 1,
+      "bush-dog": 3,
+      "goat": 3,
+      "sheep": 2,
+      "elephant": 4,
+      "capuchin": 2,
+      "macaque": 3,
+      "badger": 1,
+      "zebra": 3,
+      "giraffe": 3,
+      "hippo": 3,
+      "fennec": 1,
+      "gorilla": 1,
+      "donkey": 1,
+      "meerkat": 2,
+      "deer": 2
+    },
+    "testUsedForFitting": false,
+    "independentTestRequired": true,
+    "goals": {
+      "precisionWilsonLower95": 0.95,
+      "unknownAcceptWilsonUpper95": 0.05
+    },
+    "reason": "No threshold meets validation evidence goals; keep manual confirmation"
+  },
+  "limitations": [
+    "39 known validation photos were used to select checkpoints, not independent final accuracy",
+    "Prior test findings informed candidate search; those test sets must not be represented as new unseen proof",
+    "No production replacement or physical iPhone speed/memory verification",
+    "Browser timings use synthetic input and exclude image preprocessing",
+    "Weight compression does not guarantee smaller runtime memory"
+  ]
+}

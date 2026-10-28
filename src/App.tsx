@@ -1,6 +1,8 @@
 import { captureStudyDrawing, type StudyDrawing } from "./research/pairs";
 import { StudyPairView } from "./components/StudyPairView";
 import {
+  Suspense,
+  lazy,
   useEffect,
   useReducer,
   useRef,
@@ -13,7 +15,11 @@ import { ReadAloud, SpeechSettings, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
-import { DrawingCollection } from "./components/DrawingCollection";
+const DrawingCollection = lazy(() =>
+  import("./components/DrawingCollection").then((module) => ({
+    default: module.DrawingCollection,
+  })),
+);
 import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
@@ -29,7 +35,8 @@ import {
 } from "./research/study";
 import { StudyControls } from "./components/StudyControls";
 import {
-  initializeNotebook,
+  prepareNotebook,
+  countObservations,
   loadObservations,
   addObservation,
   deleteObservation,
@@ -80,6 +87,11 @@ export default function App() {
     audio.current = createFeedbackAudio(() => soundRef.current);
   useEffect(() => () => audio.current?.dispose(), []);
   const [collectionOpen, setCollectionOpen] = useState(false);
+  const collectionOpenRef = useRef(collectionOpen);
+  collectionOpenRef.current = collectionOpen;
+  const [collectionCount, setCollectionCount] = useState(0);
+  const [collectionLoading, setCollectionLoading] = useState(false);
+  const collectionGeneration = useRef(0);
   const [collection, setCollection] = useState<ObservationRecord[]>([]);
   const [saving, setSaving] = useState(false);
   const savingLock = useRef(false);
@@ -99,9 +111,10 @@ export default function App() {
     context.phase === studyPhase &&
     context.pairId === pairId.current;
   useEffect(() => {
-    initializeNotebook()
-      .then((data) => {
-        setCollection(data);
+    prepareNotebook()
+      .then(countObservations)
+      .then((count) => {
+        setCollectionCount(count);
         setStorageReady(true);
       })
       .catch(() => {
@@ -110,6 +123,39 @@ export default function App() {
         );
       });
   }, []);
+  async function refreshCollection() {
+    if (!collectionOpenRef.current) {
+      setCollectionCount(await countObservations());
+      return;
+    }
+    const generation = ++collectionGeneration.current;
+    const data = await loadObservations();
+    if (generation === collectionGeneration.current) {
+      setCollection(data);
+      setCollectionCount(data.length);
+    }
+  }
+  useEffect(() => {
+    if (!collectionOpen || !storageReady) return;
+    let cancelled = false;
+    setCollectionLoading(true);
+    setStorageError("");
+    void refreshCollection()
+      .catch(() => {
+        if (!cancelled)
+          setStorageError(
+            "観察ノートを読み込めませんでした。閉じてもう一度開いてください。",
+          );
+      })
+      .finally(() => {
+        if (!cancelled) setCollectionLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      collectionGeneration.current++;
+      setCollection([]);
+    };
+  }, [collectionOpen, storageReady]);
   async function save() {
     if (savingLock.current || savedId || !feedback?.passed || !storageReady)
       return;
@@ -137,7 +183,7 @@ export default function App() {
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images });
-      setCollection(await loadObservations());
+      await refreshCollection();
       if (generation === taskGeneration.current) setSavedId(record.id);
       recordStudy("observation_saved", {}, logContext);
     } catch {
@@ -348,32 +394,38 @@ export default function App() {
             window.scrollTo(0, 0);
           }}
         >
-          観察ノート ({collection.length})
+          観察ノート ({collectionCount})
         </button>
       </header>
       <main>
         {storageError && <p role="alert">{storageError}</p>}
         {collectionOpen ? (
-          <DrawingCollection
-            drawings={collection}
-            onBack={() => setCollectionOpen(false)}
-            onUpdate={async () => {
-              setCollection(await loadObservations());
-            }}
-            onDelete={async (id) => {
-              try {
-                await deleteObservation(id);
-                setCollection(await loadObservations());
-                if (savedId === id) setSavedId(undefined);
-                return true;
-              } catch {
-                setStorageError(
-                  "観察を削除できませんでした。もう一度試してください。",
-                );
-                return false;
-              }
-            }}
-          />
+          <Suspense fallback={<p role="status">観察ノートを開いています…</p>}>
+            {collectionLoading || !storageReady ? (
+              <p role="status">観察ノートを読み込んでいます…</p>
+            ) : (
+              <DrawingCollection
+                drawings={collection}
+                onBack={() => setCollectionOpen(false)}
+                onUpdate={async () => {
+                  await refreshCollection();
+                }}
+                onDelete={async (id) => {
+                  try {
+                    await deleteObservation(id);
+                    await refreshCollection();
+                    if (savedId === id) setSavedId(undefined);
+                    return true;
+                  } catch {
+                    setStorageError(
+                      "観察を削除できませんでした。もう一度試してください。",
+                    );
+                    return false;
+                  }
+                }}
+              />
+            )}
+          </Suspense>
         ) : (
           <>
             <nav className="card-flow" aria-label="観察の進み方">

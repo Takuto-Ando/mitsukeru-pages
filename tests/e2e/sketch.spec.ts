@@ -1262,11 +1262,30 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
     });
     db.close();
   });
+  await page.addInitScript(() => {
+    const original = IDBObjectStore.prototype.getAll;
+    (window as any).__notebookReads = 0;
+    IDBObjectStore.prototype.getAll = function (...args) {
+      if (this.name === "observations") (window as any).__notebookReads++;
+      return original.apply(this, args);
+    };
+  });
   await page.reload();
+  await expect(
+    page.getByRole("button", { name: "観察ノート (25)", exact: true }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(0);
   await page
     .getByRole("button", { name: "観察ノート (25)", exact: true })
     .click();
   await expect(page.locator(".collection-card")).toHaveCount(12);
+  expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(1);
+  await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
+  await page
+    .getByRole("button", { name: "観察ノート (25)", exact: true })
+    .click();
+  await expect(page.locator(".collection-card")).toHaveCount(12);
+  expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(2);
   await page
     .getByRole("button", { name: "もっと見る（残り13枚）", exact: true })
     .click();

@@ -45,7 +45,7 @@ export function observationMetadata(record: DrawingRecord): ObservationRecord {
 
 // One atomic migration, tracked in IndexedDB. The original localStorage is a backup;
 // deleting a migrated note never resurrects it on the next reload.
-export async function initializeNotebook(): Promise<ObservationRecord[]> {
+export async function prepareNotebook(): Promise<void> {
   const db = await database();
   const check = db.transaction("settings", "readonly");
   const checkDone = transactionDone(check);
@@ -79,7 +79,23 @@ export async function initializeNotebook(): Promise<ObservationRecord[]> {
     };
     await done;
   }
+}
+
+// Keep the original API for callers that explicitly need the complete notebook.
+export async function initializeNotebook(): Promise<ObservationRecord[]> {
+  await prepareNotebook();
   return loadObservations();
+}
+
+export async function countObservations(): Promise<number> {
+  const db = await database(),
+    tx = db.transaction("observations", "readonly");
+  const done = transactionDone(tx);
+  const [count] = await Promise.all([
+    requestValue(tx.objectStore("observations").count()),
+    done,
+  ]);
+  return count;
 }
 
 export async function loadObservations() {
