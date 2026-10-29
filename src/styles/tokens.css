@@ -1,4 +1,4 @@
-/* Approximate palette observed in the reference portfolio, not sampled source values.
+/* Flat colour palette sampled approximately from the supplied printed card PDF.
    Semantic tokens can map directly to future Figma variables. */
 @font-face {
   font-family: "Zen Maru Gothic";
@@ -13,11 +13,11 @@
   font-display: swap;
 }
 :root {
-  --color-teal: #75a99b;
+  --color-teal: #74bbb0;
   --color-teal-ink: #315f54;
-  --color-coral: #ca7d61;
-  --color-mustard: #c4a052;
-  --color-paper: #faf7ec;
+  --color-coral: #df7751;
+  --color-mustard: #ebb252;
+  --color-paper: #f5f0e5;
   --color-surface: #fffdf5;
   --color-ink: #514638;
   --color-muted: #796f60;

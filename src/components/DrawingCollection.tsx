@@ -59,11 +59,13 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
 
 export function DrawingCollection({
   drawings,
+  title = "観察ノート",
   onDelete,
   onBack,
   onUpdate,
 }: {
   drawings: ObservationRecord[];
+  title?: string;
   onDelete: (id: string) => Promise<boolean> | boolean;
   onBack: () => void;
   onUpdate?: () => Promise<void> | void;
@@ -125,11 +127,11 @@ export function DrawingCollection({
   }
 
   return (
-    <section className="drawing-collection" aria-label="観察ノート">
+    <section className="drawing-collection" aria-label={title}>
       <button className="text-button" onClick={onBack}>
         体験に戻る
       </button>
-      <h1>観察ノート</h1>
+      <h1>{title}</h1>
       <p>{drawings.length}枚の観察カードを保存しています。</p>
       <NotebookTools drawings={drawings} onRestored={onUpdate} />
       <p className="quiet-note">

@@ -10,8 +10,10 @@ import {
   useSyncExternalStore,
 } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { OfflineStatus } from "./offline/OfflineStatus";
-import { ReadAloud, SpeechSettings, stopSpeech } from "./speech/Speech";
+import { HomeScreen } from "./components/HomeScreen";
+import { SettingsDialog } from "./components/SettingsDialog";
+import { Settings } from "lucide-react";
+import { ReadAloud, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
@@ -33,7 +35,6 @@ import {
   subscribeStudy,
   currentStudyContext,
 } from "./research/study";
-import { StudyControls } from "./components/StudyControls";
 import {
   prepareNotebook,
   countObservations,
@@ -68,6 +69,9 @@ export default function App() {
   const taskGeneration = useRef(0);
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
+  const [screen, setScreen] = useState<"home" | "activity">("home");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsTrigger = useRef<HTMLElement | null>(null);
   const [taskId, setTaskId] = useState("goat");
   const [photo, setPhoto] = useState("");
   const [drawing, dispatchDrawing] = useReducer(
@@ -225,7 +229,8 @@ export default function App() {
     }
   }
   useEffect(() => {
-    if (step !== 3 || collectionOpen) return;
+    if (step !== 3 || collectionOpen || settingsOpen || screen !== "activity")
+      return;
     const logContext = currentStudyContext();
     let opened = false;
     const show = () => {
@@ -251,7 +256,7 @@ export default function App() {
       hide();
       document.removeEventListener("visibilitychange", visibility);
     };
-  }, [step, taskId, collectionOpen]);
+  }, [step, taskId, collectionOpen, settingsOpen, screen]);
   function next(value: number) {
     stopSpeech();
     setStep(value);
@@ -280,7 +285,8 @@ export default function App() {
     recordStudy("challenge_opened");
     activeTask.current = id;
   }
-  function restart() {
+  function restart(destination: "home" | "activity" = "activity") {
+    setScreen(destination);
     taskGeneration.current++;
     if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
@@ -376,27 +382,46 @@ export default function App() {
     }
   }
   return (
-    <div className="figma-shell" data-step={step}>
-      <header className="figma-header">
-        <button onClick={restart} aria-label="ズーケッチ 撮影に戻る">
-          <span className="brand-mark" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </span>
-          ズーケッチ
-        </button>
-        <button
-          className="collection-link"
-          aria-expanded={collectionOpen}
-          onClick={() => {
-            setCollectionOpen(!collectionOpen);
-            window.scrollTo(0, 0);
-          }}
-        >
-          観察ノート ({collectionCount})
-        </button>
-      </header>
+    <div
+      className="figma-shell"
+      data-step={step}
+      data-screen={collectionOpen ? "collection" : screen}
+    >
+      {(screen !== "home" || collectionOpen) && (
+        <header className="figma-header">
+          <button
+            onClick={() => restart("home")}
+            aria-label="ズーケッチ ホームに戻る"
+          >
+            <span className="brand-mark" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            ズーケッチ
+          </button>
+          <button
+            className="collection-link"
+            aria-expanded={collectionOpen}
+            onClick={() => {
+              setCollectionOpen(!collectionOpen);
+              window.scrollTo(0, 0);
+            }}
+          >
+            図鑑 ({collectionCount})
+          </button>
+          <button
+            className="header-settings"
+            aria-label="設定を開く"
+            onClick={(event) => {
+              settingsTrigger.current = event.currentTarget;
+              setSettingsOpen(true);
+            }}
+          >
+            <Settings aria-hidden="true" size={20} />
+          </button>
+        </header>
+      )}
       <main>
         {storageError && <p role="alert">{storageError}</p>}
         {collectionOpen ? (
@@ -405,6 +430,7 @@ export default function App() {
               <p role="status">観察ノートを読み込んでいます…</p>
             ) : (
               <DrawingCollection
+                title="スケッチ図鑑"
                 drawings={collection}
                 onBack={() => setCollectionOpen(false)}
                 onUpdate={async () => {
@@ -426,6 +452,19 @@ export default function App() {
               />
             )}
           </Suspense>
+        ) : screen === "home" ? (
+          <HomeScreen
+            onStart={() => restart("activity")}
+            onCollection={() => {
+              setCollectionOpen(true);
+              window.scrollTo(0, 0);
+            }}
+            onSettings={(trigger) => {
+              settingsTrigger.current = trigger;
+              setSettingsOpen(true);
+            }}
+            savedCount={collectionCount}
+          />
         ) : (
           <>
             <nav className="card-flow" aria-label="観察の進み方">
@@ -448,10 +487,11 @@ export default function App() {
               transition={{ duration: 0.2 }}
             >
               <div className="card-caption">
-                {step === 0 ? "どうぶつの観察カード" : group.name}
+                {step === 0 ? "かんさつカメラ" : group.name}
               </div>
               {step === 0 ? (
                 <CameraView
+                  suspended={settingsOpen}
                   onSelect={(image, id, method) => {
                     recordStudy(
                       "animal_identified",
@@ -479,7 +519,7 @@ export default function App() {
                       {studyPhase === "before" ? "1回目" : "2回目"}のスケッチ
                     </p>
                   )}
-                  <button className="text-button" onClick={restart}>
+                  <button className="text-button" onClick={() => restart()}>
                     動物を選び直す
                   </button>
                   <p className="figma-support">{task.question}</p>
@@ -796,7 +836,7 @@ export default function App() {
                       もう一度、本物を見てみよう ↗
                     </button>
                   )}
-                  <button className="text-button" onClick={restart}>
+                  <button className="text-button" onClick={() => restart()}>
                     次の動物を撮る
                   </button>
                 </>
@@ -804,21 +844,18 @@ export default function App() {
             </motion.section>
           </>
         )}
-        <button
-          className="text-button"
-          aria-pressed={sound}
-          onClick={() => {
+        <SettingsDialog
+          open={settingsOpen}
+          returnFocus={settingsTrigger}
+          onClose={() => setSettingsOpen(false)}
+          sound={sound}
+          onSoundChange={() => {
             soundRef.current = !sound;
             setSound(!sound);
             if (!sound) audio.current?.unlock();
             else audio.current?.silence();
           }}
-        >
-          効果音 {sound ? "ON" : "OFF"}
-        </button>
-        <SpeechSettings />
-        <OfflineStatus />
-        <StudyControls />
+        />
       </main>
     </div>
   );

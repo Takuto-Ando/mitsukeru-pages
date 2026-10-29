@@ -9,13 +9,18 @@ import { speciesRecognizer } from "./recognition/species";
 import { motion, useReducedMotion } from "motion/react";
 export function CameraView({
   onSelect,
+  suspended = false,
 }: {
+  suspended?: boolean;
   onSelect: (
     photo?: string,
     id?: string,
     method?: "manual" | "automatic",
   ) => void;
 }) {
+  const suspendedRef = useRef(suspended);
+  suspendedRef.current = suspended;
+  const capturePending = useRef(false);
   const [captured, setCaptured] = useState("");
   const [busy, setBusy] = useState(false);
   const [modelReady, setModelReady] = useState(speciesRecognizer.isReady());
@@ -29,7 +34,7 @@ export function CameraView({
     cameraPending = useRef(false),
     needsResume = useRef(false);
   const [status, setStatus] = useState<
-      "waiting" | "live" | "paused" | "failed"
+      "waiting" | "live" | "paused" | "failed" | "review"
     >("waiting"),
     [message, setMessage] = useState("");
   useEffect(
@@ -95,7 +100,7 @@ export function CameraView({
     }
   }
   useEffect(() => {
-    void start();
+    if (!suspendedRef.current) void start();
     const pause = () => {
       if (stream.current || cameraPending.current || needsResume.current) {
         needsResume.current = true;
@@ -107,7 +112,7 @@ export function CameraView({
       }
     };
     const resume = () => {
-      if (!document.hidden && needsResume.current) {
+      if (!document.hidden && !suspendedRef.current && needsResume.current) {
         needsResume.current = false;
         void start();
       }
@@ -122,8 +127,32 @@ export function CameraView({
       window.removeEventListener("pageshow", resume);
     };
   }, []);
+  useEffect(() => {
+    if (suspended && (stream.current || cameraPending.current)) {
+      needsResume.current = true;
+      cameraGeneration.current++;
+      cameraPending.current = false;
+      stopCamera();
+      setStatus("paused");
+    } else if (!suspended && !document.hidden && needsResume.current) {
+      needsResume.current = false;
+      void start();
+    }
+  }, [suspended]);
+  async function retake() {
+    setCaptured("");
+    setCandidates([]);
+    await start();
+  }
   async function capture() {
-    if (busy || !video.current?.videoWidth || status !== "live") return;
+    if (
+      capturePending.current ||
+      busy ||
+      !video.current?.videoWidth ||
+      status !== "live"
+    )
+      return;
+    capturePending.current = true;
     setBusy(true);
     try {
       const canvas = document.createElement("canvas");
@@ -138,6 +167,9 @@ export function CameraView({
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       setCaptured(image);
+      stopCamera();
+      needsResume.current = false;
+      setStatus("review");
       recordStudy(
         "animal_photographed",
         {},
@@ -148,6 +180,7 @@ export function CameraView({
     } catch {
       setMessage("撮影できませんでした。カメラをもう一度試してください。");
     } finally {
+      capturePending.current = false;
       setBusy(false);
     }
   }
@@ -205,8 +238,8 @@ export function CameraView({
   return (
     <div className="camera-page">
       <div className="screen-title">
-        <h1>どの動物を見ている？</h1>
-        <p>動物を撮るか、下から選んでね。</p>
+        <h1>動物を撮影しよう</h1>
+        <p>見つけた動物を、画面のまんなかに。</p>
       </div>
       <div className="camera-frame">
         <video
@@ -217,7 +250,18 @@ export function CameraView({
           aria-label="動物を映すカメラ"
           className={status === "live" ? "" : "hidden-video"}
         />
-        {status !== "live" && (
+        {captured && (
+          <motion.img
+            key={captured}
+            initial={reduce ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="captured-preview"
+            src={captured}
+            alt="撮影した動物の写真"
+          />
+        )}
+        {status !== "live" && !captured && (
           <div className="camera-fallback">
             {status === "failed" ? (
               <CameraOff size={38} />
@@ -238,7 +282,11 @@ export function CameraView({
           <ScanLine className="viewfinder" aria-hidden="true" />
         )}
         <span className="camera-tag">
-          {status === "live" ? "カメラで観察中" : "かんさつカメラ"}
+          {captured
+            ? "撮影した写真"
+            : status === "live"
+              ? "カメラで観察中"
+              : "かんさつカメラ"}
         </span>
       </div>
       {message && (
@@ -253,21 +301,10 @@ export function CameraView({
           )}
         </p>
       )}
-      {captured && (
-        <motion.img
-          key={captured}
-          initial={reduce ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
-          className="selected-photo"
-          src={captured}
-          alt="撮影した動物の写真"
-        />
-      )}
       <button
         className="shutter-button"
-        disabled={status !== "live" || busy || recognizing}
-        onClick={() => void capture()}
+        disabled={(!captured && status !== "live") || busy || recognizing}
+        onClick={() => void (captured ? retake() : capture())}
       >
         {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
       </button>

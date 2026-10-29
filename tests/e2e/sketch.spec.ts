@@ -1,6 +1,32 @@
 import { test, expect, type Page } from "@playwright/test";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
+async function startCamera(page: Page) {
+  await page.getByRole("button", { name: "撮影スタート", exact: true }).click();
+}
+async function openSettings(page: Page) {
+  if (await page.getByRole("dialog", { name: "設定", exact: true }).isVisible())
+    return;
+  const header = page.getByRole("button", { name: "設定を開く", exact: true });
+  if (await header.isVisible()) await header.click();
+  else await page.getByRole("button", { name: "設定", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "設定", exact: true }),
+  ).toBeVisible();
+}
+async function closeSettings(page: Page) {
+  if (await page.getByRole("dialog", { name: "設定", exact: true }).isVisible())
+    await page
+      .getByRole("button", { name: "設定を閉じる", exact: true })
+      .click();
+}
+async function backToCamera(page: Page) {
+  await closeSettings(page);
+  await page
+    .getByRole("button", { name: "ズーケッチ ホームに戻る", exact: true })
+    .click();
+  await startCamera(page);
+}
 async function select(page: Page, id = "goat") {
   const task = tasks.find((t) => t.id === id)!;
   await page.addInitScript(() =>
@@ -13,6 +39,7 @@ async function select(page: Page, id = "goat") {
     }),
   );
   await page.goto("./");
+  await startCamera(page);
   await page
     .locator(".animal-grid")
     .getByRole("button", {
@@ -167,7 +194,8 @@ test("端末内保存・再読込・比較・PNG保存・削除", async ({ page 
     page.getByRole("button", { name: "保存したよ！" }),
   ).toBeDisabled();
   await page.reload();
-  await page.getByRole("button", { name: "観察ノート (1)" }).click();
+  await startCamera(page);
+  await page.getByRole("button", { name: "図鑑 (1)" }).click();
   await expect(page.getByText("ふさふさした尾")).toBeVisible();
   await page.getByRole("button", { name: "フェネックの絵を見返す" }).click();
   await expect(page.locator(".comparison-overlay")).toHaveAttribute(
@@ -343,6 +371,7 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
     });
   });
   await page.goto("./");
+  await startCamera(page);
   await expect(
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
@@ -434,9 +463,7 @@ test("点をひとつ描けて、旧localStorageデータを移行し、全身�
     }
   });
   await select(page, "deer");
-  await expect(
-    page.getByRole("button", { name: "観察ノート (1)" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "図鑑 (1)" })).toBeVisible();
   const c = page.getByTestId("canvas");
   await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await c.boundingBox())!,
@@ -455,7 +482,8 @@ test("点をひとつ描けて、旧localStorageデータを移行し、全身�
     page.getByRole("button", { name: "保存したよ！" }),
   ).toBeDisabled();
   await page.reload();
-  await page.getByRole("button", { name: "観察ノート (2)" }).click();
+  await startCamera(page);
+  await page.getByRole("button", { name: "図鑑 (2)" }).click();
   await page.getByRole("button", { name: "ニホンジカの絵を見返す" }).click();
   await expect(page.locator(".comparison-overlay")).toHaveAttribute(
     "viewBox",
@@ -609,13 +637,17 @@ test("研究用ログ：同意前は記録せず、同意後の記録・JSON/CSV
   });
   expect(countBefore).toBe(0);
 
+  await openSettings(page);
   await page.getByText("研究への参加・記録").click();
   await page.getByPlaceholder("空欄なら自動生成（例: P-01）").fill("TEST-01");
   await page.getByLabel("説明を読み、研究用の操作記録に同意します").check();
   await page.getByRole("button", { name: "同意して記録を始める" }).click();
+  await closeSettings(page);
+  await openSettings(page);
   await expect(page.getByText("研究記録中・参加設定")).toBeVisible();
+  await closeSettings(page);
 
-  await page.getByRole("button", { name: "ズーケッチ 撮影に戻る" }).click();
+  await backToCamera(page);
   await page
     .locator(".animal-grid")
     .getByRole("button", { name: /ヤギ/ })
@@ -628,6 +660,7 @@ test("研究用ログ：同意前は記録せず、同意後の記録・JSON/CSV
   await page.keyboard.press("ArrowLeft");
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await page.getByRole("button", { name: "観察を保存する" }).click();
+  await openSettings(page);
   await page.getByRole("button", { name: "研究記録を終了する" }).click();
 
   const jsonDownload = page.waitForEvent("download");
@@ -643,6 +676,7 @@ test("研究用ログ：同意前は記録せず、同意後の記録・JSON/CSV
   await page
     .getByRole("button", { name: "同意を撤回して研究ログを削除" })
     .click();
+  await closeSettings(page);
   const countAfter = await page.evaluate(async () => {
     const req = indexedDB.open("zooketch.observation-notebook", 1);
     const db = await new Promise<IDBDatabase>((resolve) => {
@@ -698,8 +732,10 @@ test("読み上げは明示タップ時のみ、停止・速度変更・OFFが�
   await page
     .getByRole("button", { name: "読み上げを止める", exact: true })
     .click();
+  await openSettings(page);
   await page.getByText("読み上げの設定", { exact: true }).click();
   await page.getByLabel("読む速さ", { exact: true }).selectOption("0.7");
+  await closeSettings(page);
   await page.getByRole("button", { name: "読み上げる", exact: true }).click();
   expect(
     await page.evaluate(
@@ -709,6 +745,7 @@ test("読み上げは明示タップ時のみ、停止・速度変更・OFFが�
         ).speechCalls.at(-1)?.rate,
     ),
   ).toBe(0.7);
+  await openSettings(page);
   await page.getByLabel("読み上げボタンを使う").uncheck();
   await expect(
     page.getByRole("button", { name: "読み上げを止める", exact: true }),
@@ -719,11 +756,13 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   page,
 }) => {
   await select(page);
-  await page.getByRole("button", { name: "ズーケッチ 撮影に戻る" }).click();
+  await backToCamera(page);
+  await openSettings(page);
   await page.getByText("研究への参加・記録", { exact: true }).click();
   await page.getByLabel("同じ課題を2回描く研究モードを使う").check();
   await page.getByLabel("説明を読み、研究用の操作記録に同意します").check();
   await page.getByRole("button", { name: "同意して記録を始める" }).click();
+  await closeSettings(page);
   await page
     .locator(".animal-grid button")
     .filter({ hasText: "ヤギ・ヒツジ" })
@@ -781,6 +820,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   expect(pairs[0].after?.image).toMatch(/^data:image\/png/);
   expect(pairs[0].before?.metrics.submissions).toBe(1);
   expect(pairs[0].after?.metrics.submissions).toBe(1);
+  await openSettings(page);
   const exported = page.waitForEvent("download");
   await page.getByRole("button", { name: "研究ログをJSONで保存" }).click();
   const jsonPath = await (await exported).path();
@@ -795,15 +835,18 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
     true,
   );
   expect(json.pairs[0].before.strokes).toBeUndefined();
+  await closeSettings(page);
   await page
     .getByRole("button", { name: "観察を保存する", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "観察ノート (1)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
   ).toBeVisible();
+  await openSettings(page);
   await page
     .getByRole("button", { name: "同意を撤回して研究ログを削除" })
     .click();
+  await closeSettings(page);
   await expect
     .poll(
       async () =>
@@ -812,7 +855,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
     )
     .toBe(0);
   await expect(
-    page.getByRole("button", { name: "観察ノート (1)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
   ).toBeVisible();
 });
 
@@ -825,12 +868,14 @@ test("公開ビルドを準備後、オフライン再読込・描画・ノー�
     "Service Worker is generated only for a production build.",
   );
   await select(page);
+  await openSettings(page);
   await page.getByText("通信・オフライン", { exact: true }).click();
   await expect(
     page.getByText("オフライン準備完了（観察・ノート）", { exact: true }),
   ).toBeVisible({ timeout: 60000 });
   await context.setOffline(true);
   await page.reload();
+  await startCamera(page);
   await page
     .locator(".animal-grid button")
     .filter({ hasText: "ヤギ・ヒツジ" })
@@ -845,9 +890,7 @@ test("公開ビルドを準備後、オフライン再読込・描画・ノー�
   await expect(
     page.getByRole("button", { name: "保存したよ！", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "観察ノート (1)", exact: true })
-    .click();
+  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
   await page
     .getByRole("button", { name: "ヤギ・ヒツジの絵を見返す", exact: true })
     .click();
@@ -873,10 +916,12 @@ test("同意前の描画を研究の1回目へ遡って保存しない", async (
   const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
   if (await confirm.count()) await confirm.click();
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
+  await openSettings(page);
   await page.getByText("研究への参加・記録", { exact: true }).click();
   await page.getByLabel("同じ課題を2回描く研究モードを使う").check();
   await page.getByLabel("説明を読み、研究用の操作記録に同意します").check();
   await page.getByRole("button", { name: "同意して記録を始める" }).click();
+  await closeSettings(page);
   await expect(
     page.getByRole("button", { name: "同じ特徴をもう一度描く" }),
   ).toHaveCount(0);
@@ -899,9 +944,7 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   await expect(
     page.getByRole("button", { name: "保存したよ！", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "観察ノート (1)", exact: true })
-    .click();
+  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
   await page
     .getByText("ノートのバックアップ・保存容量", { exact: true })
     .click();
@@ -918,7 +961,7 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   await page.getByRole("button", { name: "削除", exact: true }).click();
   await page.getByRole("button", { name: "削除する", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "観察ノート (0)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (0)", exact: true }),
   ).toBeVisible();
   const fileInput = page.getByLabel("観察ノートのバックアップファイル", {
     exact: true,
@@ -935,13 +978,13 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   ).toBeVisible();
   // Selecting a file alone must never write to IndexedDB.
   await expect(
-    page.getByRole("button", { name: "観察ノート (0)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (0)", exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "確認して追加する", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "観察ノート (1)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
   ).toBeVisible();
   await fileInput.setInputFiles({
     name: "notes.json",
@@ -998,9 +1041,8 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
     "今ある記録は残しています。",
   );
   await page.reload();
-  await page
-    .getByRole("button", { name: "観察ノート (1)", exact: true })
-    .click();
+  await startCamera(page);
+  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
   await page
     .getByRole("button", { name: "ヤギ・ヒツジの絵を見返す", exact: true })
     .click();
@@ -1055,6 +1097,7 @@ test("画面を離れるとカメラを停止し、戻ると再開・撮影中�
     });
   });
   await page.goto("./");
+  await startCamera(page);
   await expect(
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
@@ -1271,19 +1314,16 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
     };
   });
   await page.reload();
+  await startCamera(page);
   await expect(
-    page.getByRole("button", { name: "観察ノート (25)", exact: true }),
+    page.getByRole("button", { name: "図鑑 (25)", exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(0);
-  await page
-    .getByRole("button", { name: "観察ノート (25)", exact: true })
-    .click();
+  await page.getByRole("button", { name: "図鑑 (25)", exact: true }).click();
   await expect(page.locator(".collection-card")).toHaveCount(12);
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(1);
   await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
-  await page
-    .getByRole("button", { name: "観察ノート (25)", exact: true })
-    .click();
+  await page.getByRole("button", { name: "図鑑 (25)", exact: true }).click();
   await expect(page.locator(".collection-card")).toHaveCount(12);
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(2);
   await page
@@ -1297,5 +1337,218 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
   await page.locator(".collection-open").last().click();
   await expect(
     page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
+  ).toBeVisible();
+});
+
+test("ホームの3つの入口・カメラの遅延起動・図鑑と設定からの復帰", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as any).__cameraRequests = 0;
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: () => {
+          (window as any).__cameraRequests++;
+          return Promise.reject(new DOMException("denied", "NotAllowedError"));
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  await expect(
+    page.getByRole("heading", { name: "ズーケッチ", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("button")).toHaveCount(3);
+  expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "図鑑を見る", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "スケッチ図鑑", exact: true }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
+  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "設定", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("dialog", { name: "設定", exact: true }),
+  ).not.toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "設定", exact: true }),
+  ).toBeFocused();
+  expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+  for (const width of [320, 393, 430]) {
+    await page.setViewportSize({ width, height: 852 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const start = (await page
+      .getByRole("button", { name: "撮影スタート", exact: true })
+      .boundingBox())!;
+    expect(start.height).toBeGreaterThanOrEqual(56);
+    await expect(
+      page.getByRole("button", { name: "設定", exact: true }),
+    ).toBeInViewport();
+  }
+  await page.setViewportSize({ width: 393, height: 852 });
+  await page.screenshot({
+    path: "test-results/home-mobile-393.png",
+    fullPage: true,
+  });
+  await startCamera(page);
+  await expect(
+    page.getByRole("heading", { name: "動物を撮影しよう", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__cameraRequests))
+    .toBe(1);
+  await page
+    .getByRole("button", { name: "ズーケッチ ホームに戻る", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "ズーケッチ", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("video")).toHaveCount(0);
+});
+
+test("スケッチ中に設定を開閉しても筆跡・Undo・キーボードフォーカスを保持する", async ({
+  page,
+}) => {
+  await select(page);
+  await draw(page);
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await openSettings(page);
+  await page.getByRole("button", { name: "効果音 OFF", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "効果音 ON", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.screenshot({
+    path: "test-results/settings-mobile.png",
+    fullPage: true,
+  });
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "設定を開く", exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "こたえあわせ →" }),
+  ).toBeDisabled();
+});
+
+test("撮影後はカメラを停止し、識別保留時の写真確認・撮り直し・手動選択ができる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as any).__cameraCalls = 0;
+    (window as any).__cameraStops = 0;
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          (window as any).__cameraCalls++;
+          const track = {
+            onended: null,
+            stop: () => (window as any).__cameraStops++,
+          };
+          return { getTracks: () => [track], getVideoTracks: () => [track] };
+        },
+      },
+    });
+    Object.defineProperties(HTMLVideoElement.prototype, {
+      srcObject: {
+        configurable: true,
+        set() {},
+        get() {
+          return null;
+        },
+      },
+      videoWidth: {
+        configurable: true,
+        get() {
+          return 640;
+        },
+      },
+      videoHeight: {
+        configurable: true,
+        get() {
+          return 480;
+        },
+      },
+      play: { configurable: true, value: () => Promise.resolve() },
+    });
+    const drawImage = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (...args: any[]) {
+      if (args[0] instanceof HTMLVideoElement) {
+        this.fillStyle = "#74bbb0";
+        this.fillRect(0, 0, 640, 480);
+        return;
+      }
+      return (drawImage as any).apply(this, args);
+    };
+    window.Worker = class {
+      onmessage: ((e: MessageEvent) => void) | null = null;
+      terminate() {}
+      postMessage(data: { photo?: string }) {
+        setTimeout(
+          () =>
+            this.onmessage?.({
+              data: {
+                type: "result",
+                result: data.photo
+                  ? { status: "unknown", reason: "動物を選んでね。" }
+                  : { status: "ready" },
+              },
+            } as MessageEvent),
+          10,
+        );
+      }
+    } as unknown as typeof Worker;
+  });
+  await page.goto("./");
+  await startCamera(page);
+  const shutter = page.getByRole("button", { name: "シャッター", exact: true });
+  await expect(shutter).toBeEnabled();
+  await openSettings(page);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__cameraStops))
+    .toBe(1);
+  await closeSettings(page);
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__cameraCalls))
+    .toBe(2);
+  await expect(shutter).toBeEnabled();
+  await shutter.click();
+  await expect(page.locator(".captured-preview")).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__cameraStops))
+    .toBe(2);
+  await page.getByRole("button", { name: "もう一度撮る", exact: true }).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__cameraCalls))
+    .toBe(3);
+  await expect(page.locator(".captured-preview")).toHaveCount(0);
+  await expect(shutter).toBeEnabled();
+  await shutter.click();
+  await expect(
+    page.getByText("動物を選んでね。", { exact: true }),
+  ).toBeVisible();
+  await page
+    .locator(".animal-grid")
+    .getByRole("button", { name: /ヤギ/ })
+    .click();
+  await expect(page.getByTestId("canvas")).toBeVisible();
+  await page.getByText("撮影した写真を確認", { exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
 });
