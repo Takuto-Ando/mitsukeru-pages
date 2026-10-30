@@ -1,3 +1,5 @@
+import { tasksForGroup } from "../content/tasks";
+import { artwork, assetPath } from "../content/artwork";
 import { groups } from "../content/groups";
 export function AnimalSelector({
   onSelect,
@@ -14,9 +16,17 @@ export function AnimalSelector({
             className="animal-choice"
             onClick={() => onSelect(g.id)}
           >
+            <img
+              src={assetPath(artwork[tasksForGroup(g.id)[0].id].reference!)}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              width="64"
+              height="64"
+            />
             <span>
               <strong>{g.name}</strong>
-              <small>{g.part}をよく見てみよう</small>
+              <small>{tasksForGroup(g.id).length}つの観察ポイント</small>
             </span>
           </button>
         ))}

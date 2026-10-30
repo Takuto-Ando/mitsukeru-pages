@@ -160,6 +160,42 @@ const rows = [
     "c_nippon",
     "partial",
   ],
+  [
+    "bear",
+    "ツキノワグマ",
+    "胸の模様",
+    "胸の白い模様はどんな形？",
+    "木の実や果実、昆虫などを食べます。",
+    "u_thibetanus",
+    "partial",
+  ],
+  [
+    "tapir",
+    "アメリカバク",
+    "背中",
+    "首から背中の毛をたどろう。",
+    "南米の森林や水辺で、葉や果実などを食べます。",
+    "t_terrestris_2",
+    "partial",
+  ],
+  [
+    "hyrax",
+    "ケープハイラックス",
+    "お尻",
+    "お尻の輪郭を見てみよう。",
+    "岩のすき間を利用し、群れで暮らします。",
+    "p_capensis",
+    "partial",
+  ],
+  [
+    "bush-dog",
+    "ヤブイヌ",
+    "足の水かき",
+    "足の指の間を見てみよう。",
+    "泳ぐことが得意で、指の間には水かきがあります。",
+    "s_venaticus",
+    "verified",
+  ],
 ] as const;
 export const groups: ObservationGroup[] = rows.map(
   ([id, name, part, question, fact, slug, explanationStatus]) => ({
@@ -178,4 +214,4 @@ export const groups: ObservationGroup[] = rows.map(
   }),
 );
 export const rosterNote =
-  "16グループは提供資料画像からの判読による暫定リストです。正式な全30カードとの一致は未確認です。掲載確認は現地で見られることの保証ではありません。";
+  "提供PDFの全30カードを20グループに整理。既存の追加課題も保持。動物の掲載は現地の展示を保証しません。";

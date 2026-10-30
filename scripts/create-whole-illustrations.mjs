@@ -1,3 +1,4 @@
+import { createMaterialIllustrations } from "./create-material-illustrations.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
@@ -327,13 +328,13 @@ function features(t) {
   );
 }
 fs.mkdirSync("public/illustrations/whole", { recursive: true });
-for (const t of tasks) {
+for (const t of tasks.filter((t) => fullBodyLayouts[t.id])) {
   const id = t.id;
   const base = bases[id];
   if (!base) throw Error(id);
   const feature = features(t);
   const root = (s, mode) =>
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" data-full-animal="${id}" data-illustration="${mode}"><rect width="600" height="600" rx="0" fill="${cream}"/>${finishIllustration(id, s, t.scene)}</svg>`;
+    `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="${id}" data-illustration="${mode}"><rect width="600" height="600" rx="0" fill="${cream}"/>${finishIllustration(id, s, t.scene)}</svg>`;
   let incomplete = base;
   // Missing contour only: preserve the animal's body colour, erase its ink contour in the target.
   if (["elephant", "gorilla", "hippo-body"].includes(id)) {
@@ -356,3 +357,5 @@ for (const t of tasks) {
     root(id === "fennec-tail" ? feature + base : base + feature, "complete"),
   );
 }
+
+createMaterialIllustrations();

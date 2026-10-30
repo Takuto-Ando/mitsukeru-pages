@@ -1,3 +1,4 @@
+import { materialTasks } from "./materialTasks";
 export interface Artwork {
   blankFill?: string;
   maskInApp?: boolean;
@@ -58,7 +59,24 @@ for (const id of [
 // Put future photo / professionally reviewed replacements here by task ID.
 // Paths stay relative to public/. The generated fallback registry above stays intact.
 const suppliedArtwork: Record<string, Artwork> = {};
-Object.assign(artwork, suppliedArtwork);
 export function assetPath(path: string) {
   return import.meta.env.BASE_URL + path.replace(/^\//, "");
 }
+
+for (const m of materialTasks) {
+  const base = `illustrations/whole/${m.id}`;
+  artwork[m.id] = {
+    status: "draft",
+    alt: m.part,
+    incomplete: base + ".svg",
+    completedBase: base + ".svg",
+    reference: base + "-complete.svg",
+    answer: base + "-complete.svg",
+    explanation: base + "-complete.svg",
+    maskInApp: true,
+    blankFill: "transparent",
+    credit: "本制作の編集可能な観察イラスト",
+  };
+}
+
+Object.assign(artwork, suppliedArtwork);

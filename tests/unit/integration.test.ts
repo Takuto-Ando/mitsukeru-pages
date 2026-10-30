@@ -38,7 +38,7 @@ test("羊を種として区別し、対象外・曖昧な推定は確定しな�
       { label: "a donkey", score: 0.34 },
     ]).status,
   ).toBe("unknown");
-  expect(challengeProvider.forSpecies("bush-dog")).toEqual([]);
+  expect(challengeProvider.forSpecies("bush-dog")[0].id).toBe("bush-dog");
 });
 test("研究記録の終了だけでは課題を完了したことにしない", () => {
   const base = {

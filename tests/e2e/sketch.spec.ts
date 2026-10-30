@@ -43,7 +43,9 @@ async function select(page: Page, id = "goat") {
   await page
     .locator(".animal-grid")
     .getByRole("button", {
-      name: new RegExp(groups.find((g) => g.id === task.groupId)!.name),
+      name: new RegExp(
+        "^" + groups.find((g) => g.id === task.groupId)!.name + " ",
+      ),
     })
     .click();
   if (tasksForGroup(task.groupId).length > 1)
@@ -140,6 +142,8 @@ for (const t of tasks)
     await expect(
       page.getByRole("heading", { name: "完成！ だいはっけん！" }),
     ).toBeVisible();
+    // Wait for cached external SVGs to finish painting after display-mode changes.
+    await page.waitForLoadState("networkidle");
     await page.screenshot({
       path: `test-results/${t.id}-${test.info().project.name}.png`,
       fullPage: true,
@@ -161,7 +165,9 @@ for (const t of tasks)
     if (await confirm.count()) await confirm.click();
     await page.getByRole("button", { name: "特徴について知ろう →" }).click();
     await page.getByRole("button", { name: "次の動物を撮る" }).click();
-    await expect(page.locator(".animal-grid button")).toHaveCount(16);
+    await expect(page.locator(".animal-grid button")).toHaveCount(
+      groups.length,
+    );
     expect(errors).toEqual([]);
   });
 test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page }) => {
@@ -375,7 +381,7 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   await expect(
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
-  await expect(page.locator(".animal-grid button")).toHaveCount(16);
+  await expect(page.locator(".animal-grid button")).toHaveCount(groups.length);
   await page.getByText("撮影の設定", { exact: true }).click();
   await page
     .getByRole("button", { name: "識別モデルを先にダウンロード" })
@@ -1361,7 +1367,7 @@ test("ホームの3つの入口・カメラの遅延起動・図鑑と設定か�
   ).toBeVisible();
   await expect(page.getByRole("button")).toHaveCount(3);
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
-  await page.getByRole("button", { name: "図鑑を見る", exact: true }).click();
+  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await expect(
     page.getByRole("heading", { name: "スケッチ図鑑", exact: true }),
   ).toBeVisible();
@@ -1551,4 +1557,70 @@ test("撮影後はカメラを停止し、識別保留時の写真確認・撮�
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
+});
+
+test("追加動物のヒント・描画・確認・PNG保存・図鑑復元", async ({ page }) => {
+  await select(page, "bear");
+  await page.getByRole("button", { name: "ヒントを見る", exact: true }).click();
+  await expect(
+    page.getByText("顔ではなく、首の下の胸を見てみよう。", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "次のヒントを見る", exact: true })
+    .click();
+  await expect(
+    page.getByText("明るい毛の左右の端と、真ん中の高さを見くらべよう。", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await draw(page, "bear");
+  await compare(page);
+  await expect(
+    page.getByRole("button", { name: "観察を保存する" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  await page.getByRole("button", { name: "観察を保存する" }).click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.reload();
+  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
+  await page.getByRole("button", { name: "ツキノワグマの絵を見返す" }).click();
+  await expect(page.locator(".comparison-overlay")).toHaveAttribute(
+    "viewBox",
+    "0 0 600 600",
+  );
+  await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
+  await expect(
+    page.getByTestId("user-lines").locator("polyline"),
+  ).not.toHaveCount(0);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "比較画像をPNGで保存" }).click();
+  expect((await download).suggestedFilename()).toMatch(
+    /^zooketch-bear-.*-comparison\.png$/,
+  );
+});
+
+test("追加部位の空欄・お手本とスマートフォン幅の一致", async ({ page }) => {
+  await select(page, "giraffe-lashes");
+  for (const width of [320, 393, 430]) {
+    await page.setViewportSize({ width, height: 852 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(width);
+    await draw(page, "giraffe-lashes");
+    await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
+    await expect(
+      page.getByRole("button", { name: "こたえあわせ →" }),
+    ).toBeDisabled();
+  }
+  await draw(page, "giraffe-lashes");
+  await compare(page);
+  await expect(
+    page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
+  ).toHaveAttribute("aria-valuenow", "50");
+  await page.getByRole("button", { name: "お手本", exact: true }).click();
+  await expect(
+    page.getByTestId("answer-shape").locator("image"),
+  ).toHaveAttribute("href", /giraffe-lashes-complete.svg$/);
 });

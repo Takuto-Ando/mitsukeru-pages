@@ -4,10 +4,10 @@ import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 import { artwork } from "../../src/content/artwork";
 import { createResearchRecorder } from "../../src/research/recorder";
-test("16グループ20課題、別部位を別IDと固有素材・マスクで管理", () => {
-  expect(tasks).toHaveLength(20);
-  expect(new Set(tasks.map((t) => t.id)).size).toBe(20);
-  expect(new Set(tasks.map((t) => artwork[t.id].incomplete)).size).toBe(20);
+test("20グループ34課題、別部位を別IDと固有素材・マスクで管理", () => {
+  expect(tasks).toHaveLength(34);
+  expect(new Set(tasks.map((t) => t.id)).size).toBe(34);
+  expect(new Set(tasks.map((t) => artwork[t.id].incomplete)).size).toBe(34);
   for (const group of groups)
     expect(tasksForGroup(group.id).length).toBeGreaterThan(0);
   for (const t of tasks) {
@@ -21,6 +21,7 @@ test("16グループ20課題、別部位を別IDと固有素材・マスクで�
     const complete = readFileSync("public/" + reference, "utf8");
     expect(complete).toContain('data-illustration="complete"');
     expect(complete).toContain('viewBox="0 0 600 600"');
+    expect(complete).toContain('width="600" height="600"');
     expect(complete).not.toBe(
       readFileSync("public/" + artwork[t.id].incomplete, "utf8"),
     );
@@ -72,4 +73,39 @@ test("研究記録はデフォルト無効で同意前後を混在させない",
   expect(r.export()).toHaveLength(4);
   r.disable();
   expect(r.export()).toEqual([]);
+});
+
+test("資料の全30カードを重複なく追跡し、追加課題と区別する", async () => {
+  const { sourceCards, materialTasks, sharedCardTasks } =
+    await import("../../src/content/materialTasks");
+  expect(sourceCards).toHaveLength(30);
+  expect(new Set(sourceCards.map(([id]) => id)).size).toBe(30);
+  expect(groups).toHaveLength(20);
+  for (const [id, page] of sourceCards) {
+    expect(
+      tasks.find((t) => t.id === id),
+      `${page}ページ: ${id}`,
+    ).toBeTruthy();
+    expect(page).toBeGreaterThanOrEqual(11);
+    expect(page).toBeLessThanOrEqual(20);
+  }
+  expect(
+    tasks
+      .filter(
+        (t) =>
+          !sourceCards.some(
+            ([id]) => id === t.id || sharedCardTasks[id]?.includes(t.id),
+          ),
+      )
+      .map((t) => t.id)
+      .sort(),
+  ).toEqual(["gibbon", "hippo-body"]);
+  for (const m of materialTasks) {
+    const t = tasks.find((t) => t.id === m.id)!;
+    expect(t.automatic).toBe(false);
+    expect(t.method).toBe("selfCheck");
+    const complete = readFileSync("public/" + artwork[m.id].reference, "utf8");
+    expect(complete).toContain(m.answerPath);
+    expect(complete).not.toMatch(/href="https?:/);
+  }
 });

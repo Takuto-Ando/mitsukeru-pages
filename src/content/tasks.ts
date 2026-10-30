@@ -1,3 +1,4 @@
+import { materialTasks } from "./materialTasks";
 import { observationHints } from "./hints";
 import { fullBodyLayouts } from "./fullBodyLayouts";
 import partScenes from "./partScenes";
@@ -124,48 +125,55 @@ const mode: Record<string, JudgingMethod> = {
   deer: "pattern",
   meerkat: "pattern",
 };
-export const tasks: ObservationTask[] = groups.map((g) => {
-  const p = profiles[g.id];
-  const [name, form, ecology] = forms[g.id];
-  const scene =
-    g.id === "elephant"
-      ? {
-          ...scenes.elephant,
-          label: "頭の輪郭",
-          regions: [
-            { x: 170 / 600, y: 45 / 400, width: 260 / 600, height: 130 / 400 },
-          ],
-          answerPath:
-            "M180 155Q190 70 240 75Q275 80 300 125Q325 80 365 75Q410 80 420 155",
-        }
-      : scenes[g.id];
-  return {
-    id: g.id,
-    groupId: g.id,
-    allowAbsent: g.id === "deer",
-    comparisonNote:
-      g.id === "deer"
-        ? "お手本は夏の模様。いま見えた姿と見くらべよう。"
-        : undefined,
-    part: g.id === "elephant" ? "頭の輪郭" : p?.part || "瞳孔",
-    question:
+export const tasks: ObservationTask[] = groups
+  .filter((g) => !!forms[g.id])
+  .map((g) => {
+    const p = profiles[g.id];
+    const [name, form, ecology] = forms[g.id];
+    const scene =
       g.id === "elephant"
-        ? "頭のてっぺんは、どんなふうにふくらんでいる？"
-        : p?.question || "目の黒い部分は、たてとよこ、どちらに長い？",
-    hint: p?.hint || "黒い部分の横幅を見てみよう。",
-    next: p?.next || "草を食べるとき、瞳孔の向きはどうなる？",
-    method: mode[g.id] || "selfCheck",
-    automatic: ["goat", "gibbon", "capuchin", "giraffe", "hippo"].includes(
-      g.id,
-    ),
-    scene,
-    profile: p,
-    explanation: { name, form, ecology: ecology || "" },
-    source: g.source,
-    sourceNote:
-      "形態の描画課題は本制作で設計。公式図鑑で確認した生態と、役割を確定していない形態の観察を区別する。",
-  };
-});
+        ? {
+            ...scenes.elephant,
+            label: "頭の輪郭",
+            regions: [
+              {
+                x: 170 / 600,
+                y: 45 / 400,
+                width: 260 / 600,
+                height: 130 / 400,
+              },
+            ],
+            answerPath:
+              "M180 155Q190 70 240 75Q275 80 300 125Q325 80 365 75Q410 80 420 155",
+          }
+        : scenes[g.id];
+    return {
+      id: g.id,
+      groupId: g.id,
+      allowAbsent: g.id === "deer",
+      comparisonNote:
+        g.id === "deer"
+          ? "お手本は夏の模様。いま見えた姿と見くらべよう。"
+          : undefined,
+      part: g.id === "elephant" ? "頭の輪郭" : p?.part || "瞳孔",
+      question:
+        g.id === "elephant"
+          ? "頭のてっぺんは、どんなふうにふくらんでいる？"
+          : p?.question || "目の黒い部分は、たてとよこ、どちらに長い？",
+      hint: p?.hint || "黒い部分の横幅を見てみよう。",
+      next: p?.next || "草を食べるとき、瞳孔の向きはどうなる？",
+      method: mode[g.id] || "selfCheck",
+      automatic: ["goat", "gibbon", "capuchin", "giraffe", "hippo"].includes(
+        g.id,
+      ),
+      scene,
+      profile: p,
+      explanation: { name, form, ecology: ecology || "" },
+      source: g.source,
+      sourceNote:
+        "形態の描画課題は本制作で設計。公式図鑑で確認した生態と、役割を確定していない形態の観察を区別する。",
+    };
+  });
 function extra(
   groupId: string,
   id: string,
@@ -253,12 +261,49 @@ extra(
   "フェネックは夜に活動し、小さな動物や昆虫などを食べます。",
   groups.find((g) => g.id === "fennec")!.source,
 );
+for (const m of materialTasks) {
+  tasks.push({
+    id: m.id,
+    groupId: m.groupId,
+    part: m.part,
+    question: m.question,
+    hint: m.hints[0],
+    hints: m.hints,
+    next: m.next,
+    method: "selfCheck",
+    automatic: false,
+    allowAbsent: ["hippo-skin", "gorilla-back", "bear"].includes(m.id),
+    comparisonNote:
+      m.id === "gorilla-back"
+        ? "お手本は大人のオス。いま見ている個体の毛の色と見くらべよう。"
+        : m.id === "hippo-skin"
+          ? "お手本の点は分泌液を表す模式図。実物にいつも見える模様ではありません。"
+          : undefined,
+    scene: {
+      id: m.id,
+      label: m.part,
+      frameHeight: 600,
+      regions: m.rects.map(([x, y, width, height]) => ({
+        x: x / 600,
+        y: y / 600,
+        width: width / 600,
+        height: height / 600,
+      })),
+      answerPath: m.answerPath,
+      answerAsset: `illustrations/whole/${m.id}-complete.svg`,
+    },
+    explanation: m.explanation,
+    source: m.source || groups.find((g) => g.id === m.groupId)?.source,
+    sourceNote: `提供PDF ${m.page}ページのカードをもとに描画課題を設計。模様の働きの未検証説明は採用していない。`,
+  });
+}
 export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 export const tasksForGroup = (id: string) =>
   tasks.filter((t) => t.groupId === id);
 
 // Position the missing part within a full-animal illustration, never a close-up.
 for (const task of tasks) {
+  if (materialTasks.some((m) => m.id === task.id)) continue;
   task.hints = observationHints[task.id];
   if (task.id === "sheep") {
     task.method = "orientation";

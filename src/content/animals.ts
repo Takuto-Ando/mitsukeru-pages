@@ -7,9 +7,11 @@ export interface Animal {
   zooSource: string;
 }
 export const scope = {
-  expectedSpeciesCount: 30,
-  officialRosterStatus: "awaiting-source" as const,
-  note: "16グループは画像から判読した暫定リストです。提供資料の正式な全30カードとの一致は未確認です。",
+  expectedSpeciesCount: 21,
+  expectedCardCount: 30,
+  groupCount: 20,
+  officialRosterStatus: "source-reviewed" as const,
+  note: "提供PDFの全30カードを20グループとして確認。ヒツジを含めた種の選択先は21です。",
 };
 export const animals: Animal[] = [
   {

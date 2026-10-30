@@ -542,7 +542,7 @@ export default function App() {
                     </div>
                   )}
                   <p className="figma-note">
-                    空いているところに、見えた形を描こう。
+                    絵のつづきを描こう。実物を見ながらで大丈夫。
                   </p>
                   {photo && (
                     <details>
