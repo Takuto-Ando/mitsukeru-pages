@@ -154,3 +154,23 @@ test("旧400座標のノートも全身版へ変換せず復元する", async ()
     "illustrations/simple/goat.svg",
   );
 });
+
+test("任意の気づきと再観察の自己申告を維持し、不正な値を拒否する", async () => {
+  const before = { ...record(), discovery: "横に長かった。", revisited: true };
+  const raw = await (await createNotebookBackup([before])).text();
+  expect(parseNotebookBackup(raw)[0]).toMatchObject({
+    discovery: before.discovery,
+    revisited: true,
+  });
+  const invalid = JSON.parse(raw);
+  invalid.observations[0].revisited = "yes";
+  expect(() => parseNotebookBackup(JSON.stringify(invalid))).toThrow();
+  invalid.observations[0].revisited = false;
+  invalid.observations[0].discovery = "あ".repeat(201);
+  expect(() => parseNotebookBackup(JSON.stringify(invalid))).toThrow();
+  const old = parseNotebookBackup(
+    await (await createNotebookBackup([record()])).text(),
+  )[0];
+  expect(old.discovery).toBeUndefined();
+  expect(old.revisited).toBeUndefined();
+});

@@ -28,7 +28,7 @@ export function offlinePlugin(): Plugin {
       async function scan(path: string) {
         for (const entry of await readdir(path, { withFileTypes: true })) {
           const full = join(path, entry.name),
-            name = relative(dir, full);
+            name = relative(dir, full).split("\\").join("/");
           if (entry.isDirectory()) await scan(full);
           else if (
             name === "index.html" ||

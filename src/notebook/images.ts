@@ -142,6 +142,8 @@ export async function composeObservationImages(
 }
 
 export interface CardMetadata {
+  discovery?: string;
+  revisited?: boolean;
   animalName: string;
   taskName: string;
   createdAt: string;
@@ -166,13 +168,24 @@ export async function composeCardPng(
       top = 236;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("カードを描けませんでした。");
-    const text = meta.explanation.form;
+    const text = [
+      meta.explanation.form,
+      meta.discovery?.trim() ? "わたしの気づき：" + meta.discovery.trim() : "",
+      meta.revisited ? "実物を見て確かめた（自分の記録）" : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
     // Japanese wraps by grapheme, not by spaces. Measure with the actual local font.
     const measure = document.createElement("canvas").getContext("2d")!;
     measure.font = '500 30px "Zen Maru Gothic", sans-serif';
     const lines: string[] = [];
     let line = "";
     for (const char of Array.from(text)) {
+      if (char === "\n") {
+        lines.push(line);
+        line = "";
+        continue;
+      }
       if (measure.measureText(line + char).width > width - margin * 2 && line) {
         lines.push(line);
         line = char;

@@ -1624,3 +1624,45 @@ test("追加部位の空欄・お手本とスマートフォン幅の一致", as
     page.getByTestId("answer-shape").locator("image"),
   ).toHaveAttribute("href", /giraffe-lashes-complete.svg$/);
 });
+
+test("気づきを任意保存・解説で追記・再読込して復元", async ({ page }) => {
+  await select(page, "bear");
+  await draw(page, "bear");
+  await compare(page);
+  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  // Empty reflection never blocks the activity or saving.
+  await page
+    .getByRole("button", { name: "観察を保存する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "特徴について知ろう →" }).click();
+  await page
+    .getByRole("textbox", { name: "どんなことに気づいた？" })
+    .fill("胸の白いところが曲がっていた。");
+  await page.getByRole("checkbox", { name: "実物を見て確かめた" }).check();
+  await page.getByRole("button", { name: "気づきを更新する" }).click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.screenshot({
+    path: `test-results/reflection-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.reload();
+  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
+  await expect(
+    page.getByRole("button", { name: "ツキノワグマの絵を見返す" }),
+  ).toHaveCount(1);
+  await page.getByRole("button", { name: "ツキノワグマの絵を見返す" }).click();
+  await expect(
+    page.getByText("胸の白いところが曲がっていた。", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("実物をもう一度見て確かめた（自分の記録）"),
+  ).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "自分の絵をPNGで保存" }).click();
+  expect((await download).suggestedFilename()).toMatch(/\.png$/);
+});

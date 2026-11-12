@@ -163,3 +163,26 @@ export async function restoreObservations(records: ObservationRecord[]) {
   await done;
   return { added, skipped };
 }
+
+// Update only reflection fields; preserve images, strokes and existing IDs atomically.
+export async function updateObservationReflection(
+  id: string,
+  reflection: { discovery: string; revisited: boolean },
+) {
+  const db = await database();
+  const tx = db.transaction("observations", "readwrite");
+  const done = transactionDone(tx);
+  const request = tx.objectStore("observations").get(id);
+  request.onsuccess = () => {
+    if (!request.result) {
+      tx.abort();
+      return;
+    }
+    tx.objectStore("observations").put({
+      ...request.result,
+      discovery: reflection.discovery.trim().slice(0, 200),
+      revisited: reflection.revisited,
+    });
+  };
+  await done;
+}

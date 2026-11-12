@@ -1157,10 +1157,68 @@ details[open] > summary::after {
   object-fit: contain;
   border-radius: 0;
 }
-.figma-shell .animal-choice > span { min-width: 0; }
-.figma-shell .animal-choice strong { font-size: 12px; overflow-wrap: anywhere; }
-.figma-shell .animal-choice small { font-size: 11px; }
+.figma-shell .animal-choice > span {
+  min-width: 0;
+}
+.figma-shell .animal-choice strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.figma-shell .animal-choice small {
+  font-size: 11px;
+}
 @media (max-width: 359px) {
-  .figma-shell .animal-grid { grid-template-columns: 1fr; }
-  .figma-shell .animal-choice img { width: 58px; flex-basis: 58px; }
+  .figma-shell .animal-grid {
+    grid-template-columns: 1fr;
+  }
+  .figma-shell .animal-choice img {
+    width: 58px;
+    flex-basis: 58px;
+  }
+}
+
+.reflection-note {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid currentColor;
+  min-width: 0;
+}
+.reflection-note legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+.reflection-note p {
+  margin: 0 0 12px;
+}
+.reflection-note label {
+  display: block;
+  font-size: 14px;
+}
+.reflection-note .reflection-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 10px;
+}
+.reflection-note input {
+  width: 22px;
+  height: 22px;
+}
+.reflection-note textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  font: inherit;
+  font-size: 16px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  resize: vertical;
+  background: transparent;
+  color: inherit;
+}
+.discovery-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

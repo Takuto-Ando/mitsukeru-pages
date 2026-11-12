@@ -269,6 +269,11 @@ export function parseNotebookBackup(raw: string): ObservationRecord[] {
       question: text(d.question),
       sceneSnapshot: snapshot,
     };
+    if (d.discovery !== undefined) record.discovery = text(d.discovery, 200);
+    if (d.revisited !== undefined) {
+      if (typeof d.revisited !== "boolean") throw invalid();
+      record.revisited = d.revisited;
+    }
     if (d.sceneVersion === 2) record.sceneVersion = 2;
     if (e.role !== undefined) record.explanation.role = text(e.role);
     for (const key of imageKeys)
@@ -304,6 +309,8 @@ export async function createNotebookBackup(records: ObservationRecord[]) {
       taskName: record.taskName,
       explanation: record.explanation,
       question: record.question,
+      discovery: record.discovery,
+      revisited: record.revisited,
       sceneSnapshot: record.sceneSnapshot,
     };
     for (const key of imageKeys)
