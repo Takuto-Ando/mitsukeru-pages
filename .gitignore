@@ -18,3 +18,13 @@ work/
 __pycache__/
 *.py[cod]
 .venv/
+
+# Machine-specific configuration, credentials and private exports
+.env
+.env.*
+!.env.example
+*.p12
+*.p8
+*.mobileprovision
+*.xcuserstate
+*.log

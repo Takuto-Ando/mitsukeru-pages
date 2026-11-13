@@ -442,6 +442,209 @@ main > .text-button {
   font-size: 11px;
   color: var(--color-muted);
 }
+/* Giraffe tongue celebration. CSS owns the timing; the component calculates
+   the stroke transforms that put its tip on each leaf. */
+.tongue-party {
+  margin: 16px 0;
+  border: 1px solid var(--color-rule);
+  background: var(--color-paper);
+}
+.tongue-party-stage {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: var(--color-paper);
+}
+.tongue-party-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--color-rule);
+}
+.tongue-party-bar p {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+.tongue-party-bar button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tongue-tree {
+  transform-box: view-box;
+  transform-origin: 547px 262px;
+  animation: tree-pop 5s ease-out both;
+}
+@keyframes tree-pop {
+  0%,
+  4% {
+    transform: translateY(26px) scale(0);
+    opacity: 0;
+  }
+  13% {
+    transform: translateY(-5px) scale(1.07);
+    opacity: 1;
+  }
+  17% {
+    transform: translateY(0) scale(0.98);
+    opacity: 1;
+  }
+  21% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  27% {
+    transform: rotate(1.1deg);
+    opacity: 1;
+  }
+  33%,
+  100% {
+    transform: rotate(0deg);
+    opacity: 1;
+  }
+}
+.tongue-lines {
+  animation: tongue-eat 5s ease-in-out both;
+}
+@keyframes tongue-eat {
+  0%,
+  15% {
+    transform: none;
+  }
+  21% {
+    transform: var(--bite-1);
+  }
+  28% {
+    transform: none;
+  }
+  35% {
+    transform: var(--bite-2);
+  }
+  42% {
+    transform: none;
+  }
+  49% {
+    transform: var(--bite-3);
+  }
+  58%,
+  100% {
+    transform: none;
+  }
+}
+.leaf-bite {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.leaf-bite-1 {
+  animation: leaf-eaten-1 5s ease-in both;
+}
+@keyframes leaf-eaten-1 {
+  0%,
+  20% {
+    transform: none;
+    opacity: 1;
+  }
+  24% {
+    transform: translate(-9px, 7px) rotate(38deg) scale(0.25);
+    opacity: 1;
+  }
+  27%,
+  100% {
+    transform: translate(-13px, 11px) rotate(55deg) scale(0);
+    opacity: 0;
+  }
+}
+.leaf-bite-2 {
+  animation: leaf-eaten-2 5s ease-in both;
+}
+@keyframes leaf-eaten-2 {
+  0%,
+  34% {
+    transform: none;
+    opacity: 1;
+  }
+  38% {
+    transform: translate(-9px, 7px) rotate(38deg) scale(0.25);
+    opacity: 1;
+  }
+  41%,
+  100% {
+    transform: translate(-13px, 11px) rotate(55deg) scale(0);
+    opacity: 0;
+  }
+}
+.leaf-bite-3 {
+  animation: leaf-eaten-3 5s ease-in both;
+}
+@keyframes leaf-eaten-3 {
+  0%,
+  48% {
+    transform: none;
+    opacity: 1;
+  }
+  52% {
+    transform: translate(-9px, 7px) rotate(38deg) scale(0.25);
+    opacity: 1;
+  }
+  55%,
+  100% {
+    transform: translate(-13px, 11px) rotate(55deg) scale(0);
+    opacity: 0;
+  }
+}
+.party-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+.party-sparkle-1 {
+  animation: sparkle-pop-1 5s ease-out both;
+}
+@keyframes sparkle-pop-1 {
+  0%,
+  59% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  64% {
+    opacity: 1;
+    transform: scale(1.15) rotate(20deg);
+  }
+  72%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(40deg);
+  }
+}
+.party-sparkle-2 {
+  animation: sparkle-pop-2 5s ease-out both;
+}
+@keyframes sparkle-pop-2 {
+  0%,
+  63% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1.15) rotate(-18deg);
+  }
+  76%,
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-36deg);
+  }
+}
 .figma-science {
   border-bottom: 1px solid var(--color-rule);
   background: var(--color-paper);
@@ -787,6 +990,15 @@ summary {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+  .tongue-party .tongue-lines {
+    transform: var(--bite-3);
+  }
+  .tongue-party .leaf-bite {
+    opacity: 0;
+  }
+  .tongue-party-bar button {
+    display: none;
   }
 }
 
@@ -1157,10 +1369,68 @@ details[open] > summary::after {
   object-fit: contain;
   border-radius: 0;
 }
-.figma-shell .animal-choice > span { min-width: 0; }
-.figma-shell .animal-choice strong { font-size: 12px; overflow-wrap: anywhere; }
-.figma-shell .animal-choice small { font-size: 11px; }
+.figma-shell .animal-choice > span {
+  min-width: 0;
+}
+.figma-shell .animal-choice strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.figma-shell .animal-choice small {
+  font-size: 11px;
+}
 @media (max-width: 359px) {
-  .figma-shell .animal-grid { grid-template-columns: 1fr; }
-  .figma-shell .animal-choice img { width: 58px; flex-basis: 58px; }
+  .figma-shell .animal-grid {
+    grid-template-columns: 1fr;
+  }
+  .figma-shell .animal-choice img {
+    width: 58px;
+    flex-basis: 58px;
+  }
+}
+
+.reflection-note {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid currentColor;
+  min-width: 0;
+}
+.reflection-note legend {
+  font-weight: 700;
+  padding: 0 6px;
+}
+.reflection-note p {
+  margin: 0 0 12px;
+}
+.reflection-note label {
+  display: block;
+  font-size: 14px;
+}
+.reflection-note .reflection-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-bottom: 10px;
+}
+.reflection-note input {
+  width: 22px;
+  height: 22px;
+}
+.reflection-note textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  font: inherit;
+  font-size: 16px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  resize: vertical;
+  background: transparent;
+  color: inherit;
+}
+.discovery-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

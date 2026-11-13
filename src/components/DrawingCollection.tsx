@@ -207,6 +207,17 @@ export function DrawingCollection({
               </>
             )}
           </div>
+          {drawing.discovery && (
+            <div className="figma-explanation">
+              <h3>わたしの気づき</h3>
+              <p className="discovery-text">{drawing.discovery}</p>
+            </div>
+          )}
+          {drawing.revisited && (
+            <p className="quiet-note">
+              実物をもう一度見て確かめた（自分の記録）
+            </p>
+          )}
           {drawing.question && <p className="figma-note">{drawing.question}</p>}
         </div>
       ) : (

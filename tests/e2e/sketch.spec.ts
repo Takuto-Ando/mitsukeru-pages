@@ -84,6 +84,51 @@ async function compare(page: Page) {
   if (await review.count()) await review.click();
   await expect(page.locator(".comparison-overlay")).toBeVisible();
 }
+test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await select(page, "giraffe");
+  await draw(page, "giraffe");
+  await compare(page);
+  const stage = page.getByTestId("tongue-celebration");
+  await expect(stage).toBeVisible();
+  await expect(stage.locator("svg.tongue-party-stage")).toHaveAttribute("aria-hidden", "true");
+  const contact = await stage.evaluate((container) => {
+    const svg = container.querySelector("svg")!;
+    const tongue = svg.querySelector(".tongue-lines") as SVGGElement;
+    const points = [...tongue.querySelectorAll("polyline")].flatMap((line) => [
+      ...line.points,
+    ]);
+    const tip = points.reduce((best, point) =>
+      point.x > best.x ? point : best,
+    );
+    svg.getAnimations({ subtree: true }).forEach((animation) => {
+      animation.pause();
+      animation.currentTime = 1050;
+    });
+    const actual = new DOMPoint(tip.x, tip.y).matrixTransform(
+      new DOMMatrix(getComputedStyle(tongue).transform),
+    );
+    return { x: actual.x, y: actual.y };
+  });
+  expect(contact.x).toBeCloseTo(458, 0);
+  expect(contact.y).toBeCloseTo(190, 0);
+  await stage.evaluate((container) => {
+    container
+      .querySelector("svg")!
+      .getAnimations({ subtree: true })
+      .forEach((animation) => {
+        animation.currentTime = 1500;
+      });
+  });
+  await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
+  await stage.getByRole("button", { name: "もう一度見る" }).click();
+  await expect(stage.locator("svg.tongue-party-stage")).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(
+    stage.getByRole("button", { name: "もう一度見る" }),
+  ).toBeHidden();
+  await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
+});
 for (const t of tasks)
   test(`${t.id}: 専用イラスト・描画・比較・確認・解説・再観察`, async ({
     page,
@@ -1623,4 +1668,46 @@ test("追加部位の空欄・お手本とスマートフォン幅の一致", as
   await expect(
     page.getByTestId("answer-shape").locator("image"),
   ).toHaveAttribute("href", /giraffe-lashes-complete.svg$/);
+});
+
+test("気づきを任意保存・解説で追記・再読込して復元", async ({ page }) => {
+  await select(page, "bear");
+  await draw(page, "bear");
+  await compare(page);
+  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  // Empty reflection never blocks the activity or saving.
+  await page
+    .getByRole("button", { name: "観察を保存する", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "特徴について知ろう →" }).click();
+  await page
+    .getByRole("textbox", { name: "どんなことに気づいた？" })
+    .fill("胸の白いところが曲がっていた。");
+  await page.getByRole("checkbox", { name: "実物を見て確かめた" }).check();
+  await page.getByRole("button", { name: "気づきを更新する" }).click();
+  await expect(
+    page.getByRole("button", { name: "保存したよ！" }),
+  ).toBeDisabled();
+  await page.screenshot({
+    path: `test-results/reflection-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.reload();
+  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
+  await expect(
+    page.getByRole("button", { name: "ツキノワグマの絵を見返す" }),
+  ).toHaveCount(1);
+  await page.getByRole("button", { name: "ツキノワグマの絵を見返す" }).click();
+  await expect(
+    page.getByText("胸の白いところが曲がっていた。", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("実物をもう一度見て確かめた（自分の記録）"),
+  ).toBeVisible();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "自分の絵をPNGで保存" }).click();
+  expect((await download).suggestedFilename()).toMatch(/\.png$/);
 });

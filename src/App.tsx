@@ -12,11 +12,13 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "./components/HomeScreen";
 import { SettingsDialog } from "./components/SettingsDialog";
+import { ReflectionNote } from "./components/ReflectionNote";
 import { Settings } from "lucide-react";
 import { ReadAloud, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
+import { TongueCelebration } from "./components/TongueCelebration";
 const DrawingCollection = lazy(() =>
   import("./components/DrawingCollection").then((module) => ({
     default: module.DrawingCollection,
@@ -42,6 +44,7 @@ import {
   addObservation,
   deleteObservation,
   observationMetadata,
+  updateObservationReflection,
 } from "./notebook/storage";
 import {
   composeObservationImages,
@@ -73,6 +76,11 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [taskId, setTaskId] = useState("goat");
+  const [reflection, setReflection] = useState({
+    discovery: "",
+    revisited: false,
+  });
+  const [reflectionDirty, setReflectionDirty] = useState(false);
   const [photo, setPhoto] = useState("");
   const [drawing, dispatchDrawing] = useReducer(
     drawingHistory,
@@ -161,7 +169,12 @@ export default function App() {
     };
   }, [collectionOpen, storageReady]);
   async function save() {
-    if (savingLock.current || savedId || !feedback?.passed || !storageReady)
+    if (
+      savingLock.current ||
+      (savedId && !reflectionDirty) ||
+      !feedback?.passed ||
+      !storageReady
+    )
       return;
     const visible = clipStrokes(strokes, scene).map((s) =>
       s.map((p) => ({
@@ -176,6 +189,20 @@ export default function App() {
     setSaving(true);
     setStorageError("");
     try {
+      if (savedId) {
+        await updateObservationReflection(savedId, reflection);
+        await refreshCollection();
+        if (generation === taskGeneration.current) setReflectionDirty(false);
+        recordStudy(
+          "reflection_saved",
+          {
+            hasDiscovery: !!reflection.discovery.trim(),
+            revisitedSelfReport: reflection.revisited,
+          },
+          logContext,
+        );
+        return;
+      }
       const record = observationMetadata({
         id: crypto.randomUUID(),
         groupId: task.groupId,
@@ -186,10 +213,21 @@ export default function App() {
         outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
       });
       const images = await composeObservationImages(scene, visible);
-      await addObservation({ ...record, ...images });
+      await addObservation({ ...record, ...images, ...reflection });
       await refreshCollection();
-      if (generation === taskGeneration.current) setSavedId(record.id);
+      if (generation === taskGeneration.current) {
+        setSavedId(record.id);
+        setReflectionDirty(false);
+      }
       recordStudy("observation_saved", {}, logContext);
+      recordStudy(
+        "reflection_saved",
+        {
+          hasDiscovery: !!reflection.discovery.trim(),
+          revisitedSelfReport: reflection.revisited,
+        },
+        logContext,
+      );
     } catch {
       setStorageError(
         "観察を保存できませんでした。空き容量やブラウザの設定を確認し、もう一度試してください。",
@@ -215,6 +253,7 @@ export default function App() {
             taskName: task.part,
             createdAt: new Date().toISOString(),
             explanation: task.explanation,
+            ...reflection,
           },
           kind === "comparison",
         ),
@@ -273,6 +312,8 @@ export default function App() {
     pairId.current = crypto.randomUUID();
     dispatchDrawing({ type: "reset" });
     setHintLevel(0);
+    setReflection({ discovery: "", revisited: false });
+    setReflectionDirty(false);
     setFeedback(undefined);
     setSavedId(undefined);
     setStudyContext(
@@ -297,6 +338,8 @@ export default function App() {
     dispatchDrawing({ type: "reset" });
     setFeedback(undefined);
     setHintLevel(0);
+    setReflection({ discovery: "", revisited: false });
+    setReflectionDirty(false);
     setSavedId(undefined);
     setStudyContext();
     next(0);
@@ -323,6 +366,8 @@ export default function App() {
       recordStudy("challenge_opened");
       dispatchDrawing({ type: "reset" });
       setHintLevel(0);
+      setReflection({ discovery: "", revisited: false });
+      setReflectionDirty(false);
       setFeedback(undefined);
       setSavedId(undefined);
       next(1);
@@ -690,6 +735,9 @@ export default function App() {
                       ? "よく見てたね！"
                       : "あなたの観察と見くらべよう"}
                   </p>
+                  {task.id === "giraffe" && (
+                    <TongueCelebration strokes={strokes} scene={scene} />
+                  )}
                   <SketchComparison
                     strokes={strokes}
                     scene={scene}
@@ -712,10 +760,19 @@ export default function App() {
                       </button>
                     </div>
                   )}
+                  <ReflectionNote
+                    value={reflection}
+                    question={task.next}
+                    disabled={saving}
+                    onChange={(value) => {
+                      setReflection(value);
+                      setReflectionDirty(true);
+                    }}
+                  />
                   <button
                     className="primary collection-save"
                     disabled={
-                      !!savedId ||
+                      (!!savedId && !reflectionDirty) ||
                       !storageReady ||
                       !feedback?.passed ||
                       saving ||
@@ -723,11 +780,13 @@ export default function App() {
                     }
                     onClick={() => void save()}
                   >
-                    {savedId
+                    {savedId && !reflectionDirty
                       ? "保存したよ！"
                       : saving
                         ? "観察を保存中…"
-                        : "観察を保存する"}
+                        : savedId
+                          ? "気づきを更新する"
+                          : "観察を保存する"}
                   </button>
                   <p className="quiet-note" role="status">
                     {savedId
@@ -774,11 +833,19 @@ export default function App() {
                     <h2>くらしとのつながり</h2>
                     <p>{task.explanation.ecology}</p>
                   </div>
-                  <p className="figma-note">{task.next}</p>
+                  <ReflectionNote
+                    value={reflection}
+                    question={task.next}
+                    disabled={saving}
+                    onChange={(value) => {
+                      setReflection(value);
+                      setReflectionDirty(true);
+                    }}
+                  />
                   <button
                     className="primary collection-save"
                     disabled={
-                      !!savedId ||
+                      (!!savedId && !reflectionDirty) ||
                       saving ||
                       !storageReady ||
                       !feedback?.passed ||
@@ -786,11 +853,13 @@ export default function App() {
                     }
                     onClick={() => void save()}
                   >
-                    {savedId
+                    {savedId && !reflectionDirty
                       ? "保存したよ！"
                       : saving
                         ? "観察を保存中…"
-                        : "観察を保存する"}
+                        : savedId
+                          ? "気づきを更新する"
+                          : "観察を保存する"}
                   </button>
                   {strokes.length > 0 && (
                     <div className="png-actions">

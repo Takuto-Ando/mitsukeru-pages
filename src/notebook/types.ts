@@ -9,5 +9,8 @@ export interface ObservationRecord extends DrawingRecord {
   ownPng?: Blob;
   answerPng?: Blob;
   comparisonPng?: Blob;
+  /** Optional participant self-report, never an automatic observation score. */
+  discovery?: string;
+  revisited?: boolean;
   migrated?: boolean;
 }

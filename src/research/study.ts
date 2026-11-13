@@ -26,6 +26,7 @@ export type StudyEventName =
   | "explanation_opened"
   | "explanation_closed"
   | "observation_saved"
+  | "reflection_saved"
   | "session_completed"
   | "challenge_completed"
   | "challenge_left"
