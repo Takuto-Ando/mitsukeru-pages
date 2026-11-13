@@ -1,36 +1,26 @@
 import { test, expect } from "vitest";
-import { tonguePartyLayout } from "../../src/components/TongueCelebration";
-import { taskById } from "../../src/content/tasks";
+import { tongueBiteTransform } from "../../src/components/TongueCelebration";
 
-test("キリンの舌のお祝い: 木は右上に立ち、口元から届く葉だけを食べる", () => {
-  const { mouth, treeBase, bites, durationMs } = tonguePartyLayout;
-  expect(durationMs).toBe(5000);
-  // Top-right sky of the 600x600 frame.
-  expect(treeBase.x).toBeGreaterThan(450);
-  expect(treeBase.y).toBeLessThan(300);
-  // The mouth anchor sits on the left edge of the giraffe tongue window.
-  const giraffe = taskById.giraffe;
-  const window = giraffe.scene.regions[0];
-  const left = window.x * 600,
-    top = window.y * 600,
-    right = left + window.width * 600,
-    bottom = top + window.height * 600;
-  expect(mouth.x).toBeGreaterThanOrEqual(left - 10);
-  expect(mouth.x).toBeLessThanOrEqual(left + 20);
-  expect(mouth.y).toBeGreaterThanOrEqual(top);
-  expect(mouth.y).toBeLessThanOrEqual(bottom);
-  // Three bites, in time order, leaves hanging right of the window
-  // (within a cartoon stretch of the drawn tongue) and below the canopy.
-  expect(bites).toHaveLength(3);
-  for (let i = 1; i < bites.length; i++)
-    expect(bites[i].at).toBeGreaterThan(bites[i - 1].at);
-  for (const bite of bites) {
-    expect(bite.at).toBeGreaterThan(0.15);
-    expect(bite.at).toBeLessThan(0.6);
-    expect(bite.leaf.x).toBeGreaterThan(right);
-    expect(bite.leaf.x).toBeLessThan(right + 90);
-    expect(bite.leaf.y).toBeGreaterThan(top);
-    expect(bite.leaf.y).toBeLessThan(bottom + 30);
-    expect(bite.leaf.x).toBeLessThan(treeBase.x);
+test("描いた舌の先端は、描画位置が違っても葉に届き、口元は動かない", () => {
+  const mouth = { x: 330, y: 188 };
+  const leaves = [
+    { x: 458, y: 190 },
+    { x: 480, y: 207 },
+    { x: 449, y: 215 },
+  ];
+  for (const tip of [
+    { x: 500, y: 215 },
+    { x: 430, y: 350 },
+  ]) {
+    for (const leaf of leaves) {
+      const values = tongueBiteTransform(tip, leaf)
+        .match(/-?\d+(?:\.\d+)?/g)!
+        .map(Number);
+      const [a, b, c, d, e, f] = values;
+      expect(a * tip.x + c * tip.y + e).toBeCloseTo(leaf.x);
+      expect(b * tip.x + d * tip.y + f).toBeCloseTo(leaf.y);
+      expect(a * mouth.x + c * mouth.y + e).toBeCloseTo(mouth.x);
+      expect(b * mouth.x + d * mouth.y + f).toBeCloseTo(mouth.y);
+    }
   }
 });

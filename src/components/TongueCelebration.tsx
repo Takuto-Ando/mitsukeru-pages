@@ -1,30 +1,34 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { Play } from "lucide-react";
 import { clipStrokes, type Scene } from "../content/scenes";
 import { SceneBase } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import type { Stroke } from "../types";
 
-// Celebration for the giraffe tongue task (600x600 whole-animal frame):
-// a tree pops up at the top right, then the child's own tongue strokes
-// stretch out and munch the three hanging leaves, one bite at a time.
-// Timings are fractions of one run and must match the CSS keyframes in
-// styles/cards.css (.tongue-tree / .tongue-lines / .leaf-bite-*).
-export const tonguePartyLayout = {
-  durationMs: 5000,
-  // Mouth edge of the tongue window; the tongue stretches from here.
-  mouth: { x: 330, y: 188 },
-  // The tree stands in the empty sky at the top right of the frame.
-  treeBase: { x: 547, y: 262 },
-  bites: [
-    { leaf: { x: 458, y: 190 }, at: 0.21 },
-    { leaf: { x: 480, y: 207 }, at: 0.35 },
-    { leaf: { x: 449, y: 215 }, at: 0.49 },
-  ],
-} as const;
+const mouth = { x: 330, y: 188 };
+const leaves = [
+  { x: 458, y: 190 },
+  { x: 480, y: 207 },
+  { x: 449, y: 215 },
+] as const;
 
-const leafShape =
-  "M0 0 Q13 -11 27 -2 Q29 12 16 15 Q2 12 0 0 Z";
+// Rotate and scale the child's actual stroke about the mouth. Its tip lands on
+// each leaf even when the child draws at a different position in the window.
+export function tongueBiteTransform(
+  tip: { x: number; y: number },
+  leaf: { x: number; y: number },
+) {
+  const dx = tip.x - mouth.x;
+  const dy = tip.y - mouth.y;
+  const tx = leaf.x - mouth.x;
+  const ty = leaf.y - mouth.y;
+  const lengthSquared = dx * dx + dy * dy;
+  const a = (tx * dx + ty * dy) / lengthSquared;
+  const b = (ty * dx - tx * dy) / lengthSquared;
+  return `matrix(${a}, ${b}, ${-b}, ${a}, ${mouth.x * (1 - a) + mouth.y * b}, ${mouth.y * (1 - a) - mouth.x * b})`;
+}
+
+const leafShape = "M0 0 Q13 -11 27 -2 Q29 12 16 15 Q2 12 0 0 Z";
 
 function SnackLeaf({
   x,
@@ -63,6 +67,20 @@ export function TongueCelebration({
   const [run, setRun] = useState(0);
   const lines = clipStrokes(strokes, scene);
   if (!lines.length) return null;
+  const points = lines.flat();
+  const tip = points.reduce((best, point) => (point.x > best.x ? point : best));
+  const root = points.reduce((best, point) =>
+    (point.x - mouth.x) ** 2 + (point.y - mouth.y) ** 2 <
+    (best.x - mouth.x) ** 2 + (best.y - mouth.y) ** 2
+      ? point
+      : best,
+  );
+  const motionStyle = Object.fromEntries(
+    leaves.map((leaf, index) => [
+      `--bite-${index + 1}`,
+      tongueBiteTransform(tip, leaf),
+    ]),
+  ) as CSSProperties;
   const height = scene.frameHeight || 400;
   return (
     <div className="tongue-party" data-testid="tongue-celebration">
@@ -108,25 +126,32 @@ export function TongueCelebration({
           <SnackLeaf x={486} y={168} rotate={28} />
           <SnackLeaf x={472} y={152} rotate={-18} />
           <SnackLeaf
-            x={tonguePartyLayout.bites[0].leaf.x}
-            y={tonguePartyLayout.bites[0].leaf.y}
+            x={leaves[0].x}
+            y={leaves[0].y}
             rotate={-32}
             className="leaf-bite leaf-bite-1"
           />
           <SnackLeaf
-            x={tonguePartyLayout.bites[1].leaf.x}
-            y={tonguePartyLayout.bites[1].leaf.y}
+            x={leaves[1].x}
+            y={leaves[1].y}
             rotate={18}
             className="leaf-bite leaf-bite-2"
           />
           <SnackLeaf
-            x={tonguePartyLayout.bites[2].leaf.x}
-            y={tonguePartyLayout.bites[2].leaf.y}
+            x={leaves[2].x}
+            y={leaves[2].y}
             rotate={-64}
             className="leaf-bite leaf-bite-3"
           />
         </g>
-        <g className="tongue-lines">
+        <g className="tongue-lines" style={motionStyle}>
+          <path
+            d={`M${mouth.x} ${mouth.y}L${root.x} ${root.y}`}
+            fill="none"
+            stroke="#277e78"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
           <SketchLines strokes={lines} />
         </g>
         <g className="party-sparkles" fill="#e9a13b">

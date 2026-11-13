@@ -442,11 +442,8 @@ main > .text-button {
   font-size: 11px;
   color: var(--color-muted);
 }
-/* Giraffe tongue celebration: a tree pops up at the top right and the
-   child's own tongue strokes stretch out to munch its leaves.
-   One 5s run; keyframe percentages match tonguePartyLayout in
-   components/TongueCelebration.tsx. With reduced motion the global
-   rule below freezes this into a static scene. */
+/* Giraffe tongue celebration. CSS owns the timing; the component calculates
+   the stroke transforms that put its tip on each leaf. */
 .tongue-party {
   margin: 16px 0;
   border: 1px solid var(--color-rule);
@@ -517,8 +514,6 @@ main > .text-button {
   }
 }
 .tongue-lines {
-  transform-box: view-box;
-  transform-origin: 330px 188px;
   animation: tongue-eat 5s ease-in-out both;
 }
 @keyframes tongue-eat {
@@ -527,30 +522,21 @@ main > .text-button {
     transform: none;
   }
   21% {
-    transform: translate(20px, -18px) rotate(-9deg) scale(1.34, 1.1);
+    transform: var(--bite-1);
   }
   28% {
-    transform: translate(6px, -5px) rotate(-3deg) scale(1.1, 1.03);
-  }
-  35% {
-    transform: translate(22px, -16px) rotate(-9deg) scale(1.36, 1.1);
-  }
-  42% {
-    transform: translate(6px, -5px) rotate(-3deg) scale(1.1, 1.03);
-  }
-  49% {
-    transform: translate(27px, -20px) rotate(-10deg) scale(1.44, 1.12);
-  }
-  58% {
     transform: none;
   }
-  64% {
-    transform: rotate(1.6deg);
+  35% {
+    transform: var(--bite-2);
   }
-  70% {
-    transform: rotate(-1.6deg);
+  42% {
+    transform: none;
   }
-  76%,
+  49% {
+    transform: var(--bite-3);
+  }
+  58%,
   100% {
     transform: none;
   }
@@ -1004,6 +990,15 @@ summary {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+  .tongue-party .tongue-lines {
+    transform: var(--bite-3);
+  }
+  .tongue-party .leaf-bite {
+    opacity: 0;
+  }
+  .tongue-party-bar button {
+    display: none;
   }
 }
 

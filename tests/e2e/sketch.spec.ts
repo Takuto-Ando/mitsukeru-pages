@@ -84,6 +84,51 @@ async function compare(page: Page) {
   if (await review.count()) await review.click();
   await expect(page.locator(".comparison-overlay")).toBeVisible();
 }
+test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await select(page, "giraffe");
+  await draw(page, "giraffe");
+  await compare(page);
+  const stage = page.getByTestId("tongue-celebration");
+  await expect(stage).toBeVisible();
+  await expect(stage.locator("svg")).toHaveAttribute("aria-hidden", "true");
+  const contact = await stage.evaluate((container) => {
+    const svg = container.querySelector("svg")!;
+    const tongue = svg.querySelector(".tongue-lines") as SVGGElement;
+    const points = [...tongue.querySelectorAll("polyline")].flatMap((line) => [
+      ...line.points,
+    ]);
+    const tip = points.reduce((best, point) =>
+      point.x > best.x ? point : best,
+    );
+    svg.getAnimations().forEach((animation) => {
+      animation.pause();
+      animation.currentTime = 1050;
+    });
+    const actual = new DOMPoint(tip.x, tip.y).matrixTransform(
+      new DOMMatrix(getComputedStyle(tongue).transform),
+    );
+    return { x: actual.x, y: actual.y };
+  });
+  expect(contact.x).toBeCloseTo(458, 0);
+  expect(contact.y).toBeCloseTo(190, 0);
+  await stage.evaluate((container) => {
+    container
+      .querySelector("svg")!
+      .getAnimations()
+      .forEach((animation) => {
+        animation.currentTime = 1500;
+      });
+  });
+  await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
+  await stage.getByRole("button", { name: "もう一度見る" }).click();
+  await expect(stage.locator("svg")).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(
+    stage.getByRole("button", { name: "もう一度見る" }),
+  ).toBeHidden();
+  await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
+});
 for (const t of tasks)
   test(`${t.id}: 専用イラスト・描画・比較・確認・解説・再観察`, async ({
     page,
