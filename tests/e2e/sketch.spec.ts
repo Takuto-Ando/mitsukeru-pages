@@ -91,7 +91,7 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
   await compare(page);
   const stage = page.getByTestId("tongue-celebration");
   await expect(stage).toBeVisible();
-  await expect(stage.locator("svg")).toHaveAttribute("aria-hidden", "true");
+  await expect(stage.locator("svg.tongue-party-stage")).toHaveAttribute("aria-hidden", "true");
   const contact = await stage.evaluate((container) => {
     const svg = container.querySelector("svg")!;
     const tongue = svg.querySelector(".tongue-lines") as SVGGElement;
@@ -101,7 +101,7 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
     const tip = points.reduce((best, point) =>
       point.x > best.x ? point : best,
     );
-    svg.getAnimations().forEach((animation) => {
+    svg.getAnimations({ subtree: true }).forEach((animation) => {
       animation.pause();
       animation.currentTime = 1050;
     });
@@ -115,14 +115,14 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
   await stage.evaluate((container) => {
     container
       .querySelector("svg")!
-      .getAnimations()
+      .getAnimations({ subtree: true })
       .forEach((animation) => {
         animation.currentTime = 1500;
       });
   });
   await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
   await stage.getByRole("button", { name: "もう一度見る" }).click();
-  await expect(stage.locator("svg")).toBeVisible();
+  await expect(stage.locator("svg.tongue-party-stage")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(
     stage.getByRole("button", { name: "もう一度見る" }),
