@@ -18,6 +18,7 @@ import { ReadAloud, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
 import { SketchCanvas } from "./SketchCanvas";
 import { SketchComparison } from "./components/SketchComparison";
+import { TongueCelebration } from "./components/TongueCelebration";
 const DrawingCollection = lazy(() =>
   import("./components/DrawingCollection").then((module) => ({
     default: module.DrawingCollection,
@@ -734,6 +735,9 @@ export default function App() {
                       ? "よく見てたね！"
                       : "あなたの観察と見くらべよう"}
                   </p>
+                  {task.id === "giraffe" && (
+                    <TongueCelebration strokes={strokes} scene={scene} />
+                  )}
                   <SketchComparison
                     strokes={strokes}
                     scene={scene}
