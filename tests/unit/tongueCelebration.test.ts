@@ -2,15 +2,15 @@ import { test, expect } from "vitest";
 import { tongueBiteTransform } from "../../src/components/TongueCelebration";
 
 test("描いた舌の先端は、描画位置が違っても葉に届き、口元は動かない", () => {
-  const mouth = { x: 330, y: 188 };
+  const mouth = { x: 326, y: 305 };
   const leaves = [
-    { x: 458, y: 190 },
-    { x: 480, y: 207 },
-    { x: 449, y: 215 },
+    { x: 500, y: 285 },
+    { x: 523, y: 301 },
+    { x: 488, y: 312 },
   ];
   for (const tip of [
-    { x: 500, y: 215 },
-    { x: 430, y: 350 },
+    { x: 535, y: 290 },
+    { x: 435, y: 345 },
   ]) {
     for (const leaf of leaves) {
       const values = tongueBiteTransform(tip, leaf)

@@ -482,7 +482,7 @@ main > .text-button {
 }
 .tongue-tree {
   transform-box: view-box;
-  transform-origin: 547px 262px;
+  transform-origin: 560px 399px;
   animation: tree-pop 5s ease-out both;
 }
 @keyframes tree-pop {

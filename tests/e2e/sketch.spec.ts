@@ -113,8 +113,8 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
     );
     return { x: actual.x, y: actual.y };
   });
-  expect(contact.x).toBeCloseTo(458, 0);
-  expect(contact.y).toBeCloseTo(190, 0);
+  expect(contact.x).toBeCloseTo(500, 0);
+  expect(contact.y).toBeCloseTo(285, 0);
   await stage.evaluate((container) => {
     container
       .querySelector("svg")!

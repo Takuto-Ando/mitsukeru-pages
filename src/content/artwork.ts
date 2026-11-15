@@ -34,7 +34,8 @@ export const artwork: Record<string, Artwork> = Object.fromEntries(
     ["deer", "ニホンジカの背中"],
   ].map(([id, alt]) => [id, { status: "awaiting", alt }]),
 );
-// Full-animal illustrations: the answer is a complete coloured animal, not a line layer.
+// Full-animal illustrations, except the owner's close-up for the giraffe tongue:
+// the answer is a complete coloured illustration, not a line layer.
 for (const id of [
   ...Object.keys(artwork),
   "sheep",
@@ -56,6 +57,7 @@ for (const id of [
     credit: "本制作の編集可能な全身イラスト",
   };
 }
+artwork.giraffe.credit = "本制作の編集可能な頭部寄りイラスト";
 // Put future photo / professionally reviewed replacements here by task ID.
 // Paths stay relative to public/. The generated fallback registry above stays intact.
 const suppliedArtwork: Record<string, Artwork> = {};
