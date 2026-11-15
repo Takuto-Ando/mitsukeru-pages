@@ -1,1 +1,44 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="giraffe" data-illustration="incomplete"><rect width="600" height="600" rx="0" fill="#fbf4e6"/><defs><mask id="detail-mask"><rect width="600" height="600" fill="white"/><rect x="320" y="165" width="105" height="95" fill="black"/></mask></defs><path d="M234 306Q329 272 436 313L457 422Q372 460 266 421Z" fill="#e5c488" stroke="#665b50" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M255 412L255 519L311 519L307 425M395 429L402 562L437 562L435 414M431 413L468 548L502 548L470 399M280 421L299 547L328 547L320 423" fill="#dfbc7f" stroke="#665b50" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M399 556l-5 26h52l-5 -26Z" fill="#665b50" stroke="#665b50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M466 543l-5 26h48l-5 -26Z" fill="#665b50" stroke="#665b50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M297 542l-5 26h44l-5 -26Z" fill="#665b50" stroke="#665b50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M231 327L167 306L169 173L157 122Q190 79 257 106L327 148Q353 171 329 194L254 190L259 305Z" fill="#e8cb91" stroke="#665b50" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M181 116L170 75M248 110L254 66" fill="none" stroke="#665b50" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="M178 113Q129 76 117 110L161 145M258 120Q297 82 314 113L278 142" fill="#e0bb80" stroke="#665b50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="222" cy="143" rx="10" ry="14" fill="#665b50"/><circle cx="219" cy="138" r="3" fill="white"/><path d="M315 166L327 166M436 332Q486 331 499 391" fill="none" stroke="#665b50" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M187 202L216 193L228 222L194 233ZM196 256L229 247L235 279L202 288ZM275 333L304 318L325 348L295 363ZM346 330L380 320L390 350L357 365ZM401 376L429 369L440 396L411 410ZM261 461L285 456L291 483L263 490Z" fill="#b98454" stroke="#665b50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M250 560l-5 26h75l-5 -26Z" fill="#665b50" stroke="#665b50" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><g mask="url(#detail-mask)" data-coat-details="giraffe"><path d="M173 154q12 8 19 4M239 123q9 -5 16 -2M222 160q10 -4 16 0M234 178q6 6 15 4M277 380q22 10 39 6M406 481l8 3" fill="none" stroke="#ac8355" stroke-width="2" stroke-linecap="round" opacity=".55"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="giraffe" data-illustration="incomplete">
+  <rect width="600" height="600" fill="#fffef8"/>
+  <defs>
+    <mask id="detail-mask">
+      <rect width="600" height="600" fill="white"/>
+      <rect x="315" y="255" width="245" height="125" fill="black"/>
+    </mask>
+  </defs>
+  <!-- The neck runs off the frame, as in the owner's close-up reference. -->
+  <path d="M-18 311C32 315 56 365 66 429L89 600H274L250 478C237 414 224 368 201 329Z" fill="#b68d5b" stroke="#665b50" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M64 436C83 428 105 432 111 448L132 600H72Z M151 411C174 402 190 410 197 432L231 600H165Z M232 463L270 600H235L209 466Z" fill="#856447"/>
+  <!-- Ossicones and the far ear sit behind the head. -->
+  <path d="M70 160L48 72Q43 54 56 48Q71 42 77 60L101 143Z M138 150L136 54Q135 36 150 35Q166 35 168 54L169 151Z" fill="#b68d5b" stroke="#665b50" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M43 69Q48 48 58 47Q74 44 78 65L82 78Q62 86 43 69Z M137 58Q137 38 151 35Q167 35 169 55L169 72Q151 77 137 58Z" fill="#826043"/>
+  <path d="M118 171Q105 116 127 83Q147 60 169 86Q188 110 166 169Z" fill="#e5c78f" stroke="#665b50" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M137 151Q126 112 139 92Q151 80 158 91Q166 107 152 145Z" fill="#987451"/>
+  <path d="M63 221Q10 177-17 196L-22 266Q25 277 75 247Z" fill="#d6ad74" stroke="#665b50" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M43 233Q3 207-15 220L-19 248Q5 255 43 233Z" fill="#856447"/>
+  <!-- The large head and the long upper muzzle. -->
+  <path d="M26 212Q26 170 64 146Q103 119 149 136Q195 144 229 180Q254 205 297 221Q340 234 350 265Q357 286 341 301Q326 311 307 303Q280 290 255 297L245 328Q249 352 216 362Q174 370 132 357Q81 343 48 307Q14 272 26 212Z" fill="#b68d5b" stroke="#665b50" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M51 219Q77 177 140 177Q206 181 244 211Q271 226 302 231Q338 241 348 264Q354 281 341 296Q326 305 307 298Q274 286 248 300Q219 318 166 322Q94 325 50 281Q32 258 51 219Z" fill="#ead4a0"/>
+  <!-- Broad, irregular giraffe patches. -->
+  <g fill="#896647" stroke="#896647" stroke-linejoin="round">
+    <path d="M31 176L57 158L76 171L69 194L43 201Z M86 145L113 137L129 157L115 176L86 168Z M151 149L177 157L190 177L177 191L148 177Z"/>
+    <path d="M38 214L64 205L79 222L70 247L40 247Z M91 189L119 185L133 206L122 229L95 223Z M150 195L176 192L194 210L182 233L151 225Z M209 206L232 216L240 237L222 248L202 230Z"/>
+    <path d="M72 255L100 241L119 257L110 283L80 283Z M135 241L163 237L178 257L166 280L139 274Z M193 249L219 245L230 263L216 281L191 272Z M244 238L263 237L275 255L261 268L242 259Z"/>
+    <path d="M53 292L81 285L96 308L83 327L55 314Z M110 296L138 285L156 303L145 329L116 322Z M168 286L190 283L204 300L192 321L169 311Z M214 287L236 285L247 303L232 320L213 312Z"/>
+    <path d="M85 341L114 329L135 342L130 361L100 355Z M158 333L185 327L202 344L193 362L165 358Z"/>
+    <path d="M269 229L283 230L295 244L288 253L272 246Z M302 244L317 250L325 263L317 267L302 257Z"/>
+  </g>
+  <g mask="url(#detail-mask)" data-coat-details="giraffe" fill="none" stroke="#a37c50" stroke-width="2.5" stroke-linecap="round" opacity=".55">
+    <path d="M68 204q11-9 21-7M128 179q11-8 20-2M178 235q13-7 21-1M114 288q11-8 20-2M213 327q13 3 23-2"/>
+  </g>
+  <!-- Pale eye surround, dark almond eye and small nostril. -->
+  <path d="M76 226Q117 193 156 215Q151 254 107 263Q78 262 76 226Z" fill="#fff4d4"/>
+  <path d="M87 239Q116 209 147 220Q137 246 94 251Q84 250 87 239Z" fill="#665b50"/>
+  <circle cx="114" cy="227" r="3" fill="#fffef8"/>
+  <path d="M303 259Q314 252 323 261Q330 269 324 279Q314 280 308 272Z" fill="#665b50"/>
+  <path d="M330 281Q337 284 339 290" fill="none" stroke="#665b50" stroke-width="3" stroke-linecap="round"/>
+  <!-- A narrow dark gap separates the upper and lower jaws. -->
+  <path d="M292 302Q312 305 338 299Q331 316 316 323Q303 323 291 315Z" fill="#665b50"/>
+  <path d="M251 315Q276 320 302 317Q321 316 337 325Q341 338 326 348Q314 359 291 353Q274 346 252 347Q242 334 251 315Z" fill="#ead4a0" stroke="#665b50" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M252 316Q283 331 319 320" fill="none" stroke="#665b50" stroke-width="3" stroke-linecap="round"/>
+</svg>

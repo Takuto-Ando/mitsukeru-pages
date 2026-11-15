@@ -5,11 +5,11 @@ import { SceneBase } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import type { Stroke } from "../types";
 
-const mouth = { x: 330, y: 188 };
+const mouth = { x: 326, y: 305 };
 const leaves = [
-  { x: 458, y: 190 },
-  { x: 480, y: 207 },
-  { x: 449, y: 215 },
+  { x: 500, y: 285 },
+  { x: 523, y: 301 },
+  { x: 488, y: 312 },
 ] as const;
 
 // Rotate and scale the child's actual stroke about the mouth. Its tip lands on
@@ -94,37 +94,37 @@ export function TongueCelebration({
       >
         <SceneBase scene={scene} completed />
         <g className="tongue-tree">
-          <ellipse cx="547" cy="264" rx="48" ry="7" fill="#e7d9b8" />
+          <ellipse cx="560" cy="399" rx="37" ry="7" fill="#e7d9b8" />
           <path
-            d="M539 262 C543 218 541 178 537 136 L553 136 C551 178 553 218 557 262 Z"
+            d="M550 398 C556 331 555 243 548 175 L566 175 C564 243 568 331 571 398 Z"
             fill="#c49a63"
             stroke="#665b50"
             strokeWidth="4"
             strokeLinejoin="round"
           />
           <path
-            d="M545 172 Q516 150 490 146 M546 148 Q522 118 500 106"
+            d="M558 236 Q531 213 505 208 M557 197 Q531 171 510 158"
             fill="none"
             stroke="#8a6b42"
             strokeWidth="7"
             strokeLinecap="round"
           />
           <g fill="#8fbc63" stroke="#665b50" strokeWidth="3">
-            <circle cx="492" cy="104" r="30" />
-            <circle cx="566" cy="100" r="30" />
-            <circle cx="530" cy="72" r="39" fill="#7fae56" />
-            <circle cx="528" cy="118" r="35" />
-            <circle cx="494" cy="134" r="23" fill="#7fae56" />
+            <circle cx="506" cy="156" r="30" />
+            <circle cx="575" cy="152" r="30" />
+            <circle cx="545" cy="122" r="39" fill="#7fae56" />
+            <circle cx="542" cy="169" r="35" />
+            <circle cx="503" cy="191" r="23" fill="#7fae56" />
           </g>
           <path
-            d="M500 128 Q480 158 467 184"
+            d="M541 227 Q518 253 506 283"
             fill="none"
             stroke="#8a6b42"
             strokeWidth="5"
             strokeLinecap="round"
           />
-          <SnackLeaf x={486} y={168} rotate={28} />
-          <SnackLeaf x={472} y={152} rotate={-18} />
+          <SnackLeaf x={527} y={239} rotate={28} />
+          <SnackLeaf x={510} y={226} rotate={-18} />
           <SnackLeaf
             x={leaves[0].x}
             y={leaves[0].y}
@@ -157,11 +157,11 @@ export function TongueCelebration({
         <g className="party-sparkles" fill="#e9a13b">
           <path
             className="party-sparkle party-sparkle-1"
-            d="M352 138 l3.5 8.5 8.5 3.5 -8.5 3.5 -3.5 8.5 -3.5 -8.5 -8.5 -3.5 8.5 -3.5 Z"
+            d="M389 228 l3.5 8.5 8.5 3.5 -8.5 3.5 -3.5 8.5 -3.5 -8.5 -8.5 -3.5 8.5 -3.5 Z"
           />
           <path
             className="party-sparkle party-sparkle-2"
-            d="M398 118 l2.8 6.8 6.8 2.8 -6.8 2.8 -2.8 6.8 -2.8 -6.8 -6.8 -2.8 6.8 -2.8 Z"
+            d="M435 208 l2.8 6.8 6.8 2.8 -6.8 2.8 -2.8 6.8 -2.8 -6.8 -6.8 -2.8 6.8 -2.8 Z"
           />
         </g>
       </svg>

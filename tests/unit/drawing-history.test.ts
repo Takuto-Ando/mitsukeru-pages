@@ -16,3 +16,10 @@ test("描画、消去、Undoで元の線を取り戻し、全消去もUndoでき
   expect(drawingHistory(drawn, { type: "undo" }).present).toEqual([]);
   expect(drawingHistory(drawn, { type: "reset" })).toEqual(emptyDrawing());
 });
+test("UndoからRedoで線を戻し、新しい描画後はRedoを消す", () => {
+  const drawn = drawingHistory(emptyDrawing(), { type: "commit", strokes: one });
+  const undone = drawingHistory(drawn, { type: "undo" });
+  expect(drawingHistory(undone, { type: "redo" }).present).toBe(one);
+  const replaced = drawingHistory(undone, { type: "commit", strokes: [] });
+  expect(drawingHistory(replaced, { type: "redo" })).toBe(replaced);
+});

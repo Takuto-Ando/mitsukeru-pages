@@ -1,4 +1,5 @@
-// One full-animal frame for drawing, answer and explanation. No enlarged insets.
+// One 600×600 frame for drawing, answer and explanation. Only the giraffe tongue
+// task uses an owner's design-reference head close-up; other tasks stay full-body.
 export interface FullBodyLayout {
   x: number;
   y: number;
@@ -46,9 +47,9 @@ export const fullBodyLayouts: Record<string, FullBodyLayout> = {
     x: 0,
     y: 0,
     scale: 1,
-    windows: [[320, 165, 105, 95]],
+    windows: [[315, 255, 245, 125]],
     answerPath:
-      "M330 178Q405 172 410 216Q415 244 379 246L372 225Q397 227 390 208Q380 193 330 198Z",
+      "M322 310C365 297 396 307 424 305C461 306 489 281 527 279C543 277 556 287 553 304C550 319 527 323 505 325C473 329 446 348 412 347C375 346 353 329 323 321Z",
   },
   "giraffe-hoof": {
     x: 0,

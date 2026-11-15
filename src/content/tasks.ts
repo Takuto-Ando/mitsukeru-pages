@@ -301,7 +301,9 @@ export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 export const tasksForGroup = (id: string) =>
   tasks.filter((t) => t.groupId === id);
 
-// Position the missing part within a full-animal illustration, never a close-up.
+// Position the missing part in the shared 600×600 illustration. The giraffe
+// tongue task alone uses a head close-up from the owner's design reference;
+// giraffe-hoof, giraffe-horns, giraffe-lashes and all other tasks stay full-body.
 for (const task of tasks) {
   if (materialTasks.some((m) => m.id === task.id)) continue;
   task.hints = observationHints[task.id];

@@ -555,20 +555,11 @@ export default function App() {
                 />
               ) : step === 1 ? (
                 <>
-                  <div className="task-heading">
-                    <span>{group.name}</span>
-                  </div>
-                  <h1>{task.part}を描こう</h1>
                   {studyTaskEnabled && (
                     <p className="quiet-note">
                       {studyPhase === "before" ? "1回目" : "2回目"}のスケッチ
                     </p>
                   )}
-                  <button className="text-button" onClick={() => restart()}>
-                    動物を選び直す
-                  </button>
-                  <p className="figma-support">{task.question}</p>
-                  <ReadAloud id="question" text={task.question} />
                   {tasksForGroup(group.id).length > 1 && (
                     <div
                       className="task-switch"
@@ -586,21 +577,47 @@ export default function App() {
                       ))}
                     </div>
                   )}
-                  <p className="figma-note">
-                    絵のつづきを描こう。実物を見ながらで大丈夫。
-                  </p>
-                  {photo && (
-                    <details>
-                      <summary>撮影した写真を確認</summary>
-                      <img
-                        className="selected-photo"
-                        src={photo}
-                        alt="撮影した動物の写真"
-                      />
-                    </details>
-                  )}
                   <SketchCanvas
                     key={taskId}
+                    missionTitle={`${group.name}の${task.part}を描いてみよう！`}
+                    landscapeInstruction={
+                      <>
+                        <p>{task.question}</p>
+                        <ReadAloud
+                          id="question-landscape"
+                          text={task.question}
+                        />
+                      </>
+                    }
+                    landscapeComplete={
+                      <button
+                        className="primary draw-complete"
+                        disabled={!strokes.length}
+                        onClick={answer}
+                      >
+                        できた！
+                      </button>
+                    }
+                    landscapeReselect={
+                      <>
+                        <button
+                          className="text-button"
+                          onClick={() => restart()}
+                        >
+                          動物を選び直す
+                        </button>
+                        {photo && (
+                          <details>
+                            <summary>撮影した写真を確認</summary>
+                            <img
+                              className="selected-photo"
+                              src={photo}
+                              alt="撮影した動物の写真"
+                            />
+                          </details>
+                        )}
+                      </>
+                    }
                     scene={scene}
                     onDrawingActivity={(active, tool) =>
                       recordStudy(
@@ -611,12 +628,40 @@ export default function App() {
                     strokes={strokes}
                     showTarget={hint}
                     canUndo={drawing.past.length > 0}
+                    canRedo={drawing.future.length > 0}
                     onUndo={() => {
                       dispatchDrawing({ type: "undo" });
                       recordStudy("drawing_undo");
                       setFeedback(undefined);
                       setSavedId(undefined);
                     }}
+                    onRedo={() => {
+                      dispatchDrawing({ type: "redo" });
+                      setFeedback(undefined);
+                      setSavedId(undefined);
+                    }}
+                    hintControl={
+                      <button
+                        className="sketch-hint-button"
+                        aria-label={
+                          hintLevel === 0
+                            ? "ヒントを見る"
+                            : hintLevel < (task.hints?.length || 0)
+                              ? "次のヒントを見る"
+                              : "ヒントを表示中"
+                        }
+                        aria-expanded={hint}
+                        aria-controls="observation-hint"
+                        disabled={hintLevel >= (task.hints?.length || 0)}
+                        onClick={() => {
+                          const level = hintLevel + 1;
+                          setHintLevel(level);
+                          recordStudy("hint_opened", { hintLevel: level });
+                        }}
+                      >
+                        ヒント
+                      </button>
+                    }
                     onChange={(value, action) => {
                       if (action === "clear") recordStudy("drawing_cleared");
                       if (action === "erase") recordStudy("drawing_erased");
@@ -626,23 +671,6 @@ export default function App() {
                     }}
                   />
                   <div className="observation-hints">
-                    <button
-                      className="text-button"
-                      aria-expanded={hint}
-                      aria-controls="observation-hint"
-                      disabled={hintLevel >= (task.hints?.length || 0)}
-                      onClick={() => {
-                        const level = hintLevel + 1;
-                        setHintLevel(level);
-                        recordStudy("hint_opened", { hintLevel: level });
-                      }}
-                    >
-                      {hintLevel === 0
-                        ? "ヒントを見る"
-                        : hintLevel < (task.hints?.length || 0)
-                          ? "次のヒントを見る"
-                          : "ヒントを表示中"}
-                    </button>
                     {hint && (
                       <ol id="observation-hint" role="note">
                         {task.hints?.slice(0, hintLevel).map((text) => (
@@ -703,12 +731,32 @@ export default function App() {
                     </button>
                   )}
                   <button
-                    className="primary"
+                    className="primary draw-complete portrait-complete"
                     disabled={!strokes.length}
                     onClick={answer}
                   >
-                    こたえあわせ →
+                    できた！
                   </button>
+                  <div className="draw-afterword">
+                    <p className="figma-support">{task.question}</p>
+                    <ReadAloud id="question" text={task.question} />
+                    <p className="figma-note">
+                      絵のつづきを描こう。実物を見ながらで大丈夫。
+                    </p>
+                    {photo && (
+                      <details>
+                        <summary>撮影した写真を確認</summary>
+                        <img
+                          className="selected-photo"
+                          src={photo}
+                          alt="撮影した動物の写真"
+                        />
+                      </details>
+                    )}
+                    <button className="text-button" onClick={() => restart()}>
+                      動物を選び直す
+                    </button>
+                  </div>
                 </>
               ) : step === 2 ? (
                 <>
