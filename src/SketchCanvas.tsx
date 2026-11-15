@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Eraser, Undo2, RotateCcw } from "lucide-react";
+import { Pencil, Eraser, Undo2, Redo2, RotateCcw } from "lucide-react";
 import {
   drawingRegions,
   scenes,
@@ -37,11 +37,19 @@ export function SketchCanvas({
   onDrawingActivity,
   onUndo,
   canUndo,
+  onRedo,
+  canRedo,
+  missionTitle,
+  hintControl,
   showTarget = false,
 }: {
   onDrawingActivity?: (active: boolean, tool: "pen" | "eraser") => void;
   onUndo?: () => void;
   canUndo?: boolean;
+  onRedo?: () => void;
+  canRedo?: boolean;
+  missionTitle?: string;
+  hintControl?: React.ReactNode;
   showTarget?: boolean;
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
@@ -55,7 +63,13 @@ export function SketchCanvas({
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
   const [drawing, setDrawing] = useState(false),
-    [erase, setErase] = useState(false);
+    [erase, setErase] = useState(false),
+    [brushWidth, setBrushWidth] = useState(7),
+    [brushColor, setBrushColor] = useState(missionTitle ? "#9173ad" : "#277e78");
+  const brushStyles = useRef(
+    new WeakMap<Stroke, { width: number; color: string }>(),
+  );
+  const activeBrush = useRef({ width: brushWidth, color: brushColor });
   const callbacks = useRef({ onChange, onDrawingActivity });
   callbacks.current = { onChange, onDrawingActivity };
   const working = useRef(strokes);
@@ -97,12 +111,18 @@ export function SketchCanvas({
           r.height * frameHeight,
         );
       context.clip();
-      context.lineWidth = 7;
       context.lineCap = "round";
       context.lineJoin = "round";
-      context.strokeStyle = "#277e78";
-      const draw = (stroke: Stroke) => {
+      const draw = (stroke: Stroke, current = false) => {
         if (!stroke.length) return;
+        const style = current
+          ? activeBrush.current
+          : brushStyles.current.get(stroke) || {
+              width: 7,
+              color: missionTitle ? "#9173ad" : "#277e78",
+            };
+        context.lineWidth = style.width;
+        context.strokeStyle = style.color;
         context.beginPath();
         context.moveTo(stroke[0].x, stroke[0].y);
         for (let i = 1; i < stroke.length; i++)
@@ -110,7 +130,7 @@ export function SketchCanvas({
         context.stroke();
       };
       for (const stroke of working.current) draw(stroke);
-      draw(current.current);
+      draw(current.current, true);
       context.restore();
     });
   }
@@ -177,6 +197,7 @@ export function SketchCanvas({
           x: next[0].x + (next[0].x < 600 ? 0.01 : -0.01),
         });
       if (clipStrokes([next], scene).length) {
+        brushStyles.current.set(next, { ...activeBrush.current });
         working.current = [...working.current, next];
         callbacks.current.onChange(working.current, "draw");
       }
@@ -198,117 +219,223 @@ export function SketchCanvas({
     return () => document.removeEventListener("visibilitychange", hide);
   }, []);
   return (
-    <div className="sketch-card">
-      <div className="paper-top">
-        <span>
-          <i />
-          かんさつスケッチ
-        </span>
-      </div>
-      <div
-        className={"drawing-paper " + (drawing ? "is-drawing" : "")}
-        style={{ aspectRatio: `600 / ${frameHeight}` }}
-      >
-        <div
-          className="scene-stage"
-          data-testid="full-animal-stage"
-          data-view="whole"
-        >
-          <svg
-            className="eye-template"
-            viewBox={`0 0 600 ${frameHeight}`}
-            preserveAspectRatio="none"
-            aria-label={scene.label + "を描き足すイラスト"}
-            role="img"
-          >
-            <SceneBase scene={scene} />
-            {(showTarget || (!strokes.length && !drawing)) && (
-              <TargetRegions scene={scene} />
-            )}
-          </svg>
-          <canvas
-            ref={ref}
-            data-testid="canvas"
-            aria-label="観察した形を描くキャンバス"
-            onPointerDown={(event) => {
-              if (
-                active.current !== null ||
-                !event.isPrimary ||
-                event.button !== 0
-              )
-                return;
-              event.preventDefault();
-              active.current = event.pointerId;
-              activeTool.current = erase ? "eraser" : "pen";
-              onDrawingActivity?.(true, activeTool.current);
-              try {
-                event.currentTarget.setPointerCapture(event.pointerId);
-              } catch {
-                /* The pointer may already have ended. */
-              }
-              const position = point(event);
-              if (activeTool.current === "eraser") eraseAt(position);
-              else {
-                current.current = [position];
-                setDrawing(true);
-                paint();
-              }
-            }}
-            onPointerMove={(event) => {
-              if (active.current !== event.pointerId) return;
-              const rect = event.currentTarget.getBoundingClientRect();
-              const samples = event.nativeEvent.getCoalescedEvents?.() || [];
-              const events = samples.length ? samples : [event];
-              for (const sample of events) {
-                const position = point(sample, rect);
-                if (activeTool.current === "eraser") eraseAt(position);
-                else append(position);
-              }
-              paint();
-            }}
-            onPointerUp={(event) => {
-              if (active.current !== event.pointerId) return;
-              if (activeTool.current === "pen") append(point(event));
-              finish();
-            }}
-            onPointerCancel={(event) => {
-              if (active.current === event.pointerId) finish();
-            }}
-            onLostPointerCapture={(event) => {
-              if (active.current === event.pointerId) finish();
-            }}
-          />
+    <div className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}>
+      {missionTitle && (
+        <div className="mission-heading">
+          <span>MISSION</span>
+          <h1>{missionTitle}</h1>
         </div>
+      )}
+      <div className="sketch-frame">
+        <div className="paper-top">
+          <span>
+            <i />
+            かんさつスケッチ
+          </span>
+        </div>
+        {missionTitle && (
+          <div className="sketch-history" role="group" aria-label="描画履歴">
+            <button
+              aria-label="ひとつ戻す"
+              disabled={!(canUndo ?? !!strokes.length)}
+              onClick={() =>
+                onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
+              }
+            >
+              <Undo2 size={25} aria-hidden="true" />
+              <span>もどる</span>
+            </button>
+            <button
+              aria-label="ひとつ進む"
+              disabled={!canRedo}
+              onClick={onRedo}
+            >
+              <Redo2 size={25} aria-hidden="true" />
+              <span>すすむ</span>
+            </button>
+          </div>
+        )}
+        <div
+          className={"drawing-paper " + (drawing ? "is-drawing" : "")}
+          style={{ aspectRatio: `600 / ${frameHeight}` }}
+        >
+          <div
+            className="scene-stage"
+            data-testid="full-animal-stage"
+            data-view="whole"
+          >
+            <svg
+              className="eye-template"
+              viewBox={`0 0 600 ${frameHeight}`}
+              preserveAspectRatio="none"
+              aria-label={scene.label + "を描き足すイラスト"}
+              role="img"
+            >
+              <SceneBase scene={scene} />
+              {(showTarget || (!strokes.length && !drawing)) && (
+                <TargetRegions scene={scene} />
+              )}
+            </svg>
+            <canvas
+              ref={ref}
+              data-testid="canvas"
+              aria-label="観察した形を描くキャンバス"
+              onPointerDown={(event) => {
+                if (
+                  active.current !== null ||
+                  !event.isPrimary ||
+                  event.button !== 0
+                )
+                  return;
+                event.preventDefault();
+                active.current = event.pointerId;
+                activeTool.current = erase ? "eraser" : "pen";
+                onDrawingActivity?.(true, activeTool.current);
+                try {
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                } catch {
+                  /* The pointer may already have ended. */
+                }
+                const position = point(event);
+                if (activeTool.current === "eraser") eraseAt(position);
+                else {
+                  current.current = [position];
+                  setDrawing(true);
+                  paint();
+                }
+              }}
+              onPointerMove={(event) => {
+                if (active.current !== event.pointerId) return;
+                const rect = event.currentTarget.getBoundingClientRect();
+                const samples = event.nativeEvent.getCoalescedEvents?.() || [];
+                const events = samples.length ? samples : [event];
+                for (const sample of events) {
+                  const position = point(sample, rect);
+                  if (activeTool.current === "eraser") eraseAt(position);
+                  else append(position);
+                }
+                paint();
+              }}
+              onPointerUp={(event) => {
+                if (active.current !== event.pointerId) return;
+                if (activeTool.current === "pen") append(point(event));
+                finish();
+              }}
+              onPointerCancel={(event) => {
+                if (active.current === event.pointerId) finish();
+              }}
+              onLostPointerCapture={(event) => {
+                if (active.current === event.pointerId) finish();
+              }}
+            />
+          </div>
+        </div>
+        {hintControl && (
+          <div className="sketch-hint-control">{hintControl}</div>
+        )}
       </div>
       <div className="tools" aria-label="描画ツール">
-        <button aria-pressed={!erase} onClick={() => setErase(false)}>
-          <Pencil size={19} />
-          ペン
-        </button>
-        <button aria-pressed={erase} onClick={() => setErase(true)}>
-          <Eraser size={19} />
-          消しゴム
-        </button>
-        <span />
-        <button
-          disabled={!(canUndo ?? !!strokes.length)}
-          onClick={() =>
-            onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
-          }
-        >
-          <Undo2 size={19} />
-          ひとつ戻す
-        </button>
-        <button
-          disabled={!strokes.length}
-          onClick={() => {
-            onChange([], "clear");
-            setErase(false);
-          }}
-        >
-          <RotateCcw size={19} />
-          描き直す
-        </button>
+        {missionTitle ? (
+          <>
+            <div className="tool-group tool-group-actions">
+              <span className="tool-group-label">ツール</span>
+              <div className="tool-options">
+                <button aria-pressed={!erase} onClick={() => setErase(false)}>
+                  <Pencil size={19} />
+                  ペン
+                </button>
+                <button aria-pressed={erase} onClick={() => setErase(true)}>
+                  <Eraser size={19} />
+                  消しゴム
+                </button>
+                <button
+                  disabled={!strokes.length}
+                  onClick={() => {
+                    onChange([], "clear");
+                    setErase(false);
+                  }}
+                >
+                  <RotateCcw size={19} />
+                  描き直す
+                </button>
+              </div>
+            </div>
+            <div className="tool-group tool-group-width">
+              <span className="tool-group-label">ふとさ</span>
+              <div className="tool-options">
+                {[4, 7, 11].map((width) => (
+                  <button
+                    key={width}
+                    className="brush-choice"
+                    aria-label={`ふとさ ${width}`}
+                    aria-pressed={brushWidth === width}
+                    onClick={() => {
+                      activeBrush.current = { ...activeBrush.current, width };
+                      setBrushWidth(width);
+                    }}
+                  >
+                    <span
+                      className="brush-dot"
+                      style={{ width, height: width }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="tool-group tool-group-color">
+              <span className="tool-group-label">カラー</span>
+              <div className="tool-options">
+                {["#9173ad", "#695b79", "#4f4a5c"].map((color, index) => (
+                  <button
+                    key={color}
+                    className="brush-choice"
+                    aria-label={`カラー ${index + 1}`}
+                    aria-pressed={brushColor === color}
+                    onClick={() => {
+                      activeBrush.current = { ...activeBrush.current, color };
+                      setBrushColor(color);
+                    }}
+                  >
+                    <span
+                      className="color-dot"
+                      style={{ backgroundColor: color }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <button aria-pressed={!erase} onClick={() => setErase(false)}>
+              <Pencil size={19} />
+              ペン
+            </button>
+            <button aria-pressed={erase} onClick={() => setErase(true)}>
+              <Eraser size={19} />
+              消しゴム
+            </button>
+            <button
+              disabled={!(canUndo ?? !!strokes.length)}
+              onClick={() =>
+                onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
+              }
+            >
+              <Undo2 size={19} />
+              ひとつ戻す
+            </button>
+            <button
+              disabled={!strokes.length}
+              onClick={() => {
+                onChange([], "clear");
+                setErase(false);
+              }}
+            >
+              <RotateCcw size={19} />
+              描き直す
+            </button>
+          </>
+        )}
       </div>
       {erase && (
         <p className="eraser-tip">線にふれると、そのひと筆が消えるよ。</p>

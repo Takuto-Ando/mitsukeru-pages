@@ -79,7 +79,7 @@ async function draw(page: Page, id = "goat", vertical = false) {
   }
 }
 async function compare(page: Page) {
-  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await page.getByRole("button", { name: "できた！" }).click();
   const review = page.locator(".figma-feedback button");
   if (await review.count()) await review.click();
   await expect(page.locator(".comparison-overlay")).toBeVisible();
@@ -91,7 +91,10 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
   await compare(page);
   const stage = page.getByTestId("tongue-celebration");
   await expect(stage).toBeVisible();
-  await expect(stage.locator("svg.tongue-party-stage")).toHaveAttribute("aria-hidden", "true");
+  await expect(stage.locator("svg.tongue-party-stage")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
   const contact = await stage.evaluate((container) => {
     const svg = container.querySelector("svg")!;
     const tongue = svg.querySelector(".tongue-lines") as SVGGElement;
@@ -153,9 +156,7 @@ for (const t of tasks)
     ).text();
     expect(correct).toContain('data-illustration="complete"');
     expect(correct).not.toContain("#c18151");
-    await expect(
-      page.getByRole("button", { name: "こたえあわせ →" }),
-    ).toBeDisabled();
+    await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
     await draw(page, t.id);
     await compare(page);
     const own = page.getByTestId("user-lines");
@@ -203,9 +204,7 @@ for (const t of tasks)
     await page
       .getByRole("button", { name: "もう一度、本物を見てみよう ↗" })
       .click();
-    await expect(
-      page.getByRole("button", { name: "こたえあわせ →" }),
-    ).toBeEnabled();
+    await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
     await compare(page);
     if (await confirm.count()) await confirm.click();
     await page.getByRole("button", { name: "特徴について知ろう →" }).click();
@@ -219,16 +218,12 @@ test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page })
   await select(page);
   await draw(page);
   await page.getByRole("button", { name: "ひとつ戻す" }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await draw(page, "goat", true);
-  await page.getByRole("button", { name: "こたえあわせ →" }).click();
+  await page.getByRole("button", { name: "できた！" }).click();
   await expect(page.locator(".figma-feedback")).toBeVisible();
   await page.getByRole("button", { name: "描き直す" }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await draw(page);
   await compare(page);
   await expect(
@@ -346,9 +341,7 @@ test("タッチ入力で描画・マスク外は回答不可", async ({
     type: "touchEnd",
     touchPoints: [],
   });
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await session.send("Input.dispatchTouchEvent", {
     type: "touchStart",
     touchPoints: [pt(0.29, 0.34)],
@@ -361,9 +354,7 @@ test("タッチ入力で描画・マスク外は回答不可", async ({
     type: "touchEnd",
     touchPoints: [],
   });
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
 });
 
 test("モデル事前準備・撮影から自動で描画へ（推論Workerはモック）", async ({
@@ -435,9 +426,7 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
     page.getByRole("button", { name: "識別モデル準備済み" }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "シャッター", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.screenshot({
     path: "test-results/capture-mobile.png",
     fullPage: true,
@@ -523,9 +512,7 @@ test("点をひとつ描けて、旧localStorageデータを移行し、全身�
     b.x + (r.x + r.width / 2) * b.width,
     b.y + (r.y + r.height / 2) * b.height,
   );
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await compare(page);
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
   await page.getByRole("button", { name: "観察を保存する" }).click();
@@ -577,13 +564,9 @@ test("消しゴム・全消去からUndoで復元し、段階的な観察ヒン�
     page.getByRole("button", { name: "ヒントを表示中", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "描き直す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await page.getByRole("button", { name: "消しゴム", exact: true }).click();
   await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await page.getByTestId("canvas").boundingBox())!;
@@ -592,13 +575,9 @@ test("消しゴム・全消去からUndoで復元し、段階的な観察ヒン�
     b.x + (r.x + r.width * 0.86) * b.width,
     b.y + (r.y + r.height / 2) * b.height,
   );
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
 });
 
 test("シカは模様が見えない観察も尊重し、空白のヤギを回答扱いしない", async ({
@@ -629,9 +608,7 @@ test("シカは模様が見えない観察も尊重し、空白のヤギを回�
   await expect(
     page.getByRole("button", { name: "模様が見えないので、見くらべる" }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
 });
 
 test("比較スライダーのポインタ・キーボード操作と画面幅変更時の位置固定", async ({
@@ -827,9 +804,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   await expect(
     page.getByText("2回目のスケッチ", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await draw(page);
   await compare(page);
   if (await confirm.count()) await confirm.click();
@@ -1240,9 +1215,7 @@ test("中断した筆跡を保持し、消しゴムの一往復を一度のUndo�
     ),
   );
   await page.mouse.up();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await page.mouse.move(x + 25, y);
   await page.mouse.down();
   await page.mouse.move(x + 35, y + 5, { steps: 8 });
@@ -1252,22 +1225,14 @@ test("中断した筆跡を保持し、消しゴムの一往復を一度のUndo�
   await page.mouse.down();
   await page.mouse.move(x + 35, y + 5, { steps: 15 });
   await page.mouse.up();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   // Erase both again: one undo must have restored both strokes.
   await page.mouse.click(x + 35, y + 5);
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await page.mouse.click(x, y);
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   expect(errors).toEqual([]);
 });
 
@@ -1300,9 +1265,7 @@ test("長い筆跡でも描画・画面幅変更・Undoを継続できる", asyn
     }
     send("pointerup", 0.49, 0.365);
   });
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await page.setViewportSize({ width: 430, height: 852 });
   await expect
     .poll(() =>
@@ -1318,9 +1281,7 @@ test("長い筆跡でも描画・画面幅変更・Undoを継続できる", asyn
     )
     .toBeLessThanOrEqual(1);
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
 });
 
 test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見返せる", async ({
@@ -1471,9 +1432,7 @@ test("スケッチ中に設定を開閉しても筆跡・Undo・キーボード�
 }) => {
   await select(page);
   await draw(page);
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await openSettings(page);
   await page.getByRole("button", { name: "効果音 OFF", exact: true }).click();
   await expect(
@@ -1487,13 +1446,9 @@ test("スケッチ中に設定を開閉しても筆跡・Undo・キーボード�
   await expect(
     page.getByRole("button", { name: "設定を開く", exact: true }),
   ).toBeFocused();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeEnabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "こたえあわせ →" }),
-  ).toBeDisabled();
+  await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
 });
 
 test("撮影後はカメラを停止し、識別保留時の写真確認・撮り直し・手動選択ができる", async ({
@@ -1655,9 +1610,7 @@ test("追加部位の空欄・お手本とスマートフォン幅の一致", as
     ).toBeLessThanOrEqual(width);
     await draw(page, "giraffe-lashes");
     await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
-    await expect(
-      page.getByRole("button", { name: "こたえあわせ →" }),
-    ).toBeDisabled();
+    await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   }
   await draw(page, "giraffe-lashes");
   await compare(page);
