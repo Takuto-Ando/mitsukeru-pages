@@ -261,6 +261,58 @@ test("描画画面の向きを手動で切り替えても線が残る", async ({
     page.getByTestId("user-lines").locator("polyline"),
   ).not.toHaveCount(0);
 });
+test("giraffe: 横向きはキャンバスカードと右ツールで画面を占める", async ({
+  page,
+}) => {
+  await select(page, "giraffe");
+  const card = page.locator(".mission-sketch");
+  const frame = card.locator(".sketch-frame");
+  const tools = card.locator(".tools");
+  const hint = frame.getByRole("button", { name: "ヒントを見る" });
+  const complete = tools.getByRole("button", { name: "できた！" });
+  await page.setViewportSize({ width: 984, height: 456 });
+  await expect(card).toHaveAttribute("data-layout", "landscape");
+  await expect(page.locator(".figma-header")).toBeHidden();
+  await expect(
+    page.getByRole("navigation", { name: "観察の進み方" }),
+  ).toBeHidden();
+  await expect(page.getByRole("group", { name: "観察する部位" })).toBeHidden();
+  await expect(
+    frame.getByRole("button", { name: "動物を選び直す" }),
+  ).toBeVisible();
+  await expect(card.getByRole("group", { name: "画面の向き" })).toBeVisible();
+  await expect(hint).toBeVisible();
+  await expect(complete).toBeVisible();
+  const [frameBox, toolBox, hintBox, completeBox] = await Promise.all([
+    frame.boundingBox(),
+    tools.boundingBox(),
+    hint.boundingBox(),
+    complete.boundingBox(),
+  ]);
+  expect(frameBox).not.toBeNull();
+  expect(toolBox).not.toBeNull();
+  expect(hintBox).not.toBeNull();
+  expect(completeBox).not.toBeNull();
+  expect(frameBox!.x).toBeLessThan(30);
+  expect(frameBox!.y).toBeLessThan(30);
+  expect(frameBox!.height).toBeGreaterThan(400);
+  expect(toolBox!.x).toBeGreaterThan(frameBox!.x + frameBox!.width);
+  expect(hintBox!.y).toBeGreaterThan(frameBox!.y + frameBox!.height * 0.7);
+  expect(completeBox!.y).toBeGreaterThan(toolBox!.y + toolBox!.height * 0.7);
+  await page.setViewportSize({ width: 390, height: 852 });
+  await expect(card).toHaveAttribute("data-layout", "portrait");
+  await expect(page.locator(".figma-header")).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "観察の進み方" }),
+  ).toBeVisible();
+  await card
+    .getByRole("group", { name: "画面の向き" })
+    .getByRole("button", { name: "よこ" })
+    .click();
+  await expect(card).toHaveAttribute("data-layout", "landscape");
+  await expect(page.locator(".figma-header")).toBeHidden();
+  await expect(complete).toBeVisible();
+});
 test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page }) => {
   await select(page);
   await draw(page);

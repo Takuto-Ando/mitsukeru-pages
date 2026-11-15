@@ -580,6 +580,44 @@ export default function App() {
                   <SketchCanvas
                     key={taskId}
                     missionTitle={`${group.name}の${task.part}を描いてみよう！`}
+                    landscapeInstruction={
+                      <>
+                        <p>{task.question}</p>
+                        <ReadAloud
+                          id="question-landscape"
+                          text={task.question}
+                        />
+                      </>
+                    }
+                    landscapeComplete={
+                      <button
+                        className="primary draw-complete"
+                        disabled={!strokes.length}
+                        onClick={answer}
+                      >
+                        できた！
+                      </button>
+                    }
+                    landscapeReselect={
+                      <>
+                        <button
+                          className="text-button"
+                          onClick={() => restart()}
+                        >
+                          動物を選び直す
+                        </button>
+                        {photo && (
+                          <details>
+                            <summary>撮影した写真を確認</summary>
+                            <img
+                              className="selected-photo"
+                              src={photo}
+                              alt="撮影した動物の写真"
+                            />
+                          </details>
+                        )}
+                      </>
+                    }
                     scene={scene}
                     onDrawingActivity={(active, tool) =>
                       recordStudy(
@@ -693,7 +731,7 @@ export default function App() {
                     </button>
                   )}
                   <button
-                    className="primary draw-complete"
+                    className="primary draw-complete portrait-complete"
                     disabled={!strokes.length}
                     onClick={answer}
                   >

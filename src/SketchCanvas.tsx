@@ -41,6 +41,9 @@ export function SketchCanvas({
   canRedo,
   missionTitle,
   hintControl,
+  landscapeInstruction,
+  landscapeComplete,
+  landscapeReselect,
   showTarget = false,
 }: {
   onDrawingActivity?: (active: boolean, tool: "pen" | "eraser") => void;
@@ -50,6 +53,9 @@ export function SketchCanvas({
   canRedo?: boolean;
   missionTitle?: string;
   hintControl?: React.ReactNode;
+  landscapeInstruction?: React.ReactNode;
+  landscapeComplete?: React.ReactNode;
+  landscapeReselect?: React.ReactNode;
   showTarget?: boolean;
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
@@ -265,6 +271,9 @@ export function SketchCanvas({
         <div className="mission-heading">
           <span>MISSION</span>
           <h1>{missionTitle}</h1>
+          {landscapeInstruction && (
+            <div className="landscape-instruction">{landscapeInstruction}</div>
+          )}
         </div>
       )}
       <div className="sketch-frame">
@@ -374,6 +383,9 @@ export function SketchCanvas({
         {hintControl && (
           <div className="sketch-hint-control">{hintControl}</div>
         )}
+        {landscapeReselect && (
+          <div className="landscape-reselect">{landscapeReselect}</div>
+        )}
       </div>
       <div className="tools" aria-label="描画ツール">
         {missionTitle ? (
@@ -445,6 +457,9 @@ export function SketchCanvas({
                 ))}
               </div>
             </div>
+            {landscapeComplete && (
+              <div className="landscape-complete">{landscapeComplete}</div>
+            )}
           </>
         ) : (
           <>

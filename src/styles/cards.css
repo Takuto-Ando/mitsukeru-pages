@@ -1729,6 +1729,273 @@ details[open] > summary::after {
   font-weight: 700;
   padding: 0 6px;
 }
+
+/* The landscape mission board fills the viewport, including when chosen manually. */
+.landscape-instruction,
+.landscape-complete,
+.landscape-reselect {
+  display: none;
+}
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"]) {
+  max-width: none;
+  min-height: 100dvh;
+  padding: 10px 12px;
+}
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .figma-header,
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .card-flow,
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .task-switch,
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .activity-card
+  > .quiet-note,
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .draw-afterword,
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .portrait-complete {
+  display: none;
+}
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .activity-card {
+  position: relative;
+  height: calc(100dvh - 20px);
+  min-height: 370px;
+}
+.figma-shell[data-step="1"] .mission-sketch[data-layout="landscape"] {
+  height: 100%;
+  min-height: 370px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(88px, 11vw, 112px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: clamp(8px, 2vw, 18px);
+}
+.mission-sketch[data-layout="landscape"] .sketch-layout-switch {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 16px;
+  padding: 2px;
+  background: #fffaf0e8;
+}
+.mission-sketch[data-layout="landscape"] .sketch-layout-switch button {
+  min-width: 43px;
+  min-height: 32px;
+  padding: 2px 5px;
+  font-size: 11px;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .sketch-frame {
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  padding: 0;
+  display: block;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .mission-heading {
+  position: absolute;
+  top: 18px;
+  right: calc(clamp(88px, 11vw, 112px) + clamp(8px, 2vw, 18px) + 18px);
+  width: min(52%, 490px);
+  z-index: 4;
+  pointer-events: auto;
+}
+.mission-sketch[data-layout="landscape"] .mission-heading > span {
+  display: none;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .mission-heading
+  h1 {
+  margin: 0;
+  font-size: clamp(17px, 2.8vw, 31px);
+  line-height: 1.25;
+}
+.mission-sketch[data-layout="landscape"] .landscape-instruction {
+  display: block;
+  font-size: clamp(10px, 1.2vw, 13px);
+  line-height: 1.3;
+}
+.mission-sketch[data-layout="landscape"] .landscape-instruction p {
+  margin: 2px 0 0;
+}
+.mission-sketch[data-layout="landscape"] .landscape-instruction .read-aloud {
+  padding: 0 5px;
+  font-size: 11px;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .drawing-paper {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto !important;
+  border: 0;
+  border-radius: 0;
+  background: white;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .paper-top {
+  display: none;
+}
+.mission-sketch[data-layout="landscape"] .sketch-history {
+  top: auto;
+  left: auto;
+  right: 14px;
+  bottom: 9px;
+}
+.mission-sketch[data-layout="landscape"] .sketch-hint-control {
+  top: auto;
+  right: 126px;
+  bottom: 17px;
+}
+.mission-sketch[data-layout="landscape"] .landscape-reselect {
+  position: absolute;
+  z-index: 4;
+  bottom: 8px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+}
+.mission-sketch[data-layout="landscape"] .landscape-reselect .text-button {
+  color: #685018;
+  font-size: 11px;
+}
+.mission-sketch[data-layout="landscape"] .landscape-reselect details {
+  position: relative;
+}
+.mission-sketch[data-layout="landscape"] .landscape-reselect img {
+  position: absolute;
+  left: 0;
+  bottom: 24px;
+  width: 180px;
+  max-height: 140px;
+  object-fit: contain;
+  background: white;
+}
+.figma-shell[data-step="1"] .mission-sketch[data-layout="landscape"] .tools {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3px;
+  padding: 8px 5px;
+  border-radius: 20px;
+}
+.mission-sketch[data-layout="landscape"] .tool-group {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 2px;
+}
+.mission-sketch[data-layout="landscape"] .tool-group-label {
+  float: none;
+  flex: none;
+  margin: 0;
+  font-size: 9px;
+  writing-mode: vertical-rl;
+}
+.mission-sketch[data-layout="landscape"] .tool-options {
+  flex: 1;
+  min-width: 0;
+}
+.mission-sketch[data-layout="landscape"] .tool-group-actions .tool-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .tools
+  .tool-options
+  button {
+  min-height: 30px;
+  padding: 1px;
+  font-size: 8px;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .tools
+  .tool-group-actions
+  button {
+  min-height: 36px;
+}
+.mission-sketch[data-layout="landscape"] .tool-group-width .tool-options,
+.mission-sketch[data-layout="landscape"] .tool-group-color .tool-options {
+  flex-direction: column;
+  gap: 2px;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .tools
+  .brush-choice {
+  width: 32px;
+  min-height: 28px;
+  flex: none;
+}
+.mission-sketch[data-layout="landscape"] .color-dot {
+  width: 23px;
+  height: 23px;
+}
+.mission-sketch[data-layout="landscape"] .landscape-complete {
+  display: block;
+  margin-top: auto;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .tools
+  .landscape-complete
+  .draw-complete {
+  width: 100%;
+  min-height: 42px;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 14px;
+  background: #f6bd32;
+  color: #513c14;
+  font-size: 13px;
+  font-weight: 700;
+}
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .observation-hints:has(ol),
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .figma-feedback {
+  position: absolute;
+  z-index: 6;
+  top: 28%;
+  left: 32%;
+  width: min(330px, 55%);
+  max-height: 65%;
+  overflow: auto;
+  margin: 0;
+  box-shadow: 0 5px 18px #55482a33;
+}
+.figma-shell[data-step="1"]:has(.mission-sketch[data-layout="landscape"])
+  .activity-card
+  > .text-button {
+  position: absolute;
+  z-index: 6;
+  bottom: 47px;
+  left: 28px;
+  background: #fffaf0e8;
+}
+@media (max-width: 759px) {
+  .figma-shell[data-step="1"]
+    .mission-sketch[data-layout="landscape"]
+    .mission-heading {
+    top: 58px;
+    right: calc(clamp(88px, 11vw, 112px) + clamp(8px, 2vw, 18px) + 10px);
+    width: calc(100% - clamp(88px, 11vw, 112px) - clamp(8px, 2vw, 18px) - 20px);
+  }
+}
 .reflection-note p {
   margin: 0 0 12px;
 }
