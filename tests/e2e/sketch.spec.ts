@@ -140,7 +140,9 @@ for (const t of tasks)
     page.on("pageerror", (e) => errors.push(e.message));
     await select(page, t.id);
     await expect(
-      page.getByRole("heading", { name: t.part + "を描こう" }),
+      page.getByRole("heading", {
+        name: `${groups.find((g) => g.id === t.groupId)!.name}の${t.part}を描いてみよう！`,
+      }),
     ).toBeVisible();
     const href = await page
       .locator(".eye-template image")
@@ -214,6 +216,51 @@ for (const t of tasks)
     );
     expect(errors).toEqual([]);
   });
+test("描画画面の向きを手動で切り替えても線が残る", async ({ page }) => {
+  await select(page, "goat");
+  const card = page.locator(".mission-sketch");
+  const orientation = page.getByRole("group", { name: "画面の向き" });
+  const portrait = orientation.getByRole("button", { name: "たて" });
+  const landscape = orientation.getByRole("button", { name: "よこ" });
+  await expect(card).toHaveAttribute("data-layout", "portrait");
+  await expect(portrait).toHaveAttribute("aria-pressed", "true");
+  await page.setViewportSize({ width: 800, height: 852 });
+  await expect(card).toHaveAttribute("data-layout", "landscape");
+  await page.setViewportSize({ width: 390, height: 852 });
+  await expect(card).toHaveAttribute("data-layout", "portrait");
+
+  await draw(page, "goat");
+  await page.getByTestId("canvas").evaluate((canvas) => {
+    canvas.dataset.orientationCheck = "same-canvas";
+  });
+  await landscape.click();
+  await expect(card).toHaveAttribute("data-layout", "landscape");
+  await expect(landscape).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator(".tools")).toHaveCSS("flex-direction", "column");
+  await page.setViewportSize({ width: 800, height: 852 });
+  await expect(card).toHaveAttribute("data-layout", "landscape");
+  await portrait.click();
+  await expect(card).toHaveAttribute("data-layout", "portrait");
+  await expect(portrait).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByTestId("canvas")).toHaveAttribute(
+    "data-orientation-check",
+    "same-canvas",
+  );
+  await expect
+    .poll(() =>
+      page.getByTestId("canvas").evaluate((canvas) => {
+        const bitmap = (canvas as HTMLCanvasElement).getContext("2d")!;
+        return bitmap
+          .getImageData(0, 0, bitmap.canvas.width, bitmap.canvas.height)
+          .data.some((value, index) => index % 4 === 3 && value > 0);
+      }),
+    )
+    .toBe(true);
+  await compare(page);
+  await expect(
+    page.getByTestId("user-lines").locator("polyline"),
+  ).not.toHaveCount(0);
+});
 test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page }) => {
   await select(page);
   await draw(page);

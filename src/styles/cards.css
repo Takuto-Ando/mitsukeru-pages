@@ -1394,6 +1394,35 @@ details[open] > summary::after {
   display: grid;
   gap: 18px;
 }
+.sketch-layout-switch {
+  display: flex;
+  justify-self: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-rule);
+  border-radius: 999px;
+  background: white;
+}
+.sketch-layout-switch button {
+  min-width: 68px;
+  min-height: 40px;
+  padding: 5px 12px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  color: var(--color-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.sketch-layout-switch button[aria-pressed="true"] {
+  border-color: #e6ad22;
+  background: #f2f1ee;
+  color: #513c14;
+  box-shadow: 0 0 0 2px #fff6dc;
+}
+.sketch-layout-switch button:focus-visible {
+  outline: 3px solid var(--color-teal-ink);
+  outline-offset: 2px;
+}
 .mission-heading {
   text-align: center;
   color: var(--color-ink);
@@ -1555,85 +1584,129 @@ details[open] > summary::after {
   margin: 8px 0;
 }
 
-/* Existing narrow card layout switches to a two-column workspace on tablets. */
+/* The automatic choice follows the former tablet breakpoint. */
 @media (min-width: 760px) {
   .figma-shell[data-step="1"] {
     max-width: 1080px;
     padding-inline: clamp(20px, 4vw, 48px);
   }
-  .figma-shell[data-step="1"] .mission-sketch {
-    position: relative;
-    grid-template-columns: minmax(0, 1fr) 146px;
-    gap: 24px;
-    align-items: stretch;
+}
+.figma-shell[data-step="1"] .mission-sketch[data-layout="landscape"] {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) clamp(100px, 18vw, 146px);
+  column-gap: clamp(8px, 3vw, 24px);
+  align-items: stretch;
+}
+.mission-sketch[data-layout="landscape"] .sketch-layout-switch {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .mission-heading {
+  position: absolute;
+  z-index: 3;
+  top: 80px;
+  right: 190px;
+  width: min(49%, 420px);
+  text-align: center;
+  pointer-events: none;
+}
+.mission-sketch[data-layout="landscape"] .mission-heading > span {
+  display: none;
+}
+.mission-sketch[data-layout="landscape"] .mission-heading h1 {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 32px);
+}
+.figma-shell[data-step="1"]
+  .mission-sketch[data-layout="landscape"]
+  .sketch-frame {
+  grid-column: 1;
+  grid-row: 2;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.mission-sketch[data-layout="landscape"] .drawing-paper {
+  width: 100%;
+}
+.mission-sketch[data-layout="landscape"] .sketch-history {
+  top: auto;
+  left: auto;
+  right: 18px;
+  bottom: 10px;
+}
+.mission-sketch[data-layout="landscape"] .sketch-hint-control {
+  top: auto;
+  right: 132px;
+  bottom: 15px;
+}
+.figma-shell[data-step="1"] .mission-sketch[data-layout="landscape"] .tools {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 12px;
+  padding: 16px 9px;
+}
+.mission-sketch[data-layout="landscape"] .tool-group-label {
+  margin-bottom: 8px;
+  writing-mode: vertical-rl;
+  float: right;
+}
+.mission-sketch[data-layout="landscape"] .tool-options {
+  flex-wrap: wrap;
+}
+.mission-sketch[data-layout="landscape"]
+  .tool-group-actions
+  .tool-options
+  button {
+  flex-basis: 42%;
+}
+.mission-sketch[data-layout="landscape"] .tool-group-width .tool-options,
+.mission-sketch[data-layout="landscape"] .tool-group-color .tool-options {
+  flex-direction: column;
+}
+.mission-sketch[data-layout="landscape"] .brush-choice {
+  width: 44px;
+  flex: none;
+}
+@media (max-width: 759px) {
+  .figma-shell[data-step="1"]
+    .mission-sketch[data-layout="landscape"]
+    .mission-heading {
+    position: static;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: auto;
+    pointer-events: auto;
   }
-  .figma-shell[data-step="1"] .mission-heading {
-    position: absolute;
-    z-index: 3;
-    top: 18px;
-    right: 190px;
-    width: min(49%, 420px);
-    text-align: center;
-    pointer-events: none;
+  .figma-shell[data-step="1"]
+    .mission-sketch[data-layout="landscape"]
+    .sketch-frame,
+  .figma-shell[data-step="1"] .mission-sketch[data-layout="landscape"] .tools {
+    grid-row: 3;
   }
-  .figma-shell[data-step="1"] .mission-heading > span {
-    display: none;
+  .figma-shell[data-step="1"]
+    .mission-sketch[data-layout="landscape"]
+    .sketch-frame {
+    padding: 54px 0 46px;
   }
-  .figma-shell[data-step="1"] .mission-heading h1 {
-    margin: 0;
-    font-size: clamp(22px, 3vw, 32px);
+  .mission-sketch[data-layout="landscape"] .mission-heading > span {
+    display: inline-block;
   }
-  .figma-shell[data-step="1"] .sketch-frame {
-    grid-column: 1;
-    padding: 0;
-    display: flex;
-    align-items: center;
+  .mission-sketch[data-layout="landscape"] .sketch-history {
+    top: 6px;
+    left: 10px;
+    right: auto;
+    bottom: auto;
   }
-  .figma-shell[data-step="1"] .drawing-paper {
-    width: 100%;
-  }
-  .figma-shell[data-step="1"] .sketch-history {
+  .mission-sketch[data-layout="landscape"] .sketch-hint-control {
     top: auto;
-    left: auto;
-    right: 18px;
-    bottom: 10px;
-  }
-  .figma-shell[data-step="1"] .sketch-hint-control {
-    top: auto;
-    right: 132px;
-    bottom: 15px;
-  }
-  .figma-shell[data-step="1"] .tools {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    gap: 12px;
-    padding: 16px 9px;
-  }
-  .figma-shell[data-step="1"] .tool-group-label {
-    margin-bottom: 8px;
-    writing-mode: vertical-rl;
-    float: right;
-  }
-  .figma-shell[data-step="1"] .tool-options {
-    flex-wrap: wrap;
-  }
-  .figma-shell[data-step="1"] .tool-group-actions .tool-options button {
-    flex-basis: 42%;
-  }
-  .figma-shell[data-step="1"] .tool-group-width .tool-options,
-  .figma-shell[data-step="1"] .tool-group-color .tool-options {
-    flex-direction: column;
-  }
-  .figma-shell[data-step="1"] .brush-choice {
-    width: 44px;
-    flex: none;
-  }
-  .figma-shell[data-step="1"] .draw-complete {
-    margin-right: 0;
-    width: 146px;
+    right: 10px;
+    bottom: 6px;
   }
 }
 @media (max-width: 359px) {

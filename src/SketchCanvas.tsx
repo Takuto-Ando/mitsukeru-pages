@@ -65,7 +65,23 @@ export function SketchCanvas({
   const [drawing, setDrawing] = useState(false),
     [erase, setErase] = useState(false),
     [brushWidth, setBrushWidth] = useState(7),
-    [brushColor, setBrushColor] = useState(missionTitle ? "#9173ad" : "#277e78");
+    [brushColor, setBrushColor] = useState(
+      missionTitle ? "#9173ad" : "#277e78",
+    );
+  const [layoutChoice, setLayoutChoice] = useState<
+    "portrait" | "landscape" | null
+  >(null);
+  const [autoLayout, setAutoLayout] = useState<"portrait" | "landscape">(() =>
+    window.matchMedia("(min-width: 760px)").matches ? "landscape" : "portrait",
+  );
+  const layout = layoutChoice ?? autoLayout;
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 760px)");
+    const update = () =>
+      setAutoLayout(media.matches ? "landscape" : "portrait");
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   const brushStyles = useRef(
     new WeakMap<Stroke, { width: number; color: string }>(),
   );
@@ -219,7 +235,32 @@ export function SketchCanvas({
     return () => document.removeEventListener("visibilitychange", hide);
   }, []);
   return (
-    <div className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}>
+    <div
+      className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}
+      data-layout={missionTitle ? layout : undefined}
+    >
+      {missionTitle && (
+        <div
+          className="sketch-layout-switch"
+          role="group"
+          aria-label="画面の向き"
+        >
+          <button
+            type="button"
+            aria-pressed={layout === "portrait"}
+            onClick={() => setLayoutChoice("portrait")}
+          >
+            たて
+          </button>
+          <button
+            type="button"
+            aria-pressed={layout === "landscape"}
+            onClick={() => setLayoutChoice("landscape")}
+          >
+            よこ
+          </button>
+        </div>
+      )}
       {missionTitle && (
         <div className="mission-heading">
           <span>MISSION</span>
