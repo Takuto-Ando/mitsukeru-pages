@@ -1446,7 +1446,7 @@ details[open] > summary::after {
 .mission-sketch .sketch-frame {
   position: relative;
   min-width: 0;
-  padding: 54px 8px 56px;
+  padding: 54px 8px 10px;
   border: 3px solid var(--color-mustard);
   border-radius: 22px;
   background: white;
@@ -1500,7 +1500,7 @@ details[open] > summary::after {
 }
 .mission-sketch .tools {
   display: grid;
-  grid-template-columns: 1.25fr 1fr 1fr;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 0.85fr) minmax(0, 0.85fr);
   gap: 5px;
   align-items: stretch;
   padding: 12px 8px;
@@ -1527,7 +1527,7 @@ details[open] > summary::after {
 .mission-sketch .tools button {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 42px;
+  min-height: 44px;
   padding: 3px 1px;
   border: 3px solid transparent;
   border-radius: 12px;
@@ -1535,7 +1535,15 @@ details[open] > summary::after {
   color: var(--color-ink);
   font-size: 9px;
   line-height: 1.15;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+@media (max-width: 379px) {
+  .mission-sketch[data-layout="portrait"] .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mission-sketch[data-layout="portrait"] .tool-group-actions {
+    grid-column: 1 / -1;
+  }
 }
 .mission-sketch .tools button[aria-pressed="true"] {
   border-color: #e6ad22;
@@ -1766,7 +1774,7 @@ details[open] > summary::after {
   height: 100%;
   min-height: 370px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(88px, 11vw, 112px);
+  grid-template-columns: minmax(0, 1fr) clamp(118px, 16vw, 148px);
   grid-template-rows: minmax(0, 1fr);
   gap: clamp(8px, 2vw, 18px);
 }
@@ -1792,13 +1800,15 @@ details[open] > summary::after {
   min-height: 0;
   padding: 0;
   display: block;
+  container-type: size;
+  background: #f8f4e9;
 }
 .figma-shell[data-step="1"]
   .mission-sketch[data-layout="landscape"]
   .mission-heading {
   position: absolute;
   top: 18px;
-  right: calc(clamp(88px, 11vw, 112px) + clamp(8px, 2vw, 18px) + 18px);
+  right: calc(clamp(118px, 16vw, 148px) + clamp(8px, 2vw, 18px) + 18px);
   width: min(52%, 490px);
   z-index: 4;
   pointer-events: auto;
@@ -1829,8 +1839,12 @@ details[open] > summary::after {
 .figma-shell[data-step="1"]
   .mission-sketch[data-layout="landscape"]
   .drawing-paper {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100cqw, 160cqh);
+  height: min(100cqh, 133.333cqw);
+  transform: translate(-50%, -50%);
   aspect-ratio: auto !important;
   border: 0;
   border-radius: 0;
@@ -1885,8 +1899,8 @@ details[open] > summary::after {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 3px;
-  padding: 8px 5px;
+  gap: 2px;
+  padding: 4px;
   border-radius: 20px;
 }
 .mission-sketch[data-layout="landscape"] .tool-group {
@@ -1908,36 +1922,37 @@ details[open] > summary::after {
 }
 .mission-sketch[data-layout="landscape"] .tool-group-actions .tool-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 2px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
 }
 .figma-shell[data-step="1"]
   .mission-sketch[data-layout="landscape"]
   .tools
   .tool-options
   button {
-  min-height: 30px;
+  min-height: 44px;
   padding: 1px;
-  font-size: 8px;
+  font-size: 9px;
 }
 .figma-shell[data-step="1"]
   .mission-sketch[data-layout="landscape"]
   .tools
   .tool-group-actions
   button {
-  min-height: 36px;
+  min-height: 44px;
 }
 .mission-sketch[data-layout="landscape"] .tool-group-width .tool-options,
 .mission-sketch[data-layout="landscape"] .tool-group-color .tool-options {
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(44px, 1fr));
+  gap: 0;
 }
 .figma-shell[data-step="1"]
   .mission-sketch[data-layout="landscape"]
   .tools
   .brush-choice {
-  width: 32px;
-  min-height: 28px;
+  width: 100%;
+  min-height: 44px;
   flex: none;
 }
 .mission-sketch[data-layout="landscape"] .color-dot {
@@ -1954,7 +1969,7 @@ details[open] > summary::after {
   .landscape-complete
   .draw-complete {
   width: 100%;
-  min-height: 42px;
+  min-height: 44px;
   margin: 0;
   padding: 3px;
   border: 0;
@@ -1992,8 +2007,14 @@ details[open] > summary::after {
     .mission-sketch[data-layout="landscape"]
     .mission-heading {
     top: 58px;
-    right: calc(clamp(88px, 11vw, 112px) + clamp(8px, 2vw, 18px) + 10px);
-    width: calc(100% - clamp(88px, 11vw, 112px) - clamp(8px, 2vw, 18px) - 20px);
+    right: calc(clamp(118px, 16vw, 148px) + clamp(8px, 2vw, 18px) + 10px);
+    width: calc(
+      100% - clamp(118px, 16vw, 148px) - clamp(8px, 2vw, 18px) - 20px
+    );
+  }
+  .mission-sketch[data-layout="landscape"] .sketch-hint-control {
+    right: 12px;
+    bottom: 52px;
   }
 }
 .reflection-note p {
