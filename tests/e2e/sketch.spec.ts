@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 async function startCamera(page: Page) {
-  await page.getByRole("button", { name: "撮影スタート", exact: true }).click();
+  await page.getByRole("button", { name: "つづきから", exact: true }).click();
 }
 async function openSettings(page: Page) {
   if (await page.getByRole("dialog", { name: "設定", exact: true }).isVisible())
@@ -1472,7 +1472,7 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
   ).toBeVisible();
 });
 
-test("ホームの3つの入口・カメラの遅延起動・図鑑と設定からの復帰", async ({
+test("ホームの入口・カメラの遅延起動・図鑑と設定からの復帰", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -1491,7 +1491,7 @@ test("ホームの3つの入口・カメラの遅延起動・図鑑と設定か�
   await expect(
     page.getByRole("heading", { name: "ズーケッチ", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("button")).toHaveCount(3);
+  await expect(page.getByRole("button")).toHaveCount(4);
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await expect(
@@ -1519,7 +1519,7 @@ test("ホームの3つの入口・カメラの遅延起動・図鑑と設定か�
       ),
     ).toBe(true);
     const start = (await page
-      .getByRole("button", { name: "撮影スタート", exact: true })
+      .getByRole("button", { name: "つづきから", exact: true })
       .boundingBox())!;
     expect(start.height).toBeGreaterThanOrEqual(56);
     await expect(

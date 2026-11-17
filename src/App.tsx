@@ -11,6 +11,8 @@ import {
 } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "./components/HomeScreen";
+import { IntroFlow } from "./components/IntroFlow";
+import { Pitsune } from "./components/Pitsune";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { ReflectionNote } from "./components/ReflectionNote";
 import { Settings } from "lucide-react";
@@ -72,7 +74,9 @@ export default function App() {
   const taskGeneration = useRef(0);
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
-  const [screen, setScreen] = useState<"home" | "activity">("home");
+  const [screen, setScreen] = useState<"home" | "intro" | "activity">("home");
+  const [interstitial, setInterstitial] = useState(false);
+  const interstitialTimer = useRef<number | undefined>(undefined);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [taskId, setTaskId] = useState("goat");
@@ -326,7 +330,7 @@ export default function App() {
     recordStudy("challenge_opened");
     activeTask.current = id;
   }
-  function restart(destination: "home" | "activity" = "activity") {
+  function restart(destination: "home" | "intro" | "activity" = "activity") {
     setScreen(destination);
     taskGeneration.current++;
     if (activeTask.current) recordStudy("challenge_left");
@@ -432,7 +436,7 @@ export default function App() {
       data-step={step}
       data-screen={collectionOpen ? "collection" : screen}
     >
-      {(screen !== "home" || collectionOpen) && (
+      {((screen !== "home" && screen !== "intro") || collectionOpen) && (
         <header className="figma-header">
           <button
             onClick={() => restart("home")}
@@ -499,7 +503,8 @@ export default function App() {
           </Suspense>
         ) : screen === "home" ? (
           <HomeScreen
-            onStart={() => restart("activity")}
+            onStart={() => restart("intro")}
+            onContinue={() => restart("activity")}
             onCollection={() => {
               setCollectionOpen(true);
               window.scrollTo(0, 0);
@@ -510,6 +515,8 @@ export default function App() {
             }}
             savedCount={collectionCount}
           />
+        ) : screen === "intro" ? (
+          <IntroFlow onDone={() => setScreen("activity")} />
         ) : (
           <>
             <nav className="card-flow" aria-label="観察の進み方">
@@ -537,6 +544,14 @@ export default function App() {
               {step === 0 ? (
                 <CameraView
                   suspended={settingsOpen}
+                  onCollection={() => {
+                    setCollectionOpen(true);
+                    window.scrollTo(0, 0);
+                  }}
+                  onSettings={(trigger) => {
+                    settingsTrigger.current = trigger;
+                    setSettingsOpen(true);
+                  }}
                   onSelect={(image, id, method) => {
                     recordStudy(
                       "animal_identified",
@@ -551,6 +566,12 @@ export default function App() {
                     setPhoto(image || "");
                     selectTask(id || "goat");
                     next(1);
+                    window.clearTimeout(interstitialTimer.current);
+                    setInterstitial(true);
+                    interstitialTimer.current = window.setTimeout(
+                      () => setInterstitial(false),
+                      1600,
+                    );
                   }}
                 />
               ) : step === 1 ? (
@@ -760,11 +781,14 @@ export default function App() {
                 </>
               ) : step === 2 ? (
                 <>
-                  <h1 className="figma-discovery">
-                    {feedback?.passed
-                      ? "完成！ だいはっけん！"
-                      : "見えた形を確かめよう"}
-                  </h1>
+                  <div className="result-pitsune">
+                    <Pitsune pose="face" className="result-pitsune-face" />
+                    <h1 className="figma-discovery pitsune-bubble">
+                      {feedback?.passed
+                        ? "完成！ だいはっけん！"
+                        : "見えた形を確かめよう"}
+                    </h1>
+                  </div>
                   <ReadAloud
                     id="result"
                     text={
@@ -797,6 +821,9 @@ export default function App() {
                       recordStudy("comparison_slider_moved", { from, to, via })
                     }
                   />
+                  {feedback?.passed && task.explanation.form && (
+                    <p className="result-fact">{task.explanation.form}</p>
+                  )}
                   {!feedback?.passed && (
                     <div className="self-check">
                       <p>実物とお手本を見くらべて、気づいたところはあった？</p>
@@ -960,6 +987,16 @@ export default function App() {
               )}
             </motion.section>
           </>
+        )}
+        {interstitial && (
+          <div className="loading-overlay" aria-hidden="true">
+            <p>
+              写真をアルバムに保存しました。
+              <br />
+              スケッチを描いています。
+            </p>
+            <Pitsune pose="easel" className="loading-pitsune" />
+          </div>
         )}
         <SettingsDialog
           open={settingsOpen}

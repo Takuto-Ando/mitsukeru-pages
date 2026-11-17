@@ -3,15 +3,20 @@ import { recordStudy } from "./research/study";
 import { groups } from "./content/groups";
 import type { Candidate } from "./recognition/labels";
 import { AnimalSelector } from "./components/AnimalSelector";
+import { Pitsune } from "./components/Pitsune";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, ScanLine } from "lucide-react";
+import { Camera, CameraOff, NotebookPen, Settings } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
 import { motion, useReducedMotion } from "motion/react";
 export function CameraView({
   onSelect,
+  onCollection,
+  onSettings,
   suspended = false,
 }: {
   suspended?: boolean;
+  onCollection?: () => void;
+  onSettings?: (trigger: HTMLButtonElement) => void;
   onSelect: (
     photo?: string,
     id?: string,
@@ -235,11 +240,21 @@ export function CameraView({
     );
     setRecognizing(false);
   }
+  const bubbleText = captured
+    ? "写真が撮れたね！動物を選んでね。"
+    : status === "live"
+      ? "動物を画面のまんなかに入れてね！"
+      : status === "failed"
+        ? "カメラが使えなくても大丈夫だよ"
+        : status === "paused"
+          ? "カメラをお休み中だよ"
+          : "カメラを準備しているよ…";
   return (
     <div className="camera-page">
-      <div className="screen-title">
-        <h1>動物を撮影しよう</h1>
-        <p>見つけた動物を、画面のまんなかに。</p>
+      <h1 className="sr-only">動物を撮影しよう</h1>
+      <div className="camera-pitsune">
+        <Pitsune pose="face" className="camera-pitsune-face" />
+        <p className="pitsune-bubble">{bubbleText}</p>
       </div>
       <div className="camera-frame">
         <video
@@ -278,8 +293,13 @@ export function CameraView({
             <span>動物から少し離れて、そっと観察しよう。</span>
           </div>
         )}
-        {status === "live" && (
-          <ScanLine className="viewfinder" aria-hidden="true" />
+        {(status === "live" || !!captured) && (
+          <div className="vf-corners" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
         )}
         <span className="camera-tag">
           {captured
@@ -301,13 +321,35 @@ export function CameraView({
           )}
         </p>
       )}
-      <button
-        className="shutter-button"
-        disabled={(!captured && status !== "live") || busy || recognizing}
-        onClick={() => void (captured ? retake() : capture())}
-      >
-        {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
-      </button>
+      <div className="camera-controls">
+        <button
+          type="button"
+          className="camera-side-button"
+          onClick={() => onCollection?.()}
+        >
+          <span className="camera-side-thumb">
+            <NotebookPen size={20} aria-hidden="true" />
+          </span>
+          スケッチ
+        </button>
+        <button
+          className="shutter-button"
+          disabled={(!captured && status !== "live") || busy || recognizing}
+          onClick={() => void (captured ? retake() : capture())}
+        >
+          {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
+        </button>
+        <button
+          type="button"
+          className="camera-side-button"
+          onClick={(event) => onSettings?.(event.currentTarget)}
+        >
+          <span className="camera-side-thumb">
+            <Settings size={20} aria-hidden="true" />
+          </span>
+          せってい
+        </button>
+      </div>
       <details className="recognition-settings">
         <summary>撮影の設定</summary>
         <button

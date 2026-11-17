@@ -292,6 +292,61 @@ main > .text-button {
   pointer-events: none;
   opacity: 0;
 }
+.brush-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  border: 1.5px solid rgba(105, 91, 121, 0.85);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+.sketch-card > .tools {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.tools .tool-group {
+  min-width: 0;
+}
+.tools .tool-group-label {
+  display: block;
+  margin: 0 0 5px 5px;
+  color: #685018;
+  font-size: 10px;
+  font-weight: 700;
+}
+.tools .tool-options {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.tools .brush-choice {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.tools .brush-dot {
+  display: block;
+  border-radius: 50%;
+  background: #9173ad;
+}
+.tools .color-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.tool-group-color .tool-options {
+  flex-wrap: wrap;
+}
+.mission-sketch .tool-group-color .brush-choice {
+  flex: 1 1 22%;
+}
+.mission-sketch[data-layout="portrait"] .tool-group-color .color-dot {
+  width: 18px;
+  height: 18px;
+}
 .tools {
   border-top: 1px solid var(--color-rule);
   display: flex;
@@ -1092,49 +1147,16 @@ details[open] > summary::after {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 22px;
-  padding: 28px 8px 12px;
+  gap: 34px;
+  padding: 40px 20px 30px;
   text-align: center;
+  background: var(--color-mustard);
+  border-radius: 28px;
 }
 .home-heading {
   display: grid;
   justify-items: center;
   gap: 10px;
-}
-.home-eye-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 88px;
-  height: 60px;
-  background: var(--color-teal);
-  border-radius: 24px 24px 10px 10px;
-}
-.home-eye-mark > span {
-  display: grid;
-  place-items: center;
-  width: 29px;
-  height: 29px;
-  border-radius: 50%;
-  background: var(--color-surface);
-}
-.home-eye-mark i {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #454d4d;
-  position: relative;
-}
-.home-eye-mark i::after {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  background: var(--color-surface);
 }
 .home-logo {
   font-size: clamp(44px, 14vw, 60px);
@@ -1151,108 +1173,59 @@ details[open] > summary::after {
   letter-spacing: 0.04em;
   color: var(--color-muted);
 }
-.home-observation-cards {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 3px;
-  padding: 6px 0;
-  height: 168px;
-}
-.home-animal-card {
-  --animal-accent: var(--color-teal);
-  width: 32%;
-  max-width: 122px;
-  flex-shrink: 0;
-  border: 3px solid var(--animal-accent);
-  background: var(--color-surface);
-  border-radius: 7px;
-  overflow: hidden;
-}
-.home-animal-card > span {
-  display: block;
-  color: #373a31;
-  background: var(--animal-accent);
-  font-size: 10px;
-  line-height: 1.8;
-  padding: 2px 4px;
-  font-weight: 700;
-}
-.home-animal-card img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-  aspect-ratio: 1;
-}
-.home-animal-card--zebra {
-  transform: rotate(-8deg);
-}
-.home-animal-card--goat {
-  --animal-accent: var(--color-coral);
-  transform: translateY(-5px);
-  z-index: 1;
-}
-.home-animal-card--giraffe {
-  --animal-accent: var(--color-mustard);
-  transform: rotate(8deg);
-}
-.home-invitation {
-  font-size: 14px;
-  line-height: 1.85;
-  letter-spacing: 0.04em;
-}
 .home-actions {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  width: min(100%, 320px);
+  margin: 0 auto;
 }
 .home-actions button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
-  border-radius: 6px;
+  border: 0;
+  border-radius: 999px;
   font-size: 16px;
   font-weight: 700;
   padding: 12px 16px;
 }
 .home-actions .home-start {
-  min-height: 60px;
-  background: var(--color-coral);
-  border: 2px solid #b75532;
-  color: #35291e;
+  min-height: 64px;
+  background: #7a4a21;
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 8px 20px rgba(122, 74, 33, 0.35);
 }
-.home-start > span:last-child {
-  margin-left: auto;
-}
-.home-start > span:nth-child(2) {
-  margin-right: auto;
-}
-.home-actions .home-collection {
+.home-actions .home-continue {
   min-height: 56px;
-  background: var(--color-surface);
-  border: 2px solid var(--color-teal);
-  color: var(--color-teal-ink);
+  background: #fffdf8;
+  color: #7a4a21;
+  font-size: 17px;
+  box-shadow: 0 6px 16px rgba(122, 74, 33, 0.22);
+}
+.home-sub-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.home-sub-actions button {
+  width: auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  background: rgba(255, 253, 248, 0.62);
+  color: #7a4a21;
+  font-size: 13px;
 }
 .home-card-count {
   min-width: 24px;
-  padding: 2px 6px;
-  background: var(--color-teal);
-  color: #203f37;
-  border-radius: 4px;
+  padding: 2px 7px;
+  background: #7a4a21;
+  color: #fff;
+  border-radius: 999px;
   font-size: 12px;
-}
-.home-actions .home-settings {
-  min-height: 44px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-muted);
-}
-.home-actions .home-start:active {
-  background: #cd6b47;
-}
-.home-actions .home-collection:active {
-  background: #e5eee4;
 }
 .figma-header .header-settings {
   margin-left: 2px;
@@ -2064,10 +2037,7 @@ details[open] > summary::after {
   overflow-wrap: anywhere;
 }
 
-/* Compact text and vector lockup from the supplied logo direction. */
-.home-screen {
-  justify-content: flex-start;
-}
+/* Title lockup (docs/design-reference/title-screen.png). */
 .home-heading {
   width: 100%;
 }
@@ -2080,16 +2050,21 @@ details[open] > summary::after {
   text-align: left;
 }
 .home-logo-mark {
-  width: clamp(60px, 20vw, 88px);
+  box-sizing: border-box;
+  width: clamp(64px, 20vw, 88px);
   height: auto;
   flex: none;
+  padding: 9px;
+  background: #eaa93a;
+  border-radius: 22px;
+  box-shadow: 0 7px 16px rgba(122, 74, 33, 0.35);
 }
 .home-lockup-copy {
   min-width: 0;
 }
 .home-tagline {
   margin-bottom: 3px;
-  color: #685018;
+  color: #fff;
   font-size: clamp(9px, 2.5vw, 13px);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -2097,8 +2072,363 @@ details[open] > summary::after {
 }
 .home-logo {
   margin: 0;
-  color: #685018;
+  color: #fff;
   font-size: clamp(35px, 10.5vw, 54px);
   line-height: 1.1;
   letter-spacing: -0.075em;
+  text-shadow: 0 2px 0 rgba(122, 74, 33, 0.28);
+}
+
+/* ==== ピツネ原案の反映 (2026-11-17, docs/design-reference 第2弾) ==== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.pitsune-bubble {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 12px 16px;
+  color: #685018;
+  font-weight: 700;
+  line-height: 1.65;
+  box-shadow: 0 4px 12px rgba(104, 80, 24, 0.14);
+}
+.pitsune-bubble::after {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 3px;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* 導入フロー */
+.intro-flow {
+  position: relative;
+  min-height: calc(
+    100svh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 8px 12px;
+}
+.intro-skip {
+  position: absolute;
+  top: 10px;
+  right: 6px;
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 0;
+  background: none;
+  color: var(--color-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.intro-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+}
+.intro-bubble {
+  max-width: 330px;
+  padding: 18px 20px;
+  font-size: 18px;
+  text-align: center;
+}
+.intro-bubble::after {
+  left: 50%;
+  top: auto;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(45deg);
+}
+.intro-text {
+  max-width: 330px;
+  color: #685018;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.85;
+  text-align: center;
+}
+.intro-pitsune {
+  display: block;
+}
+.intro-pitsune svg {
+  display: block;
+  width: min(64vw, 255px);
+  height: auto;
+}
+.intro-dots {
+  display: flex;
+  gap: 7px;
+  margin: 20px 0 14px;
+}
+.intro-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d8c9a3;
+}
+.intro-dots i.active {
+  background: #7a4a21;
+}
+.intro-next {
+  width: min(100%, 320px);
+  min-height: 56px;
+  border: 0;
+  border-radius: 999px;
+  background: #7a4a21;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(122, 74, 33, 0.3);
+}
+
+/* カメラ画面 */
+.camera-pitsune {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 6px;
+}
+.camera-pitsune-face {
+  display: block;
+  flex: none;
+  width: 76px;
+}
+.camera-pitsune-face svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.camera-pitsune .pitsune-bubble {
+  flex: 1;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.camera-frame {
+  border: none;
+  border-radius: 18px;
+}
+.vf-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.vf-corners i {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 5px solid #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.35));
+}
+.vf-corners i:nth-child(1) {
+  top: 14px;
+  left: 14px;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 12px 0 0 0;
+}
+.vf-corners i:nth-child(2) {
+  top: 14px;
+  right: 14px;
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 0 12px 0 0;
+}
+.vf-corners i:nth-child(3) {
+  bottom: 14px;
+  left: 14px;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0 0 0 12px;
+}
+.vf-corners i:nth-child(4) {
+  bottom: 14px;
+  right: 14px;
+  border-left: 0;
+  border-top: 0;
+  border-radius: 0 0 12px 0;
+}
+.camera-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.camera-side-button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 78px;
+  min-height: 68px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 16px;
+  background: #fff;
+  color: #685018;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 3px 9px rgba(104, 80, 24, 0.13);
+}
+.camera-side-thumb {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--color-paper);
+}
+.camera-controls .shutter-button {
+  margin: 0;
+}
+.camera-controls .shutter-button::before {
+  width: 78px;
+  height: 78px;
+  background: var(--color-mustard);
+  border: 5px solid #fff;
+  outline: 3px solid var(--color-mustard);
+  box-shadow: 0 5px 14px rgba(104, 80, 24, 0.28);
+}
+.camera-controls .shutter-button:active:not(:disabled)::before {
+  background: #d99a2b;
+}
+.camera-controls .shutter-button:disabled::before {
+  opacity: 0.45;
+}
+
+/* 読み込み画面 */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  padding: 24px;
+  background: var(--color-paper);
+  text-align: center;
+  pointer-events: none;
+}
+.loading-overlay p {
+  color: #685018;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.9;
+}
+.loading-pitsune {
+  display: block;
+}
+.loading-pitsune svg {
+  display: block;
+  width: min(72vw, 300px);
+  height: auto;
+}
+
+/* 描画画面: イーゼルとピツネ見出し */
+.mission-sketch {
+  position: relative;
+  padding: 14px 12px 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ecaa58, #df9840);
+  box-shadow: 0 12px 26px rgba(160, 100, 30, 0.28);
+}
+.mission-sketch::before,
+.mission-sketch::after {
+  content: "";
+  position: absolute;
+  bottom: -13px;
+  width: 38px;
+  height: 24px;
+  border-radius: 0 0 9px 9px;
+  background: #b97a34;
+}
+.mission-sketch::before {
+  left: 13%;
+}
+.mission-sketch::after {
+  right: 13%;
+}
+.mission-heading {
+  text-align: left;
+}
+.mission-pitsune-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mission-pitsune-face {
+  display: block;
+  flex: none;
+  width: 62px;
+}
+.mission-pitsune-face svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mission-heading h1.pitsune-bubble {
+  flex: 1;
+  margin: 0;
+  font-size: clamp(16px, 4.6vw, 21px);
+  line-height: 1.5;
+}
+.mission-sketch .sketch-frame {
+  border: 3px solid rgba(255, 255, 255, 0.7);
+}
+.mission-sketch .tools {
+  border-radius: 999px;
+  padding: 10px 16px;
+}
+
+/* 結果画面 */
+.result-pitsune {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.result-pitsune-face {
+  display: block;
+  flex: none;
+  width: 62px;
+}
+.result-pitsune-face svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.result-pitsune .figma-discovery {
+  flex: 1;
+  margin: 0;
+  font-size: clamp(17px, 5vw, 22px);
+  text-align: left;
+}
+.result-fact {
+  margin-top: 14px;
+  padding: 15px 17px;
+  border-radius: 14px;
+  background: #c97e2f;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.85;
+  text-align: left;
 }

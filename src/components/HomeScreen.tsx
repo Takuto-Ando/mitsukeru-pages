@@ -1,19 +1,21 @@
-import { BookOpen, Camera, Settings } from "lucide-react";
-import { assetPath, artwork } from "../content/artwork";
+import { BookOpen, Settings } from "lucide-react";
 
+// タイトル画面（原案: docs/design-reference/title-screen.png）
 export function HomeScreen({
   onStart,
+  onContinue,
   onCollection,
   onSettings,
   savedCount,
 }: {
   onStart: () => void;
+  onContinue: () => void;
   onCollection: () => void;
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
 }) {
   return (
-    <section className="home-screen" aria-label="ズーケッチのホーム">
+    <section className="home-screen" aria-label="ズーケッチのタイトル">
       <div className="home-heading">
         <div className="home-lockup">
           <svg
@@ -21,28 +23,25 @@ export function HomeScreen({
             viewBox="0 0 80 80"
             aria-hidden="true"
           >
-            <rect
-              x="3"
-              y="3"
-              width="74"
-              height="74"
-              rx="16"
-              fill="var(--color-mustard)"
-            />
             <path
-              d="M12 45h54v19H12a9 9 0 0 1-9-9v-1a9 9 0 0 1 9-9Z"
-              fill="var(--color-teal)"
-            />
-            <path d="m66 45 12 9-12 10Z" fill="#f7dca8" />
-            <path d="m75 52 3 2-3 2Z" fill="var(--color-ink)" />
-            <circle cx="40" cy="31" r="7" fill="var(--color-ink)" />
-            <path
-              d="M13 39c5 20 21 10 27 4 6 6 22 16 27-4"
+              d="M16 47 Q40 63 64 47"
               fill="none"
-              stroke="var(--color-ink)"
-              strokeWidth="4"
+              stroke="#5b3a1e"
+              strokeWidth="4.5"
               strokeLinecap="round"
-              strokeDasharray="7 5"
+            />
+            <circle cx="40" cy="38" r="5" fill="#5b3a1e" />
+            <path
+              d="M13 30 Q40 12 67 30"
+              fill="none"
+              stroke="#5b3a1e"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeDasharray="0.5 8"
+            />
+            <path
+              d="M57 3 q6-3 8 2 l1 9 5-5 q3-3 6 0 q2 3-1 6 l-4 4 q1 12-6 19 q-7 7-15 4 l-3-8 q-2-9 2-16 l5-9z"
+              fill="#fff7e6"
             />
           </svg>
           <div className="home-lockup-copy">
@@ -51,56 +50,34 @@ export function HomeScreen({
           </div>
         </div>
       </div>
-      <div className="home-observation-cards" aria-hidden="true">
-        {(
-          [
-            ["zebra", "ひづめ"],
-            ["goat", "ひとみ"],
-            ["giraffe", "した"],
-          ] as const
-        ).map(([id, label]) => (
-          <div className={`home-animal-card home-animal-card--${id}`} key={id}>
-            <span>{label}</span>
-            <img
-              src={assetPath(artwork[id].reference!)}
-              alt=""
-              width="600"
-              height="600"
-              decoding="async"
-            />
-          </div>
-        ))}
-      </div>
-      <p className="home-invitation">
-        動物の絵のつづきを、
-        <br />
-        きみの発見で描いてみよう。
-      </p>
       <div className="home-actions">
         <button className="home-start" onClick={onStart}>
-          <Camera aria-hidden="true" size={22} />
-          <span>撮影スタート</span>
-          <span aria-hidden="true">→</span>
+          はじめから
         </button>
-        <button className="home-collection" onClick={onCollection}>
-          <BookOpen aria-hidden="true" size={21} />
-          <span>図鑑を見る</span>
-          {savedCount > 0 && (
-            <span
-              className="home-card-count"
-              aria-label={`${savedCount}枚の観察カード`}
-            >
-              {savedCount}
-            </span>
-          )}
+        <button className="home-continue" onClick={onContinue}>
+          つづきから
         </button>
-        <button
-          className="home-settings"
-          onClick={(event) => onSettings(event.currentTarget)}
-        >
-          <Settings aria-hidden="true" size={18} />
-          設定
-        </button>
+        <div className="home-sub-actions">
+          <button className="home-collection" onClick={onCollection}>
+            <BookOpen aria-hidden="true" size={19} />
+            <span>図鑑を見る</span>
+            {savedCount > 0 && (
+              <span
+                className="home-card-count"
+                aria-label={`${savedCount}枚の観察カード`}
+              >
+                {savedCount}
+              </span>
+            )}
+          </button>
+          <button
+            className="home-settings"
+            onClick={(event) => onSettings(event.currentTarget)}
+          >
+            <Settings aria-hidden="true" size={17} />
+            設定
+          </button>
+        </div>
       </div>
     </section>
   );
