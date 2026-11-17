@@ -9,27 +9,10 @@ import {
 } from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
 import type { DrawingAction } from "./drawing/history";
+import { eraseStrokes } from "./drawing/erase";
 import { TargetRegions } from "./components/TargetRegions";
 import type { Point, Stroke } from "./types";
 
-function segmentDistance(point: Point, start: Point, end: Point) {
-  const length = (end.x - start.x) ** 2 + (end.y - start.y) ** 2;
-  const ratio = length
-    ? Math.max(
-        0,
-        Math.min(
-          1,
-          ((point.x - start.x) * (end.x - start.x) +
-            (point.y - start.y) * (end.y - start.y)) /
-            length,
-        ),
-      )
-    : 0;
-  return Math.hypot(
-    point.x - start.x - ratio * (end.x - start.x),
-    point.y - start.y - ratio * (end.y - start.y),
-  );
-}
 export function SketchCanvas({
   strokes,
   onChange,
@@ -95,8 +78,6 @@ export function SketchCanvas({
   const callbacks = useRef({ onChange, onDrawingActivity });
   callbacks.current = { onChange, onDrawingActivity };
   const working = useRef(strokes);
-  const committed = useRef(strokes);
-  committed.current = strokes;
   if (active.current === null) working.current = strokes;
   const paintFrame = useRef<number | undefined>(undefined);
   const paintState = useRef({ scene, frameHeight });
@@ -147,8 +128,21 @@ export function SketchCanvas({
         context.strokeStyle = style.color;
         context.beginPath();
         context.moveTo(stroke[0].x, stroke[0].y);
-        for (let i = 1; i < stroke.length; i++)
-          context.lineTo(stroke[i].x, stroke[i].y);
+        if (stroke.length === 2) {
+          context.lineTo(stroke[1].x, stroke[1].y);
+        } else if (stroke.length > 2) {
+          // Smooth through midpoints so fast strokes stay round instead of
+          // polygonal; the stored points (and scoring) are unchanged.
+          for (let i = 1; i < stroke.length - 1; i++)
+            context.quadraticCurveTo(
+              stroke[i].x,
+              stroke[i].y,
+              (stroke[i].x + stroke[i + 1].x) / 2,
+              (stroke[i].y + stroke[i + 1].y) / 2,
+            );
+          const last = stroke[stroke.length - 1];
+          context.lineTo(last.x, last.y);
+        }
         context.stroke();
       };
       for (const stroke of working.current) draw(stroke);
@@ -194,23 +188,68 @@ export function SketchCanvas({
     )
       current.current.push(position);
   }
+  const lastErase = useRef<Point | null>(null);
+  const eraseDirty = useRef(false);
+  const eraserRing = useRef<HTMLDivElement>(null);
+  function eraserRadius() {
+    // The eraser grows with the ふとさ choice, like a real eraser size.
+    return 12 + activeBrush.current.width * 1.9;
+  }
+  function eraseOnce(center: Point, radius: number) {
+    const result = eraseStrokes(working.current, center, radius, (original, parts) => {
+      const style = brushStyles.current.get(original);
+      if (style) for (const part of parts) brushStyles.current.set(part, style);
+    });
+    if (result.changed) {
+      working.current = result.strokes;
+      eraseDirty.current = true;
+    }
+  }
   function eraseAt(position: Point) {
-    working.current = working.current.filter(
-      (stroke) =>
-        !stroke.some(
-          (end, index) =>
-            index > 0 && segmentDistance(position, stroke[index - 1], end) < 23,
-        ),
-    );
+    const radius = eraserRadius();
+    const from = lastErase.current;
+    if (from) {
+      // Fill the gap between samples so a fast swipe erases continuously.
+      const distance = Math.hypot(position.x - from.x, position.y - from.y);
+      const steps = Math.max(1, Math.ceil(distance / (radius / 2)));
+      for (let s = 1; s <= steps; s++)
+        eraseOnce(
+          {
+            x: from.x + ((position.x - from.x) * s) / steps,
+            y: from.y + ((position.y - from.y) * s) / steps,
+          },
+          radius,
+        );
+    } else {
+      eraseOnce(position, radius);
+    }
+    lastErase.current = position;
     paint();
+  }
+  function moveEraserRing(event: { clientX: number; clientY: number }) {
+    const ring = eraserRing.current;
+    const canvas = ref.current;
+    if (!ring || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const diameter = eraserRadius() * 2 * (rect.width / 600);
+    ring.style.width = `${diameter}px`;
+    ring.style.height = `${diameter}px`;
+    ring.style.transform = `translate(${event.clientX - rect.left}px, ${event.clientY - rect.top}px) translate(-50%, -50%)`;
+    ring.style.opacity = "1";
+  }
+  function hideEraserRing() {
+    if (eraserRing.current) eraserRing.current.style.opacity = "0";
   }
   function finish() {
     if (active.current === null) return;
     const pointerId = active.current;
     active.current = null;
     if (activeTool.current === "eraser") {
-      if (working.current.length !== committed.current.length)
+      if (eraseDirty.current)
         callbacks.current.onChange(working.current, "erase");
+      eraseDirty.current = false;
+      lastErase.current = null;
+      hideEraserRing();
     } else if (current.current.length) {
       const next = current.current;
       if (next.length === 1)
@@ -347,14 +386,18 @@ export function SketchCanvas({
                   /* The pointer may already have ended. */
                 }
                 const position = point(event);
-                if (activeTool.current === "eraser") eraseAt(position);
-                else {
+                if (activeTool.current === "eraser") {
+                  lastErase.current = null;
+                  moveEraserRing(event);
+                  eraseAt(position);
+                } else {
                   current.current = [position];
                   setDrawing(true);
                   paint();
                 }
               }}
               onPointerMove={(event) => {
+                if (erase) moveEraserRing(event);
                 if (active.current !== event.pointerId) return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 const samples = event.nativeEvent.getCoalescedEvents?.() || [];
@@ -377,7 +420,17 @@ export function SketchCanvas({
               onLostPointerCapture={(event) => {
                 if (active.current === event.pointerId) finish();
               }}
+              onPointerLeave={() => {
+                if (active.current === null) hideEraserRing();
+              }}
             />
+            {erase && (
+              <div
+                ref={eraserRing}
+                className="eraser-ring"
+                aria-hidden="true"
+              />
+            )}
           </div>
         </div>
         {hintControl && (
@@ -494,7 +547,7 @@ export function SketchCanvas({
         )}
       </div>
       {erase && (
-        <p className="eraser-tip">線にふれると、そのひと筆が消えるよ。</p>
+        <p className="eraser-tip">なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。</p>
       )}
     </div>
   );

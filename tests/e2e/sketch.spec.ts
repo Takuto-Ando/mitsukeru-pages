@@ -670,10 +670,21 @@ test("消しゴム・全消去からUndoで復元し、段階的な観察ヒン�
   await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await page.getByTestId("canvas").boundingBox())!;
   const r = tasks.find((t) => t.id === "goat")!.scene.regions[0];
-  await page.mouse.click(
-    b.x + (r.x + r.width * 0.86) * b.width,
-    b.y + (r.y + r.height / 2) * b.height,
-  );
+  // The eraser removes only what it rubs over: trace the drawn ellipse.
+  const cx = (r.x + r.width / 2) * 600,
+    cy = (r.y + r.height / 2) * 400,
+    rx = r.width * 600 * 0.36,
+    ry = r.height * 400 * 0.33;
+  await page.mouse.move(b.x + ((cx + rx) / 600) * b.width, b.y + (cy / 400) * b.height);
+  await page.mouse.down();
+  for (let i = 1; i <= 32; i++) {
+    const a = (i / 32) * Math.PI * 2;
+    await page.mouse.move(
+      b.x + ((cx + rx * Math.cos(a)) / 600) * b.width,
+      b.y + ((cy + ry * Math.sin(a)) / 400) * b.height,
+    );
+  }
+  await page.mouse.up();
   await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
   await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
@@ -1320,17 +1331,27 @@ test("中断した筆跡を保持し、消しゴムの一往復を一度のUndo�
   await page.mouse.move(x + 35, y + 5, { steps: 8 });
   await page.mouse.up();
   await page.getByRole("button", { name: "消しゴム", exact: true }).click();
-  await page.mouse.move(x, y);
+  // Clicking the toolbar button can scroll the page; re-read the canvas
+  // position so the eraser path lands on the strokes.
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
+  const freshBox = (await canvas.boundingBox())!;
+  const dx = freshBox.x - box.x,
+    dy = freshBox.y - box.y;
+  await page.mouse.move(x + dx, y + dy);
   await page.mouse.down();
-  await page.mouse.move(x + 35, y + 5, { steps: 15 });
+  await page.mouse.move(x + dx + 35, y + dy + 5, { steps: 15 });
   await page.mouse.up();
   await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
   await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   // Erase both again: one undo must have restored both strokes.
-  await page.mouse.click(x + 35, y + 5);
+  await page.mouse.click(x + dx + 35, y + dy + 5);
   await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
-  await page.mouse.click(x, y);
+  // The eraser only removes what it rubs over, so rub along the first stroke.
+  await page.mouse.move(x + dx, y + dy);
+  await page.mouse.down();
+  await page.mouse.move(x + dx + 16, y + dy + 5, { steps: 6 });
+  await page.mouse.up();
   await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   expect(errors).toEqual([]);
 });
