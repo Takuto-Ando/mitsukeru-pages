@@ -10,6 +10,18 @@ import {
 import { SceneBase } from "./components/ObservationScene";
 import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
+import { stabilizePoint } from "./drawing/smooth";
+
+const BRUSH_WIDTHS = [2.5, 4, 7, 11];
+const BRUSH_COLORS = [
+  "#9173ad",
+  "#695b79",
+  "#3a3238",
+  "#8a6642",
+  "#b0563a",
+  "#277e78",
+  "#8d8577",
+];
 import { TargetRegions } from "./components/TargetRegions";
 import type { Point, Stroke } from "./types";
 
@@ -181,12 +193,17 @@ export function SketchCanvas({
   }
   function append(position: Point) {
     const previous = current.current.at(-1);
-    // Discard sub-pixel duplicates, without smoothing away the observed shape.
-    if (
-      !previous ||
-      Math.hypot(position.x - previous.x, position.y - previous.y) >= 0.5
-    )
+    if (!previous) {
       current.current.push(position);
+      return;
+    }
+    // Stabilize against hand tremor, and discard sub-pixel duplicates
+    // without smoothing away the observed shape.
+    const smoothed = stabilizePoint(previous, position);
+    if (
+      Math.hypot(smoothed.x - previous.x, smoothed.y - previous.y) >= 0.5
+    )
+      current.current.push(smoothed);
   }
   const lastErase = useRef<Point | null>(null);
   const eraseDirty = useRef(false);
@@ -239,6 +256,26 @@ export function SketchCanvas({
   }
   function hideEraserRing() {
     if (eraserRing.current) eraserRing.current.style.opacity = "0";
+  }
+  const brushRing = useRef<HTMLDivElement>(null);
+  function moveBrushRing(event: { clientX: number; clientY: number }) {
+    const ring = brushRing.current;
+    const canvas = ref.current;
+    if (!ring || !canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const diameter = Math.max(
+      6,
+      activeBrush.current.width * (rect.width / 600),
+    );
+    ring.style.width = `${diameter}px`;
+    ring.style.height = `${diameter}px`;
+    ring.style.borderColor = activeBrush.current.color;
+    ring.style.backgroundColor = `${activeBrush.current.color}33`;
+    ring.style.transform = `translate(${event.clientX - rect.left}px, ${event.clientY - rect.top}px) translate(-50%, -50%)`;
+    ring.style.opacity = "1";
+  }
+  function hideBrushRing() {
+    if (brushRing.current) brushRing.current.style.opacity = "0";
   }
   function finish() {
     if (active.current === null) return;
@@ -391,6 +428,7 @@ export function SketchCanvas({
                   moveEraserRing(event);
                   eraseAt(position);
                 } else {
+                  if (event.pointerType !== "touch") moveBrushRing(event);
                   current.current = [position];
                   setDrawing(true);
                   paint();
@@ -398,6 +436,7 @@ export function SketchCanvas({
               }}
               onPointerMove={(event) => {
                 if (erase) moveEraserRing(event);
+                else if (event.pointerType !== "touch") moveBrushRing(event);
                 if (active.current !== event.pointerId) return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 const samples = event.nativeEvent.getCoalescedEvents?.() || [];
@@ -422,6 +461,7 @@ export function SketchCanvas({
               }}
               onPointerLeave={() => {
                 if (active.current === null) hideEraserRing();
+                hideBrushRing();
               }}
             />
             {erase && (
@@ -430,6 +470,9 @@ export function SketchCanvas({
                 className="eraser-ring"
                 aria-hidden="true"
               />
+            )}
+            {!erase && (
+              <div ref={brushRing} className="brush-ring" aria-hidden="true" />
             )}
           </div>
         </div>
@@ -469,7 +512,7 @@ export function SketchCanvas({
             <div className="tool-group tool-group-width">
               <span className="tool-group-label">ふとさ</span>
               <div className="tool-options">
-                {[4, 7, 11].map((width) => (
+                {BRUSH_WIDTHS.map((width) => (
                   <button
                     key={width}
                     className="brush-choice"
@@ -491,7 +534,7 @@ export function SketchCanvas({
             <div className="tool-group tool-group-color">
               <span className="tool-group-label">カラー</span>
               <div className="tool-options">
-                {["#9173ad", "#695b79", "#4f4a5c"].map((color, index) => (
+                {BRUSH_COLORS.map((color, index) => (
                   <button
                     key={color}
                     className="brush-choice"
@@ -516,33 +559,82 @@ export function SketchCanvas({
           </>
         ) : (
           <>
-            <button aria-pressed={!erase} onClick={() => setErase(false)}>
-              <Pencil size={19} />
-              ペン
-            </button>
-            <button aria-pressed={erase} onClick={() => setErase(true)}>
-              <Eraser size={19} />
-              消しゴム
-            </button>
-            <button
-              disabled={!(canUndo ?? !!strokes.length)}
-              onClick={() =>
-                onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
-              }
-            >
-              <Undo2 size={19} />
-              ひとつ戻す
-            </button>
-            <button
-              disabled={!strokes.length}
-              onClick={() => {
-                onChange([], "clear");
-                setErase(false);
-              }}
-            >
-              <RotateCcw size={19} />
-              描き直す
-            </button>
+            <div className="tool-group tool-group-actions">
+              <span className="tool-group-label">ツール</span>
+              <div className="tool-options">
+                <button aria-pressed={!erase} onClick={() => setErase(false)}>
+                  <Pencil size={19} />
+                  ペン
+                </button>
+                <button aria-pressed={erase} onClick={() => setErase(true)}>
+                  <Eraser size={19} />
+                  消しゴム
+                </button>
+                <button
+                  disabled={!(canUndo ?? !!strokes.length)}
+                  onClick={() =>
+                    onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
+                  }
+                >
+                  <Undo2 size={19} />
+                  ひとつ戻す
+                </button>
+                <button
+                  disabled={!strokes.length}
+                  onClick={() => {
+                    onChange([], "clear");
+                    setErase(false);
+                  }}
+                >
+                  <RotateCcw size={19} />
+                  描き直す
+                </button>
+              </div>
+            </div>
+            <div className="tool-group tool-group-width">
+              <span className="tool-group-label">ふとさ</span>
+              <div className="tool-options">
+                {BRUSH_WIDTHS.map((width) => (
+                  <button
+                    key={width}
+                    className="brush-choice"
+                    aria-label={`ふとさ ${width}`}
+                    aria-pressed={brushWidth === width}
+                    onClick={() => {
+                      activeBrush.current = { ...activeBrush.current, width };
+                      setBrushWidth(width);
+                    }}
+                  >
+                    <span
+                      className="brush-dot"
+                      style={{ width, height: width }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="tool-group tool-group-color">
+              <span className="tool-group-label">カラー</span>
+              <div className="tool-options">
+                {BRUSH_COLORS.map((color, index) => (
+                  <button
+                    key={color}
+                    className="brush-choice"
+                    aria-label={`カラー ${index + 1}`}
+                    aria-pressed={brushColor === color}
+                    onClick={() => {
+                      activeBrush.current = { ...activeBrush.current, color };
+                      setBrushColor(color);
+                    }}
+                  >
+                    <span
+                      className="color-dot"
+                      style={{ backgroundColor: color }}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
           </>
         )}
       </div>

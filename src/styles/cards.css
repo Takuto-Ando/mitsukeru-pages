@@ -292,6 +292,61 @@ main > .text-button {
   pointer-events: none;
   opacity: 0;
 }
+.brush-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  border: 1.5px solid rgba(105, 91, 121, 0.85);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+}
+.sketch-card > .tools {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+.tools .tool-group {
+  min-width: 0;
+}
+.tools .tool-group-label {
+  display: block;
+  margin: 0 0 5px 5px;
+  color: #685018;
+  font-size: 10px;
+  font-weight: 700;
+}
+.tools .tool-options {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.tools .brush-choice {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+.tools .brush-dot {
+  display: block;
+  border-radius: 50%;
+  background: #9173ad;
+}
+.tools .color-dot {
+  display: block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.tool-group-color .tool-options {
+  flex-wrap: wrap;
+}
+.mission-sketch .tool-group-color .brush-choice {
+  flex: 1 1 22%;
+}
+.mission-sketch[data-layout="portrait"] .tool-group-color .color-dot {
+  width: 18px;
+  height: 18px;
+}
 .tools {
   border-top: 1px solid var(--color-rule);
   display: flex;
