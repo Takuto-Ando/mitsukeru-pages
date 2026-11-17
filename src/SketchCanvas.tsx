@@ -23,6 +23,7 @@ const BRUSH_COLORS = [
   "#8d8577",
 ];
 import { TargetRegions } from "./components/TargetRegions";
+import { Pitsune } from "./components/Pitsune";
 import type { Point, Stroke } from "./types";
 
 export function SketchCanvas({
@@ -345,8 +346,10 @@ export function SketchCanvas({
       )}
       {missionTitle && (
         <div className="mission-heading">
-          <span>MISSION</span>
-          <h1>{missionTitle}</h1>
+          <div className="mission-pitsune-row">
+            <Pitsune pose="face" className="mission-pitsune-face" />
+            <h1 className="pitsune-bubble">{missionTitle}</h1>
+          </div>
           {landscapeInstruction && (
             <div className="landscape-instruction">{landscapeInstruction}</div>
           )}
