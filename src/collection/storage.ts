@@ -10,6 +10,7 @@ export interface DrawingRecord {
   sceneVersion?: 2;
   createdAt: string;
   strokes: Stroke[];
+  styles?: (import("../types").StrokeStyle | null)[];
   outcome: "correct" | "self-confirmed";
 }
 export interface CollectionData {

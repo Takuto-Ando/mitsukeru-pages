@@ -1,4 +1,5 @@
 import { profiles } from "./profiles";
+import { getStrokeStyle, setStrokeStyle } from "../drawing/styles";
 import type { Point, Stroke } from "../types";
 export type Region = { x: number; y: number; width: number; height: number };
 export interface Scene {
@@ -113,7 +114,11 @@ export function clipStrokes(strokes: Stroke[], scene: Scene): Stroke[] {
     for (const r of drawingRegions(scene)) {
       let run: Stroke = [];
       const flush = () => {
-        if (run.length > 1) result.push(run);
+        if (run.length > 1) {
+          const style = getStrokeStyle(stroke);
+          if (style) setStrokeStyle(run, style);
+          result.push(run);
+        }
         run = [];
       };
       for (let i = 1; i < stroke.length; i++) {

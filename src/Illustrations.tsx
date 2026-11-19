@@ -1,4 +1,5 @@
 import type { Stroke } from "./types";
+import { getStrokeStyle } from "./drawing/styles";
 export function Eye({ answer = false }: { answer?: boolean }) {
   return (
     <svg
@@ -100,6 +101,8 @@ export function SketchLines({
       {strokes.map((stroke, index) => (
         <polyline
           key={replayKey ? `${replayKey}-${index}` : index}
+          stroke={getStrokeStyle(stroke)?.color ?? "#277e78"}
+          strokeWidth={getStrokeStyle(stroke)?.width ?? 7}
           {...(replayKey
             ? {
                 pathLength: 1,
@@ -111,8 +114,6 @@ export function SketchLines({
             : {})}
           points={stroke.map((point) => point.x + "," + point.y).join(" ")}
           fill="none"
-          stroke="#277e78"
-          strokeWidth="7"
           strokeLinejoin="round"
           strokeLinecap="round"
         />

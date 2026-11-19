@@ -1,6 +1,7 @@
 import { artwork, assetPath } from "../content/artwork";
 import { drawingRegions, type Scene } from "../content/scenes";
 import type { Stroke } from "../types";
+import { getStrokeStyle } from "../drawing/styles";
 
 async function embedded(path: string, height: number) {
   const response = await fetch(assetPath(path));
@@ -74,12 +75,13 @@ export async function composeObservationImages(
     ownCtx.rect(r.x * 600, r.y * height, r.width * 600, r.height * height);
   }
   ownCtx.clip();
-  ownCtx.lineWidth = 7;
   ownCtx.lineCap = "round";
   ownCtx.lineJoin = "round";
-  ownCtx.strokeStyle = "#277e78";
   for (const stroke of strokes) {
     if (!stroke.length) continue;
+    const style = getStrokeStyle(stroke);
+    ownCtx.lineWidth = style?.width ?? 7;
+    ownCtx.strokeStyle = style?.color ?? "#277e78";
     ownCtx.beginPath();
     ownCtx.moveTo(stroke[0].x, stroke[0].y);
     for (const point of stroke.slice(1)) {

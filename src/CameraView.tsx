@@ -293,6 +293,14 @@ export function CameraView({
             <span>動物から少し離れて、そっと観察しよう。</span>
           </div>
         )}
+        {status === "live" && !captured && (
+          <div className="vf-grid" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+          </div>
+        )}
         {(status === "live" || !!captured) && (
           <div className="vf-corners" aria-hidden="true">
             <i />
