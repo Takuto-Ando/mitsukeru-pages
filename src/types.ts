@@ -7,6 +7,10 @@ export interface ObservationParameters {
 }
 export type Point = { x: number; y: number };
 export type Stroke = Point[];
+export interface StrokeStyle {
+  color: string;
+  width: number;
+}
 export interface Challenge {
   animalId: string;
   animalName: string;

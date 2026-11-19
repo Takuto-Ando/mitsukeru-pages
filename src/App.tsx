@@ -56,7 +56,13 @@ import {
 import type { ObservationRecord } from "./notebook/types";
 import { createFeedbackAudio } from "./audio";
 import { drawingHistory, emptyDrawing } from "./drawing/history";
-import type { Evaluation } from "./types";
+import type { Evaluation, Stroke, StrokeStyle } from "./types";
+import {
+  applyStyles,
+  getStrokeStyle,
+  setStrokeStyle,
+  stylesFor,
+} from "./drawing/styles";
 import "./styles/cards.css";
 
 export default function App() {
@@ -92,6 +98,56 @@ export default function App() {
     emptyDrawing,
   );
   const strokes = drawing.present;
+  const DRAFT_KEY = "zooketch-drafts-v1";
+  type DraftMap = Record<
+    string,
+    { strokes: Stroke[]; styles: (StrokeStyle | null)[] }
+  >;
+  const readDrafts = (): DraftMap => {
+    try {
+      return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}") as DraftMap;
+    } catch {
+      return {};
+    }
+  };
+  const writeDrafts = (drafts: DraftMap) => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    } catch {
+      /* storage may be unavailable; drafts are a convenience only */
+    }
+  };
+  const removeDraft = (id: string) => {
+    const drafts = readDrafts();
+    if (id in drafts) {
+      delete drafts[id];
+      writeDrafts(drafts);
+    }
+  };
+  useEffect(() => {
+    if (screen !== "activity" || step !== 1 || !strokes.length) return;
+    const drafts = readDrafts();
+    drafts[taskId] = { strokes, styles: stylesFor(strokes) };
+    writeDrafts(drafts);
+  }, [strokes, taskId, step, screen]);
+  useEffect(() => {
+    if (screen === "activity" && step === 1 && !strokes.length) {
+      const draft = readDrafts()[taskId];
+      setDraftOffer(draft?.strokes.length ? taskId : undefined);
+    } else if (step !== 1) setDraftOffer(undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, taskId, screen]);
+  function restoreDraft() {
+    const draft = readDrafts()[taskId];
+    if (!draft) return;
+    applyStyles(draft.strokes, draft.styles);
+    dispatchDrawing({ type: "commit", strokes: draft.strokes });
+    setDraftOffer(undefined);
+  }
+  function discardDraft() {
+    removeDraft(taskId);
+    setDraftOffer(undefined);
+  }
   const [feedback, setFeedback] = useState<Evaluation>();
   const [hintLevel, setHintLevel] = useState(0);
   const hint = hintLevel > 0;
@@ -115,6 +171,8 @@ export default function App() {
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState("");
   const [savedId, setSavedId] = useState<string>();
+  const [completedGroup, setCompletedGroup] = useState("");
+  const [draftOffer, setDraftOffer] = useState<string>();
   const task = taskById[taskId],
     scene = task.scene,
     profile = task.profile;
@@ -180,12 +238,17 @@ export default function App() {
       !storageReady
     )
       return;
-    const visible = clipStrokes(strokes, scene).map((s) =>
+    const clipped = clipStrokes(strokes, scene);
+    const visible = clipped.map((s) =>
       s.map((p) => ({
         x: Math.round(p.x * 100) / 100,
         y: Math.round(p.y * 100) / 100,
       })),
     );
+    clipped.forEach((source, i) => {
+      const style = getStrokeStyle(source);
+      if (style) setStrokeStyle(visible[i], style);
+    });
     if (!visible.length) return;
     const generation = taskGeneration.current,
       logContext = currentStudyContext();
@@ -214,14 +277,23 @@ export default function App() {
         sceneVersion: 2,
         createdAt: new Date().toISOString(),
         strokes: visible,
+        styles: stylesFor(visible),
         outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });
       await refreshCollection();
+      removeDraft(taskId);
       if (generation === taskGeneration.current) {
         setSavedId(record.id);
         setReflectionDirty(false);
+        const savedRecords = await loadObservations();
+        if (
+          tasksForGroup(task.groupId).every((t) =>
+            savedRecords.some((r) => r.taskId === t.id),
+          )
+        )
+          setCompletedGroup(group.name);
       }
       recordStudy("observation_saved", {}, logContext);
       recordStudy(
@@ -320,6 +392,8 @@ export default function App() {
     setReflectionDirty(false);
     setFeedback(undefined);
     setSavedId(undefined);
+    setCompletedGroup("");
+    setDraftOffer(undefined);
     setStudyContext(
       taskById[id].groupId,
       id,
@@ -345,6 +419,8 @@ export default function App() {
     setReflection({ discovery: "", revisited: false });
     setReflectionDirty(false);
     setSavedId(undefined);
+    setCompletedGroup("");
+    setDraftOffer(undefined);
     setStudyContext();
     next(0);
   }
@@ -403,6 +479,7 @@ export default function App() {
   function answer() {
     const visible = clipStrokes(strokes, scene);
     if (!visible.length) return;
+    removeDraft(taskId);
     recordStudy("drawing_submitted", { empty: false });
     if (!task.automatic) {
       setFeedback({
@@ -598,6 +675,17 @@ export default function App() {
                       ))}
                     </div>
                   )}
+                  {draftOffer === taskId && (
+                    <div className="draft-banner" role="status">
+                      <p>前に描いた下書きがあるよ</p>
+                      <button className="primary" onClick={restoreDraft}>
+                        つづきを描く
+                      </button>
+                      <button className="text-button" onClick={discardDraft}>
+                        下書きを消す
+                      </button>
+                    </div>
+                  )}
                   <SketchCanvas
                     key={taskId}
                     photoUrl={photo || undefined}
@@ -685,7 +773,10 @@ export default function App() {
                       </button>
                     }
                     onChange={(value, action) => {
-                      if (action === "clear") recordStudy("drawing_cleared");
+                      if (action === "clear") {
+                        recordStudy("drawing_cleared");
+                        removeDraft(taskId);
+                      }
                       if (action === "erase") recordStudy("drawing_erased");
                       dispatchDrawing({ type: "commit", strokes: value });
                       setFeedback(undefined);
@@ -824,6 +915,16 @@ export default function App() {
                   />
                   {feedback?.passed && task.explanation.form && (
                     <p className="result-fact">{task.explanation.form}</p>
+                  )}
+                  {feedback?.passed && task.explanation.form && (
+                    <ReadAloud id="result-fact" text={task.explanation.form} />
+                  )}
+                  {completedGroup && savedId && (
+                    <p className="group-complete-banner">
+                      <Pitsune pose="cheer" className="group-complete-pitsune" />
+                      {completedGroup} コンプリート！
+                      ぜんぶの観察がそろったよ
+                    </p>
                   )}
                   {!feedback?.passed && (
                     <div className="self-check">

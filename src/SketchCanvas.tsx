@@ -12,6 +12,7 @@ import { SceneBase } from "./components/ObservationScene";
 import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
 import { stabilizePoint } from "./drawing/smooth";
+import { getStrokeStyle, setStrokeStyle } from "./drawing/styles";
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
 const BRUSH_COLORS = [
@@ -112,9 +113,6 @@ export function SketchCanvas({
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  const brushStyles = useRef(
-    new WeakMap<Stroke, { width: number; color: string }>(),
-  );
   const activeBrush = useRef({ width: brushWidth, color: brushColor });
   const callbacks = useRef({ onChange, onDrawingActivity });
   callbacks.current = { onChange, onDrawingActivity };
@@ -161,7 +159,7 @@ export function SketchCanvas({
         if (!stroke.length) return;
         const style = current
           ? activeBrush.current
-          : brushStyles.current.get(stroke) || {
+          : getStrokeStyle(stroke) || {
               width: 7,
               color: missionTitle ? "#9173ad" : "#277e78",
             };
@@ -243,8 +241,8 @@ export function SketchCanvas({
   }
   function eraseOnce(center: Point, radius: number) {
     const result = eraseStrokes(working.current, center, radius, (original, parts) => {
-      const style = brushStyles.current.get(original);
-      if (style) for (const part of parts) brushStyles.current.set(part, style);
+      const style = getStrokeStyle(original);
+      if (style) for (const part of parts) setStrokeStyle(part, style);
     });
     if (result.changed) {
       working.current = result.strokes;
@@ -324,7 +322,7 @@ export function SketchCanvas({
           x: next[0].x + (next[0].x < 600 ? 0.01 : -0.01),
         });
       if (clipStrokes([next], scene).length) {
-        brushStyles.current.set(next, { ...activeBrush.current });
+        setStrokeStyle(next, { ...activeBrush.current });
         working.current = [...working.current, next];
         callbacks.current.onChange(working.current, "draw");
       }

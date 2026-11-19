@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { groups } from "../content/groups";
 import { drawingScene } from "../collection/drawingScene";
 import { taskById, tasksForGroup } from "../content/tasks";
+import { applyStyles } from "../drawing/styles";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import { SketchComparison } from "./SketchComparison";
@@ -82,6 +83,12 @@ export function DrawingCollection({
   }>();
   const drawing = drawings.find((d) => d.id === selected);
   const speciesCount = new Set(drawings.map((d) => d.groupId)).size;
+  const observationDays = new Set(
+    drawings.map((d) => d.createdAt.slice(0, 10)),
+  ).size;
+  useEffect(() => {
+    for (const d of drawings) applyStyles(d.strokes, d.styles);
+  }, [drawings]);
   const completeGroups = groups.filter((g) => {
     const groupTasks = tasksForGroup(g.id);
     return groupTasks.every((t) =>
@@ -148,7 +155,7 @@ export function DrawingCollection({
         <div className="collection-progress">
           <p>
             ずかん： <strong>{speciesCount} / {groups.length}</strong>{" "}
-            しゅるい あつめたよ
+            しゅるい あつめたよ ・ 観察した日 {observationDays}日
           </p>
           <div
             className="progress-track"
