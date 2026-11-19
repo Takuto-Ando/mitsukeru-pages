@@ -72,6 +72,13 @@ export function DrawingCollection({
   onUpdate?: () => Promise<void> | void;
 }) {
   const [selected, setSelected] = useState<string>();
+  const [sortMode, setSortMode] = useState<"new" | "animal">("new");
+  const sortedDrawings = [...drawings].sort((a, b) =>
+    sortMode === "new"
+      ? b.createdAt.localeCompare(a.createdAt)
+      : a.animalName.localeCompare(b.animalName, "ja") ||
+        b.createdAt.localeCompare(a.createdAt),
+  );
   const [visibleCount, setVisibleCount] = useState(12);
   const [deleting, setDeleting] = useState<string>();
   const [exporting, setExporting] = useState(false);
@@ -86,6 +93,18 @@ export function DrawingCollection({
   const observationDays = new Set(
     drawings.map((d) => d.createdAt.slice(0, 10)),
   ).size;
+  const streak = (() => {
+    const days = new Set(drawings.map((d) => d.createdAt.slice(0, 10)));
+    const cursor = new Date();
+    const key = (d: Date) => d.toISOString().slice(0, 10);
+    if (!days.has(key(cursor))) cursor.setUTCDate(cursor.getUTCDate() - 1);
+    let count = 0;
+    while (days.has(key(cursor))) {
+      count++;
+      cursor.setUTCDate(cursor.getUTCDate() - 1);
+    }
+    return count;
+  })();
   useEffect(() => {
     for (const d of drawings) applyStyles(d.strokes, d.styles);
   }, [drawings]);
@@ -144,6 +163,35 @@ export function DrawingCollection({
     }
   }
 
+  async function shareOwn() {
+    if (!drawing || exporting) return;
+    setExporting(true);
+    setExportError("");
+    try {
+      const scene = drawing.sceneSnapshot || drawingScene(drawing);
+      let ownPng = drawing.ownPng;
+      if (!ownPng) {
+        const composed = await composeObservationImages(scene, drawing.strokes);
+        ownPng = composed.ownPng;
+        await updateObservationImages(drawing.id, composed);
+        await onUpdate?.();
+      }
+      const date = drawing.createdAt.slice(0, 10);
+      const card = await composeCardPng(ownPng, drawing, false);
+      const file = new File([card], `zooketch-${drawing.taskId}-${date}-sketch.png`, {
+        type: "image/png",
+      });
+      if (navigator.canShare?.({ files: [file] }))
+        await navigator.share({ files: [file] });
+      else await savePng(card, file.name);
+    } catch (error) {
+      if ((error as Error)?.name !== "AbortError")
+        setExportError("シェアできませんでした。PNG保存をお試しください。");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <section className="drawing-collection" aria-label={title}>
       <button className="text-button" onClick={onBack}>
@@ -156,7 +204,13 @@ export function DrawingCollection({
           <p>
             ずかん： <strong>{speciesCount} / {groups.length}</strong>{" "}
             しゅるい あつめたよ ・ 観察した日 {observationDays}日
+            {streak >= 2 && <>（れんぞく {streak}日！）</>}
           </p>
+          {speciesCount === groups.length && (
+            <p className="master-badge">
+              ずかんマスター！ ぜんぶの動物を観察したよ
+            </p>
+          )}
           <div
             className="progress-track"
             role="progressbar"
@@ -240,6 +294,15 @@ export function DrawingCollection({
             >
               比較画像をPNGで保存
             </button>
+            {"share" in navigator && (
+              <button
+                className="primary collection-save"
+                disabled={exporting}
+                onClick={() => void shareOwn()}
+              >
+                シェアする
+              </button>
+            )}
           </div>
           {exportError && <p role="alert">{exportError}</p>}
           <div className="figma-explanation">
@@ -268,7 +331,23 @@ export function DrawingCollection({
         </div>
       ) : (
         <div className="collection-grid">
-          {drawings.slice(0, visibleCount).map((d) => (
+          {drawings.length > 1 && (
+            <div className="collection-sort" role="group" aria-label="並び替え">
+              <button
+                aria-pressed={sortMode === "new"}
+                onClick={() => setSortMode("new")}
+              >
+                新しい順
+              </button>
+              <button
+                aria-pressed={sortMode === "animal"}
+                onClick={() => setSortMode("animal")}
+              >
+                動物の名前順
+              </button>
+            </div>
+          )}
+          {sortedDrawings.slice(0, visibleCount).map((d) => (
             <article className="collection-card" key={d.id}>
               <button
                 className="collection-open"

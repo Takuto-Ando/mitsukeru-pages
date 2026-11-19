@@ -98,7 +98,8 @@ export function SketchLines({
   return (
     <g>
       {" "}
-      {strokes.map((stroke, index) => (
+      {strokes.map((stroke, index) =>
+        getStrokeStyle(stroke)?.fill ? null : (
         <polyline
           key={replayKey ? `${replayKey}-${index}` : index}
           stroke={getStrokeStyle(stroke)?.color ?? "#277e78"}
@@ -117,7 +118,8 @@ export function SketchLines({
           strokeLinejoin="round"
           strokeLinecap="round"
         />
-      ))}
+        ),
+      )}
     </g>
   );
 }

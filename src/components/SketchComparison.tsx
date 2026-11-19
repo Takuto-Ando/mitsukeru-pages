@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState } from "react";
+import { getStrokeStyle } from "../drawing/styles";
 import { motion, useReducedMotion } from "motion/react";
 import { artwork, assetPath } from "../content/artwork";
 import { scenes, clipStrokes, type Scene } from "../content/scenes";
@@ -37,12 +38,28 @@ export function SketchComparison({
     reduce = useReducedMotion();
   const drag = useRef<{ id: number; from: number } | undefined>(undefined),
     value = useRef(position);
-  const userLines = useMemo(
-    () => (
-      <SketchLines strokes={clipStrokes(strokes, scene)} replayKey={replayKey} />
-    ),
-    [strokes, scene, replayKey],
-  );
+  const userLines = useMemo(() => {
+    const clipped = clipStrokes(strokes, scene);
+    return (
+      <>
+        {clipped.map((stroke, index) => {
+          const fill = getStrokeStyle(stroke)?.fill;
+          return fill ? (
+            <image
+              key={`fill-${index}`}
+              href={fill}
+              x={0}
+              y={0}
+              width={600}
+              height={scene.frameHeight || 400}
+              preserveAspectRatio="none"
+            />
+          ) : null;
+        })}
+        <SketchLines strokes={clipped} replayKey={replayKey} />
+      </>
+    );
+  }, [strokes, scene, replayKey]);
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
   const set = (n: number) => {

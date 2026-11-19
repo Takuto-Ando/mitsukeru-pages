@@ -78,6 +78,10 @@ export async function composeObservationImages(
   ownCtx.lineCap = "round";
   ownCtx.lineJoin = "round";
   for (const stroke of strokes) {
+    const fill = getStrokeStyle(stroke)?.fill;
+    if (fill) ownCtx.drawImage(await loadImage(fill), 0, 0, 600, height);
+  }
+  for (const stroke of strokes) {
     if (!stroke.length) continue;
     const style = getStrokeStyle(stroke);
     ownCtx.lineWidth = style?.width ?? 7;
