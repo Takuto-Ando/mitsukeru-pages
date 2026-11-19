@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Eraser, Undo2, Redo2, RotateCcw } from "lucide-react";
+import { Pencil, Eraser, Undo2, Redo2, RotateCcw, LayoutGrid, Image as ImageIcon, Eye } from "lucide-react";
+import { artwork, assetPath } from "./content/artwork";
 import {
   drawingRegions,
   scenes,
@@ -41,6 +42,7 @@ export function SketchCanvas({
   landscapeComplete,
   landscapeReselect,
   showTarget = false,
+  photoUrl,
 }: {
   onDrawingActivity?: (active: boolean, tool: "pen" | "eraser") => void;
   onUndo?: () => void;
@@ -53,6 +55,7 @@ export function SketchCanvas({
   landscapeComplete?: React.ReactNode;
   landscapeReselect?: React.ReactNode;
   showTarget?: boolean;
+  photoUrl?: string;
   template?: "eye" | "blank";
   backdrop?: React.ReactNode;
   scene?: Scene;
@@ -77,6 +80,31 @@ export function SketchCanvas({
     window.matchMedia("(min-width: 760px)").matches ? "landscape" : "portrait",
   );
   const layout = layoutChoice ?? autoLayout;
+  const [assist, setAssist] = useState({ grid: false, photo: false, ghost: false });
+  const ghostSrc = artwork[scene.id]?.reference;
+  const CHEERS = [
+    "いいかんじ！",
+    "よく見てるね！",
+    "その調子！",
+    "すてきな線だね！",
+    "じっくり観察できてる！",
+  ];
+  const [cheer, setCheer] = useState("");
+  const cheerTimer = useRef<number | undefined>(undefined);
+  const prevStrokeCount = useRef(strokes.length);
+  useEffect(() => {
+    const prev = prevStrokeCount.current;
+    prevStrokeCount.current = strokes.length;
+    if (!missionTitle || strokes.length <= prev || strokes.length % 3 !== 0)
+      return;
+    setCheer(CHEERS[Math.floor(strokes.length / 3 - 1) % CHEERS.length]);
+    window.clearTimeout(cheerTimer.current);
+    cheerTimer.current = window.setTimeout(() => setCheer(""), 2600);
+  }, [strokes.length, missionTitle]);
+  useEffect(
+    () => () => window.clearTimeout(cheerTimer.current),
+    [],
+  );
   useEffect(() => {
     const media = window.matchMedia("(min-width: 760px)");
     const update = () =>
@@ -349,6 +377,11 @@ export function SketchCanvas({
           <div className="mission-pitsune-row">
             <Pitsune pose="face" className="mission-pitsune-face" />
             <h1 className="pitsune-bubble">{missionTitle}</h1>
+            {cheer && (
+              <span className="pitsune-cheer" role="status">
+                {cheer}
+              </span>
+            )}
           </div>
           {landscapeInstruction && (
             <div className="landscape-instruction">{landscapeInstruction}</div>
@@ -405,6 +438,40 @@ export function SketchCanvas({
                 <TargetRegions scene={scene} />
               )}
             </svg>
+            {assist.ghost && ghostSrc && (
+              <img
+                className="underlay ghost-underlay"
+                src={assetPath(ghostSrc)}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
+            {assist.photo && photoUrl && (
+              <img
+                className="underlay photo-underlay"
+                src={photoUrl}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
+            {assist.grid && (
+              <svg
+                className="underlay grid-overlay"
+                viewBox={`0 0 600 ${frameHeight}`}
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {[100, 200, 300, 400, 500].map((x) => (
+                  <line key={`v${x}`} x1={x} y1={0} x2={x} y2={frameHeight} />
+                ))}
+                {Array.from(
+                  { length: Math.floor((frameHeight - 1) / 100) },
+                  (_, i) => (i + 1) * 100,
+                ).map((y) => (
+                  <line key={`h${y}`} x1={0} y1={y} x2={600} y2={y} />
+                ))}
+              </svg>
+            )}
             <canvas
               ref={ref}
               data-testid="canvas"
@@ -554,6 +621,36 @@ export function SketchCanvas({
                     />
                   </button>
                 ))}
+              </div>
+            </div>
+            <div className="tool-group tool-group-assist">
+              <span className="tool-group-label">おたすけ</span>
+              <div className="tool-options">
+                <button
+                  aria-pressed={assist.grid}
+                  onClick={() => setAssist((a) => ({ ...a, grid: !a.grid }))}
+                >
+                  <LayoutGrid size={19} />
+                  グリッド
+                </button>
+                {photoUrl && (
+                  <button
+                    aria-pressed={assist.photo}
+                    onClick={() => setAssist((a) => ({ ...a, photo: !a.photo }))}
+                  >
+                    <ImageIcon size={19} />
+                    写真
+                  </button>
+                )}
+                {ghostSrc && (
+                  <button
+                    aria-pressed={assist.ghost}
+                    onClick={() => setAssist((a) => ({ ...a, ghost: !a.ghost }))}
+                  >
+                    <Eye size={19} />
+                    お手本
+                  </button>
+                )}
               </div>
             </div>
             {landscapeComplete && (

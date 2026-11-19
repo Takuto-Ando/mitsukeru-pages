@@ -29,7 +29,8 @@ export function SketchComparison({
   answer: ObservationGroup["answer"];
 }) {
   const [mode, setMode] = useState<Mode>("slider"),
-    [position, setPosition] = useState(50);
+    [position, setPosition] = useState(50),
+    [replayKey, setReplayKey] = useState(0);
   const clip = useId(),
     left = useId(),
     right = useId(),
@@ -37,8 +38,10 @@ export function SketchComparison({
   const drag = useRef<{ id: number; from: number } | undefined>(undefined),
     value = useRef(position);
   const userLines = useMemo(
-    () => <SketchLines strokes={clipStrokes(strokes, scene)} />,
-    [strokes, scene],
+    () => (
+      <SketchLines strokes={clipStrokes(strokes, scene)} replayKey={replayKey} />
+    ),
+    [strokes, scene, replayKey],
   );
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
@@ -70,6 +73,15 @@ export function SketchComparison({
             {label}
           </button>
         ))}
+        <button
+          className="replay-button"
+          onClick={() => {
+            setMode("drawing");
+            setReplayKey((k) => k + 1);
+          }}
+        >
+          リプレイ
+        </button>
       </div>
       <div className="comparison-stage">
         <motion.svg

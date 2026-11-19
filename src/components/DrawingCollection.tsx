@@ -2,7 +2,7 @@ import { NotebookTools } from "./NotebookTools";
 import { useEffect, useId, useState } from "react";
 import { groups } from "../content/groups";
 import { drawingScene } from "../collection/drawingScene";
-import { taskById } from "../content/tasks";
+import { taskById, tasksForGroup } from "../content/tasks";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import { SketchComparison } from "./SketchComparison";
@@ -81,6 +81,17 @@ export function DrawingCollection({
     answer: string;
   }>();
   const drawing = drawings.find((d) => d.id === selected);
+  const speciesCount = new Set(drawings.map((d) => d.groupId)).size;
+  const completeGroups = groups.filter((g) => {
+    const groupTasks = tasksForGroup(g.id);
+    return groupTasks.every((t) =>
+      drawings.some(
+        (d) =>
+          d.taskId === t.id ||
+          (groupTasks.length === 1 && d.groupId === g.id),
+      ),
+    );
+  });
   const group = drawing && groups.find((g) => g.id === drawing.groupId);
 
   useEffect(() => {
@@ -133,6 +144,34 @@ export function DrawingCollection({
       </button>
       <h1>{title}</h1>
       <p>{drawings.length}枚の観察カードを保存しています。</p>
+      {drawings.length > 0 && (
+        <div className="collection-progress">
+          <p>
+            ずかん： <strong>{speciesCount} / {groups.length}</strong>{" "}
+            しゅるい あつめたよ
+          </p>
+          <div
+            className="progress-track"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={groups.length}
+            aria-valuenow={speciesCount}
+            aria-label="集めた動物の種類"
+          >
+            <div
+              className="progress-fill"
+              style={{ width: `${(speciesCount / groups.length) * 100}%` }}
+            />
+          </div>
+          {completeGroups.length > 0 && (
+            <ul className="complete-badges">
+              {completeGroups.map((g) => (
+                <li key={g.id}>{g.name} コンプリート！</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <NotebookTools drawings={drawings} onRestored={onUpdate} />
       <p className="quiet-note">
         このブラウザ・アプリの中だけに保存します。SafariとiPhoneアプリの保存は別々です。撮影写真や位置情報は保存しません。

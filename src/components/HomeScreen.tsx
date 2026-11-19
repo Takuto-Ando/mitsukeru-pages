@@ -1,6 +1,13 @@
 import { BookOpen, Settings } from "lucide-react";
+import { groups } from "../content/groups";
 
 // タイトル画面（原案: docs/design-reference/title-screen.png）
+const today = new Date();
+const dayIndex = Math.floor(
+  Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()) / 86400000,
+);
+const todaysPick = groups[dayIndex % groups.length];
+
 export function HomeScreen({
   onStart,
   onContinue,
@@ -47,6 +54,9 @@ export function HomeScreen({
           <div className="home-lockup-copy">
             <p className="home-tagline">指先から動物園をおもしろく。</p>
             <h1 className="home-logo">ズーケッチ</h1>
+            <p className="home-pick">
+              ピツネの今日のおすすめは <strong>{todaysPick.name}</strong> だよ！
+            </p>
           </div>
         </div>
       </div>

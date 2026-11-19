@@ -600,6 +600,7 @@ export default function App() {
                   )}
                   <SketchCanvas
                     key={taskId}
+                    photoUrl={photo || undefined}
                     missionTitle={`${group.name}の${task.part}を描いてみよう！`}
                     landscapeInstruction={
                       <>

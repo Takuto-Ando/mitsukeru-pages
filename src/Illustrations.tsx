@@ -87,13 +87,28 @@ export function PupilShape({ fill = "#4c4237" }: { fill?: string }) {
   return <rect x="219" y="190" width="168" height="59" rx="13" fill={fill} />;
 }
 
-export function SketchLines({ strokes }: { strokes: Stroke[] }) {
+export function SketchLines({
+  strokes,
+  replayKey = 0,
+}: {
+  strokes: Stroke[];
+  replayKey?: number;
+}) {
   return (
     <g>
       {" "}
       {strokes.map((stroke, index) => (
         <polyline
-          key={index}
+          key={replayKey ? `${replayKey}-${index}` : index}
+          {...(replayKey
+            ? {
+                pathLength: 1,
+                className: "replay-line",
+                style: {
+                  animationDelay: `${Math.min(index * 0.22, 5)}s`,
+                } as React.CSSProperties,
+              }
+            : {})}
           points={stroke.map((point) => point.x + "," + point.y).join(" ")}
           fill="none"
           stroke="#277e78"
