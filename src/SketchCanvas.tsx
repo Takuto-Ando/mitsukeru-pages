@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Pencil, Eraser, Undo2, Redo2, RotateCcw, LayoutGrid, Image as ImageIcon, Eye } from "lucide-react";
+import { Pencil, Eraser, Undo2, Redo2, RotateCcw, LayoutGrid, Image as ImageIcon, Eye, PaintBucket } from "lucide-react";
 import { artwork, assetPath } from "./content/artwork";
 import {
   drawingRegions,
@@ -23,6 +23,11 @@ const BRUSH_COLORS = [
   "#b0563a",
   "#277e78",
   "#8d8577",
+  "#e58c76",
+  "#f2b544",
+  "#7fb069",
+  "#5da9e9",
+  "#e88bb0",
 ];
 import { TargetRegions } from "./components/TargetRegions";
 import { Pitsune } from "./components/Pitsune";
@@ -45,7 +50,10 @@ export function SketchCanvas({
   showTarget = false,
   photoUrl,
 }: {
-  onDrawingActivity?: (active: boolean, tool: "pen" | "eraser") => void;
+  onDrawingActivity?: (
+    active: boolean,
+    tool: "pen" | "eraser" | "fill",
+  ) => void;
   onUndo?: () => void;
   canUndo?: boolean;
   onRedo?: () => void;
@@ -64,7 +72,9 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
-  const activeTool = useRef<"pen" | "eraser">("pen");
+  const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
+  const [fillMode, setFillMode] = useState(false);
+  const fillImages = useRef(new Map<string, HTMLImageElement>());
   const ref = useRef<HTMLCanvasElement>(null),
     active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
@@ -157,6 +167,7 @@ export function SketchCanvas({
       context.lineJoin = "round";
       const draw = (stroke: Stroke, current = false) => {
         if (!stroke.length) return;
+        if (!current && getStrokeStyle(stroke)?.fill) return;
         const style = current
           ? activeBrush.current
           : getStrokeStyle(stroke) || {
@@ -184,6 +195,19 @@ export function SketchCanvas({
         }
         context.stroke();
       };
+      for (const stroke of working.current) {
+        const fill = getStrokeStyle(stroke)?.fill;
+        if (!fill) continue;
+        let image = fillImages.current.get(fill);
+        if (!image) {
+          image = new Image();
+          image.src = fill;
+          image.onload = () => paint();
+          fillImages.current.set(fill, image);
+        }
+        if (image.complete && image.naturalWidth)
+          context.drawImage(image, 0, 0, 600, frameHeight);
+      }
       for (const stroke of working.current) draw(stroke);
       draw(current.current, true);
       context.restore();
@@ -268,6 +292,110 @@ export function SketchCanvas({
       eraseOnce(position, radius);
     }
     lastErase.current = position;
+    paint();
+  }
+  function doFill(center: Point) {
+    const region = drawingRegions(scene).find(
+      (r) =>
+        center.x >= r.x * 600 &&
+        center.x <= (r.x + r.width) * 600 &&
+        center.y >= r.y * frameHeight &&
+        center.y <= (r.y + r.height) * frameHeight,
+    );
+    if (!region) return;
+    const W = 600,
+      H = frameHeight;
+    const barrierCanvas = document.createElement("canvas");
+    barrierCanvas.width = W;
+    barrierCanvas.height = H;
+    const bctx = barrierCanvas.getContext("2d");
+    if (!bctx) return;
+    bctx.fillStyle = "#fff";
+    bctx.fillRect(0, 0, W, H);
+    bctx.strokeStyle = "#000";
+    bctx.lineCap = "round";
+    bctx.lineJoin = "round";
+    for (const stroke of working.current) {
+      if (!stroke.length || getStrokeStyle(stroke)?.fill) continue;
+      bctx.lineWidth = (getStrokeStyle(stroke)?.width ?? 7) + 2;
+      bctx.beginPath();
+      bctx.moveTo(stroke[0].x, stroke[0].y);
+      for (const pt of stroke.slice(1)) bctx.lineTo(pt.x, pt.y);
+      bctx.stroke();
+    }
+    bctx.lineWidth = 3;
+    bctx.strokeRect(
+      region.x * W + 1,
+      region.y * H + 1,
+      region.width * W - 2,
+      region.height * H - 2,
+    );
+    const data = bctx.getImageData(0, 0, W, H).data;
+    const isBarrier = (idx: number) => data[idx * 4] < 128;
+    const sx = Math.max(0, Math.min(W - 1, Math.round(center.x))),
+      sy = Math.max(0, Math.min(H - 1, Math.round(center.y)));
+    if (isBarrier(sy * W + sx)) return;
+    const visited = new Uint8Array(W * H);
+    const stack: number[] = [sx, sy];
+    const mask = document.createElement("canvas");
+    mask.width = W;
+    mask.height = H;
+    const mctx = mask.getContext("2d");
+    if (!mctx) return;
+    const mimg = mctx.createImageData(W, H),
+      md = mimg.data;
+    const hex = activeBrush.current.color;
+    const cr = parseInt(hex.slice(1, 3), 16),
+      cg = parseInt(hex.slice(3, 5), 16),
+      cb = parseInt(hex.slice(5, 7), 16);
+    while (stack.length) {
+      const y = stack.pop()!,
+        x0 = stack.pop()!;
+      let x = x0;
+      const row = y * W;
+      while (x >= 0 && !visited[row + x] && !isBarrier(row + x)) {
+        visited[row + x] = 1;
+        x--;
+      }
+      x++;
+      let spanUp = false,
+        spanDown = false;
+      while (x < W && !visited[row + x] && !isBarrier(row + x)) {
+        visited[row + x] = 1;
+        const mi = (row + x) * 4;
+        md[mi] = cr;
+        md[mi + 1] = cg;
+        md[mi + 2] = cb;
+        md[mi + 3] = 140;
+        if (y > 0) {
+          const up = !visited[row - W + x] && !isBarrier(row - W + x);
+          if (up && !spanUp) {
+            stack.push(x, y - 1);
+            spanUp = true;
+          } else if (!up) spanUp = false;
+        }
+        if (y < H - 1) {
+          const down = !visited[row + W + x] && !isBarrier(row + W + x);
+          if (down && !spanDown) {
+            stack.push(x, y + 1);
+            spanDown = true;
+          } else if (!down) spanDown = false;
+        }
+        x++;
+      }
+    }
+    mctx.putImageData(mimg, 0, 0);
+    const anchor: Stroke = [
+      { x: center.x, y: center.y },
+      { x: center.x + (center.x < 599 ? 0.01 : -0.01), y: center.y },
+    ];
+    setStrokeStyle(anchor, {
+      color: activeBrush.current.color,
+      width: 0,
+      fill: mask.toDataURL(),
+    });
+    working.current = [...working.current, anchor];
+    callbacks.current.onChange(working.current, "draw");
     paint();
   }
   function moveEraserRing(event: { clientX: number; clientY: number }) {
@@ -491,6 +619,14 @@ export function SketchCanvas({
                   /* The pointer may already have ended. */
                 }
                 const position = point(event);
+                if (fillMode) {
+                  active.current = null;
+                  doFill(position);
+                  if (ref.current?.hasPointerCapture(event.pointerId))
+                    ref.current.releasePointerCapture(event.pointerId);
+                  callbacks.current.onDrawingActivity?.(false, "pen");
+                  return;
+                }
                 if (activeTool.current === "eraser") {
                   lastErase.current = null;
                   moveEraserRing(event);
@@ -504,7 +640,8 @@ export function SketchCanvas({
               }}
               onPointerMove={(event) => {
                 if (erase) moveEraserRing(event);
-                else if (event.pointerType !== "touch") moveBrushRing(event);
+                else if (event.pointerType !== "touch" && !fillMode)
+                  moveBrushRing(event);
                 if (active.current !== event.pointerId) return;
                 const rect = event.currentTarget.getBoundingClientRect();
                 const samples = event.nativeEvent.getCoalescedEvents?.() || [];
@@ -539,7 +676,7 @@ export function SketchCanvas({
                 aria-hidden="true"
               />
             )}
-            {!erase && (
+            {!erase && !fillMode && (
               <div ref={brushRing} className="brush-ring" aria-hidden="true" />
             )}
           </div>
@@ -557,19 +694,42 @@ export function SketchCanvas({
             <div className="tool-group tool-group-actions">
               <span className="tool-group-label">ツール</span>
               <div className="tool-options">
-                <button aria-pressed={!erase} onClick={() => setErase(false)}>
+                <button
+                  aria-pressed={!erase && !fillMode}
+                  onClick={() => {
+                    setErase(false);
+                    setFillMode(false);
+                  }}
+                >
                   <Pencil size={19} />
                   ペン
                 </button>
-                <button aria-pressed={erase} onClick={() => setErase(true)}>
+                <button
+                  aria-pressed={erase}
+                  onClick={() => {
+                    setErase(true);
+                    setFillMode(false);
+                  }}
+                >
                   <Eraser size={19} />
                   消しゴム
+                </button>
+                <button
+                  aria-pressed={fillMode}
+                  onClick={() => {
+                    setFillMode(true);
+                    setErase(false);
+                  }}
+                >
+                  <PaintBucket size={19} />
+                  バケツ
                 </button>
                 <button
                   disabled={!strokes.length}
                   onClick={() => {
                     onChange([], "clear");
                     setErase(false);
+                    setFillMode(false);
                   }}
                 >
                   <RotateCcw size={19} />
@@ -660,13 +820,35 @@ export function SketchCanvas({
             <div className="tool-group tool-group-actions">
               <span className="tool-group-label">ツール</span>
               <div className="tool-options">
-                <button aria-pressed={!erase} onClick={() => setErase(false)}>
+                <button
+                  aria-pressed={!erase && !fillMode}
+                  onClick={() => {
+                    setErase(false);
+                    setFillMode(false);
+                  }}
+                >
                   <Pencil size={19} />
                   ペン
                 </button>
-                <button aria-pressed={erase} onClick={() => setErase(true)}>
+                <button
+                  aria-pressed={erase}
+                  onClick={() => {
+                    setErase(true);
+                    setFillMode(false);
+                  }}
+                >
                   <Eraser size={19} />
                   消しゴム
+                </button>
+                <button
+                  aria-pressed={fillMode}
+                  onClick={() => {
+                    setFillMode(true);
+                    setErase(false);
+                  }}
+                >
+                  <PaintBucket size={19} />
+                  バケツ
                 </button>
                 <button
                   disabled={!(canUndo ?? !!strokes.length)}
@@ -682,6 +864,7 @@ export function SketchCanvas({
                   onClick={() => {
                     onChange([], "clear");
                     setErase(false);
+                    setFillMode(false);
                   }}
                 >
                   <RotateCcw size={19} />
@@ -738,6 +921,9 @@ export function SketchCanvas({
       </div>
       {erase && (
         <p className="eraser-tip">なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。</p>
+      )}
+      {fillMode && (
+        <p className="eraser-tip">線で囲んだ中をタップすると、選んだ色でぬれるよ。</p>
       )}
     </div>
   );

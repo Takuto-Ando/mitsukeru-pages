@@ -10,6 +10,8 @@ export type Stroke = Point[];
 export interface StrokeStyle {
   color: string;
   width: number;
+  /** Bucket-fill mask (PNG data URL) anchored by a micro stroke. */
+  fill?: string;
 }
 export interface Challenge {
   animalId: string;

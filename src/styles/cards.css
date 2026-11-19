@@ -2601,3 +2601,34 @@ details[open] > summary::after {
   right: 0;
   height: 1px;
 }
+
+/* 機能追加 第3弾: 並び替え・マスターバッジ */
+.collection-sort {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.collection-sort button {
+  border: 2px solid #d8c9a3;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 14px;
+  font-weight: 700;
+  color: #71461f;
+}
+.collection-sort button[aria-pressed="true"] {
+  background: #f7ba3d;
+  border-color: #d99a16;
+}
+.master-badge {
+  display: inline-block;
+  background: #fdf3d0;
+  border: 2px solid #d99a16;
+  border-radius: 999px;
+  color: #8a5f10;
+  font-weight: 700;
+  padding: 3px 14px;
+  margin: 6px 0 0;
+}
+
+.collection-sort { grid-column: 1 / -1; }
