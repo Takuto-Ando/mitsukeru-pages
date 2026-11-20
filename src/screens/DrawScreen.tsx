@@ -16,6 +16,7 @@ type CanvasControls = Pick<
 >;
 
 export function DrawScreen({
+  dopa = false,
   task,
   photo,
   strokes,
@@ -28,6 +29,7 @@ export function DrawScreen({
   onReselect,
   canvasProps,
 }: {
+  dopa?: boolean;
   task: ObservationTask;
   photo: string;
   strokes: Stroke[];
@@ -75,6 +77,7 @@ export function DrawScreen({
     <div className="design3-draw">
       <SketchCanvas
         {...canvasProps}
+        dopa={dopa}
         photoUrl={photo || undefined}
         missionTitle={hasHint ? "もうすこし観察してみて！" : observationPrompt}
         landscapeReselect={reference}

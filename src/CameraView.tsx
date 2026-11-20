@@ -27,6 +27,8 @@ async function applyZoom(track: MediaStreamTrack | undefined, zoom: number) {
   }
 }
 export function CameraView({
+  dopa = false,
+  onCapture,
   onSelect,
   onCollection,
   onSettings,
@@ -34,6 +36,8 @@ export function CameraView({
   celebrating = false,
   onFreeDraw,
 }: {
+  dopa?: boolean;
+  onCapture?: () => void;
   suspended?: boolean;
   celebrating?: boolean;
   onFreeDraw: () => void;
@@ -219,6 +223,7 @@ export function CameraView({
       stopCamera();
       needsResume.current = false;
       setStatus("review");
+      onCapture?.();
       recordStudy(
         "animal_photographed",
         {},
@@ -458,6 +463,7 @@ export function CameraView({
       {status === "review" && (
         <div inert={celebrating || undefined}>
           <PhotoReview
+            dopa={dopa}
             photo={captured}
             takenAt={takenAt}
             selection={selection?.choice}

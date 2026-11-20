@@ -1,6 +1,7 @@
-import { BookOpen, Settings } from "lucide-react";
+import { BookOpen, Settings, Sparkles } from "lucide-react";
 import { groups } from "../content/groups";
 import { assetPath } from "../content/artwork";
+import { DopaTitleArt } from "./DopaEffects";
 import "../styles/design3-entry.css";
 
 const today = new Date();
@@ -16,6 +17,7 @@ export function HomeScreen({
   onSettings,
   savedCount,
   studyTutorial = false,
+  dopa = false,
 }: {
   onStart: () => void;
   onContinue: () => void;
@@ -23,24 +25,37 @@ export function HomeScreen({
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
   studyTutorial?: boolean;
+  dopa?: boolean;
 }) {
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
-      <img
-        alt=""
-        className="design3-title-tail"
-        src={assetPath("figma/entry/tail.svg")}
-      />
-      <img
-        alt=""
-        className="design3-title-curve"
-        src={assetPath("figma/entry/curve.svg")}
-      />
-      <img
-        alt=""
-        className="design3-title-trail"
-        src={assetPath("figma/entry/trail.svg")}
-      />
+      {dopa ? (
+        <>
+          <span className="dopa-edition-label">
+            <Sparkles size={17} aria-hidden="true" />
+            ドパガキ版
+          </span>
+          <DopaTitleArt />
+        </>
+      ) : (
+        <>
+          <img
+            alt=""
+            className="design3-title-tail"
+            src={assetPath("figma/entry/tail.svg")}
+          />
+          <img
+            alt=""
+            className="design3-title-curve"
+            src={assetPath("figma/entry/curve.svg")}
+          />
+          <img
+            alt=""
+            className="design3-title-trail"
+            src={assetPath("figma/entry/trail.svg")}
+          />
+        </>
+      )}
       <div className="design3-title-heading">
         <p className="design3-title-tagline">
           <img
@@ -104,6 +119,9 @@ export function HomeScreen({
             設定
           </button>
           <a href={assetPath("figma/")}>Figma再現版を開く</a>
+          <a href={assetPath(dopa ? "plus/" : "dopa/")}>
+            {dopa ? "機能拡張版を開く" : "ドパガキ版を開く"}
+          </a>
         </div>
       </div>
     </section>

@@ -61,6 +61,7 @@ export function SketchCanvas({
   missionTitle,
   missionLettering,
   fixedPortrait = false,
+  dopa = false,
   actions,
   landscapeReselect,
   showTarget = false,
@@ -78,6 +79,7 @@ export function SketchCanvas({
   missionTitle?: string;
   missionLettering?: string;
   fixedPortrait?: boolean;
+  dopa?: boolean;
   actions?: ReactNode;
   landscapeReselect?: ReactNode;
   showTarget?: boolean;
@@ -167,15 +169,23 @@ export function SketchCanvas({
   const [cheer, setCheer] = useState("");
   const cheerTimer = useRef<number | undefined>(undefined);
   const prevStrokeCount = useRef(strokes.length);
+  const firstStrokeCheered = useRef(false);
   useEffect(() => {
     const prev = prevStrokeCount.current;
     prevStrokeCount.current = strokes.length;
-    if (!missionTitle || strokes.length <= prev || strokes.length % 3 !== 0)
-      return;
-    setCheer(CHEERS[Math.floor(strokes.length / 3 - 1) % CHEERS.length]);
+    if (!missionTitle || strokes.length <= prev) return;
+    const firstMark =
+      dopa && strokes.length === 1 && !firstStrokeCheered.current;
+    if (!firstMark && strokes.length % 3 !== 0) return;
+    if (firstMark) firstStrokeCheered.current = true;
+    setCheer(
+      firstMark
+        ? "いい線だね！"
+        : CHEERS[Math.floor(strokes.length / 3 - 1) % CHEERS.length],
+    );
     window.clearTimeout(cheerTimer.current);
     cheerTimer.current = window.setTimeout(() => setCheer(""), 2600);
-  }, [strokes.length, missionTitle]);
+  }, [dopa, strokes.length, missionTitle]);
   useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 760px)");
@@ -632,7 +642,11 @@ export function SketchCanvas({
               )}
             </h1>
             {cheer && (
-              <span className="pitsune-cheer" role="status">
+              <span
+                key={dopa ? cheer : undefined}
+                className="pitsune-cheer"
+                role="status"
+              >
                 {cheer}
               </span>
             )}
