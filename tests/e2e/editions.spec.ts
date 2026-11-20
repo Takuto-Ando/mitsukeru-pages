@@ -20,6 +20,19 @@ async function drawGiraffe(page: Page) {
   await page.mouse.up();
 }
 
+async function expectGiraffeChallenge(page: Page) {
+  await expect(
+    page.getByRole("heading", {
+      name: "キリンの舌を描いてみよう！",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "難易度 1 / 3", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByTestId("canvas")).toHaveCount(0);
+}
+
 test("機能拡張版の入口からFigma再現版を別のURLで開ける", async ({
   page,
   baseURL,
@@ -27,11 +40,16 @@ test("機能拡張版の入口からFigma再現版を別のURLで開ける", asy
   await page.goto("plus/");
   const link = page.getByRole("link", { name: "Figma再現版を開く" });
   await expect(link).toBeVisible();
+  const titleScreen = page.getByRole("region", {
+    name: "ズーケッチのタイトル",
+  });
+  await expect(titleScreen).toHaveCSS("background-color", "rgb(255, 250, 240)");
   await link.click();
   await expect(page).toHaveURL(new URL("figma/", baseURL!).href);
   await expect(page).toHaveTitle("ズーケッチ Figma再現版");
   const start = page.getByRole("button", { name: "はじめから", exact: true });
   await expect(start).toBeVisible();
+  await expect(titleScreen).toHaveCSS("background-color", "rgb(255, 250, 240)");
   await expect(link).toHaveCount(0);
   await page.reload();
   await expect(start).toBeVisible();
@@ -113,6 +131,8 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
     .getByRole("button", { name: "ピツネに見せる", exact: true })
     .click();
   await page.getByRole("button", { name: "描いてみる！", exact: true }).click();
+  await expectGiraffeChallenge(page);
+  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
 
   await drawGiraffe(page);
   await page.getByRole("button", { name: "できた！", exact: true }).click();
@@ -192,6 +212,7 @@ test("再現版の通常カメラで撮影・動物選択・写真を見返せ�
   await page
     .getByRole("button", { name: "ピツネに見せる", exact: true })
     .click();
+  await expectGiraffeChallenge(page);
   await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
   await expect(page.getByTestId("canvas")).toBeVisible();
   await drawGiraffe(page);
@@ -205,6 +226,33 @@ test("再現版の通常カメラで撮影・動物選択・写真を見返せ�
   await expect(
     page.getByRole("img", { name: "撮影した写真", exact: true }),
   ).toBeVisible();
+});
+
+test("拡張版でキリンを選ぶと描画の前に舌の課題と難易度を確認できる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: () =>
+          Promise.reject(new DOMException("denied", "NotAllowedError")),
+      },
+    });
+  });
+  await page.goto("plus/");
+  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page
+    .getByRole("button", { name: "写真なしで始める", exact: true })
+    .click();
+  await page.getByRole("button", { name: "修正", exact: true }).click();
+  await page.getByRole("button", { name: "キリン", exact: true }).click();
+  await page
+    .getByRole("button", { name: "ピツネに見せる", exact: true })
+    .click();
+  await expectGiraffeChallenge(page);
+  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
+  await expect(page.getByTestId("canvas")).toBeVisible();
 });
 
 test("拡張版の任意ツールを使っても研究への同意は変わらない", async ({

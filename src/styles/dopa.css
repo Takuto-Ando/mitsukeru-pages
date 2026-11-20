@@ -26,6 +26,7 @@ body:has(.dopa-app[data-screen="home"]) {
 .dopa-app .design3-title {
   gap: 11px;
   justify-content: center;
+  color: #fffaf0;
   padding: max(24px, calc(env(safe-area-inset-top) + 14px)) 18px
     max(20px, calc(env(safe-area-inset-bottom) + 10px));
   background: var(--dopa-deep);

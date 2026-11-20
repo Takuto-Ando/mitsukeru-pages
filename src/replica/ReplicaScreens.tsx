@@ -1,7 +1,6 @@
 import { CircleHelp } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
-import { DifficultyPill } from "../components/DifficultyPill";
 import { SketchComparison } from "../components/SketchComparison";
 import { assetPath } from "../content/artwork";
 import { designCardViewport } from "../drawing/viewport";
@@ -73,47 +72,6 @@ export function ReplicaIntro({
       >
         <img alt="" src={assetPath(folder + "entry-" + pose + "-action.svg")} />
       </button>
-    </section>
-  );
-}
-
-export function ReplicaDifficulty({
-  task,
-  group,
-  onStart,
-}: {
-  task: ObservationTask;
-  group: ObservationGroup;
-  onStart: () => void;
-}) {
-  return (
-    <section className="design3-challenge replica-difficulty">
-      <h1>
-        {task.id === "giraffe" ? (
-          <img
-            className="design3-challenge-giraffe-title"
-            src={assetPath(
-              "illustrations/pdf-design/challenge-giraffe-title.svg",
-            )}
-            alt="キリンの舌"
-          />
-        ) : (
-          <strong>
-            {group.name}の{task.part}
-          </strong>
-        )}
-        <img
-          className="design3-challenge-prompt"
-          src={assetPath("illustrations/pdf-design/challenge-prompt.svg")}
-          alt="を描いてみよう！"
-        />
-      </h1>
-      <DifficultyPill regionCount={task.scene.regions.length} />
-      <button
-        className="replica-fullscreen-action"
-        onClick={onStart}
-        aria-label="描きはじめる"
-      />
     </section>
   );
 }

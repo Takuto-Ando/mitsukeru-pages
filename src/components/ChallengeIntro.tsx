@@ -22,43 +22,55 @@ export function ChallengeIntro({
   part,
   regionCount,
   onStart,
+  tapAnywhere = false,
 }: {
   taskId: string;
   animal: string;
   part: string;
   regionCount: number;
   onStart: () => void;
+  tapAnywhere?: boolean;
 }) {
+  const title = taskId === "giraffe" ? "キリンの舌" : `${animal}の${part}`;
+
   return (
     <section className="design3-challenge">
-      <h1>
+      <h1 aria-label={`${title}を描いてみよう！`}>
         {taskId === "giraffe" ? (
           <img
             className="design3-challenge-giraffe-title"
             src={assetPath(
               "illustrations/pdf-design/challenge-giraffe-title.svg",
             )}
-            alt="キリンの舌"
+            alt=""
           />
         ) : (
-          <strong>
-            {animal}の{part}
-          </strong>
+          <strong>{title}</strong>
         )}
         <img
           className="design3-challenge-prompt"
           src={assetPath("illustrations/pdf-design/challenge-prompt.svg")}
-          alt="を描いてみよう！"
+          alt=""
         />
       </h1>
       <DifficultyPill regionCount={regionCount} />
-      <button
-        className="design3-pill design3-challenge-start"
-        onClick={onStart}
-      >
-        描きはじめる
-        <ChevronRight size={20} aria-hidden="true" />
-      </button>
+      {tapAnywhere ? (
+        <button
+          className="design3-challenge-tap"
+          type="button"
+          aria-label="描きはじめる"
+          onClick={onStart}
+        />
+      ) : (
+        <button
+          className="design3-pill design3-challenge-start"
+          type="button"
+          onClick={onStart}
+        >
+          描きはじめる
+          <ChevronRight size={20} aria-hidden="true" />
+        </button>
+      )}
     </section>
   );
 }
