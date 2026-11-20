@@ -6,7 +6,7 @@ import {
   SplashScreen,
   TutorialEndScreen,
 } from "../components/IntroFlow";
-import { PhotoCelebration } from "../components/ChallengeIntro";
+import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
 import { FreeDrawScreen } from "../screens/DrawScreen";
 import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
@@ -15,7 +15,6 @@ import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { ReplicaCamera } from "./ReplicaCamera";
 import { ReplicaGallery, type ReplicaRecord } from "./ReplicaGallery";
 import {
-  ReplicaDifficulty,
   ReplicaDraw,
   ReplicaIntro,
   ReplicaPhotoReview,
@@ -316,14 +315,17 @@ export function ReplicaApp() {
             </>
           )}
           {screen === "easel" && (
-            <ReplicaIntro pose="easel" onNext={startDrawing} />
+            <ReplicaIntro pose="easel" onNext={() => setScreen("challenge")} />
           )}
           {screen === "loading" && <IntroLoadingScreen />}
           {screen === "challenge" && (
-            <ReplicaDifficulty
-              task={task}
-              group={group}
+            <ChallengeIntro
+              taskId={task.id}
+              animal={group.name}
+              part={task.part}
+              regionCount={task.scene.regions.length}
               onStart={startDrawing}
+              tapAnywhere
             />
           )}
           {screen === "draw" && (

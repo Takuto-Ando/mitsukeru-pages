@@ -27,6 +27,8 @@ export function HomeScreen({
   studyTutorial?: boolean;
   dopa?: boolean;
 }) {
+  const lettering = dopa ? "" : "-brown";
+
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
       {dopa ? (
@@ -60,11 +62,16 @@ export function HomeScreen({
         <p className="design3-title-tagline">
           <img
             alt="その指先が夢中をつくる。"
-            src={assetPath("illustrations/pdf-design/entry-title-tagline.svg")}
+            src={assetPath(
+              `illustrations/pdf-design/entry-title-tagline${lettering}.svg`,
+            )}
           />
         </p>
         <h1>
-          <img alt="ズーケッチ" src={assetPath("figma/entry/logo.svg")} />
+          <img
+            alt="ズーケッチ"
+            src={assetPath(`figma/entry/logo${lettering}.svg`)}
+          />
         </h1>
       </div>
       <div className="design3-title-actions">

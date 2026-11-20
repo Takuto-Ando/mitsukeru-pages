@@ -256,8 +256,8 @@
 
 .design3-title {
   --title-art-crop: clamp(0px, calc((874px - 100dvh) * 0.43), 62px);
-  color: #fffaf0;
-  background: #86a843;
+  color: var(--d3-brown);
+  background: #fffaf0;
   padding-top: clamp(150px, 39.25dvh, 344px);
 }
 
