@@ -1,5 +1,6 @@
 import type { Stroke, Point, Evaluation } from "./types";
 import type { Scene } from "./content/scenes";
+import { featureCues } from "./content/featureCues";
 export interface FeatureRule {
   kind:
     | "paired-bands"
@@ -12,8 +13,7 @@ export interface FeatureRule {
     | "nostrils"
     | "paw"
     | "crest"
-    | "cross"
-    | "spots";
+    | "cross";
   minWidth: number;
   minHeight: number;
   minTurn?: number;
@@ -33,7 +33,6 @@ export const featureRules: Record<string, FeatureRule> = {
   gorilla: { kind: "crest", minTurn: 0.5, minWidth: 100, minHeight: 35 },
   donkey: { kind: "cross", minWidth: 110, minHeight: 65 },
   meerkat: { kind: "paired-patches", minWidth: 25, minHeight: 12 },
-  deer: { kind: "spots", minWidth: 40, minHeight: 0 },
 };
 function samples(strokes: Stroke[]) {
   const map = new Map<string, Point>();
@@ -63,14 +62,11 @@ function spans(points: Point[]) {
   };
   return { width: extent("x"), height: extent("y") };
 }
-export function evaluateFeatures(
-  strokes: Stroke[],
-  scene: Scene,
-  hint: string,
-): Evaluation {
-  const rule = featureRules[scene.id],
-    points = samples(strokes),
-    { width, height } = spans(points);
+export function hasFeatureRule(id: string): boolean {
+  return Object.hasOwn(featureCues, id) || Object.hasOwn(featureRules, id);
+}
+
+function directions(strokes: Stroke[]) {
   let turn = 0,
     horizontal = 0,
     vertical = 0;
@@ -94,6 +90,143 @@ export function evaluateFeatures(
       angle = a;
     }
   }
+  return { turn, horizontal, vertical };
+}
+
+function separatedMarks(
+  strokes: Stroke[],
+  cue: Extract<NonNullable<(typeof featureCues)[string]>, { kind: "marks" }>,
+) {
+  const positions: number[] = [];
+  for (const stroke of strokes) {
+    if (!stroke.length) continue;
+    let x0 = Infinity,
+      y0 = Infinity,
+      x1 = -Infinity,
+      y1 = -Infinity;
+    for (const p of stroke) {
+      x0 = Math.min(x0, p.x);
+      x1 = Math.max(x1, p.x);
+      y0 = Math.min(y0, p.y);
+      y1 = Math.max(y1, p.y);
+    }
+    const width = x1 - x0,
+      height = y1 - y0;
+    if (cue.direction === "up" && (height < cue.size || height < width * 0.75))
+      continue;
+    if (
+      cue.direction === "across" &&
+      (width < cue.size || width < height * 0.7)
+    )
+      continue;
+    if (!cue.direction && Math.max(width, height) < cue.size) continue;
+    positions.push(cue.axis === "x" ? (x0 + x1) / 2 : (y0 + y1) / 2);
+  }
+  let previous = -Infinity;
+  let count = 0;
+  for (const position of positions.sort((a, b) => a - b)) {
+    if (position - previous < cue.separation) continue;
+    previous = position;
+    if (++count >= cue.count) return true;
+  }
+  return false;
+}
+
+function matchesCue(
+  strokes: Stroke[],
+  cue: NonNullable<(typeof featureCues)[string]>,
+): boolean {
+  if (cue.kind === "marks") return separatedMarks(strokes, cue);
+  const points = samples(strokes);
+  const extent = spans(points);
+  if (extent.width < cue.width || extent.height < cue.height) return false;
+  if (cue.kind === "bend") return directions(strokes).turn >= cue.minTurn;
+
+  // Compare the center edge with the two sides, irrespective of order
+  // or whether the observer drew the rest of the outline.
+  const xs = points.map((point) => point.x).sort((a, b) => a - b);
+  const left = xs[Math.floor((xs.length - 1) * 0.03)];
+  const middle =
+    cue.edge === "top"
+      ? [0.47, 0.5, 0.53]
+      : [0.44, 0.47, 0.5, 0.53, 0.56, 0.59, 0.62];
+  const halfWindow = cue.edge === "top" ? 0.09 : 0.028;
+  const centerEdges = middle.map(() => Infinity);
+  let leftEdge = Infinity;
+  let rightEdge = Infinity;
+  for (const point of points) {
+    const x = (point.x - left) / extent.width;
+    const y = cue.edge === "top" ? point.y : -point.y;
+    if (x < 0.35) leftEdge = Math.min(leftEdge, y);
+    if (x > 0.65) rightEdge = Math.min(rightEdge, y);
+    for (const [index, center] of middle.entries())
+      if (Math.abs(x - center) <= halfWindow)
+        centerEdges[index] = Math.min(centerEdges[index], y);
+  }
+  return centerEdges.some(
+    (edge) =>
+      Number.isFinite(edge) &&
+      edge >= Math.max(leftEdge, rightEdge) + cue.depth,
+  );
+}
+
+export function evaluateFeatures(
+  strokes: Stroke[],
+  scene: Scene,
+  hint: string,
+): Evaluation {
+  const rule = featureRules[scene.id];
+  const cue =
+    scene.id === "elephant" && scene.frameHeight !== 600
+      ? undefined
+      : featureCues[scene.id];
+  if (!cue && !rule)
+    return {
+      passed: false,
+      status: "uncertain",
+      message: "見えた形を見くらべよう。",
+      suggestion: hint,
+    };
+  const points = samples(strokes);
+  const { width, height } = spans(points);
+  const { turn, horizontal, vertical } = directions(strokes);
+  if (cue) {
+    const fits =
+      "eachRegion" in cue && cue.eachRegion
+        ? scene.regions.every((region) =>
+            matchesCue(
+              strokes.filter(([point]) => {
+                if (!point) return false;
+                const x = point.x / 600;
+                const y = point.y / (scene.frameHeight || 400);
+                return (
+                  x >= region.x - 1e-6 &&
+                  x <= region.x + region.width + 1e-6 &&
+                  y >= region.y - 1e-6 &&
+                  y <= region.y + region.height + 1e-6
+                );
+              }),
+              cue,
+            ),
+          )
+        : matchesCue(strokes, cue);
+    return {
+      status: fits ? "correct" : "uncertain",
+      passed: fits,
+      message: fits ? "特徴を見つけたね！" : "実物でも、こんな形に見えた？",
+      suggestion: fits ? "" : hint,
+      debug: {
+        cue: cue.kind,
+        width,
+        height,
+        turn,
+        horizontal,
+        vertical,
+        strokes: strokes.length,
+        automaticJudging: "feature-heuristic",
+      },
+    };
+  }
   const regions = scene.regions.map((r) =>
     spans(
       points.filter(
@@ -112,24 +245,7 @@ export function evaluateFeatures(
     );
   else if (rule.kind === "cross")
     fits = horizontal >= rule.minWidth && vertical >= rule.minHeight;
-  else if (rule.kind === "spots") {
-    // Separated marks, independent of pen speed and exact circle shape.
-    const remaining = [...points];
-    let clusters = 0;
-    while (remaining.length) {
-      const pending = [remaining.pop()!];
-      let size = 0;
-      while (pending.length) {
-        const a = pending.pop()!;
-        size++;
-        for (let i = remaining.length - 1; i >= 0; i--)
-          if (Math.hypot(a.x - remaining[i].x, a.y - remaining[i].y) < 18)
-            pending.push(remaining.splice(i, 1)[0]);
-      }
-      if (size >= 2) clusters++;
-    }
-    fits = clusters >= 3 && width >= rule.minWidth;
-  } else
+  else
     fits =
       width >= rule.minWidth &&
       height >= rule.minHeight &&

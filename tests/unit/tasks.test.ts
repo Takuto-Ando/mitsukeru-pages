@@ -40,7 +40,7 @@ test("20グループ34課題、別部位を別IDと固有素材・マスクで�
     "縦と横、どちらに長いかな？",
   ]);
 });
-test("模様は比較確認を標準とし、全課題に判定方法がある", () => {
+test("全課題に特徴に合う自動判定がある", () => {
   for (const t of tasks) {
     expect([
       "orientation",
@@ -50,7 +50,7 @@ test("模様は比較確認を標準とし、全課題に判定方法がある",
       "pattern",
       "selfCheck",
     ]).toContain(t.method);
-    if (t.method === "pattern") expect(t.automatic).toBe(false);
+    expect(t.automatic).toBe(true);
   }
 });
 test("研究記録はデフォルト無効で同意前後を混在させない", () => {
@@ -102,8 +102,7 @@ test("資料の全30カードを重複なく追跡し、追加課題と区別す
   ).toEqual(["gibbon", "hippo-body"]);
   for (const m of materialTasks) {
     const t = tasks.find((t) => t.id === m.id)!;
-    expect(t.automatic).toBe(false);
-    expect(t.method).toBe("selfCheck");
+    expect(t.automatic).toBe(true);
     const complete = readFileSync("public/" + artwork[m.id].reference, "utf8");
     expect(complete).toContain(m.answerPath);
     expect(complete).not.toMatch(/href="https?:/);
