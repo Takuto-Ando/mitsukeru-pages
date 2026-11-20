@@ -60,6 +60,7 @@ export function SketchCanvas({
   canRedo,
   missionTitle,
   missionLettering,
+  fixedPortrait = false,
   actions,
   landscapeReselect,
   showTarget = false,
@@ -76,6 +77,7 @@ export function SketchCanvas({
   canRedo?: boolean;
   missionTitle?: string;
   missionLettering?: string;
+  fixedPortrait?: boolean;
   actions?: ReactNode;
   landscapeReselect?: ReactNode;
   showTarget?: boolean;
@@ -109,7 +111,7 @@ export function SketchCanvas({
   const [autoLayout, setAutoLayout] = useState<"portrait" | "landscape">(() =>
     window.matchMedia("(min-width: 760px)").matches ? "landscape" : "portrait",
   );
-  const layout = layoutChoice ?? autoLayout;
+  const layout = fixedPortrait ? "portrait" : (layoutChoice ?? autoLayout);
   function chooseLayout(next: "portrait" | "landscape") {
     if (layout === next) return;
     setLayoutChoice(next);

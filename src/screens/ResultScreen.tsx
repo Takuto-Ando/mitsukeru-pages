@@ -30,6 +30,7 @@ export function ResultScreen({
   onUpdateReflection,
   onLearn,
   onExport,
+  onPhotoExport,
   onShare,
   onSliderCommit,
 }: {
@@ -50,6 +51,7 @@ export function ResultScreen({
   onUpdateReflection?: () => void;
   onLearn: () => void;
   onExport: (kind: "own" | "comparison") => void;
+  onPhotoExport?: () => void;
   onShare: () => void;
   onSliderCommit: (
     from: number,
@@ -150,7 +152,7 @@ export function ResultScreen({
       <p className="quiet-note" role="status">
         {saved
           ? "保存したよ！ マイギャラリーから、いつでも見返せるよ。"
-          : "自分の絵をこの端末に残せます。撮影写真は保存しません。"}
+          : "自分の絵をこの端末に残せます。観察ノートに撮影写真は入りません。"}
       </p>
       {saved && reflectionDirty && onUpdateReflection && (
         <button
@@ -177,6 +179,15 @@ export function ResultScreen({
           >
             比較画像をPNGで保存
           </button>
+          {onPhotoExport && (
+            <button
+              className="text-button"
+              disabled={saving}
+              onClick={onPhotoExport}
+            >
+              写真とスケッチをPNGで保存
+            </button>
+          )}
           <button className="text-button" disabled={saving} onClick={onShare}>
             シェア
           </button>

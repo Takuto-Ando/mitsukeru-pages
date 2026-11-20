@@ -188,7 +188,13 @@ export function DrawScreen({
   );
 }
 
-export function FreeDrawScreen({ onDone }: { onDone: () => void }) {
+export function FreeDrawScreen({
+  onDone,
+  fixedPortrait,
+}: {
+  onDone: () => void;
+  fixedPortrait?: boolean;
+}) {
   const [drawing, dispatch] = useReducer(
     drawingHistory,
     undefined,
@@ -260,6 +266,7 @@ export function FreeDrawScreen({ onDone }: { onDone: () => void }) {
         </button>
         <SketchCanvas
           template="blank"
+          fixedPortrait={fixedPortrait}
           missionTitle="よ〜く観察してみて！"
           canvasRef={canvas}
           strokes={drawing.present}

@@ -1,0 +1,170 @@
+.replica-gallery-back {
+  opacity: 0;
+  font-size: 2rem;
+}
+
+.replica-gallery-back:focus-visible {
+  opacity: 1;
+}
+
+.replica-gallery .collection-card {
+  position: relative;
+}
+
+.replica-gallery .collection-card:has(.replica-photo-tile[data-sample="true"]) {
+  margin-inline-start: 2px;
+}
+
+.replica-gallery .collection-open {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.replica-gallery .collection-open > .replica-sketch-image,
+.replica-gallery .collection-open > .replica-photo-tile {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.replica-gallery .replica-sketch-image {
+  object-fit: contain;
+}
+
+.replica-gallery .replica-photo-tile {
+  object-fit: cover;
+}
+
+.replica-gallery .collection-open > .replica-photo-tile[data-sample="true"] {
+  position: absolute;
+  /* Crop of the sample photograph in the supplied Figma thumbnail. */
+  inset: -3.97% auto auto -11.01%;
+  width: 115.64%;
+  max-width: none;
+  height: 103.99%;
+  object-fit: fill;
+}
+
+.replica-gallery-detail {
+  --replica-gallery-close-size: 44px;
+}
+
+.replica-gallery-detail::backdrop {
+  backdrop-filter: blur(2px);
+}
+
+.replica-gallery-detail .replica-gallery-close {
+  position: absolute;
+  top: 0;
+  left: 10px;
+  z-index: 1;
+  display: grid;
+  width: var(--replica-gallery-close-size);
+  height: var(--replica-gallery-close-size);
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  color: white;
+}
+
+.replica-gallery-detail .replica-gallery-close .gallery-mark--close {
+  width: 34px;
+  height: 34px;
+}
+
+.replica-gallery-detail .replica-gallery-close:active {
+  background: #ffffff24;
+}
+
+.replica-gallery-detail .gallery-detail-actions {
+  justify-content: flex-end;
+}
+
+.replica-gallery-detail .sketch-comparison-card > .replica-sketch-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 375.96 / 425.48;
+  border-radius: 18px;
+  background: white;
+  object-fit: contain;
+}
+
+.replica-gallery-detail .gallery-detail-fact {
+  padding-inline: clamp(15px, 6vw, 24px) 11px;
+}
+
+.replica-gallery-detail .gallery-detail-fact p {
+  font-size: 0.968rem;
+  line-height: 27px;
+  white-space: pre-line;
+}
+
+.replica-gallery-detail--photo {
+  width: min(81.1vw, 326px);
+}
+
+.replica-gallery-detail--photo[open] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.replica-gallery-detail--photo .replica-gallery-close {
+  top: 3px;
+  left: 5px;
+}
+
+.replica-gallery-photo-scroll {
+  padding-top: 66px;
+}
+
+.replica-gallery-photo-card {
+  min-height: min(511px, 127.2vw);
+  padding: clamp(20px, 7.3vw, 29px) clamp(19px, 7.4vw, 30px) 20px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: var(--d3-shadow);
+}
+
+.replica-gallery-photo-preview {
+  display: block;
+  width: min(100%, 263px);
+  aspect-ratio: 263 / 332;
+  object-fit: cover;
+}
+
+.replica-gallery-photo-metadata {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  margin-top: 14px;
+}
+
+.replica-gallery-photo-metadata h2 {
+  margin: 0;
+  font-size: clamp(18px, 5.7vw, 23px);
+}
+
+.replica-gallery-photo-metadata p,
+.replica-gallery-photo-fact {
+  margin: 0;
+  font-size: clamp(10px, 2.735vw, 11px);
+  line-height: 1.55;
+}
+
+.replica-gallery-photo-metadata p {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.replica-gallery-photo-metadata img {
+  width: 12px;
+  height: 12px;
+}
+
+.replica-gallery-photo-fact {
+  margin-top: 12px;
+}
