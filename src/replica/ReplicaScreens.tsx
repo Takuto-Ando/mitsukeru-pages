@@ -412,9 +412,14 @@ export function ReplicaPhotoReview({
           )}
         </div>
         <p className="design3-photo-fact">
-          {group?.id === "giraffe"
-            ? giraffeFact
-            : (group?.fact ?? "？？？？？")}
+          {group?.id === "giraffe" ? (
+            <img
+              src={assetPath("replica-assets/review-description.svg")}
+              alt={giraffeFact}
+            />
+          ) : (
+            (group?.fact ?? "？？？？？")
+          )}
         </p>
       </article>
       <div className="design3-actions">

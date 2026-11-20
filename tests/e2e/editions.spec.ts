@@ -96,6 +96,14 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   await expect(
     page.getByRole("img", { name: "見本写真のキリン" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "撮りなおす", exact: true }).click();
+  await expect(
+    page.getByRole("img", { name: "キリンがいるよ！", exact: true }),
+  ).toBeVisible();
+  await shutter.click();
+  await expect(
+    page.getByRole("img", { name: "見本写真のキリン", exact: true }),
+  ).toBeVisible();
   expect(
     await page.evaluate(() => Reflect.get(window, "replicaCameraRequests")),
   ).toBe(0);
@@ -116,9 +124,12 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
     page.getByRole("button", { name: "キリンのスケッチを見る" }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "写真", exact: true }).click();
-  await page
-    .getByRole("button", { name: "キリンの写真を見る", exact: true })
-    .click();
+  const examplePhotos = page.getByRole("button", {
+    name: "キリンの写真を見る",
+    exact: true,
+  });
+  await expect(examplePhotos).toHaveCount(2);
+  await examplePhotos.first().click();
   await expect(
     page.getByRole("img", { name: "見本写真", exact: true }),
   ).toBeVisible();

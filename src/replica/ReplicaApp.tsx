@@ -63,6 +63,7 @@ export function ReplicaApp() {
   const [screen, setScreen] = useState<Screen>("splash");
   const [introPage, setIntroPage] = useState(0);
   const [tutorial, setTutorial] = useState(false);
+  const [framedExample, setFramedExample] = useState(false);
   const [groupId, setGroupId] = useState("");
   const [record, setRecord] = useState<ReplicaRecord>();
   const [records, setRecords] = useState<ReplicaRecord[]>([]);
@@ -130,10 +131,16 @@ export function ReplicaApp() {
 
   function restartCamera() {
     activeCapture.current = undefined;
+    setFramedExample(false);
     setRecord(undefined);
     setGroupId("");
     setError("");
     setScreen("camera");
+  }
+
+  function retakePhoto() {
+    restartCamera();
+    setFramedExample(!!record?.samplePhoto);
   }
 
   function takePhoto({ photo, sample }: { photo?: string; sample: boolean }) {
@@ -283,6 +290,7 @@ export function ReplicaApp() {
           {camera && (
             <ReplicaCamera
               tutorial={tutorial}
+              framedExample={framedExample}
               onCapture={takePhoto}
               onFreeDraw={() => setScreen("free")}
               onHome={() => setScreen("title")}
@@ -300,7 +308,7 @@ export function ReplicaApp() {
                   group={chosen}
                   choices={choices}
                   onSelect={setGroupId}
-                  onRetake={restartCamera}
+                  onRetake={retakePhoto}
                   onConfirm={() => setScreen(tutorial ? "cheer" : "loading")}
                 />
               </div>
