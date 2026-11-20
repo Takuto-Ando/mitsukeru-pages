@@ -3,6 +3,7 @@ import { RotateCcw } from "lucide-react";
 import { groups } from "../content/groups";
 import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
+import { Furi } from "../furigana/Furigana";
 
 export function PhotoReview({
   dopa = false,
@@ -154,7 +155,7 @@ export function PhotoReview({
           )}
         </div>
         <p className="design3-photo-fact" aria-live="polite">
-          {group?.fact ?? "?????"}
+          {group?.fact ? <Furi text={group.fact} /> : "?????"}
         </p>
       </article>
       <div className="design3-actions">

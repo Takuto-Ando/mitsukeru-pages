@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { DifficultyPill } from "./DifficultyPill";
+import { Furi } from "../furigana/Furigana";
 import { assetPath } from "../content/artwork";
 
 export function PhotoCelebration() {
@@ -45,7 +46,9 @@ export function ChallengeIntro({
             alt=""
           />
         ) : (
-          <strong>{title}</strong>
+          <strong>
+            <Furi text={title} />
+          </strong>
         )}
         <img
           className="design3-challenge-prompt"
