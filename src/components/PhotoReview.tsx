@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CalendarDays, MapPin, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { groups } from "../content/groups";
 import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
@@ -60,11 +60,17 @@ export function PhotoReview({
               className="design3-photo-edit"
               type="button"
               ref={editButton}
+              aria-label="修正"
               aria-expanded={choosing}
               aria-controls={choosing ? "photo-animal-options" : undefined}
               onClick={() => setChoosing(!choosing)}
             >
-              修正
+              <img
+                alt=""
+                src={assetPath(
+                  "illustrations/pdf-design/camera-review-edit.svg",
+                )}
+              />
             </button>
             {choosing && (
               <ul
@@ -118,13 +124,23 @@ export function PhotoReview({
           {takenAt && (
             <div className="design3-photo-date">
               <span>
-                <CalendarDays size={14} aria-hidden="true" />
+                <img
+                  alt=""
+                  src={assetPath(
+                    "illustrations/pdf-design/camera-review-date.svg",
+                  )}
+                />
                 <time dateTime={takenAt.toISOString()}>
                   {takenAt.toLocaleDateString("ja-JP")}
                 </time>
               </span>
               <span>
-                <MapPin size={14} aria-hidden="true" />
+                <img
+                  alt=""
+                  src={assetPath(
+                    "illustrations/pdf-design/camera-review-location.svg",
+                  )}
+                />
                 京都市動物園
               </span>
             </div>
@@ -140,17 +156,34 @@ export function PhotoReview({
           aria-label={photo ? "もう一度撮る" : undefined}
           onClick={onRetake}
         >
-          <RotateCcw size={17} aria-hidden="true" />
-          {photo ? "撮りなおす" : "カメラに戻る"}
+          {photo ? (
+            <img
+              alt=""
+              className="photo-review-retake-mark"
+              src={assetPath(
+                "illustrations/pdf-design/camera-review-retake.svg",
+              )}
+            />
+          ) : (
+            <>
+              <RotateCcw size={17} aria-hidden="true" />
+              カメラに戻る
+            </>
+          )}
         </button>
-        <button className="design3-pill" disabled={!group} onClick={onConfirm}>
+        <button
+          className="design3-pill"
+          aria-label="ピツネに見せる"
+          disabled={!group}
+          onClick={onConfirm}
+        >
           <img
             alt=""
-            width={19}
-            height={17}
-            src={assetPath("figma/entry/confirm.svg")}
+            className="photo-review-confirm-mark"
+            src={assetPath(
+              "illustrations/pdf-design/camera-review-confirm.svg",
+            )}
           />
-          ピツネに見せる
         </button>
       </div>
       {photo && <p className="quiet-note">撮影写真は端末に保存しません。</p>}

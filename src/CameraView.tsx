@@ -366,13 +366,21 @@ export function CameraView({
               <button
                 key={value}
                 type="button"
+                aria-label={`${value}×`}
                 aria-pressed={zoom === value}
                 onClick={() => {
                   setZoom(value);
                   void applyZoom(stream.current?.getVideoTracks?.()[0], value);
                 }}
               >
-                {value}×
+                <span
+                  className={
+                    value === 0.5
+                      ? "zoom-mark zoom-mark--half"
+                      : "zoom-mark zoom-mark--one"
+                  }
+                  aria-hidden="true"
+                />
               </button>
             ))}
           </div>
@@ -382,13 +390,21 @@ export function CameraView({
           <button
             type="button"
             className="camera-side-button"
+            aria-label="ギャラリー"
             onClick={() => onCollection?.()}
           >
             <img
               alt=""
+              className="camera-side-icon camera-gallery-icon"
               src={assetPath("illustrations/pdf-design/camera-gallery.svg")}
             />
-            ギャラリー
+            <img
+              alt=""
+              className="camera-side-label"
+              src={assetPath(
+                "illustrations/pdf-design/camera-gallery-label.svg",
+              )}
+            />
           </button>
           <button
             className="shutter-button"
@@ -401,13 +417,21 @@ export function CameraView({
           <button
             type="button"
             className="camera-side-button"
+            aria-label="マイページ"
             onClick={(event) => onSettings?.(event.currentTarget)}
           >
             <img
               alt=""
+              className="camera-side-icon"
               src={assetPath("illustrations/pdf-design/camera-profile.svg")}
             />
-            マイページ
+            <img
+              alt=""
+              className="camera-side-label"
+              src={assetPath(
+                "illustrations/pdf-design/camera-profile-label.svg",
+              )}
+            />
           </button>
         </div>
         {status !== "review" && message && (

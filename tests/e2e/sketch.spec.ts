@@ -385,6 +385,25 @@ test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page })
     page.getByRole("heading", { name: "上手に描けたね！" }),
   ).toBeVisible();
 });
+test("2本の鉛筆の色を答え合わせまで保持し、塗りつぶしも選べる", async ({
+  page,
+}) => {
+  await select(page);
+  await draw(page);
+  const second = page.getByRole("button", { name: "2本目のペン", exact: true });
+  const bucket = page.getByRole("button", { name: "バケツ", exact: true });
+  await bucket.click();
+  await expect(bucket).toHaveAttribute("aria-pressed", "true");
+  await second.click();
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+  await expect(bucket).toHaveAttribute("aria-pressed", "false");
+  await draw(page);
+  await compare(page);
+  const lines = page.getByTestId("user-lines").locator("polyline");
+  await expect(lines).toHaveCount(2);
+  await expect(lines.nth(0)).toHaveAttribute("stroke", "#6b5c7a");
+  await expect(lines.nth(1)).toHaveAttribute("stroke", "#977baf");
+});
 test("端末内保存・再読込・比較・PNG保存・削除", async ({ page }) => {
   await select(page, "fennec-tail");
   await draw(page, "fennec-tail");
