@@ -14,14 +14,12 @@ for (const task of tasks)
       h = task.scene.frameHeight || 400;
     const line = [
       { x: (r.x + 0.02 * r.width) * 600, y: (r.y + 0.2 * r.height) * h },
-      { x: (r.x + 0.8 * r.width) * 600, y: (r.y + 0.6 * r.height) * h },
+      { x: (r.x + 0.8 * r.width) * 600, y: (r.y + 0.2 * r.height) * h },
     ];
     const answer = drawingEvaluator.evaluate(task, [line]);
     expect(answer.challengeId).toBe(task.id);
-    if (!task.automatic) {
-      expect(answer.status).toBe("uncertain");
-      expect(answer.method).toBe("comparison");
-    }
+    expect(answer.method).toBe("automatic");
+    expect(answer.passed).toBe(false);
   });
 test("羊を種として区別し、対象外・曖昧な推定は確定しない", () => {
   expect(challengeProvider.forSpecies("sheep")[0].id).toBe("sheep");

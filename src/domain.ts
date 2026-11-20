@@ -1,7 +1,7 @@
 import type { Stroke, Evaluation } from "./types";
 import { taskById, tasksForGroup, type ObservationTask } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
-import { evaluateProfile } from "./content/profiles";
+import { evaluateFeatures } from "./profileEvaluator";
 import { evaluateObservation } from "./evaluator";
 
 export interface ChallengeProvider {
@@ -35,9 +35,10 @@ export const drawingEvaluator: DrawingEvaluator = {
         suggestion: task.hint,
       };
     else {
-      result = task.profile
-        ? evaluateProfile(visible, task.profile, task.scene)
-        : evaluateObservation(visible);
+      result =
+        task.method === "orientation"
+          ? evaluateObservation(visible)
+          : evaluateFeatures(visible, task.scene, task.hint);
       result.method = "automatic";
     }
     return {

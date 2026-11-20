@@ -1,3 +1,5 @@
+import { hasFeatureRule } from "../profileEvaluator";
+import { featureCues } from "./featureCues";
 import { materialTasks } from "./materialTasks";
 import { observationHints } from "./hints";
 import { fullBodyLayouts } from "./fullBodyLayouts";
@@ -160,12 +162,17 @@ export const tasks: ObservationTask[] = groups
         g.id === "elephant"
           ? "頭のてっぺんは、どんなふうにふくらんでいる？"
           : p?.question || "目の黒い部分は、たてとよこ、どちらに長い？",
-      hint: p?.hint || "黒い部分の横幅を見てみよう。",
+      hint:
+        g.id === "elephant"
+          ? observationHints.elephant[1]
+          : p?.hint || "黒い部分の横幅を見てみよう。",
       next: p?.next || "草を食べるとき、瞳孔の向きはどうなる？",
-      method: mode[g.id] || "selfCheck",
-      automatic: ["goat", "gibbon", "capuchin", "giraffe", "hippo"].includes(
-        g.id,
-      ),
+      method:
+        mode[g.id] ||
+        (g.id === "elephant" || g.id === "gorilla"
+          ? "curvature"
+          : "proportion"),
+      automatic: g.id === "goat" || hasFeatureRule(g.id),
       scene,
       profile: p,
       explanation: { name, form, ecology: ecology || "" },
@@ -195,8 +202,8 @@ function extra(
     question,
     hint,
     next,
-    method: "selfCheck",
-    automatic: false,
+    method: id === "sheep" ? "orientation" : "curvature",
+    automatic: id === "sheep" || hasFeatureRule(id),
     scene: {
       id,
       label: part,
@@ -270,8 +277,8 @@ for (const m of materialTasks) {
     hint: m.hints[0],
     hints: m.hints,
     next: m.next,
-    method: "selfCheck",
-    automatic: false,
+    method: featureCues[m.id]?.kind === "marks" ? "pattern" : "curvature",
+    automatic: hasFeatureRule(m.id),
     allowAbsent: ["hippo-skin", "gorilla-back", "bear"].includes(m.id),
     comparisonNote:
       m.id === "gorilla-back"
@@ -307,10 +314,6 @@ export const tasksForGroup = (id: string) =>
 for (const task of tasks) {
   if (materialTasks.some((m) => m.id === task.id)) continue;
   task.hints = observationHints[task.id];
-  if (task.id === "sheep") {
-    task.method = "orientation";
-    task.automatic = true;
-  }
   const layout = fullBodyLayouts[task.id];
   const prior = partScenes[task.id as keyof typeof partScenes];
   const rectangles =

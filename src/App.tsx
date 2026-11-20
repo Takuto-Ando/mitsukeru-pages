@@ -656,27 +656,13 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     if (!visible.length) return;
     removeDraft(taskId);
     recordStudy("drawing_submitted", { empty: false });
-    if (!task.automatic) {
-      setFeedback({
-        passed: false,
-        status: "uncertain",
-        method: "comparison",
-        message: "見えた形を見くらべよう。",
-      });
-      recordStudy("evaluation_completed", {
-        method: "comparison",
-        status: "uncertain",
-      });
-      next(2);
-      return;
-    }
-    const result = drawingEvaluator.evaluate(task, visible);
-    result.method = "automatic";
+    const result = drawingEvaluator.evaluate(task, strokes);
     setFeedback(result);
     recordStudy("evaluation_completed", {
-      method: "automatic",
+      method: result.method,
       status: result.status,
     });
+    if (result.method === "comparison") next(2);
     if (result.passed) {
       celebrate();
       next(2);

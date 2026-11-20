@@ -2,6 +2,50 @@ import { test, expect, type Page } from "@playwright/test";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 import { tutorialSurveyUrl } from "../../src/research/tutorialSurvey";
+import { drawingEvaluator } from "../../src/domain";
+import { fullBodyLayouts } from "../../src/content/fullBodyLayouts";
+import partScenes from "../../src/content/partScenes";
+
+test("全34課題のお手本から取った線が特徴判定を通る", async ({ page }) => {
+  const targets = tasks.map((task) => {
+    const layout = fullBodyLayouts[task.id];
+    const part = partScenes[task.id as keyof typeof partScenes];
+    const d = layout?.answerPath ?? part?.answerPath ?? task.scene.answerPath!;
+    const transform = layout?.answerPath ? undefined : layout;
+    return { d, transform };
+  });
+  const drawings = await page.evaluate((targets) => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    document.body.append(svg);
+    return targets.map(({ d, transform }) =>
+      d
+        .split(/(?=M)/)
+        .filter(Boolean)
+        .map((data) => {
+          const path = document.createElementNS(
+            svg.namespaceURI!,
+            "path",
+          ) as SVGPathElement;
+          path.setAttribute("d", data);
+          svg.append(path);
+          const length = path.getTotalLength();
+          const samples = Math.max(2, Math.ceil(length / 4));
+          return Array.from({ length: samples + 1 }, (_, index) => {
+            const p = path.getPointAtLength((index * length) / samples);
+            return {
+              x: p.x * (transform?.scale ?? 1) + (transform?.x ?? 0),
+              y: p.y * (transform?.scale ?? 1) + (transform?.y ?? 0),
+            };
+          });
+        }),
+    );
+  }, targets);
+  const failures = tasks.flatMap((task, index) => {
+    const result = drawingEvaluator.evaluate(task, drawings[index]);
+    return result.passed ? [] : [{ task: task.id, metrics: result.debug }];
+  });
+  expect(failures).toEqual([]);
+});
 async function startCamera(page: Page) {
   await page.getByRole("button", { name: "つづきから", exact: true }).click();
 }
@@ -122,6 +166,43 @@ async function compare(page: Page) {
   if (await review.count()) await review.click();
   await expect(page.locator(".comparison-overlay")).toBeVisible();
 }
+test("アジアゾウ: ふたつのふくらみを描くと自動で答え合わせへ進む", async ({
+  page,
+}) => {
+  await select(page, "elephant");
+  const canvas = page.getByTestId("canvas");
+  await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
+  const box = (await canvas.boundingBox())!;
+  const outline = [
+    [198, 140],
+    [211, 100],
+    [229, 83],
+    [247, 79],
+    [270, 94],
+    [297, 122],
+    [324, 99],
+    [349, 81],
+    [373, 84],
+    [394, 104],
+    [411, 147],
+  ];
+  for (const [i, [x, y]] of outline.entries()) {
+    await page.mouse.move(
+      box.x + (x / 600) * box.width,
+      box.y + (y / 600) * box.height,
+    );
+    if (!i) await page.mouse.down();
+  }
+  await page.mouse.up();
+  await page.getByRole("button", { name: "できた！", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "上手に描けたね！" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "見くらべて、確かめた！" }),
+  ).toHaveCount(0);
+});
+
 test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await select(page, "giraffe");
@@ -408,7 +489,9 @@ test("端末内保存・再読込・比較・PNG保存・削除", async ({ page 
   await select(page, "fennec-tail");
   await draw(page, "fennec-tail");
   await compare(page);
-  await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
+  await expect(
+    page.getByRole("heading", { name: "上手に描けたね！" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "つぎへ", exact: true }).click();
   await finishTutorial(page);
   await page.reload();

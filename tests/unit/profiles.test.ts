@@ -21,7 +21,7 @@ for (const [id, p] of Object.entries(profiles)) {
       r = scene.regions[0],
       rule = featureRules[id];
     let strokes: Stroke[] = [];
-    if (rule.kind.startsWith("paired") || rule.kind === "nostrils")
+    if (rule?.kind.startsWith("paired") || rule?.kind === "nostrils")
       strokes = scene.regions.map((r) =>
         rect(
           r.x * 600 + 5,
