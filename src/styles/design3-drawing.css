@@ -621,11 +621,16 @@
   left: 52px;
 }
 
-.mission-pitsune-row > img.mission-pitsune-face {
+.mission-pitsune-row > img.mission-pitsune-face,
+.result-pitsune > img.result-pitsune-face {
   display: block;
   min-width: 0;
   width: min(24vw, 95px);
   height: auto;
+  aspect-ratio: 95 / 91.6071;
+}
+
+.mission-pitsune-row > img.mission-pitsune-face {
   align-self: end;
 }
 
@@ -643,13 +648,6 @@
   flex: none;
   width: 19px;
   height: 17px;
-}
-
-.result-pitsune > img.result-pitsune-face {
-  display: block;
-  min-width: 0;
-  width: min(24vw, 95px);
-  height: auto;
 }
 
 .design3-result .result-pitsune .pitsune-bubble {
