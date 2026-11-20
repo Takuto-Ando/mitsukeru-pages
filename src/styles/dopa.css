@@ -129,7 +129,7 @@ body:has(.dopa-app[data-screen="home"]) {
 }
 
 .dopa-app .design3-title-meta {
-  margin-top: 6px;
+  margin-top: auto;
   padding-top: 4px;
 }
 

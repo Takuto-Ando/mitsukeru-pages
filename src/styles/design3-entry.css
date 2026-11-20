@@ -139,6 +139,26 @@
   font-size: 11px;
 }
 
+.design3-title-editions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 10px;
+  margin-top: 4px;
+}
+
+.design3-title-editions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: 6px;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+
 .design3-intro {
   position: relative;
   display: grid;

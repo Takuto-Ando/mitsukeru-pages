@@ -51,34 +51,17 @@ async function drawPupil(page: Page) {
   await page.mouse.up();
 }
 
-test("モードの切替・効果音・XPの表示が再読み込み後も残る", async ({ page }) => {
-  await page.goto("plus/");
-  const toggle = page.getByRole("button", { name: /^ドパガキモード/ });
-  const shell = page.locator(".design3-shell");
-  await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  await expect(shell).not.toHaveClass(/dopa-on/);
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
-  await expect(shell).toHaveCSS("background-size", "300% 100%");
+test("ドパガキ版のXP表示と消音設定が再読み込み後も残る", async ({ page }) => {
+  await page.goto("dopa/");
   await expect(page.locator(".dopa-bar")).toContainText("あと 40 XP");
   await page.getByRole("button", { name: "設定", exact: true }).click();
   await page.getByRole("button", { name: "効果音 ON", exact: true }).click();
   await page.reload();
-  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".dopa-bar")).toContainText("あと 40 XP");
   await page.getByRole("button", { name: "設定", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "効果音 OFF", exact: true }),
   ).toBeVisible();
-  await page.keyboard.press("Escape");
-  await toggle.click();
-  await page.reload();
-  await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  await expect(page.locator(".dopa-bar")).toHaveCount(0);
-  await expect(
-    page.getByRole("region", { name: "ズーケッチのタイトル" }),
-  ).toHaveCSS("background-color", "rgb(255, 250, 240)");
-  await page.goto("dopa/");
-  await expect(toggle).toHaveAttribute("aria-pressed", "false");
 });
 
 test("10筆で5 XP、合格で50 XP、新規保存で30 XPとレベルアップ", async ({
@@ -129,25 +112,48 @@ test("10筆で5 XP、合格で50 XP、新規保存で30 XPとレベルアップ"
   await expect(page.locator(".dopa-bar")).toContainText("185 XP");
 });
 
-test("ドパガキ版の演出は別URLで開き、既存版へ戻れる", async ({
+test("ホーム最下部の小さなリンクからドパガキ版を開き、拡張版へ戻れる", async ({
   page,
   baseURL,
 }) => {
+  await page.addInitScript(() => {
+    // The previous release saved a mode choice. Each URL now selects its own edition.
+    const onDopaPage = location.pathname.endsWith("/dopa/");
+    localStorage.setItem("zooketch-dopa-mode-v1", onDopaPage ? "0" : "1");
+  });
   await page.goto("plus/");
+  const footer = page.getByRole("navigation", { name: "版の切り替え" });
+  const openDopa = footer.getByRole("link", { name: "ドパガキ版を開く" });
+  const shell = page.locator(".design3-shell");
   await expect(page.locator(".dopa-title-art")).toHaveCount(0);
-  await page.getByRole("link", { name: "ドパガキ版を開く" }).click();
+  await expect(shell).not.toHaveClass(/dopa-on/);
+  await expect(page.locator(".design3-title > :last-child")).toHaveAttribute(
+    "aria-label",
+    "版の切り替え",
+  );
+  await expect(openDopa).toHaveCSS("font-size", "12px");
+  expect((await openDopa.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  await openDopa.click();
   await expect(page).toHaveURL(new URL("dopa/", baseURL!).href);
   await expect(page).toHaveTitle("ズーケッチ ドパガキ版");
   await expect(page.locator(".dopa-title-art img")).toBeVisible();
+  await expect(shell).toHaveCSS("background-size", "300% 100%");
+  await expect(
+    page.getByRole("button", { name: /^ドパガキモード/ }),
+  ).toHaveCount(0);
   for (const width of [320, 393, 430]) {
     await page.setViewportSize({ width, height: 852 });
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(width);
   }
-  await page.getByRole("link", { name: "機能拡張版を開く" }).click();
+  await footer.getByRole("link", { name: "機能拡張版を開く" }).click();
   await expect(page).toHaveURL(new URL("plus/", baseURL!).href);
   await expect(page.locator(".dopa-title-art")).toHaveCount(0);
+  await expect(page.locator(".dopa-bar")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "ズーケッチのタイトル" }),
+  ).toHaveCSS("background-color", "rgb(255, 250, 240)");
 });
 
 test("ピツネの反応・短い紙吹雪・解説と観察ノートが機能する", async ({

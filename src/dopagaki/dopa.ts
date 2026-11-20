@@ -1,7 +1,6 @@
-// ドパガキモード（遊び用）: XP・レベル・モード設定の保存と管理。
+// ドパガキ版のXP・レベル・効果音設定。
 // 観察データ本体の保存形式には一切触れない。localStorage の専用キーだけを使う。
 
-export const DOPA_MODE_KEY = "zooketch-dopa-mode-v1";
 export const DOPA_XP_KEY = "zooketch-dopa-xp-v1";
 export const DOPA_SOUND_KEY = "zooketch-dopa-sound-v1";
 
@@ -24,15 +23,6 @@ function write(key: string, value: string) {
   } catch {
     sessionValues.set(key, value);
   }
-}
-
-export function loadDopaMode(defaultMode = false): boolean {
-  const value = read(DOPA_MODE_KEY);
-  return value === "1" || (value !== "0" && defaultMode);
-}
-
-export function saveDopaMode(on: boolean) {
-  write(DOPA_MODE_KEY, on ? "1" : "0");
 }
 
 export function loadDopaSound(): boolean {
