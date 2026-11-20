@@ -13,7 +13,6 @@
   display: flex;
   justify-self: end;
   gap: 3px;
-  order: -1;
   border-radius: 999px;
   padding: 2px;
   background: #f6f0e1;
@@ -194,6 +193,18 @@
   height: 24px;
 }
 
+.drawing-tools .drawing-tool-options button {
+  position: relative;
+  overflow: hidden;
+}
+
+.drawing-tools .drawing-tool-options .drawing-tool-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
 .drawing-tools .drawing-tool-options .drawing-color-wheel {
   background:
     radial-gradient(circle, white, transparent 70%),
@@ -280,7 +291,7 @@
 
 .drawing-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: clamp(7px, 4vw, 16px);
@@ -651,4 +662,177 @@
 
 .design3-result .result-pitsune .pitsune-bubble::after {
   content: none;
+}
+
+/* The drawing card and answer card use the same printed-card measurements. */
+.design3-draw:not(.design3-free-draw),
+.design3-result {
+  --sketch-orange: #f9a846;
+  --sketch-green: #85a842;
+  --sketch-card-radius: 18px;
+  padding-inline: 13px;
+}
+
+.design3-draw:not(.design3-free-draw):has([data-layout="portrait"]),
+.design3-result {
+  padding-top: max(17px, env(safe-area-inset-top));
+}
+
+.design3-draw .mission-sketch[data-layout="portrait"] .mission-pitsune-row,
+.design3-result .result-pitsune {
+  gap: clamp(6px, 3vw, 12px);
+  margin-inline: 11px 9px;
+}
+
+.design3-draw .mission-sketch[data-layout="portrait"] .mission-pitsune-row {
+  margin-bottom: -16px;
+}
+
+.design3-result .result-pitsune {
+  margin-bottom: -8px;
+}
+
+.design3-draw .mission-sketch[data-layout="portrait"] .mission-pitsune-face,
+.design3-result .result-pitsune-face {
+  flex-basis: min(24vw, 95px);
+}
+
+.design3-draw .mission-sketch[data-layout="portrait"] .pitsune-bubble,
+.design3-result .result-pitsune .pitsune-bubble {
+  min-height: 56px;
+  margin: -14px 0 0;
+  padding: 8px 10px 10px 14px;
+  align-content: center;
+  background: url("../../public/figma/entry/sketch-bubble.svg") center / 100%
+    100% no-repeat;
+  box-shadow: none;
+  font-size: clamp(0.85rem, 4.35vw, 1.15rem);
+}
+
+.design3-draw .mission-sketch[data-layout="portrait"] .pitsune-bubble::after {
+  content: none;
+}
+
+.design3-draw:not(.design3-free-draw) .sketch-frame,
+.design3-result .sketch-comparison-card {
+  border-radius: var(--sketch-card-radius);
+}
+
+.sketch-card[data-card-crop] .sketch-frame {
+  padding-top: 0;
+}
+
+.sketch-card[data-card-crop] .drawing-paper {
+  /* Clip both the original art and the full-size input surface to the card. */
+  clip-path: inset(0 round var(--sketch-card-radius));
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .sketch-history {
+  top: 15px;
+  right: 14px;
+}
+
+.design3-draw:not(.design3-free-draw) .mission-sketch[data-layout="portrait"] {
+  container-type: inline-size;
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-tools-stack {
+  margin-top: 10px;
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-tools {
+  min-height: 74px;
+  margin-inline: -2px;
+  gap: clamp(12px, 6.25cqi, 24px);
+  padding-inline: clamp(7px, 5cqi, 19px);
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-tool-options {
+  gap: clamp(3px, 2cqi, 8px);
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-tool-options
+  button {
+  width: clamp(44px, 14cqi, 53px);
+  min-height: clamp(44px, 14cqi, 53px);
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-width {
+  padding: 0 clamp(0px, 2.5cqi, 10px) 0 0;
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-actions {
+  margin-top: 23px;
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-actions,
+.design3-result .drawing-actions {
+  gap: clamp(8px, 4.5vw, 18px);
+}
+
+.design3-draw:not(.design3-free-draw)
+  .mission-sketch[data-layout="portrait"]
+  .drawing-pill,
+.design3-result .drawing-pill {
+  flex-basis: 154px;
+  min-width: 0;
+  min-height: 50px;
+  padding-inline: 8px;
+}
+
+.design3-draw:not(.design3-free-draw) .drawing-pill,
+.design3-result .drawing-pill,
+.design3-result .result-fact {
+  background: var(--sketch-orange);
+}
+
+.design3-draw:not(.design3-free-draw) .drawing-pill-green,
+.design3-result .drawing-pill-green {
+  background: var(--sketch-green);
+}
+
+.design3-result .sketch-comparison {
+  overflow: visible;
+  box-shadow: none;
+}
+
+.design3-result .sketch-comparison-card {
+  background: var(--sketch-orange);
+  box-shadow: none;
+}
+
+.design3-result .comparison-stage {
+  z-index: 1;
+  border-radius: var(--sketch-card-radius);
+  box-shadow: var(--d3-shadow);
+}
+
+.design3-result .comparison-overlay {
+  background: white;
+}
+
+.design3-result .result-fact {
+  min-height: 94px;
+  align-content: center;
+  padding: 16px clamp(14px, 6vw, 25px);
+}
+
+.design3-result .result-actions {
+  margin-top: 27px;
 }

@@ -1,4 +1,4 @@
-import { PitsuneIcon } from "./Pitsune";
+import { assetPath } from "../content/artwork";
 import "../styles/design3-difficulty.css";
 
 export function DifficultyPill({ regionCount }: { regionCount: number }) {
@@ -9,11 +9,17 @@ export function DifficultyPill({ regionCount }: { regionCount: number }) {
       role="img"
       aria-label={`難易度 ${difficulty} / 3`}
     >
-      難易度
+      <img
+        className="difficulty-label"
+        src={assetPath("illustrations/pdf-design/difficulty-label.svg")}
+        alt=""
+      />
       <span className="difficulty-icons" aria-hidden="true">
         {[1, 2, 3].map((level) => (
-          <PitsuneIcon
+          <img
             key={level}
+            alt=""
+            src={assetPath("illustrations/pdf-design/difficulty-mascot.svg")}
             className={level <= difficulty ? "difficulty-active" : undefined}
           />
         ))}

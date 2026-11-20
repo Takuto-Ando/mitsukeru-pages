@@ -15,12 +15,14 @@ export function HomeScreen({
   onCollection,
   onSettings,
   savedCount,
+  studyTutorial = false,
 }: {
   onStart: () => void;
   onContinue: () => void;
   onCollection: () => void;
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
+  studyTutorial?: boolean;
 }) {
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
@@ -40,26 +42,50 @@ export function HomeScreen({
         src={assetPath("figma/entry/trail.svg")}
       />
       <div className="design3-title-heading">
-        <p>その指先が夢中をつくる。</p>
+        <p className="design3-title-tagline">
+          <img
+            alt="その指先が夢中をつくる。"
+            src={assetPath("illustrations/pdf-design/entry-title-tagline.svg")}
+          />
+        </p>
         <h1>
           <img alt="ズーケッチ" src={assetPath("figma/entry/logo.svg")} />
         </h1>
       </div>
       <div className="design3-title-actions">
-        <button className="design3-start" onClick={onStart}>
+        <button
+          className="design3-start"
+          onClick={onStart}
+          aria-label="はじめから"
+        >
           <img
             alt=""
             src={assetPath("figma/entry/start.svg")}
             width={38}
             height={35}
           />
-          はじめから
+          <img
+            className="design3-title-start-lettering"
+            alt=""
+            src={assetPath("illustrations/pdf-design/entry-title-start.svg")}
+          />
         </button>
-        <button className="design3-continue" onClick={onContinue}>
-          つづきから
+        <button
+          className="design3-continue"
+          onClick={onContinue}
+          aria-label="つづきから"
+        >
+          <img
+            className="design3-title-resume-lettering"
+            alt=""
+            src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
+          />
         </button>
       </div>
       <div className="design3-title-meta">
+        {studyTutorial && (
+          <p>検証用：チュートリアル終了後、Googleフォームが開きます。</p>
+        )}
         <p>
           ピツネの今日のおすすめは <strong>{todaysPick.name}</strong> だよ！
         </p>

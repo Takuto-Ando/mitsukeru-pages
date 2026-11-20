@@ -2,29 +2,32 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.55em;
-  width: max-content;
-  padding: 0.5em 1.2em;
+  gap: 6.7%;
+  width: min(85vw, 342px);
+  min-height: clamp(54px, 18.3vw, 74px);
   border-radius: 999px;
   background: #fff;
-  color: #995619;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
+}
+
+.difficulty-label {
+  flex: 0 0 21.6%;
+  width: 21.6%;
+  height: auto;
 }
 
 .difficulty-icons {
-  display: inline-flex;
+  display: flex;
+  flex: 0 0 47%;
   align-items: center;
-  gap: 0.35em;
-  color: #f7e7d1;
+  justify-content: space-between;
 }
 
-.difficulty-icons svg {
-  width: 1.55em;
-  height: 1.35em;
+.difficulty-icons img {
+  width: 29.4%;
+  height: auto;
+  opacity: 0.26;
 }
 
 .difficulty-icons .difficulty-active {
-  color: var(--d3-orange);
+  opacity: 1;
 }

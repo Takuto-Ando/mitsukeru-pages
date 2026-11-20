@@ -2,8 +2,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import "./styles/design3-drawing.css";
 import {
-  Pencil,
-  Eraser,
   RotateCcw,
   LayoutGrid,
   Image as ImageIcon,
@@ -24,6 +22,7 @@ import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
 import { stabilizePoint } from "./drawing/smooth";
 import { getStrokeStyle, setStrokeStyle } from "./drawing/styles";
+import { designCardViewport } from "./drawing/viewport";
 import type { Point, Stroke } from "./types";
 
 const BLANK_SCENE: Scene = {
@@ -35,8 +34,8 @@ const BLANK_SCENE: Scene = {
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
 const BRUSH_COLORS = [
-  "#9173ad",
   "#695b79",
+  "#9173ad",
   "#3a3238",
   "#8a6642",
   "#b0563a",
@@ -97,7 +96,7 @@ export function SketchCanvas({
     [erase, setErase] = useState(false),
     [brushWidth, setBrushWidth] = useState(7),
     [brushColor, setBrushColor] = useState(
-      missionTitle ? "#9173ad" : "#277e78",
+      missionTitle ? BRUSH_COLORS[0] : "#277e78",
     );
   const [layoutChoice, setLayoutChoice] = useState<
     "portrait" | "landscape" | null
@@ -106,6 +105,23 @@ export function SketchCanvas({
     window.matchMedia("(min-width: 760px)").matches ? "landscape" : "portrait",
   );
   const layout = layoutChoice ?? autoLayout;
+  function chooseLayout(next: "portrait" | "landscape") {
+    if (layout === next) return;
+    setLayoutChoice(next);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  }
+  const viewport =
+    layout === "portrait" && missionTitle
+      ? designCardViewport(scene)
+      : undefined;
+  const viewportStyle = viewport
+    ? {
+        width: `${(600 / viewport.width) * 100}%`,
+        height: `${(frameHeight / viewport.height) * 100}%`,
+        left: `${(-viewport.x / viewport.width) * 100}%`,
+        top: `${(-viewport.y / viewport.height) * 100}%`,
+      }
+    : undefined;
   const [paletteOpen, setPaletteOpen] = useState(false);
   const paletteTrigger = useRef<HTMLButtonElement>(null);
   const paletteId = useId();
@@ -178,11 +194,9 @@ export function SketchCanvas({
       if (!canvas) return;
       // Allocate pixels for the displayed size, retaining logical 600-unit coordinates.
       const ratio = Math.min(window.devicePixelRatio || 1, 3);
-      const width = Math.max(
-        1,
-        Math.round(canvas.getBoundingClientRect().width * ratio),
-      );
-      const height = Math.max(1, Math.round((width * frameHeight) / 600));
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width * ratio));
+      const height = Math.max(1, Math.round(rect.height * ratio));
       if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
@@ -210,7 +224,7 @@ export function SketchCanvas({
           ? activeBrush.current
           : getStrokeStyle(stroke) || {
               width: 7,
-              color: missionTitle ? "#9173ad" : "#277e78",
+              color: missionTitle ? BRUSH_COLORS[0] : "#277e78",
             };
         context.lineWidth = style.width;
         context.strokeStyle = style.color;
@@ -518,34 +532,65 @@ export function SketchCanvas({
     paletteTrigger.current = trigger;
     setPaletteOpen(open);
   }
+  const drawingAssists = (
+    <div className="drawing-assists" role="group" aria-label="おたすけ">
+      <span>おたすけ</span>
+      <button
+        type="button"
+        aria-pressed={assist.grid}
+        onClick={() =>
+          setAssist((current) => ({ ...current, grid: !current.grid }))
+        }
+      >
+        <LayoutGrid size={15} aria-hidden="true" />
+        グリッド
+      </button>
+      {photoUrl && (
+        <button
+          type="button"
+          aria-pressed={assist.photo}
+          onClick={() =>
+            setAssist((current) => ({ ...current, photo: !current.photo }))
+          }
+        >
+          <ImageIcon size={15} aria-hidden="true" />
+          写真
+        </button>
+      )}
+      {ghostSrc && (
+        <button
+          type="button"
+          aria-pressed={assist.ghost}
+          onClick={() =>
+            setAssist((current) => ({ ...current, ghost: !current.ghost }))
+          }
+        >
+          <Eye size={15} aria-hidden="true" />
+          お手本
+        </button>
+      )}
+      <button
+        type="button"
+        disabled={!strokes.length}
+        onClick={() => {
+          onChange([], "clear");
+          setErase(false);
+          setFillMode(false);
+          setPaletteOpen(false);
+        }}
+      >
+        <RotateCcw size={15} aria-hidden="true" />
+        描き直す
+      </button>
+    </div>
+  );
   return (
     <div
       className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}
       data-layout={missionTitle ? layout : undefined}
       data-free={isFreeDrawing || undefined}
+      data-card-crop={!!viewport || undefined}
     >
-      {missionTitle && (
-        <div
-          className="sketch-layout-switch"
-          role="group"
-          aria-label="画面の向き"
-        >
-          <button
-            type="button"
-            aria-pressed={layout === "portrait"}
-            onClick={() => setLayoutChoice("portrait")}
-          >
-            たて
-          </button>
-          <button
-            type="button"
-            aria-pressed={layout === "landscape"}
-            onClick={() => setLayoutChoice("landscape")}
-          >
-            よこ
-          </button>
-        </div>
-      )}
       {missionTitle && (
         <div className="mission-heading">
           <div className="mission-pitsune-row">
@@ -584,13 +629,14 @@ export function SketchCanvas({
           className={"drawing-paper " + (drawing ? "is-drawing" : "")}
           style={
             {
-              aspectRatio: `600 / ${frameHeight}`,
+              aspectRatio: viewport?.aspectRatio ?? `600 / ${frameHeight}`,
               "--scene-ratio": 600 / frameHeight,
             } as CSSProperties
           }
         >
           <div
             className="scene-stage"
+            style={viewportStyle}
             data-testid="full-animal-stage"
             data-view="whole"
           >
@@ -730,56 +776,7 @@ export function SketchCanvas({
         )}
       </div>
       <div className="drawing-tools-stack">
-        <div className="drawing-assists" role="group" aria-label="おたすけ">
-          <span>おたすけ</span>
-          <button
-            type="button"
-            aria-pressed={assist.grid}
-            onClick={() =>
-              setAssist((current) => ({ ...current, grid: !current.grid }))
-            }
-          >
-            <LayoutGrid size={15} aria-hidden="true" />
-            グリッド
-          </button>
-          {photoUrl && (
-            <button
-              type="button"
-              aria-pressed={assist.photo}
-              onClick={() =>
-                setAssist((current) => ({ ...current, photo: !current.photo }))
-              }
-            >
-              <ImageIcon size={15} aria-hidden="true" />
-              写真
-            </button>
-          )}
-          {ghostSrc && (
-            <button
-              type="button"
-              aria-pressed={assist.ghost}
-              onClick={() =>
-                setAssist((current) => ({ ...current, ghost: !current.ghost }))
-              }
-            >
-              <Eye size={15} aria-hidden="true" />
-              お手本
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={!strokes.length}
-            onClick={() => {
-              onChange([], "clear");
-              setErase(false);
-              setFillMode(false);
-              setPaletteOpen(false);
-            }}
-          >
-            <RotateCcw size={15} aria-hidden="true" />
-            描き直す
-          </button>
-        </div>
+        {layout === "landscape" && drawingAssists}
         <div
           className="tools drawing-tools"
           aria-label="描画ツール"
@@ -809,11 +806,21 @@ export function SketchCanvas({
                 togglePalette(event.currentTarget, !penActive || !paletteOpen);
               }}
             >
-              <Pencil
-                size={25}
-                style={{ color: brushColor }}
+              <svg
+                className="drawing-tool-art"
                 aria-hidden="true"
-              />
+                viewBox="0 0 50 50"
+              >
+                <path d="M14.94 30.06H35V50H14.94Z" fill={brushColor} />
+                <path
+                  d="M24.02 12.97 14.97 30.03H35L25.95 12.97C25.54 12.18 24.43 12.18 24.02 12.97Z"
+                  fill="#f9cc8c"
+                />
+                <path
+                  d="M24.02 12.97 21.14 18.36H28.83L25.95 12.97C25.54 12.18 24.43 12.18 24.02 12.97Z"
+                  fill={brushColor}
+                />
+              </svg>
             </button>
             <button
               type="button"
@@ -840,7 +847,20 @@ export function SketchCanvas({
                 setPaletteOpen(false);
               }}
             >
-              <Eraser size={25} aria-hidden="true" />
+              <svg
+                className="drawing-tool-art"
+                aria-hidden="true"
+                viewBox="0 0 50 50"
+              >
+                <path
+                  d="M13.17 25.54C13.17 19.27 18.48 14.15 25 14.11S36.80 19.15 36.77 25.44Z"
+                  fill="white"
+                />
+                <path
+                  d="M40.57 26.80V50H9.43L9.49 26.96C9.49 26.23 10.13 25.60 10.89 25.60L39.21 25.44C39.94 25.44 40.57 26.04 40.57 26.80Z"
+                  fill="#5696d6"
+                />
+              </svg>
             </button>
           </div>
           <label className="drawing-width">
@@ -903,7 +923,30 @@ export function SketchCanvas({
             線で囲んだ中をタップすると、選んだ色でぬれるよ。
           </p>
         )}
+        {layout !== "landscape" && drawingAssists}
       </div>
+      {missionTitle && (
+        <div
+          className="sketch-layout-switch"
+          role="group"
+          aria-label="画面の向き"
+        >
+          <button
+            type="button"
+            aria-pressed={layout === "portrait"}
+            onClick={() => chooseLayout("portrait")}
+          >
+            たて
+          </button>
+          <button
+            type="button"
+            aria-pressed={layout === "landscape"}
+            onClick={() => chooseLayout("landscape")}
+          >
+            よこ
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { PhotoReview } from "./components/PhotoReview";
 import { PhotoCelebration } from "./components/ChallengeIntro";
 import { assetPath } from "./content/artwork";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, Images, UserRound } from "lucide-react";
+import { CameraOff } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
 
 type ZoomCapabilities = MediaTrackCapabilities & {
@@ -311,9 +311,11 @@ export function CameraView({
                 <strong>{detected}</strong>がいるよ！
               </>
             ) : (
-              <>
-                <strong>動物の写真</strong>を撮ろう！
-              </>
+              <img
+                className="camera-prompt-art"
+                src={assetPath("illustrations/pdf-design/camera-prompt.svg")}
+                alt="動物の写真を撮ろう！"
+              />
             )}
           </p>
         </div>
@@ -331,7 +333,13 @@ export function CameraView({
               {status === "failed" ? (
                 <CameraOff size={107} strokeWidth={1.35} aria-hidden="true" />
               ) : (
-                <Camera size={107} strokeWidth={1.35} aria-hidden="true" />
+                <img
+                  className="camera-placeholder-art"
+                  src={assetPath(
+                    "illustrations/pdf-design/camera-placeholder.svg",
+                  )}
+                  alt=""
+                />
               )}
               <span role="status">
                 {status === "paused"
@@ -376,7 +384,10 @@ export function CameraView({
             className="camera-side-button"
             onClick={() => onCollection?.()}
           >
-            <Images size={29} aria-hidden="true" />
+            <img
+              alt=""
+              src={assetPath("illustrations/pdf-design/camera-gallery.svg")}
+            />
             ギャラリー
           </button>
           <button
@@ -392,7 +403,10 @@ export function CameraView({
             className="camera-side-button"
             onClick={(event) => onSettings?.(event.currentTarget)}
           >
-            <UserRound size={29} aria-hidden="true" />
+            <img
+              alt=""
+              src={assetPath("illustrations/pdf-design/camera-profile.svg")}
+            />
             マイページ
           </button>
         </div>

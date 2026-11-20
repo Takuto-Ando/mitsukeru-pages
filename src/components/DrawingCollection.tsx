@@ -1,10 +1,12 @@
 import { NotebookTools } from "./NotebookTools";
 import { useEffect, useId, useRef, useState } from "react";
-import { Camera, ChevronLeft, Image, SquarePen, X } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { groups } from "../content/groups";
+import { assetPath } from "../content/artwork";
 import { drawingScene } from "../collection/drawingScene";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { applyStyles } from "../drawing/styles";
+import { designCardViewport } from "../drawing/viewport";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import { SketchComparison } from "./SketchComparison";
@@ -21,6 +23,30 @@ import type { ObservationRecord } from "../notebook/types";
 import { recordStudy } from "../research/study";
 import "../styles/design3-gallery.css";
 
+function GalleryMark({
+  mark,
+}: {
+  mark:
+    | "title"
+    | "sketch"
+    | "sketch-label"
+    | "photo"
+    | "photo-label"
+    | "camera"
+    | "camera-empty"
+    | "camera-label"
+    | "close";
+}) {
+  const mask = `url("${assetPath(`figma/entry/gallery-${mark}.svg`)}")`;
+  return (
+    <span
+      aria-hidden="true"
+      className={`gallery-mark gallery-mark--${mark}`}
+      style={{ maskImage: mask, WebkitMaskImage: mask }}
+    />
+  );
+}
+
 function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
   const clip = useId();
   const [source, setSource] = useState<{ id: string; url: string }>();
@@ -35,8 +61,17 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
   }, [drawing.id, drawing.ownPng]);
   const scene = drawing.sceneSnapshot || drawingScene(drawing);
   const height = scene.frameHeight || 400;
+  const viewport = designCardViewport(scene);
   return (
-    <svg viewBox={`0 0 600 ${height}`} aria-hidden="true">
+    <svg
+      viewBox={
+        viewport
+          ? `${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`
+          : `0 0 600 ${height}`
+      }
+      preserveAspectRatio={viewport ? "none" : undefined}
+      aria-hidden="true"
+    >
       <defs>
         <clipPath id={clip}>
           <SceneRegions scene={scene} />
@@ -136,6 +171,7 @@ export function DrawingCollection({
   });
   const group = drawing && groups.find((g) => g.id === drawing.groupId);
   const scene = drawing && (drawing.sceneSnapshot || drawingScene(drawing));
+  const viewport = scene && designCardViewport(scene);
 
   useEffect(() => {
     detail.current?.showModal();
@@ -149,7 +185,7 @@ export function DrawingCollection({
   }
 
   useEffect(() => {
-    if (!drawing?.ownPng || !drawing?.answerPng) {
+    if (viewport || !drawing?.ownPng || !drawing?.answerPng) {
       setUrls(undefined);
       return;
     }
@@ -160,7 +196,7 @@ export function DrawingCollection({
       URL.revokeObjectURL(own);
       URL.revokeObjectURL(answer);
     };
-  }, [drawing?.id, drawing?.ownPng, drawing?.answerPng]);
+  }, [drawing?.id, drawing?.ownPng, drawing?.answerPng, viewport]);
 
   async function exportPng(kind: "own" | "comparison") {
     if (!drawing || exporting) return;
@@ -258,7 +294,10 @@ export function DrawingCollection({
         <button type="button" onClick={onBack} aria-label="体験に戻る">
           <ChevronLeft size={28} aria-hidden="true" />
         </button>
-        <h1 id={galleryId}>マイギャラリー</h1>
+        <h1 id={galleryId}>
+          <span className="sr-only">マイギャラリー</span>
+          <GalleryMark mark="title" />
+        </h1>
       </header>
       <div className="gallery-sheet">
         <div
@@ -290,8 +329,9 @@ export function DrawingCollection({
             tabIndex={tab === "sketch" ? 0 : -1}
             onClick={() => setTab("sketch")}
           >
-            <SquarePen size={18} aria-hidden="true" />
-            スケッチ
+            <GalleryMark mark="sketch" />
+            <GalleryMark mark="sketch-label" />
+            <span className="sr-only">スケッチ</span>
           </button>
           <button
             type="button"
@@ -303,8 +343,9 @@ export function DrawingCollection({
             tabIndex={tab === "photo" ? 0 : -1}
             onClick={() => setTab("photo")}
           >
-            <Image size={18} aria-hidden="true" />
-            写真
+            <GalleryMark mark="photo" />
+            <GalleryMark mark="photo-label" />
+            <span className="sr-only">写真</span>
           </button>
         </div>
         <div
@@ -428,7 +469,16 @@ export function DrawingCollection({
         >
           <div className="collection-grid" aria-hidden="true">
             {Array.from({ length: 6 }, (_, index) => (
-              <div className="gallery-slot" key={index} />
+              <div
+                className={
+                  index === 0
+                    ? "gallery-slot gallery-slot--camera"
+                    : "gallery-slot"
+                }
+                key={index}
+              >
+                {index === 0 && <GalleryMark mark="camera-empty" />}
+              </div>
             ))}
           </div>
           <div className="gallery-photo-empty">
@@ -441,8 +491,9 @@ export function DrawingCollection({
         </div>
       </div>
       <button type="button" className="gallery-camera" onClick={onCamera}>
-        <Camera size={33} strokeWidth={2} aria-hidden="true" />
-        写真を撮る
+        <GalleryMark mark="camera" />
+        <GalleryMark mark="camera-label" />
+        <span className="sr-only">写真を撮る</span>
       </button>
       {drawing && group && scene && (
         <dialog
@@ -458,25 +509,26 @@ export function DrawingCollection({
               closeDetail();
           }}
         >
-          <div>
-            <div className="gallery-detail-actions">
-              <button
-                type="button"
-                onClick={closeDetail}
-                aria-label="一覧に戻る"
-                disabled={deleting}
-              >
-                <X size={34} aria-hidden="true" />
-              </button>
-              <DifficultyPill regionCount={scene.regions.length} />
-            </div>
+          <div className="gallery-detail-actions">
+            <button
+              type="button"
+              onClick={closeDetail}
+              aria-label="一覧に戻る"
+              disabled={deleting}
+            >
+              <GalleryMark mark="close" />
+            </button>
+            <DifficultyPill regionCount={scene.regions.length} />
+          </div>
+          <div className="gallery-detail-scroll" tabIndex={-1} autoFocus>
             <SketchComparison
               strokes={drawing.strokes}
               scene={scene}
-              images={urls?.id === drawing.id ? urls : undefined}
+              images={!viewport && urls?.id === drawing.id ? urls : undefined}
               profile={taskById[drawing.taskId || group.id]?.profile}
               answer={group.answer}
               initialMode="drawing"
+              viewport={viewport}
               cardFooter={
                 <div className="gallery-detail-fact">
                   <p>{drawing.explanation.form}</p>

@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { CalendarDays, Camera, MapPin, RotateCcw } from "lucide-react";
+import { CalendarDays, MapPin, RotateCcw } from "lucide-react";
 import { groups } from "../content/groups";
 import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
@@ -47,7 +47,10 @@ export function PhotoReview({
           />
         ) : (
           <div className="design3-photo-placeholder">
-            <Camera size={72} strokeWidth={1.5} aria-hidden="true" />
+            <img
+              alt=""
+              src={assetPath("illustrations/pdf-design/camera-placeholder.svg")}
+            />
           </div>
         )}
         <div className="design3-photo-meta">

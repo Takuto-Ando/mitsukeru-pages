@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
+import { tutorialSurveyUrl } from "../../src/research/tutorialSurvey";
 async function startCamera(page: Page) {
   await page.getByRole("button", { name: "つづきから", exact: true }).click();
 }
@@ -71,7 +72,7 @@ async function backToCamera(page: Page) {
     .click();
   await startCamera(page);
 }
-async function select(page: Page, id = "goat") {
+async function select(page: Page, id = "goat", entry = "./") {
   const task = tasks.find((t) => t.id === id)!;
   await page.addInitScript(() =>
     Object.defineProperty(navigator, "mediaDevices", {
@@ -82,7 +83,7 @@ async function select(page: Page, id = "goat") {
       },
     }),
   );
-  await page.goto("./");
+  await page.goto(entry);
   await startCamera(page);
   await pickAnimal(page, groups.find((g) => g.id === task.groupId)!.name);
   if (tasksForGroup(task.groupId).length > 1)
@@ -1848,4 +1849,34 @@ test("気づきを任意保存・解説で追記・再読込して復元", async
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "自分の絵をPNGで保存" }).click();
   expect((await download).suggestedFilename()).toMatch(/\.png$/);
+});
+
+test("検証用はチュートリアルの保存後にだけGoogleフォームを開く", async ({
+  page,
+}) => {
+  const form = tutorialSurveyUrl("?study=1", process.env.VITE_STUDY_FORM_URL);
+  test.skip(!form, "GoogleフォームURLを指定したビルドで検証する");
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-tutorial-complete-v1", "true");
+  });
+  let visits = 0;
+  await page.route(form!, async (route) => {
+    visits++;
+    await route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: "<h1>Mock study survey</h1>",
+    });
+  });
+  await select(page, "goat", "./?study=1");
+  await draw(page);
+  await compare(page);
+  expect(visits).toBe(0);
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await expect(page).toHaveURL(form!);
+  await expect(
+    page.getByRole("heading", { name: "Mock study survey" }),
+  ).toBeVisible();
+  expect(visits).toBe(1);
+  await page.goto("./");
+  await openGalleryFromHome(page, 1);
 });

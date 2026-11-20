@@ -1,5 +1,5 @@
 .figma-shell.design3-shell {
-  --d3-cream: #fffbf1;
+  --d3-cream: #fff9ef;
   --d3-ground: #dfeacb;
   --d3-orange: #f6a83c;
   --d3-green: #7fa845;
@@ -20,7 +20,7 @@
 }
 
 body:has(.design3-shell) {
-  background: #fffbf1;
+  background: #fff9ef;
 }
 
 .figma-shell.design3-shell[data-screen="activity"][data-step="1"] {
@@ -142,6 +142,7 @@ body:has(.design3-shell) {
 
 .design3-camera .camera-fallback {
   gap: 10px;
+  padding: 0;
   background: #d8d8d8;
   color: #6b6258;
 }
@@ -431,42 +432,60 @@ body:has(.design3-shell) {
 .design3-challenge {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   min-height: 100dvh;
-  gap: 23px;
-  padding: 32px 16px;
+  padding: clamp(70px, calc(50dvh - 113px), 340px) 16px 24px;
   background: var(--d3-orange);
   color: #fff;
   text-align: center;
 }
 
 body:has(.design3-shell[data-screen="challenge"]) {
-  background: #f6a83c;
+  background: #f9a846;
 }
 
-.design3-challenge h1 span,
+.design3-challenge h1 {
+  display: grid;
+  justify-items: center;
+  gap: clamp(15px, 6.72vw, 27px);
+  margin: 0;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
 .design3-challenge h1 strong {
+  color: var(--d3-orange);
+  font-size: clamp(1.75rem, 11.5vw, 2.85rem);
+  -webkit-text-stroke: 0.17em #fff;
+  paint-order: stroke fill;
+}
+
+.design3-challenge-giraffe-title {
   display: block;
+  width: min(62.5vw, 251px);
+  height: auto;
+  transform: translateX(-1%);
 }
 
-.design3-challenge h1 strong {
-  font-size: clamp(1.9rem, 8vw, 3rem);
-  text-shadow: 0 1px 3px #a95c10;
+.design3-challenge-prompt {
+  display: block;
+  width: min(77.6vw, 312px);
+  height: auto;
 }
 
-.design3-challenge h1 span {
-  font-size: clamp(1.2rem, 5vw, 1.65rem);
+.design3-challenge > .difficulty-pill {
+  margin-top: clamp(25px, 14.5vw, 58px);
 }
 
 .design3-challenge .design3-challenge-start {
+  margin-top: 20px;
   background: #fff;
   color: var(--d3-brown);
 }
 
 /* Color and geometry shared by the Figma camera and drawing frames. */
 .figma-shell.design3-shell {
-  --d3-cream: #fffaf0;
+  --d3-cream: #fff9ef;
   --d3-orange: #f9a846;
   --d3-green: #86a843;
   --d3-ground: #dfe6c3;
@@ -520,7 +539,7 @@ body:has(.design3-shell) {
 }
 
 .design3-camera .camera-frame {
-  height: min(125vw, 502px, 62dvh);
+  height: min(125vw, 503px, 69dvh);
   min-height: 245px;
 }
 
@@ -560,9 +579,62 @@ body:has(.design3-shell) {
   height: 77px;
 }
 
-.design3-camera .camera-side-button svg {
+.design3-camera .camera-side-button img {
   width: 40px;
   height: 40px;
+  margin-inline: auto;
+}
+
+.camera-prompt-art {
+  display: block;
+  width: min(100%, 172px);
+  margin-inline: auto;
+}
+
+.camera-placeholder-art {
+  width: 51.64%;
+  height: auto;
+  transform: translateY(-5px);
+}
+
+.design3-camera .camera-fallback > span {
+  position: absolute;
+  inset: auto 12px 63px;
+}
+
+.design3-zoom {
+  bottom: 11px;
+  gap: 0;
+}
+
+.design3-zoom button,
+.design3-zoom button[aria-pressed="true"] {
+  position: relative;
+  isolation: isolate;
+  height: 44px;
+  background: transparent;
+  font-size: 10px;
+}
+
+.design3-zoom button::before {
+  position: absolute;
+  z-index: -1;
+  inset: 50% auto auto 50%;
+  width: 25px;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgb(0 0 0 / 50%);
+  content: "";
+}
+
+.design3-zoom button[aria-pressed="true"] {
+  color: #f8cb58;
+  font-size: 14px;
+}
+
+.design3-zoom button[aria-pressed="true"]::before {
+  width: 40px;
 }
 
 .design3-photo-review {
@@ -599,6 +671,11 @@ body:has(.design3-shell) {
 .design3-photo-card .captured-preview,
 .design3-photo-placeholder {
   aspect-ratio: 265 / 332;
+}
+
+.design3-photo-placeholder img {
+  width: 51.2%;
+  height: auto;
 }
 
 .design3-photo-meta {
