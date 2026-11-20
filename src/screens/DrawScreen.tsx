@@ -78,6 +78,13 @@ export function DrawScreen({
         photoUrl={photo || undefined}
         missionTitle={hasHint ? "もうすこし観察してみて！" : observationPrompt}
         landscapeReselect={reference}
+        missionLettering={
+          hasHint
+            ? "illustrations/pdf-design/drawing-prompt-hint.svg"
+            : task.id === "giraffe"
+              ? "illustrations/pdf-design/drawing-prompt-giraffe.svg"
+              : undefined
+        }
         scene={task.scene}
         strokes={strokes}
         showTarget={hasHint}
@@ -91,11 +98,19 @@ export function DrawScreen({
               onClick={onHint}
             >
               <CircleHelp size={18} aria-hidden="true" />
-              {hasHint && canShowHint
-                ? "次のヒントを見る"
-                : hasHint
-                  ? "ヒントを表示中"
-                  : "ヒントを見る"}
+              {hasHint && canShowHint ? (
+                "次のヒントを見る"
+              ) : hasHint ? (
+                "ヒントを表示中"
+              ) : (
+                <img
+                  className="drawing-lettering"
+                  src={assetPath(
+                    "illustrations/pdf-design/drawing-action-hint.svg",
+                  )}
+                  alt="ヒントを見る"
+                />
+              )}
             </button>
             <button
               className="drawing-pill draw-complete"
@@ -109,7 +124,13 @@ export function DrawScreen({
                 height={17}
                 src={assetPath("figma/entry/sketch-confirm.svg")}
               />
-              できた！
+              <img
+                className="drawing-lettering"
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-action-finish.svg",
+                )}
+                alt="できた！"
+              />
             </button>
           </>
         }

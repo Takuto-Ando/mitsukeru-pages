@@ -68,7 +68,19 @@ export function ResultScreen({
           className="result-pitsune-face"
           src={assetPath("figma/entry/sketch-face.svg")}
         />
-        <h1 className="pitsune-bubble">{message}</h1>
+        <h1 className="pitsune-bubble">
+          {passed ? (
+            <img
+              className="drawing-lettering"
+              src={assetPath(
+                "illustrations/pdf-design/drawing-prompt-success.svg",
+              )}
+              alt={message}
+            />
+          ) : (
+            message
+          )}
+        </h1>
       </div>
       <SketchComparison
         strokes={strokes}
@@ -89,7 +101,13 @@ export function ResultScreen({
               onClick={onRedraw}
             >
               <CornerDownLeft size={18} aria-hidden="true" />
-              描きなおす
+              <img
+                className="drawing-lettering"
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-action-redraw.svg",
+                )}
+                alt="描きなおす"
+              />
             </button>
             <button
               className="drawing-pill"

@@ -206,11 +206,6 @@ body:has(.design3-shell) {
   background: transparent;
 }
 
-.design3-camera .camera-side-button svg {
-  margin-inline: auto;
-  color: var(--d3-orange);
-}
-
 .design3-camera .camera-controls .shutter-button,
 .design3-camera .camera-controls .shutter-button:active:not(:disabled) {
   display: grid;
@@ -350,10 +345,6 @@ body:has(.design3-shell) {
   display: flex;
   align-items: center;
   gap: 3px;
-}
-
-.design3-photo-date svg {
-  color: #ab670b;
 }
 
 .design3-photo-fact {
@@ -582,10 +573,24 @@ body:has(.design3-shell) {
   height: 77px;
 }
 
-.design3-camera .camera-side-button img {
-  width: 40px;
+.design3-camera .camera-side-button {
+  min-height: 77px;
+  gap: 11.5px;
+  padding: 6px 4px 0;
+}
+
+.camera-side-icon {
+  width: auto;
   height: 40px;
-  margin-inline: auto;
+}
+
+.camera-gallery-icon {
+  translate: -2.5px;
+}
+
+.camera-side-label {
+  width: 65px;
+  height: 12px;
 }
 
 .camera-prompt-art {
@@ -607,6 +612,7 @@ body:has(.design3-shell) {
 
 .design3-zoom {
   bottom: 11px;
+  left: calc(50% - 3.3px);
   gap: 0;
 }
 
@@ -614,16 +620,25 @@ body:has(.design3-shell) {
 .design3-zoom button[aria-pressed="true"] {
   position: relative;
   isolation: isolate;
+  display: grid;
+  place-items: center;
   height: 44px;
   background: transparent;
-  font-size: 10px;
+}
+
+.design3-zoom button:first-child {
+  --zoom-offset: 1.65px;
+}
+
+.design3-zoom button:last-child {
+  --zoom-offset: -1.65px;
 }
 
 .design3-zoom button::before {
   position: absolute;
   z-index: -1;
-  inset: 50% auto auto 50%;
-  width: 25px;
+  inset: 50% auto auto calc(50% + var(--zoom-offset));
+  width: 24.62px;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
@@ -633,30 +648,49 @@ body:has(.design3-shell) {
 
 .design3-zoom button[aria-pressed="true"] {
   color: #f8cb58;
-  font-size: 14px;
 }
 
 .design3-zoom button[aria-pressed="true"]::before {
-  width: 40px;
+  width: 39.77px;
+}
+
+.zoom-mark {
+  display: block;
+  background: currentColor;
+  translate: var(--zoom-offset);
+}
+
+.zoom-mark--half {
+  width: 15.15px;
+  height: 7.78px;
+  mask: url("../../public/illustrations/pdf-design/camera-zoom-half-label.svg")
+    center / contain no-repeat;
+}
+
+.zoom-mark--one {
+  width: 17.54px;
+  height: 11.55px;
+  mask: url("../../public/illustrations/pdf-design/camera-zoom-one-label.svg")
+    center / contain no-repeat;
 }
 
 .design3-photo-review {
   box-sizing: border-box;
-  max-width: 398px;
+  max-width: 402px;
   margin-inline: auto;
-  padding: max(47px, env(safe-area-inset-top)) clamp(18px, 9.45vw, 38px) 0;
+  padding: max(50px, env(safe-area-inset-top)) clamp(18px, 9.45vw, 38px) 0;
 }
 
 .design3-photo-review h1 {
-  margin-bottom: 26px;
+  margin-bottom: 31px;
   line-height: 1.25;
 }
 
 .design3-photo-card {
   position: relative;
   isolation: isolate;
-  min-height: min(127vw, 511px);
-  padding: clamp(14px, 7.2vw, 29px);
+  min-height: min(127.12vw, 511px);
+  padding: clamp(14px, 7.2vw, 29px) clamp(14px, 7.46vw, 30px);
   border-radius: 16px;
   background: transparent;
   box-shadow: none;
@@ -673,7 +707,7 @@ body:has(.design3-shell) {
 
 .design3-photo-card .captured-preview,
 .design3-photo-placeholder {
-  aspect-ratio: 265 / 332;
+  aspect-ratio: 266 / 332;
 }
 
 .design3-photo-placeholder img {
@@ -682,7 +716,12 @@ body:has(.design3-shell) {
 }
 
 .design3-photo-meta {
-  margin: 12px 0 8px;
+  align-items: center;
+  margin: 17px 0 11px;
+}
+
+.design3-photo-animal {
+  gap: 9px;
 }
 
 .design3-photo-animal h2 {
@@ -690,13 +729,36 @@ body:has(.design3-shell) {
 }
 
 .design3-photo-edit {
-  min-height: 24px;
-  padding: 3px 10px;
-  font-size: 10px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  width: 49px;
+  min-height: 44px;
+  margin-block: -10px;
+  padding: 0;
+  background: transparent;
+}
+
+.design3-photo-edit::before {
+  position: absolute;
+  z-index: -1;
+  inset: 50% 0 auto;
+  height: 22.5px;
+  border-radius: inherit;
+  background: var(--d3-green);
+  box-shadow: var(--d3-shadow);
+  translate: 0 -50%;
+  content: "";
+}
+
+.design3-photo-edit img {
+  width: 24.38px;
+  height: 7.82px;
 }
 
 .design3-photo-options {
-  left: min(20vw, 79px);
+  left: min(20vw, 78px);
   bottom: calc(100% + 8px);
   width: min(53vw, 159px);
   max-height: 243px;
@@ -708,6 +770,18 @@ body:has(.design3-shell) {
   font-size: clamp(10px, 2.75vw, 11px);
 }
 
+.design3-photo-date {
+  gap: 2px;
+  padding-inline-end: 5px;
+  line-height: 1.45;
+}
+
+.design3-photo-date img {
+  width: 12px;
+  height: 13.4px;
+  object-fit: contain;
+}
+
 .design3-photo-review .design3-actions {
   gap: 18px;
   margin-top: 34px;
@@ -716,6 +790,18 @@ body:has(.design3-shell) {
 .design3-photo-review .design3-actions .design3-pill {
   min-height: 50px;
   padding-inline: 8px;
+}
+
+.photo-review-retake-mark {
+  width: min(100%, 100.3px);
+  height: auto;
+  aspect-ratio: 100.3 / 15.33;
+}
+
+.photo-review-confirm-mark {
+  width: min(100%, 124.34px);
+  height: auto;
+  aspect-ratio: 124.34 / 19.04;
 }
 
 .design3-celebration-mascot > img {

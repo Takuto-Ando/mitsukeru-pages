@@ -34,8 +34,8 @@ const BLANK_SCENE: Scene = {
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
 const BRUSH_COLORS = [
-  "#695b79",
-  "#9173ad",
+  "#6b5c7a",
+  "#977baf",
   "#3a3238",
   "#8a6642",
   "#b0563a",
@@ -59,6 +59,7 @@ export function SketchCanvas({
   onRedo,
   canRedo,
   missionTitle,
+  missionLettering,
   actions,
   landscapeReselect,
   showTarget = false,
@@ -74,6 +75,7 @@ export function SketchCanvas({
   onRedo?: () => void;
   canRedo?: boolean;
   missionTitle?: string;
+  missionLettering?: string;
   actions?: ReactNode;
   landscapeReselect?: ReactNode;
   showTarget?: boolean;
@@ -94,10 +96,13 @@ export function SketchCanvas({
     current = useRef<Stroke>([]);
   const [drawing, setDrawing] = useState(false),
     [erase, setErase] = useState(false),
-    [brushWidth, setBrushWidth] = useState(7),
-    [brushColor, setBrushColor] = useState(
-      missionTitle ? BRUSH_COLORS[0] : "#277e78",
-    );
+    [brushWidth, setBrushWidth] = useState(7);
+  const [selectedPen, setSelectedPen] = useState<0 | 1>(0);
+  const [penColors, setPenColors] = useState<[string, string]>([
+    missionTitle ? BRUSH_COLORS[0] : "#277e78",
+    BRUSH_COLORS[1],
+  ]);
+  const brushColor = penColors[selectedPen];
   const [layoutChoice, setLayoutChoice] = useState<
     "portrait" | "landscape" | null
   >(null);
@@ -528,6 +533,8 @@ export function SketchCanvas({
   }, []);
   const isFreeDrawing = template === "blank";
   const penActive = !erase && !fillMode;
+  const penSlots =
+    missionTitle && !isFreeDrawing ? ([0, 1] as const) : ([0] as const);
   function togglePalette(trigger: HTMLButtonElement, open = !paletteOpen) {
     paletteTrigger.current = trigger;
     setPaletteOpen(open);
@@ -535,6 +542,18 @@ export function SketchCanvas({
   const drawingAssists = (
     <div className="drawing-assists" role="group" aria-label="おたすけ">
       <span>おたすけ</span>
+      <button
+        type="button"
+        aria-pressed={fillMode}
+        onClick={() => {
+          setFillMode(true);
+          setErase(false);
+          setPaletteOpen(false);
+        }}
+      >
+        <PaintBucket size={15} aria-hidden="true" />
+        バケツ
+      </button>
       <button
         type="button"
         aria-pressed={assist.grid}
@@ -599,7 +618,17 @@ export function SketchCanvas({
               className="mission-pitsune-face"
               src={assetPath("figma/entry/sketch-face.svg")}
             />
-            <h1 className="pitsune-bubble">{missionTitle}</h1>
+            <h1 className="pitsune-bubble">
+              {missionLettering ? (
+                <img
+                  className="drawing-lettering"
+                  src={assetPath(missionLettering)}
+                  alt={missionTitle}
+                />
+              ) : (
+                missionTitle
+              )}
+            </h1>
             {cheer && (
               <span className="pitsune-cheer" role="status">
                 {cheer}
@@ -793,49 +822,50 @@ export function SketchCanvas({
                 onClick={(event) => togglePalette(event.currentTarget)}
               />
             )}
-            <button
-              type="button"
-              aria-label="ペン"
-              aria-pressed={penActive}
-              aria-expanded={paletteOpen}
-              aria-controls={paletteId}
-              title="ペンと色"
-              onClick={(event) => {
-                setErase(false);
-                setFillMode(false);
-                togglePalette(event.currentTarget, !penActive || !paletteOpen);
-              }}
-            >
-              <svg
-                className="drawing-tool-art"
-                aria-hidden="true"
-                viewBox="0 0 50 50"
+            {penSlots.map((pen) => (
+              <button
+                key={pen}
+                type="button"
+                aria-label={pen === 0 ? "ペン" : "2本目のペン"}
+                aria-pressed={penActive && selectedPen === pen}
+                aria-expanded={selectedPen === pen && paletteOpen}
+                aria-controls={paletteId}
+                title={pen === 0 ? "ペンと色" : "2本目のペンと色"}
+                onClick={(event) => {
+                  setErase(false);
+                  setFillMode(false);
+                  if (penActive && selectedPen === pen) {
+                    togglePalette(event.currentTarget);
+                    return;
+                  }
+                  setSelectedPen(pen);
+                  activeBrush.current = {
+                    ...activeBrush.current,
+                    color: penColors[pen],
+                  };
+                  setPaletteOpen(false);
+                }}
               >
-                <path d="M14.94 30.06H35V50H14.94Z" fill={brushColor} />
-                <path
-                  d="M24.02 12.97 14.97 30.03H35L25.95 12.97C25.54 12.18 24.43 12.18 24.02 12.97Z"
-                  fill="#f9cc8c"
-                />
-                <path
-                  d="M24.02 12.97 21.14 18.36H28.83L25.95 12.97C25.54 12.18 24.43 12.18 24.02 12.97Z"
-                  fill={brushColor}
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              className="drawing-bucket"
-              aria-label="バケツ"
-              aria-pressed={fillMode}
-              title="バケツ"
-              onClick={() => {
-                setFillMode(true);
-                setErase(false);
-                setPaletteOpen(false);
-              }}
-            >
-              <PaintBucket size={25} aria-hidden="true" />
-            </button>
+                <svg
+                  className="drawing-tool-art"
+                  aria-hidden="true"
+                  viewBox="0 0 50 50"
+                >
+                  <path
+                    d="M14.937 30.063H35V50H14.937Z"
+                    fill={penColors[pen]}
+                  />
+                  <path
+                    d="M24.018 12.975L14.967 30.032H34.999L25.948 12.975C25.537 12.184 24.429 12.184 24.018 12.975Z"
+                    fill="#f9cc8c"
+                  />
+                  <path
+                    d="M24.02 12.975L21.14 18.355H28.83L25.95 12.975C25.539 12.184 24.431 12.184 24.02 12.975Z"
+                    fill={penColors[pen]}
+                  />
+                </svg>
+              </button>
+            ))}
             <button
               type="button"
               aria-label="消しゴム"
@@ -847,24 +877,23 @@ export function SketchCanvas({
                 setPaletteOpen(false);
               }}
             >
-              <svg
+              <img
                 className="drawing-tool-art"
-                aria-hidden="true"
-                viewBox="0 0 50 50"
-              >
-                <path
-                  d="M13.17 25.54C13.17 19.27 18.48 14.15 25 14.11S36.80 19.15 36.77 25.44Z"
-                  fill="white"
-                />
-                <path
-                  d="M40.57 26.80V50H9.43L9.49 26.96C9.49 26.23 10.13 25.60 10.89 25.60L39.21 25.44C39.94 25.44 40.57 26.04 40.57 26.80Z"
-                  fill="#5696d6"
-                />
-              </svg>
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-tool-eraser.svg",
+                )}
+                alt=""
+              />
             </button>
           </div>
           <label className="drawing-width">
-            ペンの太さ
+            <img
+              className="drawing-width-label"
+              src={assetPath("illustrations/pdf-design/drawing-tool-width.svg")}
+              width={48}
+              height={9}
+              alt="ペンの太さ"
+            />
             <input
               type="range"
               min={0}
@@ -899,7 +928,9 @@ export function SketchCanvas({
                 aria-pressed={brushColor === color}
                 onClick={() => {
                   activeBrush.current = { ...activeBrush.current, color };
-                  setBrushColor(color);
+                  setPenColors((colors) =>
+                    selectedPen === 0 ? [color, colors[1]] : [colors[0], color],
+                  );
                   setPaletteOpen(false);
                   paletteTrigger.current?.focus();
                 }}
