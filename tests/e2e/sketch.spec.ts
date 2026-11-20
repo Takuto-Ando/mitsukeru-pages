@@ -1681,6 +1681,9 @@ test("撮影後はカメラを停止し、識別保留時の写真確認・撮�
   await expect(shutter).toBeEnabled();
   await shutter.click();
   await expect(page.locator(".captured-preview")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "撮影した写真を確認する", exact: true }),
+  ).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => (window as any).__cameraStops))
     .toBe(2);

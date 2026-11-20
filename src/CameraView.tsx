@@ -391,7 +391,7 @@ export function CameraView({
             マイページ
           </button>
         </div>
-        {message && (
+        {status !== "review" && message && (
           <p className="camera-message" role="status">
             {message}
             {(status === "failed" || status === "paused") && (

@@ -36,7 +36,7 @@ export function PhotoReview({
       aria-labelledby="photo-review-title"
     >
       <h1 id="photo-review-title">
-        {photo ? "写真をアルバムに保存しました。" : "観察する動物を選ぶ"}
+        {photo ? "撮影した写真を確認する" : "観察する動物を選ぶ"}
       </h1>
       <article className="design3-photo-card">
         {photo ? (
