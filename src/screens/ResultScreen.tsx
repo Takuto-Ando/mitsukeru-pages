@@ -8,6 +8,7 @@ import type { ObservationGroup } from "../content/groups";
 import type { ObservationTask } from "../content/tasks";
 import { ReadAloud } from "../speech/Speech";
 import type { Evaluation, Stroke } from "../types";
+import { designCardViewport } from "../drawing/viewport";
 
 type Reflection = { discovery: string; revisited: boolean };
 
@@ -58,7 +59,7 @@ export function ResultScreen({
 }) {
   const passed = !!feedback?.passed;
   const message = passed ? "上手に描けたね！" : "見えた形を確かめよう";
-  const fact = task.explanation.form;
+  const fact = task.explanation.ecology || task.explanation.form;
   return (
     <div className="design3-result">
       <div className="result-pitsune">
@@ -77,6 +78,7 @@ export function ResultScreen({
         note={task.comparisonNote}
         completed={passed}
         initialMode="drawing"
+        viewport={designCardViewport(task.scene)}
         onSliderCommit={onSliderCommit}
         cardFooter={fact && <p className="result-fact">{fact}</p>}
         afterCard={

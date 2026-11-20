@@ -17,11 +17,13 @@ export function PhotoCelebration() {
 }
 
 export function ChallengeIntro({
+  taskId,
   animal,
   part,
   regionCount,
   onStart,
 }: {
+  taskId: string;
   animal: string;
   part: string;
   regionCount: number;
@@ -30,10 +32,24 @@ export function ChallengeIntro({
   return (
     <section className="design3-challenge">
       <h1>
-        <strong>
-          {animal}の{part}
-        </strong>
-        <span>を描いてみよう！</span>
+        {taskId === "giraffe" ? (
+          <img
+            className="design3-challenge-giraffe-title"
+            src={assetPath(
+              "illustrations/pdf-design/challenge-giraffe-title.svg",
+            )}
+            alt="キリンの舌"
+          />
+        ) : (
+          <strong>
+            {animal}の{part}
+          </strong>
+        )}
+        <img
+          className="design3-challenge-prompt"
+          src={assetPath("illustrations/pdf-design/challenge-prompt.svg")}
+          alt="を描いてみよう！"
+        />
       </h1>
       <DifficultyPill regionCount={regionCount} />
       <button

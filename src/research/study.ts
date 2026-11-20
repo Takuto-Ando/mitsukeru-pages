@@ -182,6 +182,8 @@ function enqueue(work: () => Promise<void>) {
   return queue;
 }
 
+export const flushStudyWrites = () => queue;
+
 export const currentStudyContext = () => ({ ...context });
 export function setStudyContext(
   animalId?: string,

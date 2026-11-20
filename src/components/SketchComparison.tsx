@@ -1,6 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { getStrokeStyle } from "../drawing/styles";
+import type { SceneViewport } from "../drawing/viewport";
 import { motion, useReducedMotion } from "motion/react";
 import { artwork, assetPath } from "../content/artwork";
 import { scenes, clipStrokes, type Scene } from "../content/scenes";
@@ -19,6 +20,7 @@ export function SketchComparison({
   initialMode = "slider",
   cardFooter,
   afterCard,
+  viewport,
 }: {
   strokes: Stroke[];
   scene?: Scene;
@@ -28,6 +30,7 @@ export function SketchComparison({
   initialMode?: Mode;
   cardFooter?: ReactNode;
   afterCard?: ReactNode;
+  viewport?: SceneViewport;
   onSliderCommit?: (
     from: number,
     to: number,
@@ -69,6 +72,11 @@ export function SketchComparison({
   }, [strokes, scene, replayKey]);
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
+  const viewX = viewport?.x ?? 0;
+  const viewY = viewport?.y ?? 0;
+  const viewWidth = viewport?.width ?? 600;
+  const viewHeight = viewport?.height ?? height;
+  const visibleDrawingWidth = (viewWidth * position) / 100;
   const set = (n: number) => {
     const next = Math.max(0, Math.min(100, Math.round(n)));
     value.current = next;
@@ -94,8 +102,8 @@ export function SketchComparison({
                 : { rotateY: 0, opacity: 1 }
             }
             transition={{ duration: reduce ? 0 : 0.32, ease: "easeOut" }}
-            viewBox={`0 0 600 ${height}`}
-            style={{ aspectRatio: `600 / ${height}` }}
+            viewBox={`${viewX} ${viewY} ${viewWidth} ${viewHeight}`}
+            style={{ aspectRatio: viewport?.aspectRatio ?? `600 / ${height}` }}
             preserveAspectRatio="none"
             role="img"
             aria-label={scene.label + "の描画とお手本"}
@@ -106,13 +114,19 @@ export function SketchComparison({
                 <SceneRegions scene={scene} />
               </clipPath>
               <clipPath id={left}>
-                <rect width={position * 6} height={height} />
+                <rect
+                  x={viewX}
+                  y={viewY}
+                  width={visibleDrawingWidth}
+                  height={viewHeight}
+                />
               </clipPath>
               <clipPath id={right}>
                 <rect
-                  x={position * 6}
-                  width={600 - position * 6}
-                  height={height}
+                  x={viewX + visibleDrawingWidth}
+                  y={viewY}
+                  width={viewWidth - visibleDrawingWidth}
+                  height={viewHeight}
                 />
               </clipPath>
             </defs>

@@ -1,3 +1,4 @@
+import { tutorialSurveyUrl } from "./research/tutorialSurvey";
 import { captureStudyDrawing, type StudyDrawing } from "./research/pairs";
 import { StudyPairView } from "./components/StudyPairView";
 import {
@@ -38,6 +39,7 @@ import { drawingEvaluator } from "./domain";
 
 import {
   recordStudy,
+  flushStudyWrites,
   setStudyContext,
   studyStatus,
   subscribeStudy,
@@ -93,6 +95,25 @@ export default function App() {
     "cheer" | "loading" | "challenge"
   >();
   const tutorialShown = useRef(false);
+  const attemptedSurvey = useRef(false);
+  const [surveyUrl] = useState(() =>
+    tutorialSurveyUrl(
+      window.location.search,
+      import.meta.env.VITE_STUDY_FORM_URL,
+    ),
+  );
+  useEffect(() => {
+    if (screen !== "tutorial" || !surveyUrl || attemptedSurvey.current) return;
+    let active = true;
+    void flushStudyWrites().then(() => {
+      if (!active || attemptedSurvey.current || !navigator.onLine) return;
+      attemptedSurvey.current = true;
+      window.location.assign(surveyUrl);
+    });
+    return () => {
+      active = false;
+    };
+  }, [screen, surveyUrl]);
   useEffect(() => {
     if (photoPhase !== "cheer" && photoPhase !== "loading") return;
     const timer = window.setTimeout(
@@ -347,6 +368,10 @@ export default function App() {
     if (generation !== taskGeneration.current) return;
     if (result === "created" && !tutorialShown.current) {
       tutorialShown.current = true;
+      if (surveyUrl) {
+        restart("tutorial");
+        return;
+      }
       try {
         if (!localStorage.getItem(TUTORIAL_KEY)) {
           localStorage.setItem(TUTORIAL_KEY, "true");
@@ -629,17 +654,22 @@ export default function App() {
             onCollection={openCollection}
             onSettings={openSettings}
             savedCount={collectionCount}
+            studyTutorial={!!surveyUrl}
           />
         ) : screen === "intro" ? (
           <IntroFlow onDone={() => setScreen("activity")} />
         ) : screen === "tutorial" ? (
-          <TutorialEndScreen onDone={() => restart("home")} />
+          <TutorialEndScreen
+            onDone={() => restart("home")}
+            surveyUrl={surveyUrl}
+          />
         ) : screen === "free" ? (
           <FreeDrawScreen onDone={() => restart()} />
         ) : photoPhase === "loading" ? (
           <IntroLoadingScreen />
         ) : photoPhase === "challenge" ? (
           <ChallengeIntro
+            taskId={task.id}
             animal={group.name}
             part={task.part}
             regionCount={scene.regions.length}
@@ -686,23 +716,6 @@ export default function App() {
                     <p className="quiet-note">
                       {studyPhase === "before" ? "1回目" : "2回目"}のスケッチ
                     </p>
-                  )}
-                  {tasksForGroup(group.id).length > 1 && (
-                    <div
-                      className="task-switch"
-                      role="group"
-                      aria-label="観察する部位"
-                    >
-                      {tasksForGroup(group.id).map((t) => (
-                        <button
-                          key={t.id}
-                          aria-pressed={taskId === t.id}
-                          onClick={() => selectTask(t.id)}
-                        >
-                          {t.part}
-                        </button>
-                      ))}
-                    </div>
                   )}
                   {draftOffer === taskId && (
                     <div className="draft-banner" role="status">
@@ -778,6 +791,26 @@ export default function App() {
                         ),
                     }}
                   />
+                  {tasksForGroup(group.id).length > 1 && (
+                    <div
+                      className="task-switch"
+                      role="group"
+                      aria-label="観察する部位"
+                    >
+                      {tasksForGroup(group.id).map((t) => (
+                        <button
+                          key={t.id}
+                          aria-pressed={taskId === t.id}
+                          onClick={() => {
+                            selectTask(t.id);
+                            window.scrollTo(0, 0);
+                          }}
+                        >
+                          {t.part}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </>
               ) : step === 2 ? (
                 <ResultScreen

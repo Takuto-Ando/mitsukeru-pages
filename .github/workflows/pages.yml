@@ -25,6 +25,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - run: npm run build
         env:
+          VITE_STUDY_FORM_URL: ${{ vars.VITE_STUDY_FORM_URL }}
           VITE_BASE_PATH: ${{ vars.PAGES_BASE_PATH || format('/{0}/', github.event.repository.name) }}
       - uses: actions/upload-pages-artifact@v3
         with:
