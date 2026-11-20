@@ -1506,7 +1506,7 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
   await expect(
     page.getByRole("heading", { name: "ズーケッチ", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("button")).toHaveCount(4);
+  await expect(page.getByRole("button")).toHaveCount(5);
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await expect(

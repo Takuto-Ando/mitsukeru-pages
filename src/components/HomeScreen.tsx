@@ -1,5 +1,6 @@
-import { BookOpen, Settings } from "lucide-react";
+import { BookOpen, Settings, Sparkles } from "lucide-react";
 import { groups } from "../content/groups";
+import { DopaBar } from "../dopagaki/DopaBar";
 import { PitsuneIcon } from "./Pitsune";
 import "../styles/design3-entry.css";
 
@@ -15,12 +16,16 @@ export function HomeScreen({
   onCollection,
   onSettings,
   savedCount,
+  dopaMode,
+  onToggleDopa,
 }: {
   onStart: () => void;
   onContinue: () => void;
   onCollection: () => void;
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
+  dopaMode: boolean;
+  onToggleDopa: () => void;
 }) {
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
@@ -64,6 +69,15 @@ export function HomeScreen({
         <button className="design3-continue" onClick={onContinue}>
           つづきから
         </button>
+        <button
+          className="dopa-toggle"
+          onClick={onToggleDopa}
+          aria-pressed={dopaMode}
+        >
+          <Sparkles aria-hidden="true" size={17} />
+          ドパガキモード {dopaMode ? "ON" : "OFF"}
+        </button>
+        {dopaMode && <DopaBar />}
       </div>
       <div className="design3-title-meta">
         <p>

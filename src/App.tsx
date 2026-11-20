@@ -69,6 +69,15 @@ import {
 } from "./drawing/styles";
 import "./styles/cards.css";
 import "./styles/design3.css";
+import {
+  addXp,
+  loadDopaMode,
+  pickPraise,
+  saveDopaMode,
+} from "./dopagaki/dopa";
+import { DopaOverlay, celebrateDopa, fireConfetti } from "./dopagaki/effects";
+import { dopaDing } from "./dopagaki/sounds";
+import "./styles/dopagaki.css";
 
 const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
 type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
@@ -89,6 +98,37 @@ export default function App() {
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
   const [screen, setScreen] = useState<Screen>("splash");
+  const [dopaMode, setDopaMode] = useState<boolean>(loadDopaMode);
+  function toggleDopa() {
+    setDopaMode((current) => {
+      const next = !current;
+      saveDopaMode(next);
+      return next;
+    });
+  }
+  // ドパガキモードのごほうび: XP を配って、音・紙吹雪・オーバーレイで祝う
+  function dopaReward(xp: number, jackpot: boolean) {
+    if (!dopaMode) return;
+    const gain = addXp(xp);
+    if (jackpot) {
+      celebrateDopa({
+        kind: "jackpot",
+        title: "大当たり！",
+        sub: gain.leveledUp
+          ? `レベルアップ！ Lv.${gain.level} 到達！`
+          : `${pickPraise()} +${xp} XP`,
+      });
+    } else if (gain.leveledUp) {
+      celebrateDopa({
+        kind: "levelup",
+        title: "レベルアップ！",
+        sub: `Lv.${gain.level} になったよ！`,
+      });
+    } else {
+      dopaDing();
+      fireConfetti(40);
+    }
+  }
   const [photoPhase, setPhotoPhase] = useState<
     "cheer" | "loading" | "challenge"
   >();
@@ -345,6 +385,7 @@ export default function App() {
     const generation = taskGeneration.current;
     const result = !savedId || reflectionDirty ? await save() : undefined;
     if (generation !== taskGeneration.current) return;
+    if (result) dopaReward(30, false);
     if (result === "created" && !tutorialShown.current) {
       tutorialShown.current = true;
       try {
@@ -523,6 +564,7 @@ export default function App() {
   function celebrate() {
     audio.current?.unlock();
     audio.current?.success();
+    dopaReward(50, true);
   }
   function confirm() {
     setFeedback({
@@ -575,7 +617,7 @@ export default function App() {
   );
   return (
     <div
-      className="figma-shell design3-shell"
+      className={`figma-shell design3-shell${dopaMode ? " dopa-on" : ""}`}
       data-step={step}
       data-screen={
         collectionOpen
@@ -585,6 +627,7 @@ export default function App() {
             : (photoPhase ?? screen)
       }
     >
+      <DopaOverlay />
       <main>
         {storageError && (
           <p className="design3-alert" role="alert">
@@ -629,6 +672,8 @@ export default function App() {
             onCollection={openCollection}
             onSettings={openSettings}
             savedCount={collectionCount}
+            dopaMode={dopaMode}
+            onToggleDopa={toggleDopa}
           />
         ) : screen === "intro" ? (
           <IntroFlow onDone={() => setScreen("activity")} />
@@ -722,6 +767,7 @@ export default function App() {
                     strokes={strokes}
                     feedback={feedback}
                     hintLevel={hintLevel}
+                    dopaMode={dopaMode}
                     onHint={() => {
                       const level = hintLevel + 1;
                       setHintLevel(level);
@@ -785,6 +831,7 @@ export default function App() {
                   group={group}
                   strokes={strokes}
                   feedback={feedback}
+                  dopaMode={dopaMode}
                   reflection={reflection}
                   onReflectionChange={(value) => {
                     setReflection(value);

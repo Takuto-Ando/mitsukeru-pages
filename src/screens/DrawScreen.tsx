@@ -4,6 +4,9 @@ import { ChevronLeft, CircleHelp, CornerDownLeft } from "lucide-react";
 import { SketchCanvas } from "../SketchCanvas";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
 import type { ObservationTask } from "../content/tasks";
+import { addXp } from "../dopagaki/dopa";
+import { fireConfetti } from "../dopagaki/effects";
+import { dopaComboSound } from "../dopagaki/sounds";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { savePng } from "../notebook/images";
 import { ReadAloud } from "../speech/Speech";
@@ -26,6 +29,7 @@ export function DrawScreen({
   onAbsent,
   onReselect,
   canvasProps,
+  dopaMode = false,
 }: {
   task: ObservationTask;
   photo: string;
@@ -38,7 +42,30 @@ export function DrawScreen({
   onAbsent: () => void;
   onReselect: () => void;
   canvasProps: CanvasControls;
+  dopaMode?: boolean;
 }) {
+  // ドパガキモード: 描き続けるほどコンボが伸びる（4秒空くとリセット）
+  const [combo, setCombo] = useState(0);
+  const comboTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(comboTimer.current), []);
+  const wrappedCanvasProps: CanvasControls = {
+    ...canvasProps,
+    onDrawingActivity: (active, tool) => {
+      canvasProps.onDrawingActivity?.(active, tool);
+      if (!dopaMode || active) return;
+      setCombo((current) => {
+        const next = current + 1;
+        if (next > 0 && next % 10 === 0) {
+          addXp(5);
+          dopaComboSound(next);
+          fireConfetti(36);
+        }
+        return next;
+      });
+      window.clearTimeout(comboTimer.current);
+      comboTimer.current = window.setTimeout(() => setCombo(0), 4000);
+    },
+  };
   const hasHint = hintLevel > 0;
   const hints = task.hints?.length ? task.hints : [task.hint];
   const canShowHint = hintLevel < hints.length;
@@ -68,8 +95,13 @@ export function DrawScreen({
 
   return (
     <div className="design3-draw">
+      {dopaMode && combo >= 3 && (
+        <div className="dopa-combo" key={combo} role="status">
+          {combo} コンボ！
+        </div>
+      )}
       <SketchCanvas
-        {...canvasProps}
+        {...wrappedCanvasProps}
         photoUrl={photo || undefined}
         missionTitle={
           hasHint

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { CornerDownLeft } from "lucide-react";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
+import { pickPraise } from "../dopagaki/dopa";
 import { ReflectionNote } from "../components/ReflectionNote";
 import { SketchComparison } from "../components/SketchComparison";
 import { TongueCelebration } from "../components/TongueCelebration";
@@ -30,6 +32,7 @@ export function ResultScreen({
   onExport,
   onShare,
   onSliderCommit,
+  dopaMode = false,
 }: {
   task: ObservationTask;
   group: ObservationGroup;
@@ -54,8 +57,10 @@ export function ResultScreen({
     to: number,
     via: "pointer" | "keyboard",
   ) => void;
+  dopaMode?: boolean;
 }) {
   const passed = !!feedback?.passed;
+  const [praise] = useState(pickPraise);
   const message = passed ? "上手に描けたね！" : "見えた形を確かめよう";
   const fact = task.explanation.form;
   return (
@@ -64,6 +69,11 @@ export function ResultScreen({
         <Pitsune pose="face" className="result-pitsune-face" />
         <h1 className="pitsune-bubble">{message}</h1>
       </div>
+      {dopaMode && passed && (
+        <p className="dopa-jackpot-banner" role="status">
+          大当たり！ {praise} +50 XP
+        </p>
+      )}
       <SketchComparison
         strokes={strokes}
         scene={task.scene}
