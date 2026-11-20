@@ -66,10 +66,8 @@ import { drawingHistory, emptyDrawing } from "./drawing/history";
 import type { Evaluation, Stroke, StrokeStyle } from "./types";
 import {
   addXp,
-  loadDopaMode,
   loadDopaSound,
   pickPraise,
-  saveDopaMode,
   saveDopaSound,
 } from "./dopagaki/dopa";
 import { celebrateDopa, DopaOverlay, fireConfetti } from "./dopagaki/effects";
@@ -93,33 +91,24 @@ import "./styles/dopagaki.css";
 const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
 type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
-export default function App({ dopa: dopaEdition = false }: { dopa?: boolean }) {
-  const [dopa, setDopa] = useState(() => loadDopaMode(dopaEdition));
+export default function App({ dopa = false }: { dopa?: boolean }) {
   const [dopaSound, setDopaSound] = useState(loadDopaSound);
   const [dopaPraise, setDopaPraise] = useState<string>();
   const awardedDopaPass = useRef(false);
 
   useEffect(() => {
-    if (!dopaEdition && !dopa) return;
+    if (!dopa) return;
     const theme = document.querySelector<HTMLMetaElement>(
       'meta[name="theme-color"]',
     );
     if (!theme) return;
     const previous = theme.content;
-    theme.content = dopa ? "#fbe1ee" : "#fffbef";
+    theme.content = "#fbe1ee";
     return () => {
       theme.content = previous;
     };
-  }, [dopaEdition, dopa]);
+  }, [dopa]);
   useEffect(() => () => silenceDopaAudio(), []);
-
-  function toggleDopaMode() {
-    const enabled = !dopa;
-    saveDopaMode(enabled);
-    setDopa(enabled);
-    if (enabled) unlockDopaAudio();
-    else silenceDopaAudio();
-  }
 
   const reduce = useReducedMotion();
   const study = useSyncExternalStore(subscribeStudy, studyStatus);
@@ -759,9 +748,7 @@ export default function App({ dopa: dopaEdition = false }: { dopa?: boolean }) {
           <SplashScreen onDone={() => setScreen("home")} />
         ) : screen === "home" ? (
           <HomeScreen
-            dopaMode={dopa}
-            dopaEdition={dopaEdition}
-            onToggleDopa={toggleDopaMode}
+            edition={dopa ? "dopa" : "plus"}
             onStart={() => {
               if (dopa) unlockDopaAudio();
               restart("intro");

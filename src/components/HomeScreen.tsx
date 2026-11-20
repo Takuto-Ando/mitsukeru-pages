@@ -18,9 +18,7 @@ export function HomeScreen({
   onSettings,
   savedCount,
   studyTutorial = false,
-  dopaMode = false,
-  dopaEdition = false,
-  onToggleDopa,
+  edition,
 }: {
   onStart: () => void;
   onContinue: () => void;
@@ -28,10 +26,9 @@ export function HomeScreen({
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
   studyTutorial?: boolean;
-  dopaMode?: boolean;
-  dopaEdition?: boolean;
-  onToggleDopa?: () => void;
+  edition?: "plus" | "dopa";
 }) {
+  const dopaMode = edition === "dopa";
   const lettering = dopaMode ? "" : "-brown";
 
   return (
@@ -108,17 +105,6 @@ export function HomeScreen({
             src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
           />
         </button>
-        {onToggleDopa && (
-          <button
-            className="dopa-toggle"
-            type="button"
-            aria-pressed={dopaMode}
-            onClick={onToggleDopa}
-          >
-            <Sparkles size={16} aria-hidden="true" />
-            ドパガキモード {dopaMode ? "ON" : "OFF"}
-          </button>
-        )}
         {dopaMode && <DopaBar />}
       </div>
       <div className="design3-title-meta">
@@ -142,12 +128,16 @@ export function HomeScreen({
             <Settings aria-hidden="true" size={17} />
             設定
           </button>
-          <a href={assetPath("figma/")}>Figma再現版を開く</a>
-          <a href={assetPath(dopaEdition ? "plus/" : "dopa/")}>
-            {dopaEdition ? "機能拡張版を開く" : "ドパガキ版を開く"}
-          </a>
         </div>
       </div>
+      {edition && (
+        <nav className="design3-title-editions" aria-label="版の切り替え">
+          <a href={assetPath("figma/")}>Figma再現版を開く</a>
+          <a href={assetPath(dopaMode ? "plus/" : "dopa/")}>
+            {dopaMode ? "機能拡張版を開く" : "ドパガキ版を開く"}
+          </a>
+        </nav>
+      )}
     </section>
   );
 }
