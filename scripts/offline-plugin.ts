@@ -1,6 +1,6 @@
 import type { Plugin, ResolvedConfig } from "vite";
 import { prepareCloudflareAssets } from "./cloudflare-assets";
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 // Build-time precache. No remote resources, photographs, notebook or research data.
@@ -10,6 +10,19 @@ export function offlinePlugin(): Plugin {
     name: "zooketch-offline",
     configResolved(value) {
       config = value;
+    },
+    configureServer(server) {
+      const base = server.config.base;
+      server.middlewares.use((request, _response, next) => {
+        const [path, search] = (request.url || "").split(/(?=\?)/, 2);
+        const aliases: Record<string, string> = {
+          [base + "plus/"]: base + "index.html",
+          [base + "figma/"]: base + "replica/index.html",
+        };
+        const target = aliases[path.endsWith("/") ? path : path + "/"];
+        if (target) request.url = target + (search || "");
+        next();
+      });
     },
     async closeBundle() {
       if (config.command !== "build") return;
@@ -29,7 +42,7 @@ export function offlinePlugin(): Plugin {
         name: "ズーケッチ",
         short_name: "ズーケッチ",
         lang: "ja",
-        start_url: base,
+        start_url: base + "plus/",
         scope: base,
         display: "standalone",
         background_color: "#faf7ec",
@@ -60,27 +73,50 @@ export function offlinePlugin(): Plugin {
         JSON.stringify(manifest),
       );
       const replicaBase = base + "replica/";
+      const replicaManifest = {
+        ...manifest,
+        id: replicaBase,
+        name: "ズーケッチ Figma再現版",
+        short_name: "ズーケッチ Figma版",
+        start_url: replicaBase,
+        scope: replicaBase,
+        background_color: "#fff9ef",
+        theme_color: "#fff9ef",
+      };
+      await mkdir(join(dir, "figma"), { recursive: true });
+      await mkdir(join(dir, "plus"), { recursive: true });
       await writeFile(
         join(dir, "replica", "manifest.webmanifest"),
+        JSON.stringify(replicaManifest),
+      );
+      await writeFile(
+        join(dir, "figma", "manifest.webmanifest"),
         JSON.stringify({
-          ...manifest,
-          id: replicaBase,
-          name: "ズーケッチ Figma再現版",
-          short_name: "ズーケッチ Figma版",
-          start_url: replicaBase,
-          scope: replicaBase,
-          background_color: "#fff9ef",
-          theme_color: "#fff9ef",
+          ...replicaManifest,
+          start_url: base + "figma/",
+          scope: base + "figma/",
         }),
       );
-      for (const entry of ["", "replica/"]) {
-        const path = join(dir, entry, "index.html");
-        const html = await readFile(path, "utf8");
+      const entries = [
+        ["", "", ""],
+        ["plus/", "", ""],
+        ["replica/", "replica/", "replica/"],
+        ["figma/", "replica/", "figma/"],
+      ] as const;
+      const entryFiles = new Set(
+        entries.map(([entry]) => entry + "index.html"),
+      );
+      const [enhancedHtml, replicaHtml] = await Promise.all([
+        readFile(join(dir, "index.html"), "utf8"),
+        readFile(join(dir, "replica", "index.html"), "utf8"),
+      ]);
+      for (const [entry, source, manifestPath] of entries) {
+        const html = source ? replicaHtml : enhancedHtml;
         await writeFile(
-          path,
+          join(dir, entry, "index.html"),
           html.replace(
             "</head>",
-            `<link rel="manifest" href="${base}${entry}manifest.webmanifest"></head>`,
+            `<link rel="manifest" href="${base}${manifestPath}manifest.webmanifest"></head>`,
           ),
         );
       }
@@ -91,10 +127,10 @@ export function offlinePlugin(): Plugin {
             name = relative(dir, full).split("\\").join("/");
           if (entry.isDirectory()) await scan(full);
           else if (
-            name === "index.html" ||
-            name === "replica/index.html" ||
+            entryFiles.has(name) ||
             name === "manifest.webmanifest" ||
             name === "replica/manifest.webmanifest" ||
+            name === "figma/manifest.webmanifest" ||
             name === "icon.svg" ||
             name.startsWith("icons/") ||
             name.startsWith("assets/") ||
@@ -147,8 +183,8 @@ self.addEventListener('fetch', event => {
   if(request.method!=='GET'||url.origin!==self.location.origin||!url.pathname.startsWith(BASE))return;
   if(request.mode==='navigate') {
     event.respondWith(fetch(request).catch(async()=>{
-      const replica=url.pathname===BASE+'replica'||url.pathname.startsWith(BASE+'replica/');
-      const entry=replica?'replica/index.html':'index.html';
+      const edition=url.pathname.slice(BASE.length).split('/')[0];
+      const entry=['figma','plus','replica'].includes(edition)?edition+'/index.html':'index.html';
       const cached=await (await caches.open(CACHE)).match(BASE+entry);
       if(!cached)return Response.error();
       // Pages redirects /index.html to /. A cached redirected Response cannot

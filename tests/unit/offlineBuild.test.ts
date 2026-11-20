@@ -38,6 +38,9 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "icons/icon-192.png",
       "replica/index.html",
       "replica/manifest.webmanifest",
+      "figma/index.html",
+      "figma/manifest.webmanifest",
+      "plus/index.html",
       "replica-assets/sample.png",
     ])
       expect(worker).toContain(JSON.stringify("/zooketch/" + path));
@@ -45,7 +48,7 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
     expect(
       JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"))
         .start_url,
-    ).toBe("/zooketch/");
+    ).toBe("/zooketch/plus/");
     const replica = JSON.parse(
       await readFile(join(dir, "replica", "manifest.webmanifest"), "utf8"),
     );

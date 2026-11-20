@@ -90,7 +90,7 @@ Xcodeで対象iPhoneと自分のSigning Teamを選んでRunします。証明書
 
 公開用ビルドの環境変数 `VITE_STUDY_FORM_URL` に、Googleフォームの**回答者向けURL**を設定します。 `https://forms.gle/…` または `https://docs.google.com/forms/…/viewform` が使えます。リンクのクエリやフラグメントは除去して開きます。GitHub Pagesで利用する場合は同名のActionsリポジトリ変数を設定してください。
 
-- 参加者に渡す入口は `https://zooketch.pages.dev/?study=1` です。
+- 参加者に渡す入口は `https://zooketch.pages.dev/plus/?study=1` です。
 - 初回の観察カードを保存すると、同じタブでGoogleフォームが開きます。通常のチュートリアルを過去に終えている端末も使えます。
 - オフライン時やアプリに戻ったときは、終了画面に「アンケートを開く」のリンクが残ります。
 - 研究ログの記録開始には引き続き別途同意が必要です。フォームURLに氏名、参加者コード、観察データを付加しません。
