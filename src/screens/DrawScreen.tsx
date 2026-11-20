@@ -1,11 +1,15 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import type { ComponentProps } from "react";
-import { ChevronLeft, CircleHelp, CornerDownLeft } from "lucide-react";
+import { ChevronLeft, CircleHelp, CornerDownLeft, Flame } from "lucide-react";
 import { SketchCanvas } from "../SketchCanvas";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
 import { assetPath } from "../content/artwork";
 import type { ObservationTask } from "../content/tasks";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
+import { getStrokeStyle } from "../drawing/styles";
+import { addXp } from "../dopagaki/dopa";
+import { fireConfetti } from "../dopagaki/effects";
+import { dopaComboSound } from "../dopagaki/sounds";
 import { savePng } from "../notebook/images";
 import { ReadAloud } from "../speech/Speech";
 import type { Evaluation, Stroke } from "../types";
@@ -16,7 +20,7 @@ type CanvasControls = Pick<
 >;
 
 export function DrawScreen({
-  dopa = false,
+  dopaMode = false,
   task,
   photo,
   strokes,
@@ -29,7 +33,7 @@ export function DrawScreen({
   onReselect,
   canvasProps,
 }: {
-  dopa?: boolean;
+  dopaMode?: boolean;
   task: ObservationTask;
   photo: string;
   strokes: Stroke[];
@@ -50,6 +54,36 @@ export function DrawScreen({
   const hints = task.hints?.length ? task.hints : [task.hint];
   const canShowHint = hintLevel < hints.length;
   const feedbackMessage = useRef<HTMLDivElement>(null);
+  const [combo, setCombo] = useState(0);
+  const streak = useRef(0);
+  const comboTimer = useRef<number | undefined>(undefined);
+  const committedPenStroke = useRef(false);
+  useEffect(() => () => window.clearTimeout(comboTimer.current), []);
+
+  function handleDrawingActivity(
+    active: boolean,
+    tool: "pen" | "eraser" | "fill",
+  ) {
+    canvasProps.onDrawingActivity?.(active, tool);
+    if (active) {
+      committedPenStroke.current = false;
+      return;
+    }
+    if (tool !== "pen" || !committedPenStroke.current) return;
+    committedPenStroke.current = false;
+    window.clearTimeout(comboTimer.current);
+    const count = ++streak.current;
+    setCombo(count);
+    if (count >= 3) dopaComboSound(count);
+    if (count % 10 === 0) {
+      addXp(5);
+      fireConfetti(42);
+    }
+    comboTimer.current = window.setTimeout(() => {
+      streak.current = 0;
+      setCombo(0);
+    }, 4000);
+  }
   useEffect(() => {
     if (!feedback || feedback.passed) return;
     feedbackMessage.current?.focus({ preventScroll: true });
@@ -77,7 +111,35 @@ export function DrawScreen({
     <div className="design3-draw">
       <SketchCanvas
         {...canvasProps}
-        dopa={dopa}
+        dopa={dopaMode}
+        onChange={
+          dopaMode
+            ? (value, action) => {
+                const stroke = value.at(-1);
+                committedPenStroke.current =
+                  action === "draw" &&
+                  !!stroke &&
+                  !getStrokeStyle(stroke)?.fill;
+                canvasProps.onChange(value, action);
+              }
+            : canvasProps.onChange
+        }
+        onDrawingActivity={
+          dopaMode ? handleDrawingActivity : canvasProps.onDrawingActivity
+        }
+        drawingDecoration={
+          dopaMode && combo >= 3 ? (
+            <span
+              className="dopa-combo"
+              data-milestone={combo % 10 === 0}
+              key={combo}
+            >
+              <Flame size={22} aria-hidden="true" />
+              <strong>{combo}</strong> コンボ！
+              {combo % 10 === 0 && <span>+5 XP</span>}
+            </span>
+          ) : undefined
+        }
         photoUrl={photo || undefined}
         missionTitle={hasHint ? "もうすこし観察してみて！" : observationPrompt}
         landscapeReselect={reference}

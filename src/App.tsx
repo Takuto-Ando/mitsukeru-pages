@@ -65,6 +65,21 @@ import { createFeedbackAudio } from "./audio";
 import { drawingHistory, emptyDrawing } from "./drawing/history";
 import type { Evaluation, Stroke, StrokeStyle } from "./types";
 import {
+  addXp,
+  loadDopaMode,
+  loadDopaSound,
+  pickPraise,
+  saveDopaMode,
+  saveDopaSound,
+} from "./dopagaki/dopa";
+import { celebrateDopa, DopaOverlay, fireConfetti } from "./dopagaki/effects";
+import {
+  dopaDing,
+  dopaShutter,
+  silenceDopaAudio,
+  unlockDopaAudio,
+} from "./dopagaki/sounds";
+import {
   applyStyles,
   getStrokeStyle,
   setStrokeStyle,
@@ -72,11 +87,40 @@ import {
 } from "./drawing/styles";
 import "./styles/cards.css";
 import "./styles/design3.css";
+import "./styles/dopa.css";
+import "./styles/dopagaki.css";
 
 const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
 type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
-export default function App({ dopa = false }: { dopa?: boolean }) {
+export default function App({ dopa: dopaEdition = false }: { dopa?: boolean }) {
+  const [dopa, setDopa] = useState(() => loadDopaMode(dopaEdition));
+  const [dopaSound, setDopaSound] = useState(loadDopaSound);
+  const [dopaPraise, setDopaPraise] = useState<string>();
+  const awardedDopaPass = useRef(false);
+
+  useEffect(() => {
+    if (!dopaEdition && !dopa) return;
+    const theme = document.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"]',
+    );
+    if (!theme) return;
+    const previous = theme.content;
+    theme.content = dopa ? "#fbe1ee" : "#fffbef";
+    return () => {
+      theme.content = previous;
+    };
+  }, [dopaEdition, dopa]);
+  useEffect(() => () => silenceDopaAudio(), []);
+
+  function toggleDopaMode() {
+    const enabled = !dopa;
+    saveDopaMode(enabled);
+    setDopa(enabled);
+    if (enabled) unlockDopaAudio();
+    else silenceDopaAudio();
+  }
+
   const reduce = useReducedMotion();
   const study = useSyncExternalStore(subscribeStudy, studyStatus);
   const [studyPhase, setStudyPhase] = useState<"before" | "after">("before");
@@ -197,10 +241,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   soundRef.current = sound;
   const audio = useRef<ReturnType<typeof createFeedbackAudio> | null>(null);
   if (!audio.current)
-    audio.current = createFeedbackAudio(
-      () => soundRef.current,
-      dopa ? "dopa" : "standard",
-    );
+    audio.current = createFeedbackAudio(() => soundRef.current);
   useEffect(() => () => audio.current?.dispose(), []);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionOpenRef = useRef(collectionOpen);
@@ -370,8 +411,23 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   }
   async function finishObservation(advance: boolean) {
     const generation = taskGeneration.current;
+    if (dopa) unlockDopaAudio();
     const result = !savedId || reflectionDirty ? await save() : undefined;
     if (generation !== taskGeneration.current) return;
+    if (dopa && result === "created") {
+      const { level, leveledUp } = addXp(30);
+      if (leveledUp) {
+        celebrateDopa({
+          kind: "levelup",
+          title: "レベルアップ！",
+          sub: `Lv.${level} 到達！`,
+          xp: 30,
+        });
+      } else {
+        dopaDing();
+        fireConfetti(48);
+      }
+    }
     if (result === "created" && !tutorialShown.current) {
       tutorialShown.current = true;
       if (surveyUrl) {
@@ -488,6 +544,8 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   }
   function selectTask(id: string) {
     taskGeneration.current++;
+    awardedDopaPass.current = false;
+    setDopaPraise(undefined);
     if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
     setTaskId(id);
@@ -517,6 +575,8 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     setPhotoPhase(undefined);
     setStorageError("");
     taskGeneration.current++;
+    awardedDopaPass.current = false;
+    setDopaPraise(undefined);
     if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
     setCollectionOpen(false);
@@ -553,6 +613,8 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
       recordStudy("challenge_left");
       setStudyContext(task.groupId, taskId, "after", pairId.current);
       completedAttempt.current = false;
+      awardedDopaPass.current = false;
+      setDopaPraise(undefined);
       recordStudy("challenge_opened");
       dispatchDrawing({ type: "reset" });
       setHintLevel(0);
@@ -570,6 +632,20 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     }
   }
   function celebrate() {
+    if (dopa) {
+      if (awardedDopaPass.current) return;
+      awardedDopaPass.current = true;
+      const praise = pickPraise();
+      setDopaPraise(praise);
+      const { level, leveledUp } = addXp(50);
+      celebrateDopa({
+        kind: "jackpot",
+        title: "大当たり！",
+        sub: leveledUp ? `レベルアップ！ Lv.${level} 到達！` : praise,
+        xp: 50,
+      });
+      return;
+    }
     audio.current?.unlock();
     audio.current?.success();
   }
@@ -626,7 +702,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     <div
       className={
         dopa
-          ? "figma-shell design3-shell dopa-app"
+          ? "figma-shell design3-shell dopa-app dopa-on"
           : "figma-shell design3-shell"
       }
       data-step={step}
@@ -683,9 +759,17 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
           <SplashScreen onDone={() => setScreen("home")} />
         ) : screen === "home" ? (
           <HomeScreen
-            dopa={dopa}
-            onStart={() => restart("intro")}
-            onContinue={() => restart()}
+            dopaMode={dopa}
+            dopaEdition={dopaEdition}
+            onToggleDopa={toggleDopaMode}
+            onStart={() => {
+              if (dopa) unlockDopaAudio();
+              restart("intro");
+            }}
+            onContinue={() => {
+              if (dopa) unlockDopaAudio();
+              restart();
+            }}
             onCollection={openCollection}
             onSettings={openSettings}
             savedCount={collectionCount}
@@ -725,14 +809,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
               {step === 0 ? (
                 <CameraView
                   dopa={dopa}
-                  onCapture={
-                    dopa
-                      ? () => {
-                          audio.current?.unlock();
-                          audio.current?.shutter();
-                        }
-                      : undefined
-                  }
+                  onCapture={dopa ? dopaShutter : undefined}
                   suspended={settingsOpen}
                   celebrating={photoPhase === "cheer"}
                   onCollection={openCollection}
@@ -775,7 +852,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                     </div>
                   )}
                   <DrawScreen
-                    dopa={dopa}
+                    dopaMode={dopa}
                     key={taskId}
                     task={task}
                     photo={photo}
@@ -861,7 +938,8 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                 </>
               ) : step === 2 ? (
                 <ResultScreen
-                  dopa={dopa}
+                  dopaMode={dopa}
+                  dopaPraise={dopaPraise}
                   task={task}
                   group={group}
                   strokes={strokes}
@@ -1053,8 +1131,15 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
           }
           returnFocus={settingsTrigger}
           onClose={() => setSettingsOpen(false)}
-          sound={sound}
+          sound={dopa ? dopaSound : sound}
           onSoundChange={() => {
+            if (dopa) {
+              saveDopaSound(!dopaSound);
+              setDopaSound(!dopaSound);
+              if (dopaSound) silenceDopaAudio();
+              else dopaDing();
+              return;
+            }
             soundRef.current = !sound;
             setSound(!sound);
             if (!sound) audio.current?.unlock();
@@ -1062,6 +1147,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
           }}
         />
       </main>
+      {dopa && <DopaOverlay />}
     </div>
   );
 }

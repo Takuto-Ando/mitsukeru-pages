@@ -1,4 +1,4 @@
-import { CornerDownLeft } from "lucide-react";
+import { CornerDownLeft, Zap } from "lucide-react";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
 import { assetPath } from "../content/artwork";
 import { DopaResultBanner } from "../components/DopaEffects";
@@ -14,7 +14,8 @@ import { designCardViewport } from "../drawing/viewport";
 type Reflection = { discovery: string; revisited: boolean };
 
 export function ResultScreen({
-  dopa = false,
+  dopaMode = false,
+  dopaPraise,
   task,
   group,
   strokes,
@@ -36,7 +37,8 @@ export function ResultScreen({
   onShare,
   onSliderCommit,
 }: {
-  dopa?: boolean;
+  dopaMode?: boolean;
+  dopaPraise?: string;
   task: ObservationTask;
   group: ObservationGroup;
   strokes: Stroke[];
@@ -64,7 +66,7 @@ export function ResultScreen({
 }) {
   const passed = !!feedback?.passed;
   let message = passed ? "上手に描けたね！" : "見えた形を確かめよう";
-  if (dopa) {
+  if (dopaMode) {
     if (!passed) message = "見くらべよう！";
     else
       message =
@@ -73,7 +75,7 @@ export function ResultScreen({
   const fact = task.explanation.ecology || task.explanation.form;
   return (
     <div className="design3-result">
-      {dopa ? (
+      {dopaMode ? (
         <DopaResultBanner title={message} passed={passed} />
       ) : (
         <div className="result-pitsune">
@@ -96,6 +98,14 @@ export function ResultScreen({
             )}
           </h1>
         </div>
+      )}
+      {dopaMode && passed && dopaPraise && (
+        <p className="dopa-jackpot-banner">
+          <Zap size={22} aria-hidden="true" />
+          <strong>大当たり！</strong>
+          <span>{dopaPraise}</span>
+          <b>+50 XP</b>
+        </p>
       )}
       <SketchComparison
         strokes={strokes}

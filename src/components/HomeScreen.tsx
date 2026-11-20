@@ -2,6 +2,7 @@ import { BookOpen, Settings, Sparkles } from "lucide-react";
 import { groups } from "../content/groups";
 import { assetPath } from "../content/artwork";
 import { DopaTitleArt } from "./DopaEffects";
+import { DopaBar } from "../dopagaki/DopaBar";
 import "../styles/design3-entry.css";
 
 const today = new Date();
@@ -17,7 +18,9 @@ export function HomeScreen({
   onSettings,
   savedCount,
   studyTutorial = false,
-  dopa = false,
+  dopaMode = false,
+  dopaEdition = false,
+  onToggleDopa,
 }: {
   onStart: () => void;
   onContinue: () => void;
@@ -25,17 +28,19 @@ export function HomeScreen({
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
   studyTutorial?: boolean;
-  dopa?: boolean;
+  dopaMode?: boolean;
+  dopaEdition?: boolean;
+  onToggleDopa?: () => void;
 }) {
-  const lettering = dopa ? "" : "-brown";
+  const lettering = dopaMode ? "" : "-brown";
 
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
-      {dopa ? (
+      {dopaMode ? (
         <>
           <span className="dopa-edition-label">
             <Sparkles size={17} aria-hidden="true" />
-            ドパガキ版
+            ドパガキモード
           </span>
           <DopaTitleArt />
         </>
@@ -103,6 +108,18 @@ export function HomeScreen({
             src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
           />
         </button>
+        {onToggleDopa && (
+          <button
+            className="dopa-toggle"
+            type="button"
+            aria-pressed={dopaMode}
+            onClick={onToggleDopa}
+          >
+            <Sparkles size={16} aria-hidden="true" />
+            ドパガキモード {dopaMode ? "ON" : "OFF"}
+          </button>
+        )}
+        {dopaMode && <DopaBar />}
       </div>
       <div className="design3-title-meta">
         {studyTutorial && (
@@ -126,8 +143,8 @@ export function HomeScreen({
             設定
           </button>
           <a href={assetPath("figma/")}>Figma再現版を開く</a>
-          <a href={assetPath(dopa ? "plus/" : "dopa/")}>
-            {dopa ? "機能拡張版を開く" : "ドパガキ版を開く"}
+          <a href={assetPath(dopaEdition ? "plus/" : "dopa/")}>
+            {dopaEdition ? "機能拡張版を開く" : "ドパガキ版を開く"}
           </a>
         </div>
       </div>

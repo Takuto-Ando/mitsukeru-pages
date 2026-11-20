@@ -1,0 +1,467 @@
+.design3-title-actions .dopa-toggle {
+  min-height: 44px;
+  padding: 6px 20px;
+  border: 1px solid #dccbb5;
+  box-shadow: none;
+  color: #674a35;
+  background: #fffdf8;
+  font-size: 0.875rem;
+}
+
+.figma-shell.design3-shell.dopa-on {
+  --dopa-rainbow: linear-gradient(
+    105deg,
+    #ff84ba 5%,
+    #ffc27a 21%,
+    #fff27c 38%,
+    #85f6cc 55%,
+    #8edaff 70%,
+    #c6a7ff 86%,
+    #ff84ba 100%
+  );
+  --dopa-prize-ink: #2b104d;
+  --dopa-prize-gold: #fff090;
+  background: var(--dopa-rainbow) 0% 50% / 300% 100%;
+  animation: dopagaki-rainbow 14s ease-in-out infinite;
+}
+
+.dopa-on .design3-title {
+  color: var(--dopa-prize-ink);
+  background:
+    radial-gradient(ellipse at 50% 27%, #fff5cfbb, transparent 48%),
+    linear-gradient(160deg, #ffffff75, #fff6ec96 55%, #f5ebfcab);
+}
+
+.dopa-on .dopa-edition-label {
+  z-index: 1;
+  border: 1px solid #ad7dfe;
+  color: #fff090;
+  background: #3f1b6b;
+  box-shadow:
+    0 2px 0 #241037,
+    0 5px 18px #58228c48;
+}
+
+.dopa-on .dopa-title-art::before {
+  inset: 8% 8%;
+  border: 2px solid #fff9d7;
+  background: radial-gradient(closest-side, #b54bff, #481e9a), #582ab1;
+  box-shadow:
+    0 0 0 6px #ffeb83,
+    0 0 0 12px #9257e9,
+    0 0 0 17px #fef1ad8f,
+    0 12px 40px #9245bc85;
+}
+
+.dopa-on .dopa-title-spark {
+  color: #fff2aa;
+  filter: drop-shadow(0 1px 0 #a85832) drop-shadow(0 0 9px #ff50b1);
+  animation: dopagaki-star 1.16s 2 both;
+}
+
+.dopa-on .dopa-title-spark-right {
+  animation-delay: 130ms;
+}
+
+.dopa-on .design3-title-tagline img {
+  filter: brightness(0) saturate(100%) invert(17%) sepia(38%) saturate(3146%)
+    hue-rotate(255deg) brightness(85%) contrast(93%);
+}
+
+/* Color the original lettering silhouette. Its img stays accessible and is
+   also the fallback if masks are unavailable. */
+@supports (mask-image: url("/figma/entry/logo.svg")) {
+  .dopa-on .design3-title-heading h1 {
+    position: relative;
+  }
+
+  .dopa-on .design3-title-heading h1 img {
+    opacity: 0;
+  }
+
+  .dopa-on .design3-title-heading h1::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        90deg,
+        #b0209b,
+        #c64054,
+        #986410,
+        #007e6a,
+        #2957b7,
+        #8228a7,
+        #b0209b
+      )
+      0% 50% / 230% 100%;
+    mask: url("/figma/entry/logo.svg") center / min(76.4cqw, 285.47px) auto
+      no-repeat;
+    animation: dopagaki-rainbow 6s ease-in-out infinite;
+    content: "";
+    pointer-events: none;
+  }
+}
+
+.dopa-on .design3-title-actions {
+  gap: 12px;
+}
+
+.dopa-on .design3-title-actions :is(.design3-start, .dopa-toggle) {
+  border: 1px solid #fff6be;
+  color: var(--dopa-prize-ink);
+  background: var(--dopa-rainbow) 0% 50% / 300% 100%;
+  box-shadow:
+    0 4px 0 #a164cf,
+    0 6px 14px #6c2cb34d;
+  animation: dopagaki-rainbow 7s ease-in-out infinite;
+}
+
+.dopa-on .design3-title-actions .dopa-toggle {
+  min-height: 39px;
+  border-color: #602ca2;
+  box-shadow: 0 3px 0 #602ca2;
+}
+
+.dopa-on .dopa-bar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #9867d0;
+  border-radius: 13px;
+  color: #fff9e6;
+  background: #371e57;
+  box-shadow: 0 4px 0 #68429653;
+  font-weight: 800;
+}
+
+.dopa-on .dopa-bar-level {
+  padding: 1px 8px;
+  border-radius: 6px;
+  color: var(--dopa-prize-ink);
+  background: var(--dopa-prize-gold);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.dopa-on .dopa-bar-track {
+  display: grid;
+  overflow: hidden;
+  height: 12px;
+  border: 1px solid #b08dd6;
+  border-radius: 999px;
+  background-color: #211436;
+}
+
+.dopa-on .dopa-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    125deg,
+    #ffec69 0 10px,
+    #ffc552 10px 18px,
+    #ffac7c 18px 24px
+  );
+  transition: width 270ms ease-out;
+}
+
+.dopa-on .dopa-bar-text {
+  grid-column: 1 / -1;
+  font-size: 0.77rem;
+}
+
+.dopa-on .activity-card {
+  outline: 2px solid #ffda71;
+  outline-offset: -2px;
+  box-shadow:
+    inset 0 0 0 2px #ffda71,
+    inset 0 0 17px #ffc83f80;
+}
+
+.dopa-on .dopa-combo {
+  position: absolute;
+  z-index: 3;
+  inset: auto 8px 8px auto;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: end;
+  gap: 3px 6px;
+  max-width: calc(100% - 16px);
+  padding: 6px 10px;
+  border: 1px solid #ffc462;
+  border-radius: 12px;
+  color: #fff2ac;
+  background: #412166;
+  box-shadow: 0 3px 0 #221230;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+  transform-origin: bottom right;
+  animation: dopagaki-pop 280ms cubic-bezier(0.15, 0.7, 0.3, 1.4) both;
+}
+
+.dopa-on .dopa-combo strong {
+  color: #ffdf58;
+  font-size: 1.5em;
+}
+
+.dopa-on .dopa-combo[data-milestone="true"] {
+  border: 2px solid white;
+  color: #39113f;
+  background: #ffda53;
+  box-shadow:
+    0 3px 0 #993183,
+    0 0 19px #f642a7b3;
+}
+
+.dopa-on .dopa-combo[data-milestone="true"] strong {
+  color: #65184e;
+}
+
+.dopa-on .dopa-combo span {
+  border-radius: 5px;
+  padding: 3px 5px;
+  color: #fff7d0;
+  background: #582067;
+  font-size: 0.78rem;
+}
+
+.dopa-on .dopa-jackpot-banner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0 9px 12px;
+  padding: 9px;
+  border: 2px solid #d07818;
+  border-radius: 12px;
+  color: var(--dopa-prize-ink);
+  background: var(--dopa-rainbow) 0% 50% / 300% 100%;
+  box-shadow: 0 3px 0 #f6a64250;
+  font-size: 0.9rem;
+  font-weight: 800;
+  animation: dopagaki-rainbow 2.4s ease-in-out 2;
+}
+
+.dopa-on .dopa-jackpot-banner b {
+  padding: 0 5px;
+  border-radius: 5px;
+  color: #fff7d0;
+  background: var(--dopa-prize-ink);
+  white-space: nowrap;
+}
+
+.dopa-on :is(.dopa-overlay, .dopa-confetti-canvas) {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.dopa-on .dopa-overlay {
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: max(18px, env(safe-area-inset-top)) 13px
+    max(18px, env(safe-area-inset-bottom));
+  color: #fffaf0;
+  background: #150627eb;
+  text-align: center;
+  animation: dopagaki-reveal 2.5s ease both;
+}
+
+.dopa-on .dopa-overlay-rays {
+  position: absolute;
+  z-index: -1;
+  width: 155vmax;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(closest-side, #ffca7788, #9225cf4d 42%, #200431c9),
+    repeating-conic-gradient(
+      from 0.13turn,
+      #651a8f 0 10deg,
+      #ac3882 10deg 20deg
+    );
+  animation: dopagaki-rays 15s linear infinite;
+}
+
+.dopa-on .dopa-overlay-card {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 372px);
+  padding: clamp(15px, 4vh, 32px) 10px 25px;
+  border: 3px solid #fff1ad;
+  border-radius: 29px;
+  background:
+    radial-gradient(ellipse at 50% 30%, #882bb3 0%, #37144b 65%), #37144b;
+  box-shadow:
+    0 0 0 3px #c47b20,
+    0 0 0 6px #fff392aa,
+    0 0 34px #f3a73fb3,
+    0 14px 40px #0b021c;
+  animation: dopagaki-pop 380ms cubic-bezier(0.17, 0.7, 0.25, 1.32) both;
+}
+
+.dopa-on .dopa-overlay-lamps {
+  position: absolute;
+  z-index: -1;
+  inset: 4px;
+  border: 5px dotted #fff398;
+  border-radius: 23px;
+  filter: drop-shadow(0 0 5px #ffd050);
+  animation: dopagaki-lamps 820ms ease-in-out infinite alternate;
+}
+
+.dopa-on .dopa-overlay-stage {
+  position: relative;
+  width: min(92%, 250px);
+  margin: 0 auto;
+}
+
+.dopa-on .dopa-overlay-pitsune {
+  display: block;
+  width: min(45vw, 170px, 33vh);
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 6px 0 #7a2845) drop-shadow(0 0 22px #ffad4c9c);
+  animation: dopagaki-star 700ms ease both;
+}
+
+.dopa-on .dopa-overlay-star {
+  position: absolute;
+  top: 18%;
+  left: 2%;
+  color: #ffe26f;
+  filter: drop-shadow(0 0 8px #ffb222);
+  animation: dopagaki-star 880ms 2 both;
+}
+
+.dopa-on .dopa-overlay-star-right {
+  inset: auto 2% 14% auto;
+  color: #ff93d5;
+  animation-delay: 110ms;
+}
+
+.dopa-on .dopa-overlay-title {
+  margin: 8px 0 0;
+  color: #fff297;
+  font-size: clamp(2.1rem, 13.4vw, 3.7rem);
+  font-weight: 900;
+  line-height: 1.04;
+  text-shadow:
+    0 3px 0 #a14c27,
+    0 6px 0 #64183e,
+    0 0 22px #ffbd43;
+  animation: dopagaki-pop 390ms 140ms cubic-bezier(0.17, 0.66, 0.18, 1.3) both;
+}
+
+.dopa-on .dopa-overlay[data-kind="levelup"] .dopa-overlay-title {
+  font-size: clamp(1.9rem, 10vw, 3.2rem);
+}
+
+.dopa-on .dopa-overlay-sub {
+  margin: 15px 0 5px;
+  color: #ffe4a2;
+  font-size: clamp(0.9rem, 4.3vw, 1.2rem);
+  font-weight: 800;
+}
+
+.dopa-on .dopa-overlay-xp {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 1px 15px;
+  border: 1px solid #fff4d9;
+  border-radius: 9px;
+  color: #3a1557;
+  background: var(--dopa-prize-gold);
+  box-shadow: 0 3px 0 #b97619;
+  font-size: clamp(1.22rem, 7vw, 1.82rem);
+  font-weight: 900;
+  animation: dopagaki-pop 280ms 350ms cubic-bezier(0.2, 0.7, 0.3, 1.35) both;
+}
+
+.dopa-on .dopa-confetti-canvas {
+  z-index: 121;
+}
+
+@keyframes dopagaki-rainbow {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes dopagaki-pop {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.73);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dopagaki-star {
+  0% {
+    transform: scale(0.78) rotate(-9deg);
+  }
+  48% {
+    transform: scale(1.11) rotate(8deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes dopagaki-reveal {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  7%,
+  88% {
+    opacity: 1;
+  }
+}
+
+@keyframes dopagaki-rays {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes dopagaki-lamps {
+  from {
+    border-color: #ffb765;
+    opacity: 0.72;
+  }
+  to {
+    border-color: #fff7bc;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dopa-on,
+  .dopa-on *,
+  .dopa-on *::before,
+  .dopa-on *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .dopa-on :is(.dopa-overlay-rays, .dopa-confetti-canvas) {
+    display: none;
+  }
+}
