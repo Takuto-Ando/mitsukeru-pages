@@ -464,6 +464,7 @@ body:has(.design3-shell[data-screen="challenge"]) {
   display: block;
   width: min(62.5vw, 251px);
   height: auto;
+  aspect-ratio: 251.1 / 61.3;
   transform: translateX(-1%);
 }
 
@@ -471,6 +472,7 @@ body:has(.design3-shell[data-screen="challenge"]) {
   display: block;
   width: min(77.6vw, 312px);
   height: auto;
+  aspect-ratio: 311.8 / 37.7;
 }
 
 .design3-challenge > .difficulty-pill {
@@ -508,6 +510,7 @@ body:has(.design3-shell) {
   display: block;
   width: min(25vw, 95px);
   height: auto;
+  aspect-ratio: 95 / 91.6071;
 }
 
 .design3-camera .camera-pitsune .pitsune-bubble,

@@ -299,6 +299,7 @@
   display: block;
   width: min(64cqw, 237.5px);
   height: auto;
+  aspect-ratio: 237.48 / 19.57;
   margin-inline: auto;
   translate: -5px;
 }
@@ -307,6 +308,7 @@
   display: block;
   width: min(76.4cqw, 285.47px);
   height: auto;
+  aspect-ratio: 285.469 / 66.479;
   margin: auto;
 }
 

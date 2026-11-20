@@ -471,10 +471,24 @@ test("タッチ入力で描画・マスク外は回答不可", async ({
     browserName !== "chromium",
     "実タッチ注入はCDPを使うためChromiumのみ",
   );
+  let revealMascot!: () => void;
+  const mascotReady = new Promise<void>((resolve) => {
+    revealMascot = resolve;
+  });
+  await page.route("**/figma/entry/sketch-face.svg", async (route) => {
+    await mascotReady;
+    await route.continue();
+  });
   await select(page);
   const c = page.getByTestId("canvas");
   await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const b = (await c.boundingBox())!;
+  revealMascot();
+  await page
+    .locator(".mission-pitsune-face")
+    .evaluate((image: HTMLImageElement) => image.decode());
+  const loadedBounds = (await c.boundingBox())!;
+  expect(loadedBounds.y).toBeCloseTo(b.y, 0);
   const session = await context.newCDPSession(page);
   const pt = (x: number, y: number) => ({
     x: b.x + x * b.width,
