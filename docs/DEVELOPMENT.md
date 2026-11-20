@@ -90,10 +90,10 @@ Xcodeで対象iPhoneと自分のSigning Teamを選んでRunします。証明書
 
 公開用ビルドの環境変数 `VITE_STUDY_FORM_URL` に、Googleフォームの**回答者向けURL**を設定します。 `https://forms.gle/…` または `https://docs.google.com/forms/…/viewform` が使えます。リンクのクエリやフラグメントは除去して開きます。GitHub Pagesで利用する場合は同名のActionsリポジトリ変数を設定してください。
 
-- 参加者に渡す入口は `https://zooketch.pages.dev/plus/?study=1` です。
-- 初回の観察カードを保存すると、同じタブでGoogleフォームが開きます。通常のチュートリアルを過去に終えている端末も使えます。
+- 参加者に渡す入口は機能拡張版の `https://zooketch.pages.dev/plus/?study=1`、またはFigma再現版の `https://zooketch.pages.dev/figma/?study=1` です。
+- 機能拡張版では初回の観察カード保存後、Figma再現版では「はじめから」のチュートリアルの終了時に、同じタブでGoogleフォームが開きます。
 - オフライン時やアプリに戻ったときは、終了画面に「アンケートを開く」のリンクが残ります。
 - 研究ログの記録開始には引き続き別途同意が必要です。フォームURLに氏名、参加者コード、観察データを付加しません。
 - URLを設定していないビルドや通常の入口では、これまでどおりホームへ戻ります。
 
-ブラウザテストでは、設定したURLへの通信をモックして実際のフォームに回答せずに遷移を検証できます。`VITE_STUDY_FORM_URL` をビルド時とPlaywright実行時に同じ値で指定し、`npm run test:e2e -- -g '検証用はチュートリアル'` を実行します。
+ブラウザテストでは、設定したURLへの通信をモックして実際のフォームに回答せずに遷移を検証できます。`VITE_STUDY_FORM_URL` をビルド時とPlaywright実行時に同じ値で指定し、`npm run test:e2e -- -g 'Googleフォーム'` を実行します。

@@ -12,6 +12,9 @@ import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { composeObservationImages } from "../notebook/images";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
+import { drawingEvaluator } from "../domain";
+import { tutorialSurveyUrl } from "../research/tutorialSurvey";
+import type { Evaluation } from "../types";
 import { ReplicaCamera } from "./ReplicaCamera";
 import { ReplicaGallery, type ReplicaRecord } from "./ReplicaGallery";
 import {
@@ -60,6 +63,25 @@ function recordId() {
 
 export function ReplicaApp() {
   const [screen, setScreen] = useState<Screen>("splash");
+  const [feedback, setFeedback] = useState<Evaluation>();
+  const [surveyUrl] = useState(() =>
+    tutorialSurveyUrl(
+      window.location.search,
+      import.meta.env.VITE_STUDY_FORM_URL,
+    ),
+  );
+  const attemptedSurvey = useRef(false);
+  useEffect(() => {
+    if (
+      screen !== "tutorial" ||
+      !surveyUrl ||
+      attemptedSurvey.current ||
+      !navigator.onLine
+    )
+      return;
+    attemptedSurvey.current = true;
+    window.location.assign(surveyUrl);
+  }, [screen, surveyUrl]);
   const [introPage, setIntroPage] = useState(0);
   const [tutorial, setTutorial] = useState(false);
   const [framedExample, setFramedExample] = useState(false);
@@ -178,6 +200,7 @@ export function ReplicaApp() {
 
   function startDrawing() {
     dispatchDrawing({ type: "reset" });
+    setFeedback(undefined);
     setShowHint(false);
     setScreen("draw");
   }
@@ -192,7 +215,8 @@ export function ReplicaApp() {
   }
 
   async function finishDrawing() {
-    if (savingRef.current || !drawing.present.length) return;
+    if (savingRef.current || !feedback?.passed || !drawing.present.length)
+      return;
     savingRef.current = true;
     setSaving(true);
     setError("");
@@ -263,6 +287,7 @@ export function ReplicaApp() {
           {screen === "title" && (
             <HomeScreen
               savedCount={records.length}
+              studyTutorial={!!surveyUrl}
               onStart={() => {
                 setIntroPage(0);
                 setTutorial(true);
@@ -341,18 +366,30 @@ export function ReplicaApp() {
               }
               showHint={showHint}
               onHint={() => setShowHint(true)}
-              onDone={() => setScreen("result")}
+              onDone={() => {
+                setFeedback(drawingEvaluator.evaluate(task, drawing.present));
+                setScreen("result");
+              }}
             />
           )}
-          {screen === "result" && (
+          {screen === "result" && feedback && (
             <>
               <ReplicaResult
                 task={task}
                 group={group}
                 strokes={drawing.present}
+                feedback={feedback}
                 tutorial={tutorial}
                 saving={saving}
                 onRedraw={() => setScreen("draw")}
+                onConfirm={() =>
+                  setFeedback({
+                    passed: true,
+                    status: "correct",
+                    method: "self-confirmed",
+                    message: "見くらべて、確かめたね。",
+                  })
+                }
                 onDone={() => void finishDrawing()}
               />
               {error && (
@@ -367,6 +404,7 @@ export function ReplicaApp() {
           )}
           {screen === "tutorial" && (
             <TutorialEndScreen
+              surveyUrl={surveyUrl}
               onDone={() => {
                 setTutorial(false);
                 restartCamera();

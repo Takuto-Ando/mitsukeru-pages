@@ -109,7 +109,9 @@ export function HomeScreen({
       </div>
       <div className="design3-title-meta">
         {studyTutorial && (
-          <p>検証用：チュートリアル終了後、Googleフォームが開きます。</p>
+          <p className="design3-title-survey-notice">
+            チュートリアルのあと、Googleフォームが開きます。
+          </p>
         )}
         <p>
           ピツネの今日のおすすめは <strong>{todaysPick.name}</strong> だよ！
