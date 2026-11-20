@@ -63,6 +63,7 @@ export function SketchCanvas({
   fixedPortrait = false,
   dopa = false,
   actions,
+  drawingDecoration,
   landscapeReselect,
   showTarget = false,
   photoUrl,
@@ -81,6 +82,7 @@ export function SketchCanvas({
   fixedPortrait?: boolean;
   dopa?: boolean;
   actions?: ReactNode;
+  drawingDecoration?: ReactNode;
   landscapeReselect?: ReactNode;
   showTarget?: boolean;
   photoUrl?: string;
@@ -815,6 +817,7 @@ export function SketchCanvas({
               <div ref={brushRing} className="brush-ring" aria-hidden="true" />
             )}
           </div>
+          {drawingDecoration}
         </div>
         {landscapeReselect && (
           <div className="landscape-reselect">{landscapeReselect}</div>

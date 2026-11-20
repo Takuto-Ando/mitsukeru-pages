@@ -51,6 +51,84 @@ async function drawPupil(page: Page) {
   await page.mouse.up();
 }
 
+test("モードの切替・効果音・XPの表示が再読み込み後も残る", async ({ page }) => {
+  await page.goto("plus/");
+  const toggle = page.getByRole("button", { name: /^ドパガキモード/ });
+  const shell = page.locator(".design3-shell");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(shell).not.toHaveClass(/dopa-on/);
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await expect(shell).toHaveCSS("background-size", "300% 100%");
+  await expect(page.locator(".dopa-bar")).toContainText("あと 40 XP");
+  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await page.getByRole("button", { name: "効果音 ON", exact: true }).click();
+  await page.reload();
+  await expect(toggle).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "効果音 OFF", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await toggle.click();
+  await page.reload();
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator(".dopa-bar")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "ズーケッチのタイトル" }),
+  ).toHaveCSS("background-color", "rgb(255, 250, 240)");
+  await page.goto("dopa/");
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+});
+
+test("10筆で5 XP、合格で50 XP、新規保存で30 XPとレベルアップ", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    if (!localStorage.getItem("zooketch-dopa-xp-v1"))
+      localStorage.setItem("zooketch-dopa-xp-v1", "100");
+  });
+  const xp = () =>
+    page.evaluate(() => localStorage.getItem("zooketch-dopa-xp-v1"));
+  await startGoat(page);
+  await drawPupil(page);
+  const canvas = (await page.getByTestId("canvas").boundingBox())!;
+  const region = taskById.goat.scene.regions[0];
+  const x = canvas.x + (region.x + region.width * 0.5) * canvas.width;
+  const y = canvas.y + (region.y + region.height * 0.5) * canvas.height;
+  for (let i = 0; i < 9; i++) await page.mouse.click(x, y);
+  await expect(page.locator(".dopa-combo")).toContainText("10 コンボ！");
+  await expect.poll(xp).toBe("105");
+  await expect(page.locator(".dopa-combo")).toBeHidden({ timeout: 5500 });
+
+  const answer = page.getByRole("button", { name: "できた！", exact: true });
+  await answer.click();
+  const jackpot = page.locator(".dopa-overlay[data-kind=jackpot]");
+  await expect(jackpot).toContainText("大当たり！");
+  await expect(jackpot).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".dopa-confetti-canvas")).toHaveCount(0);
+  await expect(page.locator(".dopa-jackpot-banner")).toContainText("+50 XP");
+  await expect(jackpot).toBeHidden();
+  await expect.poll(xp).toBe("155");
+  await page.getByRole("button", { name: "描きなおす", exact: true }).click();
+  await answer.click();
+  await expect(page.locator(".dopa-jackpot-banner")).toContainText("+50 XP");
+  await expect(jackpot).toHaveCount(0);
+  await expect.poll(xp).toBe("155");
+
+  await page.getByRole("button", { name: /特徴について知ろう/ }).click();
+  await page
+    .getByRole("button", { name: "観察を保存する", exact: true })
+    .click();
+  const levelup = page.locator(".dopa-overlay[data-kind=levelup]");
+  await expect(levelup).toContainText("Lv.3 到達！");
+  await expect(levelup).toContainText("+30 XP");
+  await expect.poll(xp).toBe("185");
+  await page.reload();
+  await expect(page.locator(".dopa-bar")).toContainText("Lv.3");
+  await expect(page.locator(".dopa-bar")).toContainText("185 XP");
+});
+
 test("ドパガキ版の演出は別URLで開き、既存版へ戻れる", async ({
   page,
   baseURL,
@@ -83,6 +161,10 @@ test("ピツネの反応・短い紙吹雪・解説と観察ノートが機能�
   await drawPupil(page);
   await expect(page.getByText("いい線だね！", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "できた！", exact: true }).click();
+  await expect(page.locator(".dopa-overlay[data-kind=jackpot]")).toContainText(
+    "Lv.2 到達！",
+  );
+  await expect(page.locator(".dopa-confetti-canvas")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "大発見！", exact: true }),
   ).toBeVisible();
