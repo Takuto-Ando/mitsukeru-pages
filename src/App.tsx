@@ -23,6 +23,11 @@ import { ChallengeIntro } from "./components/ChallengeIntro";
 import { DrawScreen, FreeDrawScreen } from "./screens/DrawScreen";
 import { ResultScreen } from "./screens/ResultScreen";
 import { SettingsDialog } from "./components/SettingsDialog";
+import {
+  FuriganaProvider,
+  loadFurigana,
+  saveFurigana,
+} from "./furigana/Furigana";
 import { ReflectionNote } from "./components/ReflectionNote";
 import { Settings } from "lucide-react";
 import { ReadAloud, stopSpeech } from "./speech/Speech";
@@ -225,6 +230,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   }
   const [feedback, setFeedback] = useState<Evaluation>();
   const [hintLevel, setHintLevel] = useState(0);
+  const [furigana, setFurigana] = useState(loadFurigana);
   const [sound, setSound] = useState(false);
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -674,6 +680,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     </p>
   );
   return (
+    <FuriganaProvider enabled={furigana}>
     <div
       className={
         dopa
@@ -1118,9 +1125,15 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             if (!sound) audio.current?.unlock();
             else audio.current?.silence();
           }}
+          furigana={furigana}
+          onFuriganaChange={() => {
+            saveFurigana(!furigana);
+            setFurigana(!furigana);
+          }}
         />
       </main>
       {dopa && <DopaOverlay />}
     </div>
+    </FuriganaProvider>
   );
 }

@@ -8,6 +8,7 @@ import { TongueCelebration } from "../components/TongueCelebration";
 import type { ObservationGroup } from "../content/groups";
 import type { ObservationTask } from "../content/tasks";
 import { ReadAloud } from "../speech/Speech";
+import { Furi } from "../furigana/Furigana";
 import type { Evaluation, Stroke } from "../types";
 import { designCardViewport } from "../drawing/viewport";
 
@@ -117,7 +118,13 @@ export function ResultScreen({
         initialMode="drawing"
         viewport={designCardViewport(task.scene)}
         onSliderCommit={onSliderCommit}
-        cardFooter={fact && <p className="result-fact">{fact}</p>}
+        cardFooter={
+          fact && (
+            <p className="result-fact">
+              <Furi text={fact} />
+            </p>
+          )
+        }
         afterCard={
           <div className="drawing-actions result-actions">
             <button

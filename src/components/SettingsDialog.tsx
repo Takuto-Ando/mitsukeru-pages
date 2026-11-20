@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { X, Volume2 } from "lucide-react";
+import { X, Volume2, BookOpenText } from "lucide-react";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
@@ -12,6 +12,8 @@ export function SettingsDialog({
   onClose,
   sound,
   onSoundChange,
+  furigana,
+  onFuriganaChange,
   returnFocus,
   defaultObservationTaskId,
 }: {
@@ -20,6 +22,8 @@ export function SettingsDialog({
   onClose: () => void;
   sound: boolean;
   onSoundChange: () => void;
+  furigana?: boolean;
+  onFuriganaChange?: () => void;
   defaultObservationTaskId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -64,6 +68,17 @@ export function SettingsDialog({
             効果音 {sound ? "ON" : "OFF"}
           </button>
         </div>
+        {onFuriganaChange && (
+          <div className="sound-setting">
+            <span>
+              <BookOpenText aria-hidden="true" size={19} />
+              ふりがな
+            </span>
+            <button aria-pressed={!!furigana} onClick={onFuriganaChange}>
+              ふりがな {furigana ? "ON" : "OFF"}
+            </button>
+          </div>
+        )}
         <SpeechSettings />
         <OfflineStatus />
         <details
