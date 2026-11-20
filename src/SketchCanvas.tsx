@@ -1,5 +1,15 @@
-import { useEffect, useRef, useState } from "react";
-import { Pencil, Eraser, Undo2, Redo2, RotateCcw, LayoutGrid, Image as ImageIcon, Eye, PaintBucket } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import type { CSSProperties, ReactNode, RefObject } from "react";
+import "./styles/design3-drawing.css";
+import {
+  Pencil,
+  Eraser,
+  RotateCcw,
+  LayoutGrid,
+  Image as ImageIcon,
+  Eye,
+  PaintBucket,
+} from "lucide-react";
 import { artwork, assetPath } from "./content/artwork";
 import {
   drawingRegions,
@@ -9,10 +19,19 @@ import {
   type Scene,
 } from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
+import { TargetRegions } from "./components/TargetRegions";
 import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
 import { stabilizePoint } from "./drawing/smooth";
 import { getStrokeStyle, setStrokeStyle } from "./drawing/styles";
+import type { Point, Stroke } from "./types";
+
+const BLANK_SCENE: Scene = {
+  id: "free-drawing",
+  label: "自由に描くスケッチ",
+  frameHeight: 660,
+  regions: [{ x: 0, y: 0, width: 1, height: 1 }],
+};
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
 const BRUSH_COLORS = [
@@ -29,26 +48,23 @@ const BRUSH_COLORS = [
   "#5da9e9",
   "#e88bb0",
 ];
-import { TargetRegions } from "./components/TargetRegions";
-import { Pitsune } from "./components/Pitsune";
-import type { Point, Stroke } from "./types";
 
 export function SketchCanvas({
   strokes,
   onChange,
-  scene = scenes.goat,
+  template = "eye",
+  scene = template === "blank" ? BLANK_SCENE : scenes.goat,
   onDrawingActivity,
   onUndo,
   canUndo,
   onRedo,
   canRedo,
   missionTitle,
-  hintControl,
-  landscapeInstruction,
-  landscapeComplete,
+  actions,
   landscapeReselect,
   showTarget = false,
   photoUrl,
+  canvasRef,
 }: {
   onDrawingActivity?: (
     active: boolean,
@@ -59,14 +75,12 @@ export function SketchCanvas({
   onRedo?: () => void;
   canRedo?: boolean;
   missionTitle?: string;
-  hintControl?: React.ReactNode;
-  landscapeInstruction?: React.ReactNode;
-  landscapeComplete?: React.ReactNode;
-  landscapeReselect?: React.ReactNode;
+  actions?: ReactNode;
+  landscapeReselect?: ReactNode;
   showTarget?: boolean;
   photoUrl?: string;
+  canvasRef?: RefObject<HTMLCanvasElement | null>;
   template?: "eye" | "blank";
-  backdrop?: React.ReactNode;
   scene?: Scene;
   strokes: Stroke[];
   onChange: (next: Stroke[], action: DrawingAction) => void;
@@ -75,8 +89,9 @@ export function SketchCanvas({
   const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
   const [fillMode, setFillMode] = useState(false);
   const fillImages = useRef(new Map<string, HTMLImageElement>());
-  const ref = useRef<HTMLCanvasElement>(null),
-    active = useRef<number | null>(null),
+  const ownCanvas = useRef<HTMLCanvasElement>(null);
+  const ref = canvasRef ?? ownCanvas;
+  const active = useRef<number | null>(null),
     current = useRef<Stroke>([]);
   const [drawing, setDrawing] = useState(false),
     [erase, setErase] = useState(false),
@@ -91,8 +106,34 @@ export function SketchCanvas({
     window.matchMedia("(min-width: 760px)").matches ? "landscape" : "portrait",
   );
   const layout = layoutChoice ?? autoLayout;
-  const [assist, setAssist] = useState({ grid: false, photo: false, ghost: false });
-  const ghostSrc = artwork[scene.id]?.reference;
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const paletteTrigger = useRef<HTMLButtonElement>(null);
+  const paletteId = useId();
+  const toolsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!paletteOpen) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!toolsRef.current?.contains(event.target as Node))
+        setPaletteOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setPaletteOpen(false);
+      paletteTrigger.current?.focus();
+    };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [paletteOpen]);
+  const [assist, setAssist] = useState({
+    grid: false,
+    photo: false,
+    ghost: false,
+  });
+  const ghostSrc = (scene.artworkOverride || artwork[scene.id])?.reference;
   const CHEERS = [
     "いいかんじ！",
     "よく見てるね！",
@@ -112,10 +153,7 @@ export function SketchCanvas({
     window.clearTimeout(cheerTimer.current);
     cheerTimer.current = window.setTimeout(() => setCheer(""), 2600);
   }, [strokes.length, missionTitle]);
-  useEffect(
-    () => () => window.clearTimeout(cheerTimer.current),
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(cheerTimer.current), []);
   useEffect(() => {
     const media = window.matchMedia("(min-width: 760px)");
     const update = () =>
@@ -251,9 +289,7 @@ export function SketchCanvas({
     // Stabilize against hand tremor, and discard sub-pixel duplicates
     // without smoothing away the observed shape.
     const smoothed = stabilizePoint(previous, position);
-    if (
-      Math.hypot(smoothed.x - previous.x, smoothed.y - previous.y) >= 0.5
-    )
+    if (Math.hypot(smoothed.x - previous.x, smoothed.y - previous.y) >= 0.5)
       current.current.push(smoothed);
   }
   const lastErase = useRef<Point | null>(null);
@@ -264,10 +300,15 @@ export function SketchCanvas({
     return 12 + activeBrush.current.width * 1.9;
   }
   function eraseOnce(center: Point, radius: number) {
-    const result = eraseStrokes(working.current, center, radius, (original, parts) => {
-      const style = getStrokeStyle(original);
-      if (style) for (const part of parts) setStrokeStyle(part, style);
-    });
+    const result = eraseStrokes(
+      working.current,
+      center,
+      radius,
+      (original, parts) => {
+        const style = getStrokeStyle(original);
+        if (style) for (const part of parts) setStrokeStyle(part, style);
+      },
+    );
     if (result.changed) {
       working.current = result.strokes;
       eraseDirty.current = true;
@@ -471,10 +512,17 @@ export function SketchCanvas({
     document.addEventListener("visibilitychange", hide);
     return () => document.removeEventListener("visibilitychange", hide);
   }, []);
+  const isFreeDrawing = template === "blank";
+  const penActive = !erase && !fillMode;
+  function togglePalette(trigger: HTMLButtonElement, open = !paletteOpen) {
+    paletteTrigger.current = trigger;
+    setPaletteOpen(open);
+  }
   return (
     <div
       className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}
       data-layout={missionTitle ? layout : undefined}
+      data-free={isFreeDrawing || undefined}
     >
       {missionTitle && (
         <div
@@ -501,7 +549,11 @@ export function SketchCanvas({
       {missionTitle && (
         <div className="mission-heading">
           <div className="mission-pitsune-row">
-            <Pitsune pose="face" className="mission-pitsune-face" />
+            <img
+              alt=""
+              className="mission-pitsune-face"
+              src={assetPath("figma/entry/sketch-face.svg")}
+            />
             <h1 className="pitsune-bubble">{missionTitle}</h1>
             {cheer && (
               <span className="pitsune-cheer" role="status">
@@ -509,43 +561,33 @@ export function SketchCanvas({
               </span>
             )}
           </div>
-          {landscapeInstruction && (
-            <div className="landscape-instruction">{landscapeInstruction}</div>
-          )}
         </div>
       )}
       <div className="sketch-frame">
-        <div className="paper-top">
-          <span>
-            <i />
-            かんさつスケッチ
-          </span>
+        <div className="sketch-history" role="group" aria-label="描画履歴">
+          <button
+            aria-label="ひとつ戻す"
+            disabled={!(canUndo ?? !!strokes.length)}
+            onClick={() =>
+              onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
+            }
+          >
+            <img alt="" src={assetPath("figma/entry/undo.svg")} />
+            <span>もどる</span>
+          </button>
+          <button aria-label="ひとつ進む" disabled={!canRedo} onClick={onRedo}>
+            <img alt="" src={assetPath("figma/entry/redo.svg")} />
+            <span>すすむ</span>
+          </button>
         </div>
-        {missionTitle && (
-          <div className="sketch-history" role="group" aria-label="描画履歴">
-            <button
-              aria-label="ひとつ戻す"
-              disabled={!(canUndo ?? !!strokes.length)}
-              onClick={() =>
-                onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
-              }
-            >
-              <Undo2 size={25} aria-hidden="true" />
-              <span>もどる</span>
-            </button>
-            <button
-              aria-label="ひとつ進む"
-              disabled={!canRedo}
-              onClick={onRedo}
-            >
-              <Redo2 size={25} aria-hidden="true" />
-              <span>すすむ</span>
-            </button>
-          </div>
-        )}
         <div
           className={"drawing-paper " + (drawing ? "is-drawing" : "")}
-          style={{ aspectRatio: `600 / ${frameHeight}` }}
+          style={
+            {
+              aspectRatio: `600 / ${frameHeight}`,
+              "--scene-ratio": 600 / frameHeight,
+            } as CSSProperties
+          }
         >
           <div
             className="scene-stage"
@@ -556,13 +598,15 @@ export function SketchCanvas({
               className="eye-template"
               viewBox={`0 0 600 ${frameHeight}`}
               preserveAspectRatio="none"
-              aria-label={scene.label + "を描き足すイラスト"}
+              aria-label={
+                isFreeDrawing
+                  ? "白い画用紙"
+                  : scene.label + "を描き足すイラスト"
+              }
               role="img"
             >
-              <SceneBase scene={scene} />
-              {(showTarget || (!strokes.length && !drawing)) && (
-                <TargetRegions scene={scene} />
-              )}
+              {!isFreeDrawing && <SceneBase scene={scene} />}
+              {showTarget && <TargetRegions scene={scene} />}
             </svg>
             {assist.ghost && ghostSrc && (
               <img
@@ -681,250 +725,185 @@ export function SketchCanvas({
             )}
           </div>
         </div>
-        {hintControl && (
-          <div className="sketch-hint-control">{hintControl}</div>
-        )}
         {landscapeReselect && (
           <div className="landscape-reselect">{landscapeReselect}</div>
         )}
       </div>
-      <div className="tools" aria-label="描画ツール">
-        {missionTitle ? (
-          <>
-            <div className="tool-group tool-group-actions">
-              <span className="tool-group-label">ツール</span>
-              <div className="tool-options">
-                <button
-                  aria-pressed={!erase && !fillMode}
-                  onClick={() => {
-                    setErase(false);
-                    setFillMode(false);
-                  }}
-                >
-                  <Pencil size={19} />
-                  ペン
-                </button>
-                <button
-                  aria-pressed={erase}
-                  onClick={() => {
-                    setErase(true);
-                    setFillMode(false);
-                  }}
-                >
-                  <Eraser size={19} />
-                  消しゴム
-                </button>
-                <button
-                  aria-pressed={fillMode}
-                  onClick={() => {
-                    setFillMode(true);
-                    setErase(false);
-                  }}
-                >
-                  <PaintBucket size={19} />
-                  バケツ
-                </button>
-                <button
-                  disabled={!strokes.length}
-                  onClick={() => {
-                    onChange([], "clear");
-                    setErase(false);
-                    setFillMode(false);
-                  }}
-                >
-                  <RotateCcw size={19} />
-                  描き直す
-                </button>
-              </div>
-            </div>
-            <div className="tool-group tool-group-width">
-              <span className="tool-group-label">ふとさ</span>
-              <div className="tool-options">
-                {BRUSH_WIDTHS.map((width) => (
-                  <button
-                    key={width}
-                    className="brush-choice"
-                    aria-label={`ふとさ ${width}`}
-                    aria-pressed={brushWidth === width}
-                    onClick={() => {
-                      activeBrush.current = { ...activeBrush.current, width };
-                      setBrushWidth(width);
-                    }}
-                  >
-                    <span
-                      className="brush-dot"
-                      style={{ width, height: width }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="tool-group tool-group-color">
-              <span className="tool-group-label">カラー</span>
-              <div className="tool-options">
-                {BRUSH_COLORS.map((color, index) => (
-                  <button
-                    key={color}
-                    className="brush-choice"
-                    aria-label={`カラー ${index + 1}`}
-                    aria-pressed={brushColor === color}
-                    onClick={() => {
-                      activeBrush.current = { ...activeBrush.current, color };
-                      setBrushColor(color);
-                    }}
-                  >
-                    <span
-                      className="color-dot"
-                      style={{ backgroundColor: color }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="tool-group tool-group-assist">
-              <span className="tool-group-label">おたすけ</span>
-              <div className="tool-options">
-                <button
-                  aria-pressed={assist.grid}
-                  onClick={() => setAssist((a) => ({ ...a, grid: !a.grid }))}
-                >
-                  <LayoutGrid size={19} />
-                  グリッド
-                </button>
-                {photoUrl && (
-                  <button
-                    aria-pressed={assist.photo}
-                    onClick={() => setAssist((a) => ({ ...a, photo: !a.photo }))}
-                  >
-                    <ImageIcon size={19} />
-                    写真
-                  </button>
-                )}
-                {ghostSrc && (
-                  <button
-                    aria-pressed={assist.ghost}
-                    onClick={() => setAssist((a) => ({ ...a, ghost: !a.ghost }))}
-                  >
-                    <Eye size={19} />
-                    お手本
-                  </button>
-                )}
-              </div>
-            </div>
-            {landscapeComplete && (
-              <div className="landscape-complete">{landscapeComplete}</div>
+      <div className="drawing-tools-stack">
+        <div className="drawing-assists" role="group" aria-label="おたすけ">
+          <span>おたすけ</span>
+          <button
+            type="button"
+            aria-pressed={assist.grid}
+            onClick={() =>
+              setAssist((current) => ({ ...current, grid: !current.grid }))
+            }
+          >
+            <LayoutGrid size={15} aria-hidden="true" />
+            グリッド
+          </button>
+          {photoUrl && (
+            <button
+              type="button"
+              aria-pressed={assist.photo}
+              onClick={() =>
+                setAssist((current) => ({ ...current, photo: !current.photo }))
+              }
+            >
+              <ImageIcon size={15} aria-hidden="true" />
+              写真
+            </button>
+          )}
+          {ghostSrc && (
+            <button
+              type="button"
+              aria-pressed={assist.ghost}
+              onClick={() =>
+                setAssist((current) => ({ ...current, ghost: !current.ghost }))
+              }
+            >
+              <Eye size={15} aria-hidden="true" />
+              お手本
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={!strokes.length}
+            onClick={() => {
+              onChange([], "clear");
+              setErase(false);
+              setFillMode(false);
+              setPaletteOpen(false);
+            }}
+          >
+            <RotateCcw size={15} aria-hidden="true" />
+            描き直す
+          </button>
+        </div>
+        <div
+          className="tools drawing-tools"
+          aria-label="描画ツール"
+          ref={toolsRef}
+        >
+          <div className="drawing-tool-options" role="group" aria-label="道具">
+            {isFreeDrawing && (
+              <button
+                type="button"
+                className="drawing-color-wheel"
+                aria-label="カラー"
+                aria-expanded={paletteOpen}
+                aria-controls={paletteId}
+                onClick={(event) => togglePalette(event.currentTarget)}
+              />
             )}
-          </>
-        ) : (
-          <>
-            <div className="tool-group tool-group-actions">
-              <span className="tool-group-label">ツール</span>
-              <div className="tool-options">
-                <button
-                  aria-pressed={!erase && !fillMode}
-                  onClick={() => {
-                    setErase(false);
-                    setFillMode(false);
-                  }}
-                >
-                  <Pencil size={19} />
-                  ペン
-                </button>
-                <button
-                  aria-pressed={erase}
-                  onClick={() => {
-                    setErase(true);
-                    setFillMode(false);
-                  }}
-                >
-                  <Eraser size={19} />
-                  消しゴム
-                </button>
-                <button
-                  aria-pressed={fillMode}
-                  onClick={() => {
-                    setFillMode(true);
-                    setErase(false);
-                  }}
-                >
-                  <PaintBucket size={19} />
-                  バケツ
-                </button>
-                <button
-                  disabled={!(canUndo ?? !!strokes.length)}
-                  onClick={() =>
-                    onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
-                  }
-                >
-                  <Undo2 size={19} />
-                  ひとつ戻す
-                </button>
-                <button
-                  disabled={!strokes.length}
-                  onClick={() => {
-                    onChange([], "clear");
-                    setErase(false);
-                    setFillMode(false);
-                  }}
-                >
-                  <RotateCcw size={19} />
-                  描き直す
-                </button>
-              </div>
-            </div>
-            <div className="tool-group tool-group-width">
-              <span className="tool-group-label">ふとさ</span>
-              <div className="tool-options">
-                {BRUSH_WIDTHS.map((width) => (
-                  <button
-                    key={width}
-                    className="brush-choice"
-                    aria-label={`ふとさ ${width}`}
-                    aria-pressed={brushWidth === width}
-                    onClick={() => {
-                      activeBrush.current = { ...activeBrush.current, width };
-                      setBrushWidth(width);
-                    }}
-                  >
-                    <span
-                      className="brush-dot"
-                      style={{ width, height: width }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="tool-group tool-group-color">
-              <span className="tool-group-label">カラー</span>
-              <div className="tool-options">
-                {BRUSH_COLORS.map((color, index) => (
-                  <button
-                    key={color}
-                    className="brush-choice"
-                    aria-label={`カラー ${index + 1}`}
-                    aria-pressed={brushColor === color}
-                    onClick={() => {
-                      activeBrush.current = { ...activeBrush.current, color };
-                      setBrushColor(color);
-                    }}
-                  >
-                    <span
-                      className="color-dot"
-                      style={{ backgroundColor: color }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
+            <button
+              type="button"
+              aria-label="ペン"
+              aria-pressed={penActive}
+              aria-expanded={paletteOpen}
+              aria-controls={paletteId}
+              title="ペンと色"
+              onClick={(event) => {
+                setErase(false);
+                setFillMode(false);
+                togglePalette(event.currentTarget, !penActive || !paletteOpen);
+              }}
+            >
+              <Pencil
+                size={25}
+                style={{ color: brushColor }}
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              type="button"
+              className="drawing-bucket"
+              aria-label="バケツ"
+              aria-pressed={fillMode}
+              title="バケツ"
+              onClick={() => {
+                setFillMode(true);
+                setErase(false);
+                setPaletteOpen(false);
+              }}
+            >
+              <PaintBucket size={25} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label="消しゴム"
+              aria-pressed={erase}
+              title="消しゴム"
+              onClick={() => {
+                setErase(true);
+                setFillMode(false);
+                setPaletteOpen(false);
+              }}
+            >
+              <Eraser size={25} aria-hidden="true" />
+            </button>
+          </div>
+          <label className="drawing-width">
+            ペンの太さ
+            <input
+              type="range"
+              min={0}
+              max={BRUSH_WIDTHS.length - 1}
+              step={1}
+              aria-valuetext={String(brushWidth)}
+              value={BRUSH_WIDTHS.indexOf(brushWidth)}
+              style={
+                {
+                  "--brush-range": `${(BRUSH_WIDTHS.indexOf(brushWidth) / (BRUSH_WIDTHS.length - 1)) * 100}%`,
+                } as CSSProperties
+              }
+              onChange={(event) => {
+                const width = BRUSH_WIDTHS[event.currentTarget.valueAsNumber];
+                activeBrush.current = { ...activeBrush.current, width };
+                setBrushWidth(width);
+              }}
+            />
+          </label>
+          <div
+            className="drawing-palette"
+            id={paletteId}
+            role="group"
+            aria-label="カラー"
+            hidden={!paletteOpen}
+          >
+            {BRUSH_COLORS.map((color, index) => (
+              <button
+                key={color}
+                type="button"
+                aria-label={`カラー ${index + 1}`}
+                aria-pressed={brushColor === color}
+                onClick={() => {
+                  activeBrush.current = { ...activeBrush.current, color };
+                  setBrushColor(color);
+                  setPaletteOpen(false);
+                  paletteTrigger.current?.focus();
+                }}
+              >
+                <span
+                  className="color-dot"
+                  style={{ backgroundColor: color }}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+        {actions && <div className="drawing-actions">{actions}</div>}
+        {erase && (
+          <p className="eraser-tip">
+            なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。
+          </p>
+        )}
+        {fillMode && (
+          <p className="eraser-tip">
+            線で囲んだ中をタップすると、選んだ色でぬれるよ。
+          </p>
         )}
       </div>
-      {erase && (
-        <p className="eraser-tip">なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。</p>
-      )}
-      {fillMode && (
-        <p className="eraser-tip">線で囲んだ中をタップすると、選んだ色でぬれるよ。</p>
-      )}
     </div>
   );
 }

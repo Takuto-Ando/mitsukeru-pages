@@ -11,16 +11,20 @@ import {
 } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "./components/HomeScreen";
-import { IntroFlow } from "./components/IntroFlow";
-import { Pitsune } from "./components/Pitsune";
+import {
+  IntroFlow,
+  IntroLoadingScreen,
+  SplashScreen,
+  TutorialEndScreen,
+} from "./components/IntroFlow";
+import { ChallengeIntro } from "./components/ChallengeIntro";
+import { DrawScreen, FreeDrawScreen } from "./screens/DrawScreen";
+import { ResultScreen } from "./screens/ResultScreen";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { ReflectionNote } from "./components/ReflectionNote";
 import { Settings } from "lucide-react";
 import { ReadAloud, stopSpeech } from "./speech/Speech";
 import { CameraView } from "./CameraView";
-import { SketchCanvas } from "./SketchCanvas";
-import { SketchComparison } from "./components/SketchComparison";
-import { TongueCelebration } from "./components/TongueCelebration";
 const DrawingCollection = lazy(() =>
   import("./components/DrawingCollection").then((module) => ({
     default: module.DrawingCollection,
@@ -64,6 +68,10 @@ import {
   stylesFor,
 } from "./drawing/styles";
 import "./styles/cards.css";
+import "./styles/design3.css";
+
+const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
+type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
 export default function App() {
   const reduce = useReducedMotion();
@@ -80,9 +88,19 @@ export default function App() {
   const taskGeneration = useRef(0);
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
-  const [screen, setScreen] = useState<"home" | "intro" | "activity">("home");
-  const [interstitial, setInterstitial] = useState(false);
-  const interstitialTimer = useRef<number | undefined>(undefined);
+  const [screen, setScreen] = useState<Screen>("splash");
+  const [photoPhase, setPhotoPhase] = useState<
+    "cheer" | "loading" | "challenge"
+  >();
+  const tutorialShown = useRef(false);
+  useEffect(() => {
+    if (photoPhase !== "cheer" && photoPhase !== "loading") return;
+    const timer = window.setTimeout(
+      () => setPhotoPhase(photoPhase === "cheer" ? "loading" : "challenge"),
+      photoPhase === "cheer" ? 1200 : 950,
+    );
+    return () => window.clearTimeout(timer);
+  }, [photoPhase]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [taskId, setTaskId] = useState("goat");
@@ -150,7 +168,6 @@ export default function App() {
   }
   const [feedback, setFeedback] = useState<Evaluation>();
   const [hintLevel, setHintLevel] = useState(0);
-  const hint = hintLevel > 0;
   const [sound, setSound] = useState(false);
   const soundRef = useRef(sound);
   soundRef.current = sound;
@@ -174,8 +191,7 @@ export default function App() {
   const [completedGroup, setCompletedGroup] = useState("");
   const [draftOffer, setDraftOffer] = useState<string>();
   const task = taskById[taskId],
-    scene = task.scene,
-    profile = task.profile;
+    scene = task.scene;
   const group = groups.find((g) => g.id === task.groupId)!;
   const context = currentStudyContext();
   const studyTaskEnabled =
@@ -230,7 +246,7 @@ export default function App() {
       setCollection([]);
     };
   }, [collectionOpen, storageReady]);
-  async function save() {
+  async function save(): Promise<"created" | "updated" | undefined> {
     if (
       savingLock.current ||
       (savedId && !reflectionDirty) ||
@@ -258,7 +274,6 @@ export default function App() {
     try {
       if (savedId) {
         await updateObservationReflection(savedId, reflection);
-        await refreshCollection();
         if (generation === taskGeneration.current) setReflectionDirty(false);
         recordStudy(
           "reflection_saved",
@@ -268,7 +283,7 @@ export default function App() {
           },
           logContext,
         );
-        return;
+        return "updated";
       }
       const record = observationMetadata({
         id: crypto.randomUUID(),
@@ -282,19 +297,23 @@ export default function App() {
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });
-      await refreshCollection();
       removeDraft(taskId);
       if (generation === taskGeneration.current) {
         setSavedId(record.id);
         setReflectionDirty(false);
-        const savedRecords = await loadObservations();
-        if (
-          tasksForGroup(task.groupId).every((t) =>
-            savedRecords.some((r) => r.taskId === t.id),
-          )
-        )
-          setCompletedGroup(group.name);
+        void loadObservations()
+          .then((records) => {
+            if (
+              generation === taskGeneration.current &&
+              tasksForGroup(task.groupId).every((t) =>
+                records.some((record) => record.taskId === t.id),
+              )
+            )
+              setCompletedGroup(group.name);
+          })
+          .catch(() => undefined);
       }
+      void refreshCollection().catch(() => undefined);
       recordStudy("observation_saved", {}, logContext);
       recordStudy(
         "reflection_saved",
@@ -304,6 +323,7 @@ export default function App() {
         },
         logContext,
       );
+      return "created";
     } catch {
       setStorageError(
         "観察を保存できませんでした。空き容量やブラウザの設定を確認し、もう一度試してください。",
@@ -313,31 +333,70 @@ export default function App() {
       setSaving(false);
     }
   }
-  async function exportCurrentPng(kind: "own" | "comparison") {
+  function openCollection() {
+    setCollectionOpen(true);
+    window.scrollTo(0, 0);
+  }
+  function openSettings(trigger: HTMLElement) {
+    settingsTrigger.current = trigger;
+    setSettingsOpen(true);
+  }
+  async function finishObservation(advance: boolean) {
+    const generation = taskGeneration.current;
+    const result = !savedId || reflectionDirty ? await save() : undefined;
+    if (generation !== taskGeneration.current) return;
+    if (result === "created" && !tutorialShown.current) {
+      tutorialShown.current = true;
+      try {
+        if (!localStorage.getItem(TUTORIAL_KEY)) {
+          localStorage.setItem(TUTORIAL_KEY, "true");
+          restart("tutorial");
+          return;
+        }
+      } catch {
+        restart("tutorial");
+        return;
+      }
+    }
+    if (advance) {
+      if (savedId && (!reflectionDirty || result === "updated"))
+        openCollection();
+      else if (result === "created") restart();
+    }
+  }
+  async function exportCurrentPng(kind: "own" | "comparison", share = false) {
     const visible = clipStrokes(strokes, scene);
     if (!visible.length || saving) return;
     setSaving(true);
     setStorageError("");
     try {
       const images = await composeObservationImages(scene, visible);
-      const date = new Date().toISOString().slice(0, 10);
-      await savePng(
-        await composeCardPng(
-          kind === "own" ? images.ownPng : images.comparisonPng,
-          {
-            animalName: group.name,
-            taskName: task.part,
-            createdAt: new Date().toISOString(),
-            explanation: task.explanation,
-            ...reflection,
-          },
-          kind === "comparison",
-        ),
-        `zooketch-${taskId}-${date}-${kind === "own" ? "sketch" : "comparison"}.png`,
+      const createdAt = new Date().toISOString();
+      const image = await composeCardPng(
+        kind === "own" ? images.ownPng : images.comparisonPng,
+        {
+          animalName: group.name,
+          taskName: task.part,
+          createdAt,
+          explanation: task.explanation,
+          ...reflection,
+        },
+        kind === "comparison",
       );
-    } catch {
+      const date = createdAt.slice(0, 10);
+      const filename = `zooketch-${taskId}-${date}-${kind === "own" ? "sketch" : "comparison"}.png`;
+      if (share && navigator.share && navigator.canShare) {
+        const file = new File([image], filename, { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: "ズーケッチ" });
+          return;
+        }
+      }
+      await savePng(image, filename);
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
       setStorageError(
-        "PNG画像を保存できませんでした。もう一度試してください。",
+        "PNG画像を準備できませんでした。もう一度試してください。",
       );
     } finally {
       setSaving(false);
@@ -404,8 +463,10 @@ export default function App() {
     recordStudy("challenge_opened");
     activeTask.current = id;
   }
-  function restart(destination: "home" | "intro" | "activity" = "activity") {
+  function restart(destination: Screen = "activity") {
     setScreen(destination);
+    setPhotoPhase(undefined);
+    setStorageError("");
     taskGeneration.current++;
     if (activeTask.current) recordStudy("challenge_left");
     activeTask.current = undefined;
@@ -507,66 +568,47 @@ export default function App() {
       next(2);
     }
   }
+  const collectionLoadingView = (
+    <p className="design3-alert" role="status">
+      観察ノートを読み込んでいます…
+    </p>
+  );
   return (
     <div
-      className="figma-shell"
+      className="figma-shell design3-shell"
       data-step={step}
-      data-screen={collectionOpen ? "collection" : screen}
+      data-screen={
+        collectionOpen
+          ? "collection"
+          : photoPhase === "cheer"
+            ? screen
+            : (photoPhase ?? screen)
+      }
     >
-      {((screen !== "home" && screen !== "intro") || collectionOpen) && (
-        <header className="figma-header">
-          <button
-            onClick={() => restart("home")}
-            aria-label="ズーケッチ ホームに戻る"
-          >
-            <span className="brand-mark" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-            ズーケッチ
-          </button>
-          <button
-            className="collection-link"
-            aria-expanded={collectionOpen}
-            onClick={() => {
-              setCollectionOpen(!collectionOpen);
-              window.scrollTo(0, 0);
-            }}
-          >
-            図鑑 ({collectionCount})
-          </button>
-          <button
-            className="header-settings"
-            aria-label="設定を開く"
-            onClick={(event) => {
-              settingsTrigger.current = event.currentTarget;
-              setSettingsOpen(true);
-            }}
-          >
-            <Settings aria-hidden="true" size={20} />
-          </button>
-        </header>
-      )}
       <main>
-        {storageError && <p role="alert">{storageError}</p>}
+        {storageError && (
+          <p className="design3-alert" role="alert">
+            {storageError}
+          </p>
+        )}
         {collectionOpen ? (
-          <Suspense fallback={<p role="status">観察ノートを開いています…</p>}>
+          <Suspense fallback={collectionLoadingView}>
             {collectionLoading || !storageReady ? (
-              <p role="status">観察ノートを読み込んでいます…</p>
+              collectionLoadingView
             ) : (
               <DrawingCollection
-                title="スケッチ図鑑"
                 drawings={collection}
                 onBack={() => setCollectionOpen(false)}
-                onUpdate={async () => {
-                  await refreshCollection();
-                }}
+                onCamera={() => restart()}
+                onUpdate={refreshCollection}
                 onDelete={async (id) => {
                   try {
                     await deleteObservation(id);
                     await refreshCollection();
-                    if (savedId === id) setSavedId(undefined);
+                    if (savedId === id) {
+                      setSavedId(undefined);
+                      setCompletedGroup("");
+                    }
                     return true;
                   } catch {
                     setStorageError(
@@ -578,36 +620,36 @@ export default function App() {
               />
             )}
           </Suspense>
+        ) : screen === "splash" ? (
+          <SplashScreen onDone={() => setScreen("home")} />
         ) : screen === "home" ? (
           <HomeScreen
             onStart={() => restart("intro")}
-            onContinue={() => restart("activity")}
-            onCollection={() => {
-              setCollectionOpen(true);
-              window.scrollTo(0, 0);
-            }}
-            onSettings={(trigger) => {
-              settingsTrigger.current = trigger;
-              setSettingsOpen(true);
-            }}
+            onContinue={() => restart()}
+            onCollection={openCollection}
+            onSettings={openSettings}
             savedCount={collectionCount}
           />
         ) : screen === "intro" ? (
           <IntroFlow onDone={() => setScreen("activity")} />
+        ) : screen === "tutorial" ? (
+          <TutorialEndScreen onDone={() => restart("home")} />
+        ) : screen === "free" ? (
+          <FreeDrawScreen onDone={() => restart()} />
+        ) : photoPhase === "loading" ? (
+          <IntroLoadingScreen />
+        ) : photoPhase === "challenge" ? (
+          <ChallengeIntro
+            animal={group.name}
+            part={task.part}
+            regionCount={scene.regions.length}
+            onStart={() => {
+              setPhotoPhase(undefined);
+              next(1);
+            }}
+          />
         ) : (
           <>
-            <nav className="card-flow" aria-label="観察の進み方">
-              <ol>
-                {["撮る", "描く", "比べる", "知る"].map((label, index) => (
-                  <li
-                    key={label}
-                    aria-current={step === index ? "step" : undefined}
-                  >
-                    {label}
-                  </li>
-                ))}
-              </ol>
-            </nav>
             <motion.section
               className="activity-card"
               key={step}
@@ -615,40 +657,27 @@ export default function App() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="card-caption">
-                {step === 0 ? "かんさつカメラ" : group.name}
-              </div>
               {step === 0 ? (
                 <CameraView
                   suspended={settingsOpen}
-                  onCollection={() => {
-                    setCollectionOpen(true);
-                    window.scrollTo(0, 0);
-                  }}
-                  onSettings={(trigger) => {
-                    settingsTrigger.current = trigger;
-                    setSettingsOpen(true);
-                  }}
+                  celebrating={photoPhase === "cheer"}
+                  onCollection={openCollection}
+                  onSettings={openSettings}
+                  onFreeDraw={() => restart("free")}
                   onSelect={(image, id, method) => {
                     recordStudy(
                       "animal_identified",
-                      { method: method || "manual" },
+                      { method },
                       {
-                        animalId:
-                          taskById[id || "goat"]?.groupId || id || "goat",
+                        animalId: taskById[id].groupId,
                         taskId: undefined,
                         attemptId: undefined,
                       },
                     );
-                    setPhoto(image || "");
-                    selectTask(id || "goat");
-                    next(1);
-                    window.clearTimeout(interstitialTimer.current);
-                    setInterstitial(true);
-                    interstitialTimer.current = window.setTimeout(
-                      () => setInterstitial(false),
-                      1600,
-                    );
+                    setPhoto(image);
+                    selectTask(id);
+                    window.scrollTo(0, 0);
+                    setPhotoPhase(image ? "cheer" : "challenge");
                   }}
                 />
               ) : step === 1 ? (
@@ -686,300 +715,102 @@ export default function App() {
                       </button>
                     </div>
                   )}
-                  <SketchCanvas
+                  <DrawScreen
                     key={taskId}
-                    photoUrl={photo || undefined}
-                    missionTitle={`${group.name}の${task.part}を描いてみよう！`}
-                    landscapeInstruction={
-                      <>
-                        <p>{task.question}</p>
-                        <ReadAloud
-                          id="question-landscape"
-                          text={task.question}
-                        />
-                      </>
-                    }
-                    landscapeComplete={
-                      <button
-                        className="primary draw-complete"
-                        disabled={!strokes.length}
-                        onClick={answer}
-                      >
-                        できた！
-                      </button>
-                    }
-                    landscapeReselect={
-                      <>
-                        <button
-                          className="text-button"
-                          onClick={() => restart()}
-                        >
-                          動物を選び直す
-                        </button>
-                        {photo && (
-                          <details>
-                            <summary>撮影した写真を確認</summary>
-                            <img
-                              className="selected-photo"
-                              src={photo}
-                              alt="撮影した動物の写真"
-                            />
-                          </details>
-                        )}
-                      </>
-                    }
-                    scene={scene}
-                    onDrawingActivity={(active, tool) =>
-                      recordStudy(
-                        active ? "drawing_started" : "drawing_stopped",
-                        { tool },
-                      )
-                    }
+                    task={task}
+                    photo={photo}
                     strokes={strokes}
-                    showTarget={hint}
-                    canUndo={drawing.past.length > 0}
-                    canRedo={drawing.future.length > 0}
-                    onUndo={() => {
-                      dispatchDrawing({ type: "undo" });
-                      recordStudy("drawing_undo");
-                      setFeedback(undefined);
-                      setSavedId(undefined);
+                    feedback={feedback}
+                    hintLevel={hintLevel}
+                    onHint={() => {
+                      const level = hintLevel + 1;
+                      setHintLevel(level);
+                      recordStudy("hint_opened", { hintLevel: level });
                     }}
-                    onRedo={() => {
-                      dispatchDrawing({ type: "redo" });
-                      setFeedback(undefined);
-                      setSavedId(undefined);
+                    onAnswer={answer}
+                    onContinue={() => next(2)}
+                    onAbsent={() => {
+                      setFeedback({
+                        status: "uncertain",
+                        passed: false,
+                        method: "comparison",
+                        message: "いま見えた姿を確かめよう。",
+                      });
+                      recordStudy("drawing_submitted", {
+                        empty: true,
+                        reason: "observed-absent",
+                      });
+                      recordStudy("evaluation_completed", {
+                        method: "comparison",
+                        status: "uncertain",
+                      });
+                      next(2);
                     }}
-                    hintControl={
-                      <button
-                        className="sketch-hint-button"
-                        aria-label={
-                          hintLevel === 0
-                            ? "ヒントを見る"
-                            : hintLevel < (task.hints?.length || 0)
-                              ? "次のヒントを見る"
-                              : "ヒントを表示中"
+                    onReselect={() => restart()}
+                    canvasProps={{
+                      canUndo: drawing.past.length > 0,
+                      canRedo: drawing.future.length > 0,
+                      onUndo: () => {
+                        dispatchDrawing({ type: "undo" });
+                        recordStudy("drawing_undo");
+                        setFeedback(undefined);
+                        setSavedId(undefined);
+                      },
+                      onRedo: () => {
+                        dispatchDrawing({ type: "redo" });
+                        setFeedback(undefined);
+                        setSavedId(undefined);
+                      },
+                      onChange: (value, action) => {
+                        if (action === "clear") {
+                          recordStudy("drawing_cleared");
+                          removeDraft(taskId);
                         }
-                        aria-expanded={hint}
-                        aria-controls="observation-hint"
-                        disabled={hintLevel >= (task.hints?.length || 0)}
-                        onClick={() => {
-                          const level = hintLevel + 1;
-                          setHintLevel(level);
-                          recordStudy("hint_opened", { hintLevel: level });
-                        }}
-                      >
-                        ヒント
-                      </button>
-                    }
-                    onChange={(value, action) => {
-                      if (action === "clear") {
-                        recordStudy("drawing_cleared");
-                        removeDraft(taskId);
-                      }
-                      if (action === "erase") recordStudy("drawing_erased");
-                      dispatchDrawing({ type: "commit", strokes: value });
-                      setFeedback(undefined);
-                      setSavedId(undefined);
+                        if (action === "erase") recordStudy("drawing_erased");
+                        dispatchDrawing({ type: "commit", strokes: value });
+                        setFeedback(undefined);
+                        setSavedId(undefined);
+                      },
+                      onDrawingActivity: (active, tool) =>
+                        recordStudy(
+                          active ? "drawing_started" : "drawing_stopped",
+                          { tool },
+                        ),
                     }}
                   />
-                  <div className="observation-hints">
-                    {hint && (
-                      <ol id="observation-hint" role="note">
-                        {task.hints?.slice(0, hintLevel).map((text) => (
-                          <li key={text}>{text}</li>
-                        ))}
-                      </ol>
-                    )}
-                    {hint && (
-                      <ReadAloud
-                        id="hints"
-                        text={
-                          task.hints?.slice(0, hintLevel).join("。") ||
-                          task.hint
-                        }
-                      />
-                    )}
-                  </div>
-                  {feedback && !feedback.passed && (
-                    <div role="status" className="figma-feedback">
-                      <p>{feedback.message}</p>
-                      <p>{feedback.suggestion}</p>
-                      <button className="primary" onClick={() => next(2)}>
-                        {feedback.status === "uncertain"
-                          ? "見えた形をお手本と比べる"
-                          : "お手本で確かめる"}
-                      </button>
-                      {import.meta.env.DEV &&
-                        new URLSearchParams(location.search).has("debug") && (
-                          <details>
-                            <summary>判定デバッグ</summary>
-                            <pre>{JSON.stringify(feedback, null, 2)}</pre>
-                          </details>
-                        )}
-                    </div>
-                  )}
-                  {task.allowAbsent && !strokes.length && (
-                    <button
-                      className="text-button"
-                      onClick={() => {
-                        setFeedback({
-                          status: "uncertain",
-                          passed: false,
-                          method: "comparison",
-                          message: "いま見えた姿を確かめよう。",
-                        });
-                        recordStudy("drawing_submitted", {
-                          empty: true,
-                          reason: "observed-absent",
-                        });
-                        recordStudy("evaluation_completed", {
-                          method: "comparison",
-                          status: "uncertain",
-                        });
-                        next(2);
-                      }}
-                    >
-                      模様が見えないので、見くらべる
-                    </button>
-                  )}
-                  <button
-                    className="primary draw-complete portrait-complete"
-                    disabled={!strokes.length}
-                    onClick={answer}
-                  >
-                    できた！
-                  </button>
-                  <div className="draw-afterword">
-                    <p className="figma-support">{task.question}</p>
-                    <ReadAloud id="question" text={task.question} />
-                    <p className="figma-note">
-                      絵のつづきを描こう。実物を見ながらで大丈夫。
-                    </p>
-                    {photo && (
-                      <details>
-                        <summary>撮影した写真を確認</summary>
-                        <img
-                          className="selected-photo"
-                          src={photo}
-                          alt="撮影した動物の写真"
-                        />
-                      </details>
-                    )}
-                    <button className="text-button" onClick={() => restart()}>
-                      動物を選び直す
-                    </button>
-                  </div>
                 </>
               ) : step === 2 ? (
-                <>
-                  <div className="result-pitsune">
-                    <Pitsune pose="face" className="result-pitsune-face" />
-                    <h1 className="figma-discovery pitsune-bubble">
-                      {feedback?.passed
-                        ? "完成！ だいはっけん！"
-                        : "見えた形を確かめよう"}
-                    </h1>
-                  </div>
-                  <ReadAloud
-                    id="result"
-                    text={
-                      feedback?.passed
-                        ? "完成！ だいはっけん！ よく見てたね！"
-                        : "見えた形を確かめよう。あなたの観察と見くらべよう。"
-                    }
-                  />
-                  <p className="center">
-                    <strong>
-                      {group.name}の{task.part}
-                    </strong>
-                  </p>
-                  <p className="figma-note">
-                    {feedback?.passed
-                      ? "よく見てたね！"
-                      : "あなたの観察と見くらべよう"}
-                  </p>
-                  {task.id === "giraffe" && (
-                    <TongueCelebration strokes={strokes} scene={scene} />
-                  )}
-                  <SketchComparison
-                    strokes={strokes}
-                    scene={scene}
-                    profile={profile}
-                    answer={group.answer}
-                    note={task.comparisonNote}
-                    completed={feedback?.passed}
-                    onSliderCommit={(from, to, via) =>
-                      recordStudy("comparison_slider_moved", { from, to, via })
-                    }
-                  />
-                  {feedback?.passed && task.explanation.form && (
-                    <p className="result-fact">{task.explanation.form}</p>
-                  )}
-                  {feedback?.passed && task.explanation.form && (
-                    <ReadAloud id="result-fact" text={task.explanation.form} />
-                  )}
-                  {completedGroup && savedId && (
-                    <p className="group-complete-banner">
-                      <Pitsune pose="cheer" className="group-complete-pitsune" />
-                      {completedGroup} コンプリート！
-                      ぜんぶの観察がそろったよ
-                    </p>
-                  )}
-                  {!feedback?.passed && (
-                    <div className="self-check">
-                      <p>実物とお手本を見くらべて、気づいたところはあった？</p>
-                      <button className="primary" onClick={confirm}>
-                        見くらべて、確かめた！
-                      </button>
-                      <button className="text-button" onClick={() => next(1)}>
-                        もう少し観察して描く
-                      </button>
-                    </div>
-                  )}
-                  <ReflectionNote
-                    value={reflection}
-                    question={task.next}
-                    disabled={saving}
-                    onChange={(value) => {
-                      setReflection(value);
-                      setReflectionDirty(true);
-                    }}
-                  />
-                  <button
-                    className="primary collection-save"
-                    disabled={
-                      (!!savedId && !reflectionDirty) ||
-                      !storageReady ||
-                      !feedback?.passed ||
-                      saving ||
-                      !strokes.length
-                    }
-                    onClick={() => void save()}
-                  >
-                    {savedId && !reflectionDirty
-                      ? "保存したよ！"
-                      : saving
-                        ? "観察を保存中…"
-                        : savedId
-                          ? "気づきを更新する"
-                          : "観察を保存する"}
-                  </button>
-                  <p className="quiet-note" role="status">
-                    {savedId
-                      ? "「観察ノート」から、いつでも見返せるよ。"
-                      : "自分の絵をこの端末に残せます。撮影写真は保存しません。"}
-                  </p>
-                  <button
-                    className="primary"
-                    disabled={!feedback?.passed}
-                    onClick={() => next(3)}
-                  >
-                    特徴について知ろう →
-                  </button>
-                </>
+                <ResultScreen
+                  task={task}
+                  group={group}
+                  strokes={strokes}
+                  feedback={feedback}
+                  reflection={reflection}
+                  onReflectionChange={(value) => {
+                    setReflection(value);
+                    setReflectionDirty(true);
+                  }}
+                  saving={saving}
+                  saved={!!savedId}
+                  reflectionDirty={reflectionDirty}
+                  storageReady={storageReady}
+                  completedGroup={completedGroup}
+                  onConfirm={confirm}
+                  onRedraw={() => next(1)}
+                  onNext={() => void finishObservation(true)}
+                  onUpdateReflection={() => void finishObservation(false)}
+                  onLearn={() => next(3)}
+                  onExport={exportCurrentPng}
+                  onShare={() => void exportCurrentPng("own", true)}
+                  onSliderCommit={(from, to, via) =>
+                    recordStudy("comparison_slider_moved", { from, to, via })
+                  }
+                />
               ) : (
-                <>
+                <section className="design3-lesson">
+                  <button className="text-button" onClick={() => next(2)}>
+                    結果に戻る
+                  </button>
                   <h1>{task.explanation.name}</h1>
                   <ReadAloud
                     id="explanation"
@@ -997,7 +828,10 @@ export default function App() {
                       aria-label={task.explanation.name + "の解説イラスト"}
                     >
                       <image
-                        href={assetPath(artwork[task.id].explanation!)}
+                        href={assetPath(
+                          (scene.artworkOverride ?? artwork[task.id])
+                            .explanation!,
+                        )}
                         width="600"
                         height={scene.frameHeight || 400}
                         preserveAspectRatio="none"
@@ -1028,7 +862,7 @@ export default function App() {
                       !feedback?.passed ||
                       !strokes.length
                     }
-                    onClick={() => void save()}
+                    onClick={() => void finishObservation(false)}
                   >
                     {savedId && !reflectionDirty
                       ? "保存したよ！"
@@ -1085,20 +919,39 @@ export default function App() {
                   <button className="text-button" onClick={() => restart()}>
                     次の動物を撮る
                   </button>
-                </>
+                </section>
               )}
             </motion.section>
+            {photoPhase !== "cheer" && (
+              <nav
+                className="figma-header design3-utilities"
+                aria-label="アプリのメニュー"
+              >
+                <button
+                  disabled={saving}
+                  onClick={() => restart("home")}
+                  aria-label="ズーケッチ ホームに戻る"
+                >
+                  ホーム
+                </button>
+                {step !== 0 && (
+                  <>
+                    <button disabled={saving} onClick={openCollection}>
+                      図鑑 ({collectionCount})
+                    </button>
+                    <button
+                      className="header-settings"
+                      disabled={saving}
+                      aria-label="設定を開く"
+                      onClick={(event) => openSettings(event.currentTarget)}
+                    >
+                      <Settings aria-hidden="true" size={19} />
+                    </button>
+                  </>
+                )}
+              </nav>
+            )}
           </>
-        )}
-        {interstitial && (
-          <div className="loading-overlay" aria-hidden="true">
-            <p>
-              写真をアルバムに保存しました。
-              <br />
-              スケッチを描いています。
-            </p>
-            <Pitsune pose="easel" className="loading-pitsune" />
-          </div>
         )}
         <SettingsDialog
           open={settingsOpen}

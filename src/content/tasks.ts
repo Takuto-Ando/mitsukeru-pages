@@ -340,3 +340,22 @@ for (const task of tasks) {
     );
   if (layout.answerPath) task.scene.answerPath = layout.answerPath;
 }
+
+// Keep the established mouth anchor and 600px frame for existing drafts.
+const pdfGiraffe = tasks.find((task) => task.id === "giraffe");
+if (pdfGiraffe) {
+  const base = "illustrations/pdf-design/giraffe";
+  pdfGiraffe.scene.artworkOverride = {
+    status: "draft",
+    alt: pdfGiraffe.scene.label,
+    incomplete: base + ".svg",
+    completedBase: base + ".svg",
+    reference: base + "-complete.svg",
+    answer: base + "-complete.svg",
+    explanation: base + "-complete.svg",
+    blankFill: "transparent",
+    maskInApp: true,
+    credit: "提供されたデザインPDFの28・30ページのイラスト",
+  };
+  pdfGiraffe.scene.answerAsset = base + "-complete.svg";
+}

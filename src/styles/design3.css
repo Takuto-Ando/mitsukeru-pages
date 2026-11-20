@@ -1,0 +1,645 @@
+.figma-shell.design3-shell {
+  --d3-cream: #fffbf1;
+  --d3-ground: #dfeacb;
+  --d3-orange: #f6a83c;
+  --d3-green: #7fa845;
+  --d3-brown: #7a4a21;
+  --d3-radius: 24px;
+  --d3-shadow: 0 3px 9px rgb(85 62 33 / 15%);
+  --color-paper: var(--d3-cream);
+  --color-surface: #fff;
+  --color-ink: var(--d3-brown);
+  --color-mustard: var(--d3-orange);
+  --color-teal: var(--d3-green);
+  --color-teal-ink: var(--d3-brown);
+  color: var(--d3-brown);
+  background: var(--d3-cream);
+  max-width: 460px;
+  min-height: 100dvh;
+  padding: 0;
+}
+
+body:has(.design3-shell) {
+  background: #fffbf1;
+}
+
+.figma-shell.design3-shell[data-screen="activity"][data-step="1"] {
+  max-width: 460px;
+}
+
+.design3-shell .activity-card {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+  padding: 0;
+}
+
+.design3-shell .design3-utilities.figma-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  justify-content: center;
+  padding: 6px 12px calc(8px + env(safe-area-inset-bottom));
+}
+
+.design3-shell .design3-utilities > button:first-child,
+.design3-shell .design3-utilities > button {
+  min-height: 44px;
+  padding: 4px;
+  border: 0;
+  font-weight: 700;
+  font-size: 0.76rem;
+  letter-spacing: normal;
+}
+
+.design3-shell .design3-alert,
+.design3-shell .design3-lesson {
+  padding: 12px max(16px, env(safe-area-inset-left));
+}
+
+.design3-shell .primary {
+  border: 0;
+  border-radius: 999px;
+  background: var(--d3-orange);
+  color: #fff;
+}
+
+.design3-shell .primary:active:not(:disabled),
+.design3-pill:active:not(:disabled) {
+  background: var(--d3-orange);
+  filter: brightness(0.93);
+}
+
+.design3-pill {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  min-height: 48px;
+  border-radius: 999px;
+  background: var(--d3-orange);
+  box-shadow: var(--d3-shadow);
+  color: #fff;
+  font-size: clamp(0.83rem, 3.8vw, 1rem);
+  font-weight: 700;
+}
+
+.design3-pill--green,
+.design3-pill--green:active:not(:disabled) {
+  background: var(--d3-green);
+}
+
+.design3-pill:disabled {
+  background: #fbe5c5;
+  box-shadow: none;
+  opacity: 1;
+}
+
+.design3-pill > svg {
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+}
+
+.design3-camera .camera-pitsune {
+  align-items: center;
+  position: relative;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 0;
+  margin: 0 0 -3px;
+  z-index: 1;
+}
+
+.design3-camera .camera-pitsune-face {
+  width: clamp(72px, 24vw, 105px);
+}
+
+.design3-camera .camera-pitsune .pitsune-bubble {
+  margin-bottom: 0;
+  background: #fff;
+  color: var(--d3-brown);
+  text-align: center;
+  font-size: clamp(0.88rem, 4vw, 1.1rem);
+  padding: 9px 12px;
+  box-shadow: var(--d3-shadow);
+}
+
+.design3-camera .pitsune-bubble strong {
+  color: #a85b0c;
+}
+
+.design3-camera .camera-frame {
+  position: relative;
+  width: 100%;
+  height: clamp(260px, 58dvh, 540px);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #d8d8d8;
+  aspect-ratio: auto;
+}
+
+.design3-camera .camera-fallback {
+  gap: 10px;
+  background: #d8d8d8;
+  color: #6b6258;
+}
+
+.design3-camera .camera-fallback svg {
+  color: #b5b5b5;
+}
+
+.design3-camera .vf-corners {
+  inset: 16% 13% 19%;
+}
+
+.design3-camera .vf-corners i {
+  width: clamp(37px, 13vw, 64px);
+  height: clamp(37px, 13vw, 64px);
+  border-width: 6px;
+  filter: none;
+}
+
+.design3-zoom {
+  position: absolute;
+  z-index: 1;
+  bottom: 12px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.design3-zoom button {
+  width: 44px;
+  border-radius: 50%;
+  background: rgb(45 44 42 / 76%);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.design3-zoom button[aria-pressed="true"] {
+  background: #3f3d38;
+  color: #ffcd77;
+}
+
+.design3-camera .camera-controls {
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 5vw, 36px);
+  margin: 0;
+  padding: 15px 12px 7px;
+}
+
+.design3-camera .camera-side-button {
+  display: inline-grid;
+  place-content: center;
+  min-width: 73px;
+  width: auto;
+  color: var(--d3-brown);
+  box-shadow: none;
+  background: transparent;
+}
+
+.design3-camera .camera-side-button svg {
+  margin-inline: auto;
+  color: var(--d3-orange);
+}
+
+.design3-camera .camera-controls .shutter-button,
+.design3-camera .camera-controls .shutter-button:active:not(:disabled) {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  min-width: 74px;
+  height: 74px;
+  min-height: 74px;
+  padding: 0;
+  border: 3px solid var(--d3-orange);
+  border-radius: 50%;
+  background: var(--d3-cream);
+}
+
+.design3-camera .camera-controls .shutter-button::before {
+  width: 61px;
+  height: 61px;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+}
+
+.design3-camera .camera-message {
+  margin: 4px 12px;
+}
+
+.design3-camera-alternatives {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.design3-camera .recognition-settings {
+  margin-inline: 16px;
+}
+
+.design3-photo-review {
+  padding: calc(22px + env(safe-area-inset-top)) clamp(14px, 7vw, 31px) 0;
+}
+
+.design3-photo-review h1 {
+  margin: 0 0 18px;
+  font-size: clamp(0.98rem, 4.2vw, 1.15rem);
+  text-align: center;
+}
+
+.design3-photo-card {
+  background: #fff;
+  padding: clamp(13px, 5vw, 23px);
+  border-radius: var(--d3-radius);
+  box-shadow: var(--d3-shadow);
+}
+
+.design3-photo-card .captured-preview,
+.design3-photo-placeholder {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 4.8;
+  object-fit: contain;
+  background: #d8d8d8;
+}
+
+.design3-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: #b1b1b1;
+}
+
+.design3-photo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 3px 8px;
+  margin: 10px 0;
+}
+
+.design3-photo-animal {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.design3-photo-animal h2 {
+  font-size: clamp(1.15rem, 5vw, 1.38rem);
+}
+
+.design3-photo-edit {
+  min-height: 44px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--d3-green);
+  color: #fff;
+  font-size: 0.79rem;
+  font-weight: 700;
+}
+
+.design3-photo-options {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(100% + 3px);
+  left: 0;
+  width: min(65vw, 245px);
+  max-height: min(42vh, 250px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border-radius: 13px;
+  background: var(--d3-cream);
+  box-shadow: var(--d3-shadow);
+}
+
+.design3-photo-options button {
+  width: 100%;
+  min-height: 44px;
+  padding-inline: 9px;
+  border-radius: 8px;
+  text-align: start;
+}
+
+.design3-photo-options button[aria-pressed="true"] {
+  background: var(--d3-ground);
+}
+
+.design3-photo-date {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  font-size: 0.72rem;
+}
+
+.design3-photo-date span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.design3-photo-date svg {
+  color: #ab670b;
+}
+
+.design3-photo-fact {
+  min-height: 2rem;
+  font-size: 0.84rem;
+}
+
+.design3-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.design3-photo-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 18px;
+  background: rgb(86 60 21 / 70%);
+  color: #fff;
+}
+
+.design3-photo-celebration p {
+  font-size: clamp(1.3rem, 6vw, 1.7rem);
+  font-weight: 700;
+}
+
+.design3-celebration-mascot {
+  position: relative;
+  width: min(57vw, 235px);
+  color: #ffd361;
+}
+
+.design3-celebration-mascot > svg:not(.lucide-star),
+.design3-celebration-mascot > span > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.design3-celebration-mascot .lucide-star {
+  position: absolute;
+  width: 12%;
+  height: auto;
+}
+
+.design3-celebration-mascot .lucide-star:nth-child(2) {
+  left: -16%;
+  bottom: 23%;
+}
+.design3-celebration-mascot .lucide-star:nth-child(3) {
+  left: -8%;
+  bottom: 3%;
+}
+.design3-celebration-mascot .lucide-star:nth-child(4) {
+  left: 9%;
+  bottom: -10%;
+}
+.design3-celebration-mascot .lucide-star:nth-child(5) {
+  right: -16%;
+  bottom: 23%;
+}
+.design3-celebration-mascot .lucide-star:nth-child(6) {
+  right: -8%;
+  bottom: 3%;
+}
+.design3-celebration-mascot .lucide-star:nth-child(7) {
+  right: 9%;
+  bottom: -10%;
+}
+
+.design3-challenge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  gap: 23px;
+  padding: 32px 16px;
+  background: var(--d3-orange);
+  color: #fff;
+  text-align: center;
+}
+
+body:has(.design3-shell[data-screen="challenge"]) {
+  background: #f6a83c;
+}
+
+.design3-challenge h1 span,
+.design3-challenge h1 strong {
+  display: block;
+}
+
+.design3-challenge h1 strong {
+  font-size: clamp(1.9rem, 8vw, 3rem);
+  text-shadow: 0 1px 3px #a95c10;
+}
+
+.design3-challenge h1 span {
+  font-size: clamp(1.2rem, 5vw, 1.65rem);
+}
+
+.design3-challenge .design3-challenge-start {
+  background: #fff;
+  color: var(--d3-brown);
+}
+
+/* Color and geometry shared by the Figma camera and drawing frames. */
+.figma-shell.design3-shell {
+  --d3-cream: #fffaf0;
+  --d3-orange: #f9a846;
+  --d3-green: #86a843;
+  --d3-ground: #dfe6c3;
+  --d3-brown: #835c3b;
+}
+
+body:has(.design3-shell) {
+  background: #fffaf0;
+}
+
+.design3-camera .camera-pitsune {
+  box-sizing: border-box;
+  display: flex;
+  gap: 14px;
+  padding: max(21px, env(safe-area-inset-top)) 18px 0 26px;
+  margin-bottom: -4px;
+}
+
+.design3-camera .camera-pitsune-face {
+  display: block;
+  width: min(25vw, 95px);
+  height: auto;
+}
+
+.design3-camera .camera-pitsune .pitsune-bubble,
+.mission-pitsune-row .pitsune-bubble {
+  box-sizing: border-box;
+  display: grid;
+  place-content: center;
+  min-height: 54px;
+  margin: 0;
+  padding: 6px 13px 10px 19px;
+  background: url("../../public/figma/entry/camera-bubble.svg") center / 100%
+    100% no-repeat;
+  box-shadow: none;
+  border: 0;
+}
+
+.design3-camera .camera-pitsune .pitsune-bubble::after,
+.mission-pitsune-row .pitsune-bubble::after {
+  content: none;
+}
+
+.design3-camera .pitsune-bubble strong {
+  color: var(--d3-orange);
+}
+
+.design3-camera .camera-pitsune .pitsune-bubble {
+  display: block;
+  align-content: center;
+}
+
+.design3-camera .camera-frame {
+  height: min(125vw, 502px, 62dvh);
+  min-height: 245px;
+}
+
+.design3-camera-guides {
+  position: absolute;
+  top: 6%;
+  left: 7.7%;
+  width: 73.5%;
+  height: auto;
+  max-height: 78%;
+  object-fit: contain;
+  object-position: left top;
+  pointer-events: none;
+}
+
+.design3-camera .camera-controls {
+  column-gap: clamp(15px, 10vw, 40px);
+  padding-top: 19px;
+}
+
+.design3-camera .camera-controls .shutter-button,
+.design3-camera .camera-controls .shutter-button:active:not(:disabled) {
+  width: 77px;
+  height: 77px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.design3-camera .camera-controls .shutter-button::before {
+  content: none;
+}
+
+.design3-camera .camera-controls .shutter-button img {
+  display: block;
+  width: 77px;
+  height: 77px;
+}
+
+.design3-camera .camera-side-button svg {
+  width: 40px;
+  height: 40px;
+}
+
+.design3-photo-review {
+  box-sizing: border-box;
+  max-width: 398px;
+  margin-inline: auto;
+  padding: max(47px, env(safe-area-inset-top)) clamp(18px, 9.45vw, 38px) 0;
+}
+
+.design3-photo-review h1 {
+  margin-bottom: 26px;
+  line-height: 1.25;
+}
+
+.design3-photo-card {
+  position: relative;
+  isolation: isolate;
+  min-height: min(127vw, 511px);
+  padding: clamp(14px, 7.2vw, 29px);
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.design3-photo-card::before {
+  position: absolute;
+  z-index: -1;
+  inset: -6px -14px -14px -6px;
+  background: url("../../public/figma/entry/photo-card.svg") center / 100% 100%
+    no-repeat;
+  content: "";
+}
+
+.design3-photo-card .captured-preview,
+.design3-photo-placeholder {
+  aspect-ratio: 265 / 332;
+}
+
+.design3-photo-meta {
+  margin: 12px 0 8px;
+}
+
+.design3-photo-animal h2 {
+  font-size: clamp(18px, 5.72vw, 23px);
+}
+
+.design3-photo-edit {
+  min-height: 24px;
+  padding: 3px 10px;
+  font-size: 10px;
+}
+
+.design3-photo-options {
+  left: min(20vw, 79px);
+  bottom: calc(100% + 8px);
+  width: min(53vw, 159px);
+  max-height: 243px;
+  border-radius: 16px;
+}
+
+.design3-photo-date,
+.design3-photo-fact {
+  font-size: clamp(10px, 2.75vw, 11px);
+}
+
+.design3-photo-review .design3-actions {
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.design3-photo-review .design3-actions .design3-pill {
+  min-height: 50px;
+  padding-inline: 8px;
+}
+
+.design3-celebration-mascot > img {
+  display: block;
+  width: min(88vw, 353px);
+  height: auto;
+}
