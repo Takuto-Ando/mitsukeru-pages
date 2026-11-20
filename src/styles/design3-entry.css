@@ -245,3 +245,148 @@
     display: none;
   }
 }
+
+/* Figma entry art is positioned in the 402 × 874 reference frame.
+   Browser and system chrome are supplied by the device. */
+.design3-title,
+.design3-intro[data-figma-art] {
+  container-type: inline-size;
+}
+
+.design3-title {
+  color: #fffaf0;
+  background: #86a843;
+  padding-top: max(180px, min(39.4dvh, 344px));
+}
+
+.design3-title-tail {
+  inset: 0 auto auto min(65.8%, calc(50% + 64px));
+  width: min(97cqw, 363px);
+  height: auto;
+  translate: -50% -29%;
+  transform: rotate(-99.47deg) scaleX(-1);
+  filter: drop-shadow(0 3px 3px #7a4a2124);
+}
+
+.design3-title-curve {
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  top: min(19.8dvh, 173px);
+  left: max(-33.4%, calc(50% - 335px));
+  width: min(56.2cqw, 210px);
+  translate: -50% -50%;
+  rotate: 129.59deg;
+}
+
+.design3-title-trail {
+  right: max(-10%, calc(50% - 244px));
+  bottom: 3px;
+  width: min(59.4cqw, 222px);
+}
+
+.design3-title-heading {
+  width: 100%;
+}
+
+.design3-title-heading p {
+  margin: 0 0 clamp(11px, 2dvh, 20px);
+  font-size: clamp(15px, 5.1cqw, 19.05px);
+  letter-spacing: 0.09em;
+}
+
+.design3-title-heading h1 img {
+  display: block;
+  width: min(76.4cqw, 285.47px);
+  height: auto;
+  margin: auto;
+}
+
+.design3-title-actions {
+  width: min(100%, 292px);
+  margin-top: clamp(24px, 6.4dvh, 56px);
+  gap: clamp(12px, 3.09dvh, 27px);
+}
+
+.design3-title-actions .design3-start {
+  background: #f9a846;
+  color: #fffaf0;
+  min-height: clamp(51px, 7.9dvh, 69px);
+  font-size: clamp(20px, 7.51cqw, 28.08px);
+}
+
+.design3-title-actions .design3-continue {
+  background: #ffffff66;
+  color: #55402c;
+}
+
+.design3-title-meta button {
+  color: #55402c;
+}
+
+.design3-intro[data-figma-art] {
+  color: #835c3b;
+  grid-template-rows: 30% 42% 28%;
+  padding: 0 12px;
+  background: linear-gradient(#fffaf0 0 64.3%, #dfe6c3 64.3% 100%);
+}
+
+.design3-intro[data-figma-art] .design3-intro-message {
+  margin: 0 0 clamp(4px, 1dvh, 9px);
+  font-size: clamp(15px, 5.71cqw, 21.57px);
+  line-height: 1.93;
+  text-wrap: balance;
+}
+
+.design3-intro[data-figma-art] .design3-intro-message strong {
+  color: #f9a846;
+  font-size: 1.25em;
+}
+
+.design3-intro-original {
+  grid-row: 2;
+  align-self: end;
+  margin-bottom: 2.33dvh;
+  display: block;
+  width: min(67.5cqw, 255px, 35dvh * 0.85);
+  height: auto;
+}
+
+.design3-intro[data-figma-art="book"] .design3-intro-original {
+  width: min(65.9cqw, 249px, 35dvh * 0.822);
+  translate: min(4.6cqw, 18.5px);
+}
+
+.design3-intro[data-figma-art="camera"] .design3-intro-original {
+  width: min(64.6cqw, 243.9px, 35dvh * 0.807);
+  translate: min(4.2cqw, 17px);
+}
+
+.design3-intro[data-figma-art="loading"] .design3-intro-original {
+  width: min(86cqw, 325.04px, 35dvh * 1.177);
+}
+
+.design3-intro[data-figma-art] .design3-intro-next {
+  align-self: start;
+  margin-top: 5.46dvh;
+  min-height: 56px;
+  background-color: #86a843;
+  color: #fffaf0;
+  font-size: clamp(17px, 5.26cqw, 21.16px);
+}
+
+.design3-intro[data-figma-art] .design3-intro-next[data-color="orange"] {
+  background-color: #f9a846;
+}
+
+.design3-splash-original {
+  display: block;
+  width: min(57.5vw, 231px);
+  height: auto;
+  max-height: 56dvh;
+  object-fit: contain;
+}
+
+.design3-intro[data-figma-art="easel"] .design3-intro-original {
+  width: min(86cqw, 325px, 35dvh * 1.177);
+}

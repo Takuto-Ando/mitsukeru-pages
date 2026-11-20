@@ -36,6 +36,8 @@ export function offlinePlugin(): Plugin {
             name.startsWith("icons/") ||
             name.startsWith("assets/") ||
             name.startsWith("fonts/") ||
+            name.startsWith("figma/entry/") ||
+            name.startsWith("illustrations/pdf-design/") ||
             name.startsWith("illustrations/whole/") ||
             name.startsWith("illustrations/simple/")
           )

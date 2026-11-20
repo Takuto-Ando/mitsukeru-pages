@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Camera, ChevronRight, Pencil } from "lucide-react";
 import { Pitsune, type PitsunePose } from "./Pitsune";
 import "../styles/design3-entry.css";
+import { assetPath } from "../content/artwork";
 
 const pages = [
   {
@@ -64,22 +65,37 @@ function IntroPanel({
   pose,
   children,
   loading = false,
+  artwork,
 }: {
   label: string;
   message: ReactNode;
   pose: PitsunePose;
   children?: ReactNode;
   loading?: boolean;
+  artwork?: "wave" | "book" | "camera" | "loading" | "easel";
 }) {
   return (
     <section
       className="design3-intro"
       aria-label={label}
       data-pose={pose}
+      data-figma-art={artwork}
       role={loading ? "status" : undefined}
     >
       <p className="design3-intro-message">{message}</p>
-      <Pitsune pose={pose} className="design3-intro-pitsune" />
+      {artwork ? (
+        <img
+          alt=""
+          className="design3-intro-original"
+          src={assetPath(
+            artwork === "easel"
+              ? "illustrations/pdf-design/pitsune-easel.svg"
+              : `figma/entry/${artwork}.svg`,
+          )}
+        />
+      ) : (
+        <Pitsune pose={pose} className="design3-intro-pitsune" />
+      )}
       {children}
     </section>
   );
@@ -94,6 +110,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
       label="ピツネのあいさつ"
       message={current.message}
       pose={current.pose}
+      artwork={current.pose}
     >
       <button className="design3-intro-skip" onClick={onDone}>
         スキップ
@@ -134,7 +151,11 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
       onClick={onDone}
       aria-label="スプラッシュをスキップ"
     >
-      <Pitsune pose="stand" />
+      <img
+        alt=""
+        className="design3-splash-original"
+        src={assetPath("illustrations/pdf-design/pitsune-stand.svg")}
+      />
     </button>
   );
 }
@@ -151,6 +172,7 @@ export function IntroLoadingScreen() {
         </>
       }
       pose="easel"
+      artwork="loading"
       loading
     />
   );
@@ -168,6 +190,7 @@ export function TutorialEndScreen({ onDone }: { onDone: () => void }) {
         </>
       }
       pose="wave"
+      artwork="wave"
     >
       <button className="design3-intro-next" onClick={onDone}>
         ありがとう！

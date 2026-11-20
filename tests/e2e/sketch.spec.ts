@@ -178,23 +178,38 @@ for (const t of tasks)
     await select(page, t.id);
     await expect(
       page.getByRole("heading", {
-        name: `${t.part}をよく観察してみて！`,
+        name:
+          t.id === "giraffe"
+            ? "舌をよく観察してみて！"
+            : `${t.part}をよく観察してみて！`,
       }),
     ).toBeVisible();
     const href = await page
       .locator(".eye-template image")
       .first()
       .getAttribute("href");
-    expect(href).toContain(`whole/${t.id}.svg`);
+    expect(href).toContain(
+      t.scene.artworkOverride?.incomplete ?? `whole/${t.id}.svg`,
+    );
     const source = await (await page.request.get(href!)).text();
-    expect(source).toContain(`data-full-animal="${t.id}"`);
-    const correct = await (
-      await page.request.get(
-        new URL(`illustrations/whole/${t.id}-complete.svg`, page.url()).href,
-      )
-    ).text();
-    expect(correct).toContain('data-illustration="complete"');
-    expect(correct).not.toContain("#c18151");
+    if (t.id === "giraffe") expect(source).toContain("translate(-180 -403)");
+    else expect(source).toContain(`data-full-animal="${t.id}"`);
+    const answerAsset =
+      t.scene.artworkOverride?.reference ??
+      `illustrations/whole/${t.id}-complete.svg`;
+    const answerResponse = await page.request.get(
+      new URL(answerAsset, page.url()).href,
+    );
+    expect(answerResponse.ok()).toBe(true);
+    expect(answerResponse.headers()["content-type"]).toContain("image/svg+xml");
+    const correct = await answerResponse.text();
+    if (t.id === "giraffe") {
+      expect(correct).not.toEqual(source);
+      expect(correct).toContain("#6d6497");
+    } else {
+      expect(correct).toContain('data-illustration="complete"');
+      expect(correct).not.toContain("#c18151");
+    }
     await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
     await draw(page, t.id);
     await compare(page);
@@ -216,6 +231,9 @@ for (const t of tasks)
     ).toEqual(lines);
     await page.getByRole("button", { name: "お手本", exact: true }).click();
     await expect(own).toHaveAttribute("visibility", "hidden");
+    await expect(
+      page.getByTestId("answer-shape").locator("image").first(),
+    ).toHaveAttribute("href", new RegExp(answerAsset));
     await page.getByRole("button", { name: "自分の絵", exact: true }).click();
     await expect(own).toHaveAttribute("visibility", "visible");
     await expect(own).toHaveCSS("opacity", "1");

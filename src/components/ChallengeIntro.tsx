@@ -1,21 +1,16 @@
-import { ChevronRight, Star } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { DifficultyPill } from "./DifficultyPill";
-import { Pitsune } from "./Pitsune";
+import { assetPath } from "../content/artwork";
 
 export function PhotoCelebration() {
   return (
     <section className="design3-photo-celebration" role="status">
       <p>ステキな写真だね！</p>
       <div className="design3-celebration-mascot">
-        <Pitsune pose="cheer" />
-        {Array.from({ length: 6 }, (_, index) => (
-          <Star
-            key={index}
-            fill="currentColor"
-            strokeWidth={0}
-            aria-hidden="true"
-          />
-        ))}
+        <img
+          alt=""
+          src={assetPath("illustrations/pdf-design/pitsune-cheer.svg")}
+        />
       </div>
     </section>
   );

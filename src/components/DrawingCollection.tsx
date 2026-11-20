@@ -314,6 +314,56 @@ export function DrawingCollection({
           hidden={tab !== "sketch"}
           tabIndex={0}
         >
+          <div className="collection-grid">
+            {sortedDrawings.slice(0, visibleCount).map((d) => (
+              <article className="collection-card" key={d.id}>
+                <button
+                  className="collection-open"
+                  onClick={() => {
+                    setSelected(d.id);
+                    recordStudy(
+                      "comparison_opened",
+                      { reason: "notebook" },
+                      {
+                        animalId: d.groupId,
+                        taskId: d.taskId,
+                        attemptId: undefined,
+                      },
+                    );
+                  }}
+                  aria-label={d.animalName + "の絵を見返す"}
+                >
+                  <Thumbnail drawing={d} />
+                  <span className="gallery-card-meta">
+                    <strong>{d.animalName}</strong>
+                    <span className="collection-part">{d.taskName}</span>
+                    <time dateTime={d.createdAt}>
+                      {new Date(d.createdAt).toLocaleDateString("ja-JP")}
+                    </time>
+                  </span>
+                </button>
+              </article>
+            ))}
+            {Array.from(
+              { length: Math.max(0, 6 - drawings.length) },
+              (_, index) => (
+                <div className="gallery-slot" aria-hidden="true" key={index} />
+              ),
+            )}
+          </div>
+          {!drawings.length && (
+            <p className="gallery-sketch-empty">
+              スケッチを描いて「つぎへ」を押すと、ここで見返せるよ。
+            </p>
+          )}
+          {drawings.length > visibleCount && (
+            <button
+              className="text-button gallery-more"
+              onClick={() => setVisibleCount((count) => count + 12)}
+            >
+              もっと見る（残り{drawings.length - visibleCount}枚）
+            </button>
+          )}
           <div className="collection-progress" aria-live="polite">
             <p>{drawings.length}枚の観察カードを保存しています。</p>
             <p>
@@ -364,51 +414,6 @@ export function DrawingCollection({
               </button>
             </div>
           )}
-          {drawings.length ? (
-            <div className="collection-grid">
-              {sortedDrawings.slice(0, visibleCount).map((d) => (
-                <article className="collection-card" key={d.id}>
-                  <button
-                    className="collection-open"
-                    onClick={() => {
-                      setSelected(d.id);
-                      recordStudy(
-                        "comparison_opened",
-                        { reason: "notebook" },
-                        {
-                          animalId: d.groupId,
-                          taskId: d.taskId,
-                          attemptId: undefined,
-                        },
-                      );
-                    }}
-                    aria-label={d.animalName + "の絵を見返す"}
-                  >
-                    <Thumbnail drawing={d} />
-                    <span className="gallery-card-meta">
-                      <strong>{d.animalName}</strong>
-                      <span className="collection-part">{d.taskName}</span>
-                      <time dateTime={d.createdAt}>
-                        {new Date(d.createdAt).toLocaleDateString("ja-JP")}
-                      </time>
-                    </span>
-                  </button>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="gallery-sketch-empty">
-              スケッチを描いて「つぎへ」を押すと、ここで見返せるよ。
-            </p>
-          )}
-          {drawings.length > visibleCount && (
-            <button
-              className="text-button gallery-more"
-              onClick={() => setVisibleCount((count) => count + 12)}
-            >
-              もっと見る（残り{drawings.length - visibleCount}枚）
-            </button>
-          )}
           <NotebookTools drawings={drawings} onRestored={onUpdate} />
           <p className="quiet-note">
             スケッチはこのブラウザ・アプリの中に保存します。SafariとiPhoneアプリの保存は別々です。
@@ -421,6 +426,11 @@ export function DrawingCollection({
           hidden={tab !== "photo"}
           tabIndex={0}
         >
+          <div className="collection-grid" aria-hidden="true">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div className="gallery-slot" key={index} />
+            ))}
+          </div>
           <div className="gallery-photo-empty">
             <Pitsune pose="face" className="gallery-empty-pitsune" />
             <h2>写真は保存されないよ</h2>

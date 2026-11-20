@@ -4,8 +4,6 @@ import "./styles/design3-drawing.css";
 import {
   Pencil,
   Eraser,
-  Undo2,
-  Redo2,
   RotateCcw,
   LayoutGrid,
   Image as ImageIcon,
@@ -21,7 +19,6 @@ import {
   type Scene,
 } from "./content/scenes";
 import { SceneBase } from "./components/ObservationScene";
-import { Pitsune } from "./components/Pitsune";
 import { TargetRegions } from "./components/TargetRegions";
 import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
@@ -552,7 +549,11 @@ export function SketchCanvas({
       {missionTitle && (
         <div className="mission-heading">
           <div className="mission-pitsune-row">
-            <Pitsune pose="face" className="mission-pitsune-face" />
+            <img
+              alt=""
+              className="mission-pitsune-face"
+              src={assetPath("figma/entry/sketch-face.svg")}
+            />
             <h1 className="pitsune-bubble">{missionTitle}</h1>
             {cheer && (
               <span className="pitsune-cheer" role="status">
@@ -571,11 +572,11 @@ export function SketchCanvas({
               onUndo ? onUndo() : onChange(strokes.slice(0, -1), "erase")
             }
           >
-            <Undo2 size={25} aria-hidden="true" />
+            <img alt="" src={assetPath("figma/entry/undo.svg")} />
             <span>もどる</span>
           </button>
           <button aria-label="ひとつ進む" disabled={!canRedo} onClick={onRedo}>
-            <Redo2 size={25} aria-hidden="true" />
+            <img alt="" src={assetPath("figma/entry/redo.svg")} />
             <span>すすむ</span>
           </button>
         </div>

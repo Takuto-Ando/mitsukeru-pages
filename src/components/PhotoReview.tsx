@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { CalendarDays, Camera, MapPin, RotateCcw } from "lucide-react";
 import { groups } from "../content/groups";
 import type { Candidate } from "../recognition/labels";
-import { PitsuneIcon } from "./Pitsune";
+import { assetPath } from "../content/artwork";
 
 export function PhotoReview({
   photo,
@@ -141,7 +141,12 @@ export function PhotoReview({
           {photo ? "撮りなおす" : "カメラに戻る"}
         </button>
         <button className="design3-pill" disabled={!group} onClick={onConfirm}>
-          <PitsuneIcon />
+          <img
+            alt=""
+            width={19}
+            height={17}
+            src={assetPath("figma/entry/confirm.svg")}
+          />
           ピツネに見せる
         </button>
       </div>

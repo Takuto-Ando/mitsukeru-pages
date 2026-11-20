@@ -609,3 +609,46 @@
   .sketch-layout-switch {
   left: 52px;
 }
+
+.mission-pitsune-row > img.mission-pitsune-face {
+  display: block;
+  min-width: 0;
+  width: min(24vw, 95px);
+  height: auto;
+  align-self: end;
+}
+
+.design3-draw .mission-pitsune-row .pitsune-bubble {
+  background-image: url("../../public/figma/entry/sketch-bubble.svg");
+}
+
+.sketch-history img {
+  width: 35px;
+  height: 29px;
+  object-fit: contain;
+}
+
+.drawing-actions img.drawing-pitsune-icon {
+  flex: none;
+  width: 19px;
+  height: 17px;
+}
+
+.result-pitsune > img.result-pitsune-face {
+  display: block;
+  min-width: 0;
+  width: min(24vw, 95px);
+  height: auto;
+}
+
+.design3-result .result-pitsune .pitsune-bubble {
+  background: url("../../public/figma/entry/sketch-bubble.svg") center / 100%
+    100% no-repeat;
+  box-shadow: none;
+  min-height: 54px;
+  align-content: center;
+}
+
+.design3-result .result-pitsune .pitsune-bubble::after {
+  content: none;
+}

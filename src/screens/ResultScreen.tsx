@@ -1,5 +1,6 @@
 import { CornerDownLeft } from "lucide-react";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
+import { assetPath } from "../content/artwork";
 import { ReflectionNote } from "../components/ReflectionNote";
 import { SketchComparison } from "../components/SketchComparison";
 import { TongueCelebration } from "../components/TongueCelebration";
@@ -61,7 +62,11 @@ export function ResultScreen({
   return (
     <div className="design3-result">
       <div className="result-pitsune">
-        <Pitsune pose="face" className="result-pitsune-face" />
+        <img
+          alt=""
+          className="result-pitsune-face"
+          src={assetPath("figma/entry/sketch-face.svg")}
+        />
         <h1 className="pitsune-bubble">{message}</h1>
       </div>
       <SketchComparison

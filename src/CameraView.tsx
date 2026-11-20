@@ -4,7 +4,7 @@ import { groups } from "./content/groups";
 import type { Candidate } from "./recognition/labels";
 import { PhotoReview } from "./components/PhotoReview";
 import { PhotoCelebration } from "./components/ChallengeIntro";
-import { Pitsune } from "./components/Pitsune";
+import { assetPath } from "./content/artwork";
 import { useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, Images, UserRound } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
@@ -300,7 +300,11 @@ export function CameraView({
       <section hidden={status === "review"}>
         <h1 className="sr-only">動物を撮影しよう</h1>
         <div className="camera-pitsune">
-          <Pitsune pose="face" className="camera-pitsune-face" />
+          <img
+            alt=""
+            className="camera-pitsune-face"
+            src={assetPath("figma/entry/camera-face.svg")}
+          />
           <p className="pitsune-bubble">
             {detected ? (
               <>
@@ -339,12 +343,11 @@ export function CameraView({
             </div>
           )}
           {status === "live" && detected && (
-            <div className="vf-corners" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-            </div>
+            <img
+              alt=""
+              className="design3-camera-guides"
+              src={assetPath("figma/entry/camera-guides.svg")}
+            />
           )}
           <div
             className="design3-zoom"
@@ -381,7 +384,9 @@ export function CameraView({
             aria-label="シャッター"
             disabled={status !== "live" || recognizing}
             onClick={capture}
-          />
+          >
+            <img alt="" src={assetPath("figma/entry/shutter.svg")} />
+          </button>
           <button
             type="button"
             className="camera-side-button"

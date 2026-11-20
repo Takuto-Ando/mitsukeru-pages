@@ -828,7 +828,10 @@ export default function App() {
                       aria-label={task.explanation.name + "の解説イラスト"}
                     >
                       <image
-                        href={assetPath(artwork[task.id].explanation!)}
+                        href={assetPath(
+                          (scene.artworkOverride ?? artwork[task.id])
+                            .explanation!,
+                        )}
                         width="600"
                         height={scene.frameHeight || 400}
                         preserveAspectRatio="none"

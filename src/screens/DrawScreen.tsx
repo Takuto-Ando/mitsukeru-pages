@@ -3,6 +3,7 @@ import type { ComponentProps } from "react";
 import { ChevronLeft, CircleHelp, CornerDownLeft } from "lucide-react";
 import { SketchCanvas } from "../SketchCanvas";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
+import { assetPath } from "../content/artwork";
 import type { ObservationTask } from "../content/tasks";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { savePng } from "../notebook/images";
@@ -40,6 +41,10 @@ export function DrawScreen({
   canvasProps: CanvasControls;
 }) {
   const hasHint = hintLevel > 0;
+  const observationPrompt =
+    task.id === "giraffe"
+      ? "舌をよく観察してみて！"
+      : task.part + "をよく観察してみて！";
   const hints = task.hints?.length ? task.hints : [task.hint];
   const canShowHint = hintLevel < hints.length;
   const feedbackMessage = useRef<HTMLDivElement>(null);
@@ -71,11 +76,7 @@ export function DrawScreen({
       <SketchCanvas
         {...canvasProps}
         photoUrl={photo || undefined}
-        missionTitle={
-          hasHint
-            ? "もうすこし観察してみて！"
-            : `${task.part}をよく観察してみて！`
-        }
+        missionTitle={hasHint ? "もうすこし観察してみて！" : observationPrompt}
         landscapeReselect={reference}
         scene={task.scene}
         strokes={strokes}
@@ -101,7 +102,13 @@ export function DrawScreen({
               disabled={!strokes.length}
               onClick={onAnswer}
             >
-              <PitsuneIcon className="drawing-pitsune-icon" />
+              <img
+                className="drawing-pitsune-icon"
+                alt=""
+                width={19}
+                height={17}
+                src={assetPath("figma/entry/sketch-confirm.svg")}
+              />
               できた！
             </button>
           </>
