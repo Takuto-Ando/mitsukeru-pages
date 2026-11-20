@@ -13,6 +13,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         enhanced: fileURLToPath(new URL("./index.html", import.meta.url)),
+        dopa: fileURLToPath(new URL("./dopa/index.html", import.meta.url)),
         replica: fileURLToPath(
           new URL("./replica/index.html", import.meta.url),
         ),

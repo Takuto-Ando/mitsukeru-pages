@@ -14,6 +14,7 @@ export async function prepareCloudflareAssets(
     "/replica/\n  Cache-Control: no-cache\n",
     "/figma/\n  Cache-Control: no-cache\n",
     "/plus/\n  Cache-Control: no-cache\n",
+    "/dopa/\n  Cache-Control: no-cache\n",
   ];
   const aliases: Record<string, string> = {};
   const compressed: {
@@ -59,7 +60,7 @@ export async function prepareCloudflareAssets(
     }
   }
   await walk(dir);
-  if (count + 9 > 20000)
+  if (count + 10 > 20000)
     throw Error("Cloudflare無料プランのファイル数制限を超えています");
   await writeFile(join(dir, "_headers"), headers.join("\n"));
   await writeFile(

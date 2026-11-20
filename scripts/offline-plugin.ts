@@ -97,21 +97,42 @@ export function offlinePlugin(): Plugin {
           scope: base + "figma/",
         }),
       );
+      const dopaBase = base + "dopa/";
+      await writeFile(
+        join(dir, "dopa", "manifest.webmanifest"),
+        JSON.stringify({
+          ...manifest,
+          id: dopaBase,
+          name: "ズーケッチ ドパガキ版",
+          short_name: "ズーケッチ ドパガキ版",
+          start_url: dopaBase,
+          scope: dopaBase,
+          background_color: "#f7f2ff",
+          theme_color: "#3d277e",
+        }),
+      );
       const entries = [
         ["", "", ""],
         ["plus/", "", ""],
         ["replica/", "replica/", "replica/"],
         ["figma/", "replica/", "figma/"],
+        ["dopa/", "dopa/", "dopa/"],
       ] as const;
       const entryFiles = new Set(
         entries.map(([entry]) => entry + "index.html"),
       );
-      const [enhancedHtml, replicaHtml] = await Promise.all([
+      const [enhancedHtml, replicaHtml, dopaHtml] = await Promise.all([
         readFile(join(dir, "index.html"), "utf8"),
         readFile(join(dir, "replica", "index.html"), "utf8"),
+        readFile(join(dir, "dopa", "index.html"), "utf8"),
       ]);
+      const documents = {
+        "": enhancedHtml,
+        "replica/": replicaHtml,
+        "dopa/": dopaHtml,
+      };
       for (const [entry, source, manifestPath] of entries) {
-        const html = source ? replicaHtml : enhancedHtml;
+        const html = documents[source];
         await writeFile(
           join(dir, entry, "index.html"),
           html.replace(
@@ -120,6 +141,11 @@ export function offlinePlugin(): Plugin {
           ),
         );
       }
+      const manifests = new Set(
+        entries.map(
+          ([, , manifestPath]) => manifestPath + "manifest.webmanifest",
+        ),
+      );
       const files: string[] = [];
       async function scan(path: string) {
         for (const entry of await readdir(path, { withFileTypes: true })) {
@@ -128,9 +154,7 @@ export function offlinePlugin(): Plugin {
           if (entry.isDirectory()) await scan(full);
           else if (
             entryFiles.has(name) ||
-            name === "manifest.webmanifest" ||
-            name === "replica/manifest.webmanifest" ||
-            name === "figma/manifest.webmanifest" ||
+            manifests.has(name) ||
             name === "icon.svg" ||
             name.startsWith("icons/") ||
             name.startsWith("assets/") ||
@@ -184,7 +208,7 @@ self.addEventListener('fetch', event => {
   if(request.mode==='navigate') {
     event.respondWith(fetch(request).catch(async()=>{
       const edition=url.pathname.slice(BASE.length).split('/')[0];
-      const entry=['figma','plus','replica'].includes(edition)?edition+'/index.html':'index.html';
+      const entry=['figma','plus','replica','dopa'].includes(edition)?edition+'/index.html':'index.html';
       const cached=await (await caches.open(CACHE)).match(BASE+entry);
       if(!cached)return Response.error();
       // Pages redirects /index.html to /. A cached redirected Response cannot

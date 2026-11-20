@@ -13,6 +13,7 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "fonts/gothic.woff2",
       "icons/icon-192.png",
       "index.html",
+      "dopa/index.html",
       "replica/index.html",
       "replica-assets/sample.png",
     ]) {
@@ -36,10 +37,12 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "illustrations/whole/goat.svg",
       "fonts/gothic.woff2",
       "icons/icon-192.png",
+      "dopa/index.html",
       "replica/index.html",
       "replica/manifest.webmanifest",
       "figma/index.html",
       "figma/manifest.webmanifest",
+      "dopa/manifest.webmanifest",
       "plus/index.html",
       "replica-assets/sample.png",
     ])
@@ -60,6 +63,15 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
     expect(
       await readFile(join(dir, "replica", "index.html"), "utf8"),
     ).toContain('href="/zooketch/replica/manifest.webmanifest"');
+    expect(
+      JSON.parse(
+        await readFile(join(dir, "dopa", "manifest.webmanifest"), "utf8"),
+      ),
+    ).toMatchObject({
+      id: "/zooketch/dopa/",
+      start_url: "/zooketch/dopa/",
+      scope: "/zooketch/dopa/",
+    });
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

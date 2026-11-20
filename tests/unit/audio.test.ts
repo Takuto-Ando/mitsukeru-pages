@@ -35,3 +35,48 @@ it("再生許可がなくても例外を外へ漏らさない", () => {
     audio.success();
   }).not.toThrow();
 });
+it("ドパガキ版の撮影音とお祝い音は設定をオンにしたときだけ鳴る", () => {
+  const pitches: number[] = [];
+  let enabled = false;
+  class Audio {
+    state = "running";
+    currentTime = 0;
+    destination = {};
+    createGain() {
+      return {
+        gain: {
+          setValueAtTime() {},
+          linearRampToValueAtTime() {},
+          exponentialRampToValueAtTime() {},
+        },
+        connect() {},
+      };
+    }
+    createOscillator() {
+      const frequency = { value: 0 };
+      return {
+        frequency,
+        connect() {},
+        start() {
+          pitches.push(frequency.value);
+        },
+        stop() {},
+      };
+    }
+  }
+  vi.stubGlobal("window", { AudioContext: Audio });
+  const audio = createFeedbackAudio(() => enabled, "dopa");
+  audio.unlock();
+  audio.shutter();
+  audio.success();
+  expect(pitches).toHaveLength(0);
+  enabled = true;
+  audio.unlock();
+  audio.shutter();
+  audio.success();
+  expect(pitches).toEqual([659.25, 440, 587.33, 739.99, 880, 1174.66]);
+  enabled = false;
+  audio.shutter();
+  audio.success();
+  expect(pitches).toHaveLength(6);
+});

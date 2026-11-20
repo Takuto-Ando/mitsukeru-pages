@@ -5,6 +5,7 @@ import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
 
 export function PhotoReview({
+  dopa = false,
   photo,
   takenAt,
   selection,
@@ -13,6 +14,7 @@ export function PhotoReview({
   onRetake,
   onConfirm,
 }: {
+  dopa?: boolean;
   photo: string;
   takenAt?: Date;
   selection?: Pick<Candidate, "groupId" | "speciesId">;
@@ -39,6 +41,11 @@ export function PhotoReview({
         {photo ? "撮影した写真を確認する" : "観察する動物を選ぶ"}
       </h1>
       <article className="design3-photo-card">
+        {dopa && photo && (
+          <span className="dopa-snapshot" aria-hidden="true">
+            カシャ！
+          </span>
+        )}
         {photo ? (
           <img
             className="captured-preview"

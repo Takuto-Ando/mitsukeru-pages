@@ -1,6 +1,7 @@
 import { CornerDownLeft } from "lucide-react";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
 import { assetPath } from "../content/artwork";
+import { DopaResultBanner } from "../components/DopaEffects";
 import { ReflectionNote } from "../components/ReflectionNote";
 import { SketchComparison } from "../components/SketchComparison";
 import { TongueCelebration } from "../components/TongueCelebration";
@@ -13,6 +14,7 @@ import { designCardViewport } from "../drawing/viewport";
 type Reflection = { discovery: string; revisited: boolean };
 
 export function ResultScreen({
+  dopa = false,
   task,
   group,
   strokes,
@@ -34,6 +36,7 @@ export function ResultScreen({
   onShare,
   onSliderCommit,
 }: {
+  dopa?: boolean;
   task: ObservationTask;
   group: ObservationGroup;
   strokes: Stroke[];
@@ -60,30 +63,40 @@ export function ResultScreen({
   ) => void;
 }) {
   const passed = !!feedback?.passed;
-  const message = passed ? "上手に描けたね！" : "見えた形を確かめよう";
+  let message = passed ? "上手に描けたね！" : "見えた形を確かめよう";
+  if (dopa) {
+    if (!passed) message = "見くらべよう！";
+    else
+      message =
+        feedback?.method === "self-confirmed" ? "気づけたね！" : "大発見！";
+  }
   const fact = task.explanation.ecology || task.explanation.form;
   return (
     <div className="design3-result">
-      <div className="result-pitsune">
-        <img
-          alt=""
-          className="result-pitsune-face"
-          src={assetPath("figma/entry/sketch-face.svg")}
-        />
-        <h1 className="pitsune-bubble">
-          {passed ? (
-            <img
-              className="drawing-lettering"
-              src={assetPath(
-                "illustrations/pdf-design/drawing-prompt-success.svg",
-              )}
-              alt={message}
-            />
-          ) : (
-            message
-          )}
-        </h1>
-      </div>
+      {dopa ? (
+        <DopaResultBanner title={message} passed={passed} />
+      ) : (
+        <div className="result-pitsune">
+          <img
+            alt=""
+            className="result-pitsune-face"
+            src={assetPath("figma/entry/sketch-face.svg")}
+          />
+          <h1 className="pitsune-bubble">
+            {passed ? (
+              <img
+                className="drawing-lettering"
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-prompt-success.svg",
+                )}
+                alt={message}
+              />
+            ) : (
+              message
+            )}
+          </h1>
+        </div>
+      )}
       <SketchComparison
         strokes={strokes}
         scene={task.scene}

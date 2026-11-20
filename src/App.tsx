@@ -12,6 +12,7 @@ import {
 } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "./components/HomeScreen";
+import { DopaProgress } from "./components/DopaEffects";
 import {
   IntroFlow,
   IntroLoadingScreen,
@@ -75,7 +76,7 @@ import "./styles/design3.css";
 const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
 type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
-export default function App() {
+export default function App({ dopa = false }: { dopa?: boolean }) {
   const reduce = useReducedMotion();
   const study = useSyncExternalStore(subscribeStudy, studyStatus);
   const [studyPhase, setStudyPhase] = useState<"before" | "after">("before");
@@ -116,12 +117,14 @@ export default function App() {
   }, [screen, surveyUrl]);
   useEffect(() => {
     if (photoPhase !== "cheer" && photoPhase !== "loading") return;
+    const duration =
+      photoPhase === "cheer" ? (dopa ? 760 : 1200) : dopa ? 450 : 950;
     const timer = window.setTimeout(
       () => setPhotoPhase(photoPhase === "cheer" ? "loading" : "challenge"),
-      photoPhase === "cheer" ? 1200 : 950,
+      duration,
     );
     return () => window.clearTimeout(timer);
-  }, [photoPhase]);
+  }, [dopa, photoPhase]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [taskId, setTaskId] = useState("goat");
@@ -194,7 +197,10 @@ export default function App() {
   soundRef.current = sound;
   const audio = useRef<ReturnType<typeof createFeedbackAudio> | null>(null);
   if (!audio.current)
-    audio.current = createFeedbackAudio(() => soundRef.current);
+    audio.current = createFeedbackAudio(
+      () => soundRef.current,
+      dopa ? "dopa" : "standard",
+    );
   useEffect(() => () => audio.current?.dispose(), []);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionOpenRef = useRef(collectionOpen);
@@ -618,7 +624,11 @@ export default function App() {
   );
   return (
     <div
-      className="figma-shell design3-shell"
+      className={
+        dopa
+          ? "figma-shell design3-shell dopa-app"
+          : "figma-shell design3-shell"
+      }
       data-step={step}
       data-screen={
         collectionOpen
@@ -629,6 +639,12 @@ export default function App() {
       }
     >
       <main>
+        {dopa &&
+          screen === "activity" &&
+          !collectionOpen &&
+          photoPhase !== "cheer" && (
+            <DopaProgress step={photoPhase ? 1 : step} />
+          )}
         {storageError && (
           <p className="design3-alert" role="alert">
             {storageError}
@@ -667,6 +683,7 @@ export default function App() {
           <SplashScreen onDone={() => setScreen("home")} />
         ) : screen === "home" ? (
           <HomeScreen
+            dopa={dopa}
             onStart={() => restart("intro")}
             onContinue={() => restart()}
             onCollection={openCollection}
@@ -707,6 +724,15 @@ export default function App() {
             >
               {step === 0 ? (
                 <CameraView
+                  dopa={dopa}
+                  onCapture={
+                    dopa
+                      ? () => {
+                          audio.current?.unlock();
+                          audio.current?.shutter();
+                        }
+                      : undefined
+                  }
                   suspended={settingsOpen}
                   celebrating={photoPhase === "cheer"}
                   onCollection={openCollection}
@@ -725,7 +751,9 @@ export default function App() {
                     setPhoto(image);
                     selectTask(id);
                     window.scrollTo(0, 0);
-                    setPhotoPhase(image ? "cheer" : "challenge");
+                    setPhotoPhase(
+                      image && !(dopa && reduce) ? "cheer" : "challenge",
+                    );
                   }}
                 />
               ) : step === 1 ? (
@@ -747,6 +775,7 @@ export default function App() {
                     </div>
                   )}
                   <DrawScreen
+                    dopa={dopa}
                     key={taskId}
                     task={task}
                     photo={photo}
@@ -832,6 +861,7 @@ export default function App() {
                 </>
               ) : step === 2 ? (
                 <ResultScreen
+                  dopa={dopa}
                   task={task}
                   group={group}
                   strokes={strokes}
