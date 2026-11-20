@@ -1,22 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 import { taskById } from "../../src/content/tasks";
+import { tutorialSurveyUrl } from "../../src/research/tutorialSurvey";
 
-async function drawGiraffe(page: Page) {
+async function drawGiraffe(page: Page, shape: "curve" | "line" = "curve") {
   await page.locator(".drawing-paper").scrollIntoViewIfNeeded();
   const canvas = (await page.getByTestId("canvas").boundingBox())!;
   const { scene } = taskById.giraffe;
   const region = scene.regions[0];
-  const y = canvas.y + (region.y + region.height * 0.5) * canvas.height;
-  await page.mouse.move(
-    canvas.x + (region.x + region.width * 0.25) * canvas.width,
-    y,
-  );
-  await page.mouse.down();
-  await page.mouse.move(
-    canvas.x + (region.x + region.width * 0.75) * canvas.width,
-    y,
-    { steps: 8 },
-  );
+  for (let i = 0; i <= 20; i++) {
+    const t = i / 20;
+    const y = shape === "curve" ? 0.25 + Math.sin(t * Math.PI) * 0.5 : 0.5;
+    await page.mouse.move(
+      canvas.x + (region.x + region.width * (0.2 + 0.6 * t)) * canvas.width,
+      canvas.y + (region.y + region.height * y) * canvas.height,
+    );
+    if (!i) await page.mouse.down();
+  }
   await page.mouse.up();
 }
 
@@ -38,6 +37,7 @@ test("機能拡張版の入口からFigma再現版を別のURLで開ける", asy
   baseURL,
 }) => {
   await page.goto("plus/");
+  await expect(page).toHaveTitle("ズーケッチ — その指先が夢中をつくる。");
   const link = page.getByRole("link", { name: "Figma再現版を開く" });
   await expect(link).toBeVisible();
   const titleScreen = page.getByRole("region", {
@@ -134,6 +134,18 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   await expectGiraffeChallenge(page);
   await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
 
+  await drawGiraffe(page, "line");
+  await page.getByRole("button", { name: "できた！", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "実物でも、こんな形に見えた？" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "つぎへ", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "自分の絵", exact: true }).click();
+  await page.getByRole("button", { name: "お手本", exact: true }).click();
+  await page.getByRole("button", { name: "描きなおす", exact: true }).click();
+  await page.getByRole("button", { name: "ひとつ戻す", exact: true }).click();
   await drawGiraffe(page);
   await page.getByRole("button", { name: "できた！", exact: true }).click();
   await expect(
@@ -168,6 +180,50 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   await expect(
     page.getByText("0枚の観察カードを保存しています。"),
   ).toBeVisible();
+});
+
+test("Figma再現版の検証用チュートリアルからだけGoogleフォームへ進める", async ({
+  page,
+}) => {
+  const form = tutorialSurveyUrl("?study=1", process.env.VITE_STUDY_FORM_URL);
+  test.skip(!form, "回答用Googleフォームを指定したビルドで検証する");
+  let visits = 0;
+  await page.route(form!, async (route) => {
+    visits++;
+    await route.fulfill({
+      contentType: "text/html",
+      body: "<h1>Mock study survey</h1>",
+    });
+  });
+  await page.goto("figma/?study=1");
+  await expect(
+    page.getByText("チュートリアルのあと、Googleフォームが開きます。"),
+  ).toBeVisible();
+  for (const name of [
+    "はじめから",
+    "こんにちは！",
+    "やってみる！",
+    "撮ってみる！",
+    "シャッター",
+    "シャッター",
+    "ピツネに見せる",
+    "描いてみる！",
+    "描きはじめる",
+  ]) {
+    await page.getByRole("button", { name, exact: true }).click();
+  }
+  await drawGiraffe(page, "line");
+  await page.getByRole("button", { name: "できた！", exact: true }).click();
+  await page
+    .getByRole("button", { name: "見くらべて、確かめた！", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "見くらべて、確かめたね。" }),
+  ).toBeVisible();
+  expect(visits).toBe(0);
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await expect(page).toHaveURL(form!);
+  expect(visits).toBe(1);
 });
 
 test("再現版の通常カメラで撮影・動物選択・写真を見返せる", async ({ page }) => {

@@ -7,7 +7,7 @@ import { designCardViewport } from "../drawing/viewport";
 import { SketchCanvas } from "../SketchCanvas";
 import type { ObservationGroup } from "../content/groups";
 import type { ObservationTask } from "../content/tasks";
-import type { Stroke } from "../types";
+import type { Evaluation, Stroke } from "../types";
 
 const backgrounds = {
   wave: [
@@ -165,17 +165,21 @@ export function ReplicaResult({
   task,
   group,
   strokes,
+  feedback,
   tutorial,
   saving,
   onRedraw,
+  onConfirm,
   onDone,
 }: {
   task: ObservationTask;
   group: ObservationGroup;
   strokes: Stroke[];
+  feedback: Evaluation;
   tutorial: boolean;
   saving: boolean;
   onRedraw: () => void;
+  onConfirm: () => void;
   onDone: () => void;
 }) {
   const fact = task.explanation.ecology || task.explanation.form;
@@ -189,20 +193,24 @@ export function ReplicaResult({
           src={assetPath("figma/entry/sketch-face.svg")}
         />
         <h1 className="pitsune-bubble">
-          <img
-            className="drawing-lettering"
-            src={assetPath(
-              "illustrations/pdf-design/drawing-prompt-success.svg",
-            )}
-            alt="上手に描けたね！"
-          />
+          {feedback.passed && feedback.method === "automatic" ? (
+            <img
+              className="drawing-lettering"
+              src={assetPath(
+                "illustrations/pdf-design/drawing-prompt-success.svg",
+              )}
+              alt="上手に描けたね！"
+            />
+          ) : (
+            feedback.message
+          )}
         </h1>
       </div>
       <SketchComparison
         strokes={strokes}
         scene={task.scene}
         answer={group.answer}
-        completed
+        completed={feedback.passed}
         initialMode="answer"
         viewport={designCardViewport(task.scene)}
         cardFooter={<p className="result-fact">{fact}</p>}
@@ -219,20 +227,34 @@ export function ReplicaResult({
                 alt="描きなおす"
               />
             </button>
-            <button className="drawing-pill" onClick={onDone} disabled={saving}>
-              <img
-                className="drawing-lettering"
-                src={assetPath(
-                  tutorial
-                    ? "replica-assets/result-next.svg"
-                    : "replica-assets/result-camera.svg",
-                )}
-                alt={tutorial ? "つぎへ" : "写真を撮る"}
-              />
-            </button>
+            {feedback.passed && (
+              <button
+                className="drawing-pill"
+                onClick={onDone}
+                disabled={saving}
+              >
+                <img
+                  className="drawing-lettering"
+                  src={assetPath(
+                    tutorial
+                      ? "replica-assets/result-next.svg"
+                      : "replica-assets/result-camera.svg",
+                  )}
+                  alt={tutorial ? "つぎへ" : "写真を撮る"}
+                />
+              </button>
+            )}
           </div>
         }
       />
+      {!feedback.passed && (
+        <div className="self-check">
+          {feedback.suggestion && <p>{feedback.suggestion}</p>}
+          <button className="primary" onClick={onConfirm}>
+            見くらべて、確かめた！
+          </button>
+        </div>
+      )}
     </section>
   );
 }

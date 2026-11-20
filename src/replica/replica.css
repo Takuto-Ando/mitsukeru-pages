@@ -12,9 +12,16 @@
 .replica-app .drawing-assists,
 .replica-app .sketch-layout-switch,
 .replica-app .pitsune-cheer,
-.replica-app .comparison-modes,
 .replica-app .comparison-legend,
 .replica-app .comparison-note {
+  display: none;
+}
+
+.replica-app .design3-title-meta:has(.design3-title-survey-notice) {
+  display: block;
+}
+
+.replica-app .design3-title-meta > :not(.design3-title-survey-notice) {
   display: none;
 }
 
