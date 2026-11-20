@@ -1,8 +1,11 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { X, Volume2 } from "lucide-react";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
+import "../styles/observation-tools.css";
+
+const ExtraObservationTools = lazy(() => import("./ExtraObservationTools"));
 
 export function SettingsDialog({
   open,
@@ -10,15 +13,18 @@ export function SettingsDialog({
   sound,
   onSoundChange,
   returnFocus,
+  defaultObservationTaskId,
 }: {
   returnFocus?: React.RefObject<HTMLElement | null>;
   open: boolean;
   onClose: () => void;
   sound: boolean;
   onSoundChange: () => void;
+  defaultObservationTaskId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const wasOpen = useRef(false);
+  const [toolsLoaded, setToolsLoaded] = useState(false);
   useEffect(() => {
     const element = dialog.current;
     if (open && !element?.open) {
@@ -60,6 +66,19 @@ export function SettingsDialog({
         </div>
         <SpeechSettings />
         <OfflineStatus />
+        <details
+          className="observation-tools-settings"
+          onToggle={(event) => {
+            if (event.currentTarget.open) setToolsLoaded(true);
+          }}
+        >
+          <summary>追加の観察ツール</summary>
+          {toolsLoaded && (
+            <Suspense fallback={<p role="status">ツールを読み込み中…</p>}>
+              <ExtraObservationTools defaultTaskId={defaultObservationTaskId} />
+            </Suspense>
+          )}
+        </details>
         <StudyControls />
       </div>
       <button className="settings-done" type="button" onClick={onClose}>

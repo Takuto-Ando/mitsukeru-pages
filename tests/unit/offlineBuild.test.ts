@@ -13,10 +13,15 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "fonts/gothic.woff2",
       "icons/icon-192.png",
       "index.html",
+      "replica/index.html",
+      "replica-assets/sample.png",
     ]) {
       const parent = file.slice(0, file.lastIndexOf("/"));
       if (parent) await mkdir(join(dir, parent), { recursive: true });
-      await writeFile(join(dir, file), "fixture");
+      await writeFile(
+        join(dir, file),
+        file.endsWith(".html") ? "<html><head></head></html>" : "fixture",
+      );
     }
     const plugin = offlinePlugin() as any;
     plugin.configResolved({
@@ -31,6 +36,9 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "illustrations/whole/goat.svg",
       "fonts/gothic.woff2",
       "icons/icon-192.png",
+      "replica/index.html",
+      "replica/manifest.webmanifest",
+      "replica-assets/sample.png",
     ])
       expect(worker).toContain(JSON.stringify("/zooketch/" + path));
     expect(worker).not.toContain("assets\\\\app.js");
@@ -38,6 +46,17 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"))
         .start_url,
     ).toBe("/zooketch/");
+    const replica = JSON.parse(
+      await readFile(join(dir, "replica", "manifest.webmanifest"), "utf8"),
+    );
+    expect(replica).toMatchObject({
+      id: "/zooketch/replica/",
+      start_url: "/zooketch/replica/",
+      scope: "/zooketch/replica/",
+    });
+    expect(
+      await readFile(join(dir, "replica", "index.html"), "utf8"),
+    ).toContain('href="/zooketch/replica/manifest.webmanifest"');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

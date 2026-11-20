@@ -389,14 +389,33 @@ export default function App() {
       else if (result === "created") restart();
     }
   }
-  async function exportCurrentPng(kind: "own" | "comparison", share = false) {
+  async function exportCurrentPng(
+    kind: "own" | "comparison" | "photo",
+    share = false,
+  ) {
     const visible = clipStrokes(strokes, scene);
-    if (!visible.length || saving) return;
+    if (!visible.length || saving || (kind === "photo" && !photo)) return;
     setSaving(true);
     setStorageError("");
     try {
       const images = await composeObservationImages(scene, visible);
       const createdAt = new Date().toISOString();
+      const date = createdAt.slice(0, 10);
+      if (kind === "photo") {
+        const [{ composePhotoCard }, capture] = await Promise.all([
+          import("./future/photoCard"),
+          fetch(photo),
+        ]);
+        const card = await composePhotoCard({
+          photo: await capture.blob(),
+          sketch: images.ownPng,
+          animalName: group.name,
+          featureName: task.part,
+          discovery: reflection.discovery,
+        });
+        await savePng(card, `zooketch-${taskId}-${date}-photo-card.png`);
+        return;
+      }
       const image = await composeCardPng(
         kind === "own" ? images.ownPng : images.comparisonPng,
         {
@@ -408,7 +427,6 @@ export default function App() {
         },
         kind === "comparison",
       );
-      const date = createdAt.slice(0, 10);
       const filename = `zooketch-${taskId}-${date}-${kind === "own" ? "sketch" : "comparison"}.png`;
       if (share && navigator.share && navigator.canShare) {
         const file = new File([image], filename, { type: "image/png" });
@@ -834,6 +852,9 @@ export default function App() {
                   onUpdateReflection={() => void finishObservation(false)}
                   onLearn={() => next(3)}
                   onExport={exportCurrentPng}
+                  onPhotoExport={
+                    photo ? () => void exportCurrentPng("photo") : undefined
+                  }
                   onShare={() => void exportCurrentPng("own", true)}
                   onSliderCommit={(from, to, via) =>
                     recordStudy("comparison_slider_moved", { from, to, via })
@@ -921,6 +942,15 @@ export default function App() {
                       >
                         比較画像をPNGで保存
                       </button>
+                      {photo && (
+                        <button
+                          className="primary collection-save"
+                          disabled={saving}
+                          onClick={() => void exportCurrentPng("photo")}
+                        >
+                          写真とスケッチをPNGで保存
+                        </button>
+                      )}
                     </div>
                   )}
                   {studyTaskEnabled ? (
@@ -988,6 +1018,9 @@ export default function App() {
         )}
         <SettingsDialog
           open={settingsOpen}
+          defaultObservationTaskId={
+            screen === "activity" && step > 0 ? taskId : undefined
+          }
           returnFocus={settingsTrigger}
           onClose={() => setSettingsOpen(false)}
           sound={sound}

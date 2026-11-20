@@ -1,0 +1,154 @@
+.figma-shell.replica-app {
+  max-width: 402px;
+  margin-inline: auto;
+}
+
+.replica-screen {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.replica-app .design3-title-meta,
+.replica-app .drawing-assists,
+.replica-app .sketch-layout-switch,
+.replica-app .pitsune-cheer,
+.replica-app .comparison-modes,
+.replica-app .comparison-legend,
+.replica-app .comparison-note {
+  display: none;
+}
+
+.replica-app .design3-photo-celebration {
+  position: absolute;
+}
+
+.replica-app .design3-photo-review .captured-preview {
+  object-fit: cover;
+}
+
+.replica-app .camera-frame {
+  overflow: hidden;
+}
+
+.replica-camera-sample {
+  position: absolute;
+  inset: -135.86% auto auto 0;
+  width: 224.07%;
+  max-width: none;
+  height: 239.24%;
+  object-fit: fill;
+}
+
+.replica-camera-sample[data-framed="true"] {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.replica-sample-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  padding: 2px 7px;
+  border-radius: 7px;
+  color: #fffaf0;
+  background: #2a231ccc;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.replica-camera-alternatives {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 10px;
+  padding: 0 12px 18px;
+}
+
+.replica-menu {
+  width: min(calc(100vw - 32px), 342px);
+  margin: auto;
+  padding: 20px;
+  border: 0;
+  border-radius: 22px;
+  color: var(--d3-brown);
+  background: #fffaf0;
+  box-shadow: var(--d3-shadow);
+}
+
+.replica-menu[open] {
+  display: grid;
+  gap: 8px;
+}
+
+.replica-menu::backdrop {
+  background: #573c25a3;
+}
+
+.replica-menu h2 {
+  margin-block-end: 10px;
+  text-align: center;
+}
+
+.replica-difficulty {
+  position: relative;
+}
+
+.replica-fullscreen-action {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+}
+
+.replica-fullscreen-action:focus-visible {
+  outline-color: #fffaf0;
+  outline-offset: -6px;
+}
+
+.replica-app .replica-task-hint,
+.replica-app .replica-storage-error,
+.replica-skip-save {
+  padding: 12px 18px;
+  text-align: center;
+}
+
+.replica-app .design3-camera .pitsune-bubble {
+  translate: -2px -2px;
+}
+
+.replica-app .replica-found-art {
+  width: min(100%, 136.35px);
+}
+
+.replica-app .design3-camera-guides {
+  top: 7.6%;
+  left: 9.45%;
+}
+
+.replica-app .design3-photo-review h1 {
+  display: grid;
+  min-height: 23px;
+  place-items: center;
+}
+
+.replica-app .design3-photo-review .captured-preview {
+  width: calc(100% - 3px);
+  margin-inline: auto;
+  aspect-ratio: 263 / 332;
+}
+
+.replica-app .design3-photo-meta {
+  min-height: 38px;
+  margin-block: 15px 11px;
+}
+
+.replica-app .design3-photo-animal h2 {
+  line-height: 1.2;
+}
+
+.replica-app .design3-photo-fact {
+  font-size: 10px;
+  line-height: 1.6;
+}

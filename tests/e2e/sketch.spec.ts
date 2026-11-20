@@ -1769,6 +1769,20 @@ test("撮影後はカメラを停止し、識別保留時の写真確認・撮�
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
+  await draw(page);
+  await compare(page);
+  const photoCard = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "写真とスケッチをPNGで保存", exact: true })
+    .click();
+  const downloaded = await photoCard;
+  expect(downloaded.suggestedFilename()).toMatch(
+    /^zooketch-goat-.*-photo-card\.png$/,
+  );
+  const { readFile } = await import("node:fs/promises");
+  const bytes = await readFile((await downloaded.path())!);
+  expect(bytes.subarray(1, 4).toString()).toBe("PNG");
+  expect(bytes.readUInt32BE(16)).toBe(1000);
 });
 
 test("追加動物のヒント・描画・確認・PNG保存・図鑑復元", async ({ page }) => {
