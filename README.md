@@ -10,16 +10,18 @@
 
 ## 2つの公開版
 
+従来の `/` と `/replica/` からも同じ版を開けます。
+
 | 版 | Cloudflare Pages | GitHub Pages |
 | --- | --- | --- |
-| 機能拡張版 | [従来のURL](https://zooketch.pages.dev/) | [機能拡張版](https://takuto-ando.github.io/mitsukeru-pages/) |
-| Figma再現版 | [再現版を開く](https://zooketch.pages.dev/replica/) | [Figma再現版](https://takuto-ando.github.io/mitsukeru-pages/replica/) |
+| 機能拡張版 | [機能拡張版](https://zooketch.pages.dev/plus/) | [機能拡張版](https://takuto-ando.github.io/mitsukeru-pages/plus/) |
+| Figma再現版 | [再現版を開く](https://zooketch.pages.dev/figma/) | [Figma再現版](https://takuto-ando.github.io/mitsukeru-pages/figma/) |
 
 機能拡張版は20グループ・34課題、比較スライダー、観察ノート、読み上げ、研究モードを利用できます。撮影したセッションでは、写真とスケッチを任意で1枚のPNGに書き出せます。設定から保存状態のチェック、前後の気づきの比較、短い質問の試用も開けます。
 
 Figma再現版は提供ファイルのキリンのチュートリアルと画面遷移を再現します。見本撮影には提供されたキリン画像を使用し、通常撮影では端末のカメラを使います。再現版では撮影時に写真を端末内のギャラリーに保存します。見本写真には見本の表示が付きます。再現版と拡張版の観察記録は、同じブラウザでも独立しています。Safariのステータスバーとアドレス欄は端末で表示されます。
 
-ローカルでは `npm run dev` で `/` と `/replica/` を開きます。両方の入口・素材・ホーム画面用マニフェストを `npm run build` で生成します。
+ローカルでは `npm run dev` で `/plus/` と `/figma/` を開きます。両方の入口・素材・ホーム画面用マニフェストを `npm run build` で生成します。
 
 ## 資料の全30カードに対応（2026-10-30）
 

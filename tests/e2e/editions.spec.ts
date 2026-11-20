@@ -24,11 +24,11 @@ test("機能拡張版の入口からFigma再現版を別のURLで開ける", asy
   page,
   baseURL,
 }) => {
-  await page.goto("./");
+  await page.goto("plus/");
   const link = page.getByRole("link", { name: "Figma再現版を開く" });
   await expect(link).toBeVisible();
   await link.click();
-  await expect(page).toHaveURL(new URL("replica/", baseURL!).href);
+  await expect(page).toHaveURL(new URL("figma/", baseURL!).href);
   await expect(page).toHaveTitle("ズーケッチ Figma再現版");
   const start = page.getByRole("button", { name: "はじめから", exact: true });
   await expect(start).toBeVisible();
@@ -45,7 +45,7 @@ test("Figma再現版をオフラインで開いても機能拡張版に切り替
     process.env.E2E_PREVIEW !== "1",
     "サービスワーカーは公開用ビルドで確認",
   );
-  await page.goto("replica/");
+  await page.goto("figma/");
   const start = page.getByRole("button", { name: "はじめから", exact: true });
   await expect(start).toBeVisible();
   await expect
@@ -57,10 +57,12 @@ test("Figma再現版をオフラインで開いても機能拡張版に切り替
   await page.reload();
   await expect(page).toHaveTitle("ズーケッチ Figma再現版");
   await expect(start).toBeVisible();
-  await page.goto("./");
+  await page.goto("plus/");
   await expect(
     page.getByRole("link", { name: "Figma再現版を開く" }),
   ).toBeVisible();
+  await page.goto("replica/");
+  await expect(page).toHaveTitle("ズーケッチ Figma再現版");
 });
 
 test("再現版の見本撮影・描画・アルバムが拡張版の観察ノートから独立する", async ({
@@ -81,7 +83,7 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
       },
     });
   });
-  await page.goto("replica/");
+  await page.goto("figma/");
   for (const name of [
     "はじめから",
     "こんにちは！",
@@ -179,7 +181,7 @@ test("再現版の通常カメラで撮影・動物選択・写真を見返せ�
       return (drawImage as any).apply(this, args);
     };
   });
-  await page.goto("replica/");
+  await page.goto("figma/");
   await page.getByRole("button", { name: "つづきから", exact: true }).click();
   await page.getByRole("button", { name: "シャッター", exact: true }).click();
   await expect(

@@ -103,7 +103,7 @@ export function HomeScreen({
             <Settings aria-hidden="true" size={17} />
             設定
           </button>
-          <a href={assetPath("replica/")}>Figma再現版を開く</a>
+          <a href={assetPath("figma/")}>Figma再現版を開く</a>
         </div>
       </div>
     </section>
