@@ -4,12 +4,56 @@ import { groups } from "../../src/content/groups";
 async function startCamera(page: Page) {
   await page.getByRole("button", { name: "つづきから", exact: true }).click();
 }
+async function openAnimalPicker(page: Page) {
+  await page
+    .getByRole("button", { name: "写真なしで始める", exact: true })
+    .click();
+  await page.getByRole("button", { name: "修正", exact: true }).click();
+  return page.getByRole("list", { name: "動物の一覧", exact: true });
+}
+async function beginChallenge(page: Page) {
+  await page
+    .getByRole("button", { name: "ピツネに見せる", exact: true })
+    .click();
+  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
+}
+async function pickAnimal(page: Page, name = "ヤギ・ヒツジ") {
+  const picker = await openAnimalPicker(page);
+  await picker.getByRole("button", { name, exact: true }).click();
+  await beginChallenge(page);
+}
+async function finishTutorial(page: Page) {
+  await page.getByRole("button", { name: "ありがとう！", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ズーケッチ", exact: true }),
+  ).toBeVisible();
+}
+async function openGalleryFromHome(page: Page, count?: number) {
+  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "マイギャラリー", exact: true }),
+  ).toBeVisible();
+  if (count !== undefined) {
+    await expect(
+      page.getByText(`${count}枚の観察カードを保存しています。`, {
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+}
 async function openSettings(page: Page) {
   if (await page.getByRole("dialog", { name: "設定", exact: true }).isVisible())
     return;
   const header = page.getByRole("button", { name: "設定を開く", exact: true });
   if (await header.isVisible()) await header.click();
-  else await page.getByRole("button", { name: "設定", exact: true }).click();
+  else {
+    const camera = page.getByRole("button", {
+      name: "マイページ",
+      exact: true,
+    });
+    if (await camera.isVisible()) await camera.click();
+    else await page.getByRole("button", { name: "設定", exact: true }).click();
+  }
   await expect(
     page.getByRole("dialog", { name: "設定", exact: true }),
   ).toBeVisible();
@@ -40,14 +84,7 @@ async function select(page: Page, id = "goat") {
   );
   await page.goto("./");
   await startCamera(page);
-  await page
-    .locator(".animal-grid")
-    .getByRole("button", {
-      name: new RegExp(
-        "^" + groups.find((g) => g.id === task.groupId)!.name + " ",
-      ),
-    })
-    .click();
+  await pickAnimal(page, groups.find((g) => g.id === task.groupId)!.name);
   if (tasksForGroup(task.groupId).length > 1)
     await page
       .getByRole("group", { name: "観察する部位" })
@@ -141,7 +178,7 @@ for (const t of tasks)
     await select(page, t.id);
     await expect(
       page.getByRole("heading", {
-        name: `${groups.find((g) => g.id === t.groupId)!.name}の${t.part}を描いてみよう！`,
+        name: `${t.part}をよく観察してみて！`,
       }),
     ).toBeVisible();
     const href = await page
@@ -188,7 +225,7 @@ for (const t of tasks)
     });
     if (await confirm.count()) await confirm.click();
     await expect(
-      page.getByRole("heading", { name: "完成！ だいはっけん！" }),
+      page.getByRole("heading", { name: "上手に描けたね！" }),
     ).toBeVisible();
     // Wait for cached external SVGs to finish painting after display-mode changes.
     await page.waitForLoadState("networkidle");
@@ -211,9 +248,9 @@ for (const t of tasks)
     if (await confirm.count()) await confirm.click();
     await page.getByRole("button", { name: "特徴について知ろう →" }).click();
     await page.getByRole("button", { name: "次の動物を撮る" }).click();
-    await expect(page.locator(".animal-grid button")).toHaveCount(
-      groups.length,
-    );
+    await expect(
+      (await openAnimalPicker(page)).getByRole("button"),
+    ).toHaveCount(groups.length);
     expect(errors).toEqual([]);
   });
 test("描画画面の向きを手動で切り替えても線が残る", async ({ page }) => {
@@ -267,14 +304,14 @@ test("giraffe: 横向きはキャンバスカードと右ツールで画面を�
   await select(page, "giraffe");
   const card = page.locator(".mission-sketch");
   const frame = card.locator(".sketch-frame");
-  const tools = card.locator(".tools");
-  const hint = frame.getByRole("button", { name: "ヒントを見る" });
+  const tools = card.locator(".drawing-tools-stack");
+  const hint = tools.getByRole("button", { name: "ヒントを見る" });
   const complete = tools.getByRole("button", { name: "できた！" });
   await page.setViewportSize({ width: 984, height: 456 });
   await expect(card).toHaveAttribute("data-layout", "landscape");
   await expect(page.locator(".figma-header")).toBeHidden();
   await expect(
-    page.getByRole("navigation", { name: "観察の進み方" }),
+    page.getByRole("navigation", { name: "アプリのメニュー" }),
   ).toBeHidden();
   await expect(page.getByRole("group", { name: "観察する部位" })).toBeHidden();
   await expect(
@@ -297,13 +334,13 @@ test("giraffe: 横向きはキャンバスカードと右ツールで画面を�
   expect(frameBox!.y).toBeLessThan(30);
   expect(frameBox!.height).toBeGreaterThan(400);
   expect(toolBox!.x).toBeGreaterThan(frameBox!.x + frameBox!.width);
-  expect(hintBox!.y).toBeGreaterThan(frameBox!.y + frameBox!.height * 0.7);
+  expect(hintBox!.x).toBeGreaterThan(frameBox!.x + frameBox!.width);
   expect(completeBox!.y).toBeGreaterThan(toolBox!.y + toolBox!.height * 0.7);
   await page.setViewportSize({ width: 390, height: 852 });
   await expect(card).toHaveAttribute("data-layout", "portrait");
   await expect(page.locator(".figma-header")).toBeVisible();
   await expect(
-    page.getByRole("navigation", { name: "観察の進み方" }),
+    page.getByRole("navigation", { name: "アプリのメニュー" }),
   ).toBeVisible();
   await card
     .getByRole("group", { name: "画面の向き" })
@@ -326,7 +363,7 @@ test("Undo・全消去・縦長の再観察・横長の楕円", async ({ page })
   await draw(page);
   await compare(page);
   await expect(
-    page.getByRole("heading", { name: "完成！ だいはっけん！" }),
+    page.getByRole("heading", { name: "上手に描けたね！" }),
   ).toBeVisible();
 });
 test("端末内保存・再読込・比較・PNG保存・削除", async ({ page }) => {
@@ -334,19 +371,17 @@ test("端末内保存・再読込・比較・PNG保存・削除", async ({ page 
   await draw(page, "fennec-tail");
   await compare(page);
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
-  await page.getByRole("button", { name: "観察を保存する" }).click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！" }),
-  ).toBeDisabled();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
   await page.reload();
-  await startCamera(page);
-  await page.getByRole("button", { name: "図鑑 (1)" }).click();
+  await openGalleryFromHome(page, 1);
   await expect(page.getByText("ふさふさした尾")).toBeVisible();
   await page.getByRole("button", { name: "フェネックの絵を見返す" }).click();
   await expect(page.locator(".comparison-overlay")).toHaveAttribute(
     "aria-label",
     /ふさふさした尾/,
   );
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
   await expect(
     page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
   ).toHaveAttribute("aria-valuenow", "50");
@@ -364,7 +399,6 @@ test("端末内保存・再読込・比較・PNG保存・削除", async ({ page 
   await expect(
     page.getByTestId("user-lines").locator("polyline"),
   ).not.toHaveCount(0);
-  await page.getByRole("button", { name: "一覧に戻る" }).click();
   await page.getByRole("button", { name: "削除", exact: true }).click();
   await page.getByRole("button", { name: "残す", exact: true }).click();
   await page.getByRole("button", { name: "削除", exact: true }).click();
@@ -382,11 +416,10 @@ test("保存失敗を保存済みにしない", async ({ page }) => {
   await select(page);
   await draw(page);
   await compare(page);
-  await page.getByRole("button", { name: "観察を保存する" }).click();
+  const next = page.getByRole("button", { name: "つぎへ", exact: true });
+  await next.click();
   await expect(page.getByRole("alert")).toContainText("保存できません");
-  await expect(
-    page.getByRole("button", { name: "観察を保存する" }),
-  ).toBeEnabled();
+  await expect(next).toBeEnabled();
 });
 test("320〜430px・開発メモ非表示・ファイル入力なし", async ({ page }) => {
   await select(page);
@@ -516,7 +549,6 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   await expect(
     page.getByRole("button", { name: "シャッター", exact: true }),
   ).toBeEnabled();
-  await expect(page.locator(".animal-grid button")).toHaveCount(groups.length);
   await page.getByText("撮影の設定", { exact: true }).click();
   await page
     .getByRole("button", { name: "識別モデルを先にダウンロード" })
@@ -525,6 +557,10 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
     page.getByRole("button", { name: "識別モデル準備済み" }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "シャッター", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "ヤギ・ヒツジ", exact: true }),
+  ).toBeVisible();
+  await beginChallenge(page);
   await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.screenshot({
     path: "test-results/capture-mobile.png",
@@ -547,7 +583,7 @@ test("紙のカードで全身に直接描き、余計なズームや装飾を�
   ).toHaveCount(0);
   await expect(page.locator(".figma-confetti, .figma-mascot")).toHaveCount(0);
   await expect(
-    page.getByRole("navigation", { name: "観察の進み方" }),
+    page.getByRole("navigation", { name: "アプリのメニュー" }),
   ).not.toContainText(/01|02|03|04/);
   await expect(page.getByText(/1〜3分|1分から3分/)).toHaveCount(0);
   await expect(page.locator(".activity-card")).toHaveCSS("box-shadow", "none");
@@ -614,13 +650,10 @@ test("点をひとつ描けて、旧localStorageデータを移行し、全身�
   await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await compare(page);
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
-  await page.getByRole("button", { name: "観察を保存する" }).click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！" }),
-  ).toBeDisabled();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
   await page.reload();
-  await startCamera(page);
-  await page.getByRole("button", { name: "図鑑 (2)" }).click();
+  await openGalleryFromHome(page, 2);
   await page.getByRole("button", { name: "ニホンジカの絵を見返す" }).click();
   await expect(page.locator(".comparison-overlay")).toHaveAttribute(
     "viewBox",
@@ -632,7 +665,7 @@ test("消しゴム・全消去からUndoで復元し、段階的な観察ヒン�
   page,
 }) => {
   await select(page);
-  await expect(page.getByTestId("drawing-target")).toBeVisible();
+  await expect(page.getByTestId("drawing-target")).toHaveCount(0);
   await draw(page);
   await expect(page.getByTestId("drawing-target")).toHaveCount(0);
   await expect
@@ -675,7 +708,10 @@ test("消しゴム・全消去からUndoで復元し、段階的な観察ヒン�
     cy = (r.y + r.height / 2) * 400,
     rx = r.width * 600 * 0.36,
     ry = r.height * 400 * 0.33;
-  await page.mouse.move(b.x + ((cx + rx) / 600) * b.width, b.y + (cy / 400) * b.height);
+  await page.mouse.move(
+    b.x + ((cx + rx) / 600) * b.width,
+    b.y + (cy / 400) * b.height,
+  );
   await page.mouse.down();
   for (let i = 1; i <= 32; i++) {
     const a = (i / 32) * Math.PI * 2;
@@ -702,7 +738,7 @@ test("シカは模様が見えない観察も尊重し、空白のヤギを回�
   ).toBeVisible();
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
   await expect(
-    page.getByRole("button", { name: "観察を保存する" }),
+    page.getByRole("button", { name: "つぎへ", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await expect(
@@ -711,10 +747,7 @@ test("シカは模様が見えない観察も尊重し、空白のヤギを回�
     }),
   ).toBeVisible();
   await page.getByRole("button", { name: "次の動物を撮る" }).click();
-  await page
-    .locator(".animal-grid")
-    .getByRole("button", { name: /ヤギ/ })
-    .click();
+  await pickAnimal(page);
   await expect(
     page.getByRole("button", { name: "模様が見えないので、見くらべる" }),
   ).toHaveCount(0);
@@ -727,6 +760,7 @@ test("比較スライダーのポインタ・キーボード操作と画面幅�
   await select(page);
   await draw(page);
   await compare(page);
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
   const slider = page.getByRole("slider", { name: "自分の絵とお手本の境目" });
   await expect(slider).toHaveAttribute("aria-valuenow", "50");
   const overlay = page.locator(".comparison-overlay");
@@ -786,18 +820,17 @@ test("研究用ログ：同意前は記録せず、同意後の記録・JSON/CSV
   await closeSettings(page);
 
   await backToCamera(page);
-  await page
-    .locator(".animal-grid")
-    .getByRole("button", { name: /ヤギ/ })
-    .click();
+  await pickAnimal(page);
   await page.getByRole("button", { name: "ヒントを見る" }).click();
   await draw(page);
   await compare(page);
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
   const slider = page.getByRole("slider", { name: "自分の絵とお手本の境目" });
   await slider.focus();
   await page.keyboard.press("ArrowLeft");
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await page.getByRole("button", { name: "観察を保存する" }).click();
+  await finishTutorial(page);
   await openSettings(page);
   await page.getByRole("button", { name: "研究記録を終了する" }).click();
 
@@ -901,10 +934,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   await page.getByLabel("説明を読み、研究用の操作記録に同意します").check();
   await page.getByRole("button", { name: "同意して記録を始める" }).click();
   await closeSettings(page);
-  await page
-    .locator(".animal-grid button")
-    .filter({ hasText: "ヤギ・ヒツジ" })
-    .click();
+  await pickAnimal(page);
   await draw(page);
   await compare(page);
   const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
@@ -975,9 +1005,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   await page
     .getByRole("button", { name: "観察を保存する", exact: true })
     .click();
-  await expect(
-    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
-  ).toBeVisible();
+  await finishTutorial(page);
   await openSettings(page);
   await page
     .getByRole("button", { name: "同意を撤回して研究ログを削除" })
@@ -990,9 +1018,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
           .length,
     )
     .toBe(0);
-  await expect(
-    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
-  ).toBeVisible();
+  await openGalleryFromHome(page, 1);
 });
 
 test("公開ビルドを準備後、オフライン再読込・描画・ノート保存ができる", async ({
@@ -1012,25 +1038,21 @@ test("公開ビルドを準備後、オフライン再読込・描画・ノー�
   await context.setOffline(true);
   await page.reload();
   await startCamera(page);
-  await page
-    .locator(".animal-grid button")
-    .filter({ hasText: "ヤギ・ヒツジ" })
-    .click();
+  await pickAnimal(page);
   await draw(page);
   await compare(page);
   const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
   if (await confirm.count()) await confirm.click();
-  await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
+  await openGalleryFromHome(page, 1);
   await page
     .getByRole("button", { name: "ヤギ・ヒツジの絵を見返す", exact: true })
     .click();
-  await expect(page.getByRole("slider")).toBeVisible();
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
+  await expect(
+    page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
+  ).toBeVisible();
   const file = page.waitForEvent("download");
   await page
     .getByRole("button", { name: "自分の絵をPNGで保存", exact: true })
@@ -1074,13 +1096,9 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   await compare(page);
   const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
   if (await confirm.count()) await confirm.click();
-  await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
+  await openGalleryFromHome(page, 1);
   await page
     .getByText("ノートのバックアップ・保存容量", { exact: true })
     .click();
@@ -1094,10 +1112,11 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   const backup = JSON.parse(data.toString());
   expect(backup.observations).toHaveLength(1);
   expect(backup.observations[0].ownPng).toMatch(/^data:image\/png/);
+  await page.getByRole("button", { name: "ヤギ・ヒツジの絵を見返す" }).click();
   await page.getByRole("button", { name: "削除", exact: true }).click();
   await page.getByRole("button", { name: "削除する", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "図鑑 (0)", exact: true }),
+    page.getByText("0枚の観察カードを保存しています。", { exact: true }),
   ).toBeVisible();
   const fileInput = page.getByLabel("観察ノートのバックアップファイル", {
     exact: true,
@@ -1114,13 +1133,13 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
   ).toBeVisible();
   // Selecting a file alone must never write to IndexedDB.
   await expect(
-    page.getByRole("button", { name: "図鑑 (0)", exact: true }),
+    page.getByText("0枚の観察カードを保存しています。", { exact: true }),
   ).toBeVisible();
   await page
     .getByRole("button", { name: "確認して追加する", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "図鑑 (1)", exact: true }),
+    page.getByText("1枚の観察カードを保存しています。", { exact: true }),
   ).toBeVisible();
   await fileInput.setInputFiles({
     name: "notes.json",
@@ -1177,12 +1196,14 @@ test("ノートをバックアップし、削除後に復元・重複回避・�
     "今ある記録は残しています。",
   );
   await page.reload();
-  await startCamera(page);
-  await page.getByRole("button", { name: "図鑑 (1)", exact: true }).click();
+  await openGalleryFromHome(page, 1);
   await page
     .getByRole("button", { name: "ヤギ・ヒツジの絵を見返す", exact: true })
     .click();
-  await expect(page.getByRole("slider")).toBeVisible();
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
+  await expect(
+    page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
+  ).toBeVisible();
 });
 
 test("画面を離れるとカメラを停止し、戻ると再開・撮影中断から手動復帰できる", async ({
@@ -1412,12 +1433,8 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
   await compare(page);
   const confirm = page.getByRole("button", { name: "見くらべて、確かめた！" });
   if (await confirm.count()) await confirm.click();
-  await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
-    .click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！", exact: true }),
-  ).toBeVisible();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
   await page.evaluate(async () => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("zooketch.observation-notebook", 1);
@@ -1446,16 +1463,13 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
     };
   });
   await page.reload();
-  await startCamera(page);
-  await expect(
-    page.getByRole("button", { name: "図鑑 (25)", exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /^図鑑を見る/ })).toBeVisible();
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(0);
-  await page.getByRole("button", { name: "図鑑 (25)", exact: true }).click();
+  await openGalleryFromHome(page, 25);
   await expect(page.locator(".collection-card")).toHaveCount(12);
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(1);
   await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
-  await page.getByRole("button", { name: "図鑑 (25)", exact: true }).click();
+  await openGalleryFromHome(page, 25);
   await expect(page.locator(".collection-card")).toHaveCount(12);
   expect(await page.evaluate(() => (window as any).__notebookReads)).toBe(2);
   await page
@@ -1467,6 +1481,7 @@ test("観察ノートが増えても12枚ずつ開き、追加分と詳細を見
     .click();
   await expect(page.locator(".collection-card")).toHaveCount(25);
   await page.locator(".collection-open").last().click();
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
   await expect(
     page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
   ).toBeVisible();
@@ -1495,9 +1510,14 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await expect(
-    page.getByRole("heading", { name: "スケッチ図鑑", exact: true }),
+    page.getByRole("heading", { name: "マイギャラリー", exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+  await page.getByRole("tab", { name: "写真", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "写真は保存されないよ" }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "スケッチ", exact: true }).click();
   await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
   await page.getByRole("button", { name: "設定", exact: true }).click();
   await expect(
@@ -1531,7 +1551,13 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
     path: "test-results/home-mobile-393.png",
     fullPage: true,
   });
-  await startCamera(page);
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  for (const name of ["こんにちは！", "やってみる！", "撮ってみる！"]) {
+    expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+    await page.getByRole("button", { name, exact: true }).click();
+  }
+  expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
+  await page.getByRole("button", { name: "描いてみる！", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "動物を撮影しよう", exact: true }),
   ).toBeVisible();
@@ -1668,12 +1694,23 @@ test("撮影後はカメラを停止し、識別保留時の写真確認・撮�
   await expect(
     page.getByText("動物を選んでね。", { exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "?????", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "ピツネに見せる", exact: true }),
+  ).toBeDisabled();
+  await page.getByRole("button", { name: "修正", exact: true }).click();
   await page
-    .locator(".animal-grid")
-    .getByRole("button", { name: /ヤギ/ })
+    .getByRole("list", { name: "動物の一覧" })
+    .getByRole("button", { name: "ヤギ・ヒツジ", exact: true })
     .click();
+  await beginChallenge(page);
   await expect(page.getByTestId("canvas")).toBeVisible();
-  await page.getByText("撮影した写真を確認", { exact: true }).click();
+  await page
+    .locator(".drawing-reference")
+    .getByText("撮影した写真を確認", { exact: true })
+    .click();
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
@@ -1696,13 +1733,11 @@ test("追加動物のヒント・描画・確認・PNG保存・図鑑復元", as
   await draw(page, "bear");
   await compare(page);
   await expect(
-    page.getByRole("button", { name: "観察を保存する" }),
+    page.getByRole("button", { name: "つぎへ", exact: true }),
   ).toBeDisabled();
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
-  await page.getByRole("button", { name: "観察を保存する" }).click();
-  await expect(
-    page.getByRole("button", { name: "保存したよ！" }),
-  ).toBeDisabled();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await finishTutorial(page);
   await page.reload();
   await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await page.getByRole("button", { name: "ツキノワグマの絵を見返す" }).click();
@@ -1734,6 +1769,7 @@ test("追加部位の空欄・お手本とスマートフォン幅の一致", as
   }
   await draw(page, "giraffe-lashes");
   await compare(page);
+  await page.getByRole("button", { name: "左右で比べる", exact: true }).click();
   await expect(
     page.getByRole("slider", { name: "自分の絵とお手本の境目" }),
   ).toHaveAttribute("aria-valuenow", "50");
@@ -1749,13 +1785,16 @@ test("気づきを任意保存・解説で追記・再読込して復元", async
   await compare(page);
   await page.getByRole("button", { name: "見くらべて、確かめた！" }).click();
   // Empty reflection never blocks the activity or saving.
+  await page.evaluate(() =>
+    localStorage.setItem("zooketch-tutorial-complete-v1", "true"),
+  );
+  await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await page
     .getByRole("button", { name: "観察を保存する", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "保存したよ！" }),
+    page.getByRole("button", { name: "保存したよ！", exact: true }),
   ).toBeDisabled();
-  await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await page
     .getByRole("textbox", { name: "どんなことに気づいた？" })
     .fill("胸の白いところが曲がっていた。");
@@ -1768,8 +1807,13 @@ test("気づきを任意保存・解説で追記・再読込して復元", async
     path: `test-results/reflection-${test.info().project.name}.png`,
     fullPage: true,
   });
+  await page.getByRole("button", { name: "結果に戻る", exact: true }).click();
+  await page.getByRole("button", { name: "つぎへ", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "マイギャラリー", exact: true }),
+  ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: /^図鑑を見る/ }).click();
+  await openGalleryFromHome(page, 1);
   await expect(
     page.getByRole("button", { name: "ツキノワグマの絵を見返す" }),
   ).toHaveCount(1);

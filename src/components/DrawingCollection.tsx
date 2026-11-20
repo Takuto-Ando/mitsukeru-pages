@@ -1,5 +1,6 @@
 import { NotebookTools } from "./NotebookTools";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { Camera, ChevronLeft, Image, SquarePen, X } from "lucide-react";
 import { groups } from "../content/groups";
 import { drawingScene } from "../collection/drawingScene";
 import { taskById, tasksForGroup } from "../content/tasks";
@@ -7,6 +8,9 @@ import { applyStyles } from "../drawing/styles";
 import { SceneBase, SceneRegions } from "./ObservationScene";
 import { SketchLines } from "../Illustrations";
 import { SketchComparison } from "./SketchComparison";
+import { DifficultyPill } from "./DifficultyPill";
+import { Pitsune } from "./Pitsune";
+import { ReadAloud } from "../speech/Speech";
 import {
   composeObservationImages,
   composeCardPng,
@@ -15,6 +19,7 @@ import {
 import { updateObservationImages } from "../notebook/storage";
 import type { ObservationRecord } from "../notebook/types";
 import { recordStudy } from "../research/study";
+import "../styles/design3-gallery.css";
 
 function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
   const clip = useId();
@@ -29,27 +34,30 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
     return () => URL.revokeObjectURL(url);
   }, [drawing.id, drawing.ownPng]);
   const scene = drawing.sceneSnapshot || drawingScene(drawing);
+  const height = scene.frameHeight || 400;
   return (
-    <svg
-      viewBox={`0 0 600 ${scene.frameHeight || 400}`}
-      role="img"
-      aria-label={scene.label + "に描き足した絵"}
-    >
+    <svg viewBox={`0 0 600 ${height}`} aria-hidden="true">
       <defs>
         <clipPath id={clip}>
           <SceneRegions scene={scene} />
         </clipPath>
       </defs>
       {source?.id === drawing.id ? (
-        <image
-          href={source.url}
-          width="600"
-          height={scene.frameHeight || 400}
-        />
+        <image href={source.url} width="600" height={height} />
       ) : (
         <>
           <SceneBase scene={scene} completed />
           <g clipPath={`url(#${clip})`}>
+            {drawing.styles?.map((style, index) =>
+              style?.fill ? (
+                <image
+                  key={index}
+                  href={style.fill}
+                  width="600"
+                  height={height}
+                />
+              ) : null,
+            )}
             <SketchLines strokes={drawing.strokes} />
           </g>
         </>
@@ -60,17 +68,23 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
 
 export function DrawingCollection({
   drawings,
-  title = "観察ノート",
   onDelete,
   onBack,
+  onCamera,
   onUpdate,
 }: {
   drawings: ObservationRecord[];
-  title?: string;
   onDelete: (id: string) => Promise<boolean> | boolean;
   onBack: () => void;
+  onCamera: () => void;
   onUpdate?: () => Promise<void> | void;
 }) {
+  const galleryId = useId();
+  const detailId = useId();
+  const detail = useRef<HTMLDialogElement>(null);
+  const sketchTab = useRef<HTMLButtonElement>(null);
+  const photoTab = useRef<HTMLButtonElement>(null);
+  const [tab, setTab] = useState<"sketch" | "photo">("sketch");
   const [selected, setSelected] = useState<string>();
   const [sortMode, setSortMode] = useState<"new" | "animal">("new");
   const sortedDrawings = [...drawings].sort((a, b) =>
@@ -80,9 +94,13 @@ export function DrawingCollection({
         b.createdAt.localeCompare(a.createdAt),
   );
   const [visibleCount, setVisibleCount] = useState(12);
-  const [deleting, setDeleting] = useState<string>();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [exportError, setExportError] = useState("");
+  const [detailError, setDetailError] = useState<{
+    id: string;
+    message: string;
+  }>();
   const [urls, setUrls] = useState<{
     id: string;
     own: string;
@@ -90,9 +108,8 @@ export function DrawingCollection({
   }>();
   const drawing = drawings.find((d) => d.id === selected);
   const speciesCount = new Set(drawings.map((d) => d.groupId)).size;
-  const observationDays = new Set(
-    drawings.map((d) => d.createdAt.slice(0, 10)),
-  ).size;
+  const observationDays = new Set(drawings.map((d) => d.createdAt.slice(0, 10)))
+    .size;
   const streak = (() => {
     const days = new Set(drawings.map((d) => d.createdAt.slice(0, 10)));
     const cursor = new Date();
@@ -113,12 +130,23 @@ export function DrawingCollection({
     return groupTasks.every((t) =>
       drawings.some(
         (d) =>
-          d.taskId === t.id ||
-          (groupTasks.length === 1 && d.groupId === g.id),
+          d.taskId === t.id || (groupTasks.length === 1 && d.groupId === g.id),
       ),
     );
   });
   const group = drawing && groups.find((g) => g.id === drawing.groupId);
+  const scene = drawing && (drawing.sceneSnapshot || drawingScene(drawing));
+
+  useEffect(() => {
+    detail.current?.showModal();
+  }, [selected]);
+
+  function closeDetail() {
+    detail.current?.close();
+    setSelected(undefined);
+    setConfirmDelete(false);
+    setDetailError(undefined);
+  }
 
   useEffect(() => {
     if (!drawing?.ownPng || !drawing?.answerPng) {
@@ -137,7 +165,7 @@ export function DrawingCollection({
   async function exportPng(kind: "own" | "comparison") {
     if (!drawing || exporting) return;
     setExporting(true);
-    setExportError("");
+    setDetailError(undefined);
     try {
       const scene = drawing.sceneSnapshot || drawingScene(drawing);
       let ownPng = drawing.ownPng;
@@ -157,7 +185,10 @@ export function DrawingCollection({
         `zooketch-${drawing.taskId}-${date}-${suffix}.png`,
       );
     } catch {
-      setExportError("PNG画像を書き出せませんでした。もう一度試してください。");
+      setDetailError({
+        id: drawing.id,
+        message: "PNG画像を書き出せませんでした。もう一度試してください。",
+      });
     } finally {
       setExporting(false);
     }
@@ -166,7 +197,7 @@ export function DrawingCollection({
   async function shareOwn() {
     if (!drawing || exporting) return;
     setExporting(true);
-    setExportError("");
+    setDetailError(undefined);
     try {
       const scene = drawing.sceneSnapshot || drawingScene(drawing);
       let ownPng = drawing.ownPng;
@@ -178,159 +209,145 @@ export function DrawingCollection({
       }
       const date = drawing.createdAt.slice(0, 10);
       const card = await composeCardPng(ownPng, drawing, false);
-      const file = new File([card], `zooketch-${drawing.taskId}-${date}-sketch.png`, {
-        type: "image/png",
-      });
+      const file = new File(
+        [card],
+        `zooketch-${drawing.taskId}-${date}-sketch.png`,
+        {
+          type: "image/png",
+        },
+      );
       if (navigator.canShare?.({ files: [file] }))
         await navigator.share({ files: [file] });
       else await savePng(card, file.name);
     } catch (error) {
       if ((error as Error)?.name !== "AbortError")
-        setExportError("シェアできませんでした。PNG保存をお試しください。");
+        setDetailError({
+          id: drawing.id,
+          message: "シェアできませんでした。PNG保存をお試しください。",
+        });
     } finally {
       setExporting(false);
     }
   }
 
+  async function deleteDrawing() {
+    if (!drawing || deleting || exporting) return;
+    setDeleting(true);
+    setDetailError(undefined);
+    try {
+      if (await onDelete(drawing.id)) {
+        closeDetail();
+        sketchTab.current?.focus();
+        return;
+      }
+      setDetailError({
+        id: drawing.id,
+        message: "観察を削除できませんでした。もう一度試してください。",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
-    <section className="drawing-collection" aria-label={title}>
-      <button className="text-button" onClick={onBack}>
-        体験に戻る
-      </button>
-      <h1>{title}</h1>
-      <p>{drawings.length}枚の観察カードを保存しています。</p>
-      {drawings.length > 0 && (
-        <div className="collection-progress">
-          <p>
-            ずかん： <strong>{speciesCount} / {groups.length}</strong>{" "}
-            しゅるい あつめたよ ・ 観察した日 {observationDays}日
-            {streak >= 2 && <>（れんぞく {streak}日！）</>}
-          </p>
-          {speciesCount === groups.length && (
-            <p className="master-badge">
-              ずかんマスター！ ぜんぶの動物を観察したよ
-            </p>
-          )}
-          <div
-            className="progress-track"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={groups.length}
-            aria-valuenow={speciesCount}
-            aria-label="集めた動物の種類"
-          >
-            <div
-              className="progress-fill"
-              style={{ width: `${(speciesCount / groups.length) * 100}%` }}
-            />
-          </div>
-          {completeGroups.length > 0 && (
-            <ul className="complete-badges">
-              {completeGroups.map((g) => (
-                <li key={g.id}>{g.name} コンプリート！</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-      <NotebookTools drawings={drawings} onRestored={onUpdate} />
-      <p className="quiet-note">
-        このブラウザ・アプリの中だけに保存します。SafariとiPhoneアプリの保存は別々です。撮影写真や位置情報は保存しません。
-      </p>
-      {!drawings.length && (
-        <p>観察を終えたら「観察を保存する」で、ここにカードを残せるよ。</p>
-      )}
-      {drawing && group ? (
-        <div className="notebook-detail">
+    <section
+      className="drawing-collection gallery-screen"
+      aria-labelledby={galleryId}
+    >
+      <header className="gallery-header">
+        <button type="button" onClick={onBack} aria-label="体験に戻る">
+          <ChevronLeft size={28} aria-hidden="true" />
+        </button>
+        <h1 id={galleryId}>マイギャラリー</h1>
+      </header>
+      <div className="gallery-sheet">
+        <div
+          className="gallery-tabs"
+          role="tablist"
+          aria-label="ギャラリーの表示"
+          onKeyDown={(event) => {
+            const other = tab === "sketch" ? "photo" : "sketch";
+            const destinations = {
+              Home: "sketch",
+              End: "photo",
+              ArrowLeft: other,
+              ArrowRight: other,
+            } as const;
+            if (!(event.key in destinations)) return;
+            event.preventDefault();
+            const next = destinations[event.key as keyof typeof destinations];
+            setTab(next);
+            (next === "sketch" ? sketchTab : photoTab).current?.focus();
+          }}
+        >
           <button
-            className="text-button"
-            onClick={() => {
-              setSelected(undefined);
-              setExportError("");
-            }}
+            type="button"
+            ref={sketchTab}
+            id={galleryId + "-sketch"}
+            role="tab"
+            aria-controls={galleryId + "-sketch-panel"}
+            aria-selected={tab === "sketch"}
+            tabIndex={tab === "sketch" ? 0 : -1}
+            onClick={() => setTab("sketch")}
           >
-            一覧に戻る
+            <SquarePen size={18} aria-hidden="true" />
+            スケッチ
           </button>
-          <h2>{drawing.animalName}</h2>
-          <p className="center">
-            <strong>{drawing.taskName}</strong>
-          </p>
-          <p className="quiet-note center">
-            観察日:{" "}
-            <time dateTime={drawing.createdAt}>
-              {new Date(drawing.createdAt).toLocaleDateString("ja-JP")}
-            </time>
-          </p>
-          <SketchComparison
-            strokes={drawing.strokes}
-            scene={drawing.sceneSnapshot || drawingScene(drawing)}
-            images={urls?.id === drawing.id ? urls : undefined}
-            profile={taskById[drawing.taskId || group.id]?.profile}
-            answer={group.answer}
-            onSliderCommit={(from, to, via) =>
-              recordStudy(
-                "comparison_slider_moved",
-                { from, to, via, reason: "notebook" },
-                {
-                  animalId: drawing.groupId,
-                  taskId: drawing.taskId,
-                  attemptId: undefined,
-                },
-              )
-            }
-          />
-          <div className="png-actions">
-            <button
-              className="primary collection-save"
-              disabled={exporting}
-              onClick={() => void exportPng("own")}
-            >
-              自分の絵をPNGで保存
-            </button>
-            <button
-              className="primary collection-save"
-              disabled={exporting}
-              onClick={() => void exportPng("comparison")}
-            >
-              比較画像をPNGで保存
-            </button>
-            {"share" in navigator && (
-              <button
-                className="primary collection-save"
-                disabled={exporting}
-                onClick={() => void shareOwn()}
-              >
-                シェアする
-              </button>
-            )}
-          </div>
-          {exportError && <p role="alert">{exportError}</p>}
-          <div className="figma-explanation">
-            <h2>{drawing.explanation.name}</h2>
-            <h3>よく見ると…</h3>
-            <p>{drawing.explanation.form}</p>
-            {drawing.explanation.ecology && (
-              <>
-                <h3>くらしとのつながり</h3>
-                <p>{drawing.explanation.ecology}</p>
-              </>
-            )}
-          </div>
-          {drawing.discovery && (
-            <div className="figma-explanation">
-              <h3>わたしの気づき</h3>
-              <p className="discovery-text">{drawing.discovery}</p>
-            </div>
-          )}
-          {drawing.revisited && (
-            <p className="quiet-note">
-              実物をもう一度見て確かめた（自分の記録）
-            </p>
-          )}
-          {drawing.question && <p className="figma-note">{drawing.question}</p>}
+          <button
+            type="button"
+            ref={photoTab}
+            id={galleryId + "-photo"}
+            role="tab"
+            aria-controls={galleryId + "-photo-panel"}
+            aria-selected={tab === "photo"}
+            tabIndex={tab === "photo" ? 0 : -1}
+            onClick={() => setTab("photo")}
+          >
+            <Image size={18} aria-hidden="true" />
+            写真
+          </button>
         </div>
-      ) : (
-        <div className="collection-grid">
+        <div
+          id={galleryId + "-sketch-panel"}
+          role="tabpanel"
+          aria-labelledby={galleryId + "-sketch"}
+          hidden={tab !== "sketch"}
+          tabIndex={0}
+        >
+          <div className="collection-progress" aria-live="polite">
+            <p>{drawings.length}枚の観察カードを保存しています。</p>
+            <p>
+              <strong>
+                {speciesCount} / {groups.length}
+              </strong>{" "}
+              種・観察した日 {observationDays}日・れんぞく {streak}日
+            </p>
+            {speciesCount === groups.length && (
+              <p className="master-badge">
+                ずかんマスター！ ぜんぶの動物を観察したよ
+              </p>
+            )}
+            <div
+              className="progress-track"
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={groups.length}
+              aria-valuenow={speciesCount}
+              aria-label="集めた動物の種類"
+            >
+              <div
+                className="progress-fill"
+                style={{ width: `${(speciesCount / groups.length) * 100}%` }}
+              />
+            </div>
+            {completeGroups.length > 0 && (
+              <ul className="complete-badges">
+                {completeGroups.map((g) => (
+                  <li key={g.id}>{g.name} コンプリート！</li>
+                ))}
+              </ul>
+            )}
+          </div>
           {drawings.length > 1 && (
             <div className="collection-sort" role="group" aria-label="並び替え">
               <button
@@ -347,47 +364,199 @@ export function DrawingCollection({
               </button>
             </div>
           )}
-          {sortedDrawings.slice(0, visibleCount).map((d) => (
-            <article className="collection-card" key={d.id}>
+          {drawings.length ? (
+            <div className="collection-grid">
+              {sortedDrawings.slice(0, visibleCount).map((d) => (
+                <article className="collection-card" key={d.id}>
+                  <button
+                    className="collection-open"
+                    onClick={() => {
+                      setSelected(d.id);
+                      recordStudy(
+                        "comparison_opened",
+                        { reason: "notebook" },
+                        {
+                          animalId: d.groupId,
+                          taskId: d.taskId,
+                          attemptId: undefined,
+                        },
+                      );
+                    }}
+                    aria-label={d.animalName + "の絵を見返す"}
+                  >
+                    <Thumbnail drawing={d} />
+                    <span className="gallery-card-meta">
+                      <strong>{d.animalName}</strong>
+                      <span className="collection-part">{d.taskName}</span>
+                      <time dateTime={d.createdAt}>
+                        {new Date(d.createdAt).toLocaleDateString("ja-JP")}
+                      </time>
+                    </span>
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="gallery-sketch-empty">
+              スケッチを描いて「つぎへ」を押すと、ここで見返せるよ。
+            </p>
+          )}
+          {drawings.length > visibleCount && (
+            <button
+              className="text-button gallery-more"
+              onClick={() => setVisibleCount((count) => count + 12)}
+            >
+              もっと見る（残り{drawings.length - visibleCount}枚）
+            </button>
+          )}
+          <NotebookTools drawings={drawings} onRestored={onUpdate} />
+          <p className="quiet-note">
+            スケッチはこのブラウザ・アプリの中に保存します。SafariとiPhoneアプリの保存は別々です。
+          </p>
+        </div>
+        <div
+          id={galleryId + "-photo-panel"}
+          role="tabpanel"
+          aria-labelledby={galleryId + "-photo"}
+          hidden={tab !== "photo"}
+          tabIndex={0}
+        >
+          <div className="gallery-photo-empty">
+            <Pitsune pose="face" className="gallery-empty-pitsune" />
+            <h2>写真は保存されないよ</h2>
+            <p>
+              撮影した写真は動物の観察に使います。撮影写真や位置情報は保存しません。
+            </p>
+          </div>
+        </div>
+      </div>
+      <button type="button" className="gallery-camera" onClick={onCamera}>
+        <Camera size={33} strokeWidth={2} aria-hidden="true" />
+        写真を撮る
+      </button>
+      {drawing && group && scene && (
+        <dialog
+          ref={detail}
+          className="gallery-detail"
+          aria-labelledby={detailId}
+          onCancel={(event) => {
+            event.preventDefault();
+            if (!deleting) closeDetail();
+          }}
+          onClick={(event) => {
+            if (!deleting && event.target === event.currentTarget)
+              closeDetail();
+          }}
+        >
+          <div>
+            <div className="gallery-detail-actions">
               <button
-                className="collection-open"
-                onClick={() => {
-                  setSelected(d.id);
-                  setDeleting(undefined);
-                  setExportError("");
-                  recordStudy(
-                    "comparison_opened",
-                    { reason: "notebook" },
-                    {
-                      animalId: d.groupId,
-                      taskId: d.taskId,
-                      attemptId: undefined,
-                    },
-                  );
-                }}
-                aria-label={d.animalName + "の絵を見返す"}
+                type="button"
+                onClick={closeDetail}
+                aria-label="一覧に戻る"
+                disabled={deleting}
               >
-                <Thumbnail drawing={d} />
-                <strong>{d.animalName}</strong>
-                <span className="collection-part">{d.taskName}</span>
-                <time dateTime={d.createdAt}>
-                  {new Date(d.createdAt).toLocaleDateString("ja-JP")}
-                </time>
+                <X size={34} aria-hidden="true" />
               </button>
-              {deleting === d.id ? (
+              <DifficultyPill regionCount={scene.regions.length} />
+            </div>
+            <SketchComparison
+              strokes={drawing.strokes}
+              scene={scene}
+              images={urls?.id === drawing.id ? urls : undefined}
+              profile={taskById[drawing.taskId || group.id]?.profile}
+              answer={group.answer}
+              initialMode="drawing"
+              cardFooter={
+                <div className="gallery-detail-fact">
+                  <p>{drawing.explanation.form}</p>
+                  {drawing.explanation.ecology && (
+                    <p>{drawing.explanation.ecology}</p>
+                  )}
+                </div>
+              }
+              onSliderCommit={(from, to, via) =>
+                recordStudy(
+                  "comparison_slider_moved",
+                  { from, to, via, reason: "notebook" },
+                  {
+                    animalId: drawing.groupId,
+                    taskId: drawing.taskId,
+                    attemptId: undefined,
+                  },
+                )
+              }
+            />
+            <div className="gallery-detail-tools">
+              <h2 id={detailId}>
+                {drawing.animalName} <span>{drawing.taskName}</span>
+              </h2>
+              <p className="quiet-note">
+                観察日{" "}
+                <time dateTime={drawing.createdAt}>
+                  {new Date(drawing.createdAt).toLocaleDateString("ja-JP")}
+                </time>
+              </p>
+              <ReadAloud
+                id={"gallery-" + drawing.id}
+                text={`${drawing.explanation.name}。${drawing.explanation.form}${drawing.explanation.ecology}`}
+              />
+              <div className="png-actions">
+                <button
+                  className="primary collection-save"
+                  disabled={exporting || deleting}
+                  onClick={() => void exportPng("own")}
+                >
+                  自分の絵をPNGで保存
+                </button>
+                <button
+                  className="primary collection-save"
+                  disabled={exporting || deleting}
+                  onClick={() => void exportPng("comparison")}
+                >
+                  比較画像をPNGで保存
+                </button>
+                {"share" in navigator && (
+                  <button
+                    className="primary collection-save"
+                    disabled={exporting || deleting}
+                    onClick={() => void shareOwn()}
+                  >
+                    シェアする
+                  </button>
+                )}
+              </div>
+              {detailError?.id === drawing.id && (
+                <p role="alert">{detailError.message}</p>
+              )}
+              {drawing.discovery && (
+                <div className="gallery-discovery">
+                  <h3>わたしの気づき</h3>
+                  <p className="discovery-text">{drawing.discovery}</p>
+                </div>
+              )}
+              {drawing.revisited && (
+                <p className="quiet-note">
+                  実物をもう一度見て確かめた（自分の記録）
+                </p>
+              )}
+              {drawing.question && (
+                <p className="figma-note">{drawing.question}</p>
+              )}
+              {confirmDelete ? (
                 <div>
                   <p>この絵を削除する？</p>
                   <button
                     className="text-button"
-                    onClick={async () => {
-                      if (await onDelete(d.id)) setDeleting(undefined);
-                    }}
+                    disabled={deleting || exporting}
+                    onClick={() => void deleteDrawing()}
                   >
                     削除する
                   </button>
                   <button
                     className="text-button"
-                    onClick={() => setDeleting(undefined)}
+                    disabled={deleting}
+                    onClick={() => setConfirmDelete(false)}
                   >
                     残す
                   </button>
@@ -395,22 +564,15 @@ export function DrawingCollection({
               ) : (
                 <button
                   className="text-button"
-                  onClick={() => setDeleting(d.id)}
+                  disabled={exporting}
+                  onClick={() => setConfirmDelete(true)}
                 >
                   削除
                 </button>
               )}
-            </article>
-          ))}
-        </div>
-      )}
-      {!drawing && drawings.length > visibleCount && (
-        <button
-          className="text-button"
-          onClick={() => setVisibleCount((count) => count + 12)}
-        >
-          もっと見る（残り{drawings.length - visibleCount}枚）
-        </button>
+            </div>
+          </div>
+        </dialog>
       )}
     </section>
   );

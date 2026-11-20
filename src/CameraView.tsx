@@ -2,36 +2,65 @@ import { challengeProvider } from "./domain";
 import { recordStudy } from "./research/study";
 import { groups } from "./content/groups";
 import type { Candidate } from "./recognition/labels";
-import { AnimalSelector } from "./components/AnimalSelector";
+import { PhotoReview } from "./components/PhotoReview";
+import { PhotoCelebration } from "./components/ChallengeIntro";
 import { Pitsune } from "./components/Pitsune";
 import { useEffect, useRef, useState } from "react";
-import { Camera, CameraOff, NotebookPen, Settings } from "lucide-react";
+import { Camera, CameraOff, Images, UserRound } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
-import { motion, useReducedMotion } from "motion/react";
+
+type ZoomCapabilities = MediaTrackCapabilities & {
+  zoom?: { min: number; max: number };
+};
+
+async function applyZoom(track: MediaStreamTrack | undefined, zoom: number) {
+  try {
+    const capabilities: ZoomCapabilities | undefined =
+      track?.getCapabilities?.();
+    const range = capabilities?.zoom;
+    if (track && range && zoom >= range.min && zoom <= range.max) {
+      const setting: MediaTrackConstraintSet & { zoom: number } = { zoom };
+      await track.applyConstraints({ advanced: [setting] });
+    }
+  } catch {
+    // Some cameras expose a zoom range but reject external changes.
+  }
+}
 export function CameraView({
   onSelect,
   onCollection,
   onSettings,
   suspended = false,
+  celebrating = false,
+  onFreeDraw,
 }: {
   suspended?: boolean;
+  celebrating?: boolean;
+  onFreeDraw: () => void;
   onCollection?: () => void;
   onSettings?: (trigger: HTMLButtonElement) => void;
   onSelect: (
-    photo?: string,
-    id?: string,
-    method?: "manual" | "automatic",
+    photo: string,
+    taskId: string,
+    method: "manual" | "automatic",
   ) => void;
 }) {
   const suspendedRef = useRef(suspended);
   suspendedRef.current = suspended;
-  const capturePending = useRef(false);
+  const [takenAt, setTakenAt] = useState<Date>();
+  const [selection, setSelection] = useState<{
+    choice: Pick<Candidate, "groupId" | "speciesId">;
+    method: "manual" | "automatic";
+  }>();
+  const manuallySelected = useRef(false);
+  const [detected, setDetected] = useState("");
+  const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(zoom);
+  zoomRef.current = zoom;
   const [captured, setCaptured] = useState("");
-  const [busy, setBusy] = useState(false);
   const [modelReady, setModelReady] = useState(speciesRecognizer.isReady());
   const [recognizing, setRecognizing] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const reduce = useReducedMotion();
   const video = useRef<HTMLVideoElement>(null),
     stream = useRef<MediaStream | null>(null),
     generation = useRef(0),
@@ -87,6 +116,7 @@ export function CameraView({
           );
         };
       });
+      void applyZoom(media.getVideoTracks?.()[0], zoomRef.current);
       if (video.current) {
         video.current.srcObject = media;
         await video.current.play();
@@ -144,21 +174,32 @@ export function CameraView({
       void start();
     }
   }, [suspended]);
-  async function retake() {
-    setCaptured("");
+  function clearReview() {
+    generation.current++;
+    speciesRecognizer.release();
+    setModelReady(speciesRecognizer.isReady());
+    setRecognizing(false);
     setCandidates([]);
-    await start();
+    setCaptured("");
+    setTakenAt(undefined);
+    setSelection(undefined);
+    manuallySelected.current = false;
   }
-  async function capture() {
-    if (
-      capturePending.current ||
-      busy ||
-      !video.current?.videoWidth ||
-      status !== "live"
-    )
-      return;
-    capturePending.current = true;
-    setBusy(true);
+  function retake() {
+    clearReview();
+    void start();
+  }
+  function chooseWithoutPhoto() {
+    cameraGeneration.current++;
+    cameraPending.current = false;
+    needsResume.current = false;
+    stopCamera();
+    clearReview();
+    setMessage("");
+    setStatus("review");
+  }
+  function capture() {
+    if (!video.current?.videoWidth || status !== "live") return;
     try {
       const canvas = document.createElement("canvas");
       const scale = Math.min(
@@ -171,7 +212,10 @@ export function CameraView({
       if (!context) throw new Error("canvas");
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
+      clearReview();
+      setDetected("");
       setCaptured(image);
+      setTakenAt(new Date());
       stopCamera();
       needsResume.current = false;
       setStatus("review");
@@ -180,13 +224,9 @@ export function CameraView({
         {},
         { animalId: undefined, taskId: undefined, attemptId: undefined },
       );
-      setCandidates([]);
-      await recognize(image);
+      void recognize(image);
     } catch {
       setMessage("撮影できませんでした。カメラをもう一度試してください。");
-    } finally {
-      capturePending.current = false;
-      setBusy(false);
     }
   }
   async function recognize(image = captured) {
@@ -209,7 +249,16 @@ export function CameraView({
           challengeProvider.forSpecies(first.speciesId || first.groupId)
             .length > 0
         ) {
-          onSelect(image, first.speciesId || first.groupId, "automatic");
+          if (!manuallySelected.current) {
+            setSelection({ choice: first, method: "automatic" });
+            setDetected(
+              first.speciesId === "sheep"
+                ? "ヒツジ"
+                : (groups.find((item) => item.id === first.groupId)?.name ??
+                    ""),
+            );
+          }
+          setMessage("");
           return;
         }
         setCandidates(result.candidates);
@@ -240,149 +289,179 @@ export function CameraView({
     );
     setRecognizing(false);
   }
-  const bubbleText = captured
-    ? "写真が撮れたね！動物を選んでね。"
-    : status === "live"
-      ? "動物を画面のまんなかに入れてね！"
-      : status === "failed"
-        ? "カメラが使えなくても大丈夫だよ"
-        : status === "paused"
-          ? "カメラをお休み中だよ"
-          : "カメラを準備しているよ…";
+  const selectedTask = selection
+    ? challengeProvider.forSpecies(
+        selection.choice.speciesId ?? selection.choice.groupId,
+      )[0]
+    : undefined;
+
   return (
-    <div className="camera-page">
-      <h1 className="sr-only">動物を撮影しよう</h1>
-      <div className="camera-pitsune">
-        <Pitsune pose="face" className="camera-pitsune-face" />
-        <p className="pitsune-bubble">{bubbleText}</p>
-      </div>
-      <div className="camera-frame">
-        <video
-          ref={video}
-          playsInline
-          autoPlay
-          muted
-          aria-label="動物を映すカメラ"
-          className={status === "live" ? "" : "hidden-video"}
-        />
-        {captured && (
-          <motion.img
-            key={captured}
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.2 }}
-            className="captured-preview"
-            src={captured}
-            alt="撮影した動物の写真"
-          />
-        )}
-        {status !== "live" && !captured && (
-          <div className="camera-fallback">
-            {status === "failed" ? (
-              <CameraOff size={38} />
+    <div className="camera-page design3-camera">
+      <section hidden={status === "review"}>
+        <h1 className="sr-only">動物を撮影しよう</h1>
+        <div className="camera-pitsune">
+          <Pitsune pose="face" className="camera-pitsune-face" />
+          <p className="pitsune-bubble">
+            {detected ? (
+              <>
+                <strong>{detected}</strong>がいるよ！
+              </>
             ) : (
-              <Camera size={38} />
+              <>
+                <strong>動物の写真</strong>を撮ろう！
+              </>
             )}
-            <strong>
-              {status === "paused"
-                ? "カメラを再開できます"
-                : status === "failed"
-                  ? "手動で始められるよ"
-                  : "カメラを準備しています"}
-            </strong>
-            <span>動物から少し離れて、そっと観察しよう。</span>
-          </div>
-        )}
-        {status === "live" && !captured && (
-          <div className="vf-grid" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-        )}
-        {(status === "live" || !!captured) && (
-          <div className="vf-corners" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-        )}
-        <span className="camera-tag">
-          {captured
-            ? "撮影した写真"
-            : status === "live"
-              ? "カメラで観察中"
-              : "かんさつカメラ"}
-        </span>
-      </div>
-      {message && (
-        <p className="camera-message" role="status">
-          {message}
-          {(status === "failed" || status === "paused") && (
-            <button className="text-button" onClick={() => void start()}>
-              {status === "paused"
-                ? "カメラを再開する"
-                : "カメラをもう一度試す"}
-            </button>
+          </p>
+        </div>
+        <div className="camera-frame">
+          <video
+            ref={video}
+            playsInline
+            autoPlay
+            muted
+            aria-label="動物を映すカメラ"
+            className={status === "live" ? "" : "hidden-video"}
+          />
+          {status !== "live" && (
+            <div className="camera-fallback">
+              {status === "failed" ? (
+                <CameraOff size={107} strokeWidth={1.35} aria-hidden="true" />
+              ) : (
+                <Camera size={107} strokeWidth={1.35} aria-hidden="true" />
+              )}
+              <span role="status">
+                {status === "paused"
+                  ? "カメラを再開できます"
+                  : status === "waiting"
+                    ? "カメラを準備しています"
+                    : "手動で始められるよ"}
+              </span>
+            </div>
           )}
-        </p>
-      )}
-      <div className="camera-controls">
-        <button
-          type="button"
-          className="camera-side-button"
-          onClick={() => onCollection?.()}
-        >
-          <span className="camera-side-thumb">
-            <NotebookPen size={20} aria-hidden="true" />
-          </span>
-          スケッチ
-        </button>
-        <button
-          className="shutter-button"
-          disabled={(!captured && status !== "live") || busy || recognizing}
-          onClick={() => void (captured ? retake() : capture())}
-        >
-          {busy ? "写真を確認中…" : captured ? "もう一度撮る" : "シャッター"}
-        </button>
-        <button
-          type="button"
-          className="camera-side-button"
-          onClick={(event) => onSettings?.(event.currentTarget)}
-        >
-          <span className="camera-side-thumb">
-            <Settings size={20} aria-hidden="true" />
-          </span>
-          せってい
-        </button>
-      </div>
-      <details className="recognition-settings">
-        <summary>撮影の設定</summary>
-        <button
-          className="text-button"
-          disabled={recognizing || modelReady}
-          onClick={() => void prepare()}
-        >
-          {modelReady ? "識別モデル準備済み" : "識別モデルを先にダウンロード"}
-        </button>
-        <p className="quiet-note">
-          初回は約150MB以上。Wi-Fiで先に準備できます。撮影後、候補が絞れたら描画へ進みます。
-        </p>
-        {recognizing && !captured && (
-          <button
-            className="text-button"
-            onClick={() => {
-              speciesRecognizer.cancel();
-              setModelReady(false);
-            }}
+          {status === "live" && detected && (
+            <div className="vf-corners" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+          )}
+          <div
+            className="design3-zoom"
+            role="group"
+            aria-label="カメラのズーム"
           >
-            準備をやめる
+            {[0.5, 1].map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={zoom === value}
+                onClick={() => {
+                  setZoom(value);
+                  void applyZoom(stream.current?.getVideoTracks?.()[0], value);
+                }}
+              >
+                {value}×
+              </button>
+            ))}
+          </div>
+          {status === "live" && <span className="sr-only">カメラで観察中</span>}
+        </div>
+        <div className="camera-controls">
+          <button
+            type="button"
+            className="camera-side-button"
+            onClick={() => onCollection?.()}
+          >
+            <Images size={29} aria-hidden="true" />
+            ギャラリー
           </button>
+          <button
+            className="shutter-button"
+            aria-label="シャッター"
+            disabled={status !== "live" || recognizing}
+            onClick={capture}
+          />
+          <button
+            type="button"
+            className="camera-side-button"
+            onClick={(event) => onSettings?.(event.currentTarget)}
+          >
+            <UserRound size={29} aria-hidden="true" />
+            マイページ
+          </button>
+        </div>
+        {message && (
+          <p className="camera-message" role="status">
+            {message}
+            {(status === "failed" || status === "paused") && (
+              <button className="text-button" onClick={() => void start()}>
+                {status === "paused"
+                  ? "カメラを再開する"
+                  : "カメラをもう一度試す"}
+              </button>
+            )}
+          </p>
         )}
-        {captured && (
+        <div className="design3-camera-alternatives">
+          <button className="text-button" onClick={chooseWithoutPhoto}>
+            写真なしで始める
+          </button>
+          <button className="text-button" onClick={onFreeDraw}>
+            自由に描く
+          </button>
+        </div>
+      </section>
+      {status === "review" && (
+        <div inert={celebrating || undefined}>
+          <PhotoReview
+            photo={captured}
+            takenAt={takenAt}
+            selection={selection?.choice}
+            candidates={candidates}
+            onChange={(choice) => {
+              manuallySelected.current = true;
+              setSelection({ choice, method: "manual" });
+              setDetected(
+                choice.speciesId === "sheep"
+                  ? "ヒツジ"
+                  : (groups.find((item) => item.id === choice.groupId)?.name ??
+                      ""),
+              );
+            }}
+            onRetake={retake}
+            onConfirm={() => {
+              if (selectedTask && selection)
+                onSelect(captured, selectedTask.id, selection.method);
+            }}
+          />
+          {message && (
+            <p className="quiet-note" role="status">
+              {message}
+            </p>
+          )}
+        </div>
+      )}
+      {celebrating && <PhotoCelebration />}
+      <details className="recognition-settings" hidden={celebrating}>
+        <summary>撮影の設定</summary>
+        {status !== "review" ? (
           <>
+            <button
+              className="text-button"
+              disabled={recognizing || modelReady}
+              onClick={() => void prepare()}
+            >
+              {modelReady
+                ? "識別モデル準備済み"
+                : "識別モデルを先にダウンロード"}
+            </button>
+            <p className="quiet-note">
+              初回は約150MB以上。Wi-Fiで先に準備できます。
+            </p>
+          </>
+        ) : (
+          captured && (
             <button
               className="text-button"
               disabled={recognizing}
@@ -390,46 +469,20 @@ export function CameraView({
             >
               {recognizing ? "候補を探しています…" : "AIで候補を探す"}
             </button>
-            {recognizing && (
-              <button
-                className="text-button"
-                onClick={() => speciesRecognizer.cancel()}
-              >
-                検索をやめる
-              </button>
-            )}
-          </>
+          )
+        )}
+        {recognizing && (
+          <button
+            className="text-button"
+            onClick={() => {
+              speciesRecognizer.cancel();
+              setModelReady(false);
+            }}
+          >
+            {captured ? "検索をやめる" : "準備をやめる"}
+          </button>
         )}
       </details>
-      {candidates.length > 0 && (
-        <section aria-label="AIの候補">
-          <h2>この動物かな？</h2>
-          {candidates.map((c) => (
-            <button
-              className="animal-choice"
-              key={c.groupId}
-              disabled={
-                !challengeProvider.forSpecies(c.speciesId || c.groupId).length
-              }
-              onClick={() => onSelect(captured, c.speciesId || c.groupId)}
-            >
-              {c.speciesId === "sheep"
-                ? "ヒツジ"
-                : groups.find((g) => g.id === c.groupId)?.name ||
-                  "ヤブイヌ（描画課題は未対応）"}{" "}
-              {challengeProvider.forSpecies(c.speciesId || c.groupId).length > 0
-                ? "を観察する"
-                : ""}
-            </button>
-          ))}
-          <p>違うときは、下から選んでね。</p>
-        </section>
-      )}
-      {captured && <p role="status">撮影した写真を見て、動物を選んでね。</p>}
-      <AnimalSelector onSelect={(id) => onSelect(captured, id)} />
-      <p className="quiet-note">
-        写真は端末内で処理します。描くときは実物を見てね。
-      </p>
     </div>
   );
 }

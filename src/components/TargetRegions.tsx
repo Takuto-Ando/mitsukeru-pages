@@ -1,24 +1,33 @@
 import type { Scene } from "../content/scenes";
-// A printed guide, not an animation. Drawing masks remain shared with judging.
+
 export function TargetRegions({ scene }: { scene: Scene }) {
+  const height = scene.frameHeight || 400;
   return (
-    <g aria-hidden="true" pointerEvents="none" data-testid="drawing-target">
-      {scene.regions.map((r, i) => (
-        <rect
-          key={i}
-          x={r.x * 600}
-          y={r.y * (scene.frameHeight || 400)}
-          width={r.width * 600}
-          height={r.height * (scene.frameHeight || 400)}
-          rx="3"
-          fill="#c6a353"
-          fillOpacity=".07"
-          stroke="#a88439"
-          strokeWidth="1.2"
-          strokeDasharray="4 5"
-          vectorEffect="non-scaling-stroke"
-        />
-      ))}
+    <g
+      className="drawing-target"
+      aria-hidden="true"
+      pointerEvents="none"
+      data-testid="drawing-target"
+      fill="none"
+      stroke="#bdbab4"
+      strokeWidth="2"
+      strokeDasharray="4 5"
+    >
+      {scene.id === "giraffe" && scene.answerPath ? (
+        <path d={scene.answerPath} vectorEffect="non-scaling-stroke" />
+      ) : (
+        scene.regions.map((region, index) => (
+          <rect
+            key={index}
+            x={region.x * 600}
+            y={region.y * height}
+            width={region.width * 600}
+            height={region.height * height}
+            rx="6"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))
+      )}
     </g>
   );
 }

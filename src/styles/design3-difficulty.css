@@ -1,0 +1,30 @@
+.difficulty-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+  width: max-content;
+  padding: 0.5em 1.2em;
+  border-radius: 999px;
+  background: #fff;
+  color: #995619;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.difficulty-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: #f7e7d1;
+}
+
+.difficulty-icons svg {
+  width: 1.55em;
+  height: 1.35em;
+}
+
+.difficulty-icons .difficulty-active {
+  color: var(--d3-orange);
+}
