@@ -11,19 +11,21 @@ type Capture = {
 
 export function ReplicaCamera({
   tutorial,
+  framedExample,
   onCapture,
   onGallery,
   onHome,
   onFreeDraw,
 }: {
   tutorial: boolean;
+  framedExample: boolean;
   onCapture: (capture: Capture) => void;
   onGallery: () => void;
   onHome: () => void;
   onFreeDraw: () => void;
 }) {
-  const [sample, setSample] = useState(tutorial);
-  const [sampleHasAnimal, setSampleHasAnimal] = useState(false);
+  const [sample, setSample] = useState(tutorial || framedExample);
+  const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
   const [streamReady, setStreamReady] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [message, setMessage] = useState("");
