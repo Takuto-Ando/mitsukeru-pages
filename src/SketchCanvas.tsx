@@ -16,6 +16,7 @@ import {
   scenePoint,
   type Scene,
 } from "./content/scenes";
+import { Furi } from "./furigana/Furigana";
 import { SceneBase } from "./components/ObservationScene";
 import { TargetRegions } from "./components/TargetRegions";
 import type { DrawingAction } from "./drawing/history";
@@ -632,13 +633,15 @@ export function SketchCanvas({
               className="mission-pitsune-face"
               src={assetPath("figma/entry/sketch-face.svg")}
             />
-            <h1 className="pitsune-bubble">
+            <h1 className="pitsune-bubble" aria-label={missionTitle}>
               {missionLettering ? (
                 <img
                   className="drawing-lettering"
                   src={assetPath(missionLettering)}
                   alt={missionTitle}
                 />
+              ) : missionTitle ? (
+                <Furi text={missionTitle} />
               ) : (
                 missionTitle
               )}

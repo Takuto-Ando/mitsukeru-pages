@@ -1,4 +1,5 @@
 import { NotebookTools } from "./NotebookTools";
+import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { groups } from "../content/groups";
@@ -531,9 +532,13 @@ export function DrawingCollection({
               viewport={viewport}
               cardFooter={
                 <div className="gallery-detail-fact">
-                  <p>{drawing.explanation.form}</p>
+                  <p>
+                    <Furi text={drawing.explanation.form} />
+                  </p>
                   {drawing.explanation.ecology && (
-                    <p>{drawing.explanation.ecology}</p>
+                    <p>
+                      <Furi text={drawing.explanation.ecology} />
+                    </p>
                   )}
                 </div>
               }
