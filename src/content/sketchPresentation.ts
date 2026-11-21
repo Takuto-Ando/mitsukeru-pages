@@ -1,3 +1,4 @@
+import { kyotoDrafts } from "./kyotoCatalog";
 import type { Point } from "../types";
 import type { Artwork } from "./artwork";
 import type { CelebrationKind } from "./celebrations";
@@ -73,10 +74,20 @@ const colors: Record<string, PenColors> = {
   donkey: ["#635044", "#917660"],
   meerkat: ["#654731", "#a17b53"],
   deer: ["#89583b", "#c0976e"],
+  bear: ["#383032", "#a78d67"],
+  "bush-dog": ["#765044", "#a96e4d"],
+  horse: ["#80543d", "#b18560"],
+  hyrax: ["#735b48", "#a98764"],
+  tapir: ["#554d51", "#86777c"],
 };
 
+const draftColors = new Map(
+  kyotoDrafts.map(({ groupId, draft }) => [groupId, draft.color]),
+);
+
 export function penColorsFor(groupId: string): PenColors {
-  return colors[groupId] ?? neutral;
+  const draft = draftColors.get(groupId);
+  return colors[groupId] ?? (draft ? [draft, neutral[0]] : neutral);
 }
 
 export function applySketchDesign(taskId: string, scene: Scene): Scene {

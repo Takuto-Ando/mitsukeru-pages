@@ -1,6 +1,7 @@
 import { test, expect } from "vitest";
 import { drawingEvaluator, challengeProvider } from "../../src/domain";
 import { tasks, taskById } from "../../src/content/tasks";
+import { penColorsFor } from "../../src/content/sketchPresentation";
 import { recognitionFromOutput } from "../../src/recognition/labels";
 import { analyzeStudy } from "../../src/research/analysis";
 import type { StudyEvent } from "../../src/research/study";
@@ -21,6 +22,13 @@ for (const task of tasks)
     expect(answer.method).toBe(task.automatic ? "automatic" : "comparison");
     expect(answer.passed).toBe(false);
   });
+test("登録された課題は動物別のペン色で始める", () => {
+  const fallback = penColorsFor("unregistered");
+  for (const { groupId } of tasks) {
+    expect(penColorsFor(groupId), groupId).not.toEqual(fallback);
+  }
+  expect(penColorsFor("giraffe")[0]).toBe("#6b5c7a");
+});
 test("羊を種として区別し、対象外・曖昧な推定は確定しない", () => {
   expect(challengeProvider.forSpecies("sheep")[0].id).toBe("sheep");
   expect(taskById.sheep.automatic).toBe(true);
