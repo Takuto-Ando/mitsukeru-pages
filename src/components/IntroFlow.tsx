@@ -235,6 +235,9 @@ export function TutorialEndScreen({
             text="ありがとう！"
             src={entryLettering("finish", "action")}
           />
+          {import.meta.env.VITE_LEGACY_EDITIONS !== "1" && (
+            <ChevronRight aria-hidden="true" className="intro-action-icon" />
+          )}
         </button>
       )}
     </IntroPanel>

@@ -110,6 +110,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
     ["38-898", "撮ってみる！"],
   ]) {
     await expect(node(id)).toBeVisible();
+    await expect(button(choice).locator(".intro-action-icon")).toBeVisible();
     await button(choice).click();
   }
   await expect(node("43-1681")).toBeVisible();
@@ -140,6 +141,9 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
     .locator(".photo-celebration-tap")
     .click({ position: { x: 100, y: 100 } });
   await expect(node("38-1056")).toBeVisible();
+  await expect(
+    button("描いてみる！").locator(".intro-action-icon"),
+  ).toBeVisible();
   await button("描いてみる！").click();
   await expect(node("52-5984")).toBeVisible();
   await expectLicensedTypeface(
@@ -172,6 +176,9 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   if (production) expect(payload).not.toHaveProperty("token");
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
+  await expect(
+    button("ありがとう！").locator(".intro-action-icon"),
+  ).toBeVisible();
   await button("ありがとう！").click();
   await expect(node("38-1026")).toBeVisible();
   await button("ギャラリー").click();

@@ -224,9 +224,73 @@
   white-space: nowrap;
 }
 
+.replica-app .design3-photo-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 49px;
+  gap: 2px;
+  color: var(--d3-cream);
+}
+
+.replica-app .design3-photo-edit > .photo-review-edit-icon {
+  flex: none;
+}
+
 .replica-app .design3-photo-edit > span {
-  color: #fff;
-  font-size: 11px;
+  font-size: 7.23px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.replica-app .design3-photo-edit ruby[data-reading]::after {
+  inset-block-end: calc(100% - 1px);
+  font-size: 6.5px;
+}
+
+.replica-app .design3-photo-edit > span:has(ruby[data-reading]) {
+  translate: 0 3px;
+}
+
+.replica-app .design3-intro-next:has(.intro-action-icon) {
+  position: relative;
+}
+
+.replica-app .design3-intro-next > .intro-action-icon {
+  position: absolute;
+  inset-inline-end: 5.8%;
+  width: 29px;
+  height: 29px;
+  pointer-events: none;
+}
+
+.replica-app .design3-intro-next:has(.intro-action-icon) .card-lettering-text {
+  translate: -8px;
+}
+
+.replica-app
+  .design3-intro:is(
+    [data-entry-lettering="camera"],
+    [data-entry-lettering="easel"]
+  )
+  .intro-action-icon {
+  inset-inline: 11.4% auto;
+  width: 22px;
+  height: 22px;
+}
+
+.replica-app .design3-intro[data-entry-lettering="easel"] .intro-action-icon {
+  inset-inline-start: 13.5%;
+}
+
+.replica-app
+  .design3-intro:is(
+    [data-entry-lettering="camera"],
+    [data-entry-lettering="easel"]
+  )
+  .design3-intro-next:has(.intro-action-icon)
+  .card-lettering-text {
+  translate: 17px;
 }
 
 .replica-app[data-variant="product"] .camera-frame,

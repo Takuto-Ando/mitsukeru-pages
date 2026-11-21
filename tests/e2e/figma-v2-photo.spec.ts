@@ -151,6 +151,17 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await expect(
     savedHeading.locator('ruby[data-reading="ほぞん"]'),
   ).toBeVisible();
+  const editButton = button(page, "修正");
+  await expect(editButton.locator(".photo-review-edit-icon")).toBeVisible();
+  const editBounds = (await editButton.boundingBox())!;
+  expect(editBounds.width).toBeCloseTo(49, 0);
+  expect(editBounds.height).toBeCloseTo(44, 0);
+  await expect(
+    button(page, "撮りなおす").locator(":scope > svg"),
+  ).toBeVisible();
+  await expect(
+    button(page, "ピツネに見せる").locator(":scope > img"),
+  ).toBeVisible();
   const jpeg = (await savedObservations(page))[0].photo!;
   const storedRatio = await page.evaluate(async (source) => {
     const image = new Image();
@@ -265,7 +276,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   expect(uploads).toBe(0);
 });
 
-test("チュートリアルでも背面カメラで撮り、認識の案内と写真の保存を確認できる", async ({
+test("チュートリアルで未検出なら撮影直後に動物を修正でき、写真を保存する", async ({
   page,
 }) => {
   await useTestCamera(page, false);
@@ -287,11 +298,9 @@ test("チュートリアルでも背面カメラで撮り、認識の案内と�
     page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
   await expect(button(page, "撮りなおす")).toBeDisabled();
-  await expect(
-    page.getByText(
-      /画像認識を利用できませんでした。動物の名前を選んでください。/,
-    ),
-  ).toBeVisible();
+  await expect(button(page, "修正")).toBeEnabled();
+  await expect(button(page, "ピツネに見せる")).toBeDisabled();
+  await expect(page.locator(".replica-recognition-status")).toHaveCount(0);
   await chooseAnimal(page, "キリン");
   await expect
     .poll(() => savedObservations(page))

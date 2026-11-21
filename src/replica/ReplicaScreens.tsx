@@ -6,7 +6,13 @@ import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering, tutorialLines } from "../components/CardLettering";
-import { Camera, CircleHelp, CornerDownLeft } from "lucide-react";
+import {
+  Camera,
+  ChevronRight,
+  CircleHelp,
+  CornerDownLeft,
+  Pencil,
+} from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
@@ -52,6 +58,8 @@ export function ReplicaIntro({
 }) {
   const [message, action, color] = backgrounds[pose];
   const folder = "illustrations/pdf-design/";
+  const ActionIcon =
+    pose === "camera" ? Camera : pose === "easel" ? Pencil : ChevronRight;
   return (
     <section
       className="design3-intro"
@@ -92,6 +100,9 @@ export function ReplicaIntro({
           text={action}
           src={assetPath(folder + "entry-" + pose + "-action.svg")}
         />
+        {import.meta.env.VITE_LEGACY_EDITIONS !== "1" && (
+          <ActionIcon aria-hidden="true" className="intro-action-icon" />
+        )}
       </button>
     </section>
   );
@@ -364,12 +375,18 @@ export function ReplicaPhotoReview({
             <h2>{group?.name ?? "？？？？？"}</h2>
             <button
               className="design3-photo-edit"
+              type="button"
               ref={edit}
               aria-label="修正"
               aria-controls={editing ? optionsId : undefined}
               aria-expanded={editing}
               onClick={() => setEditing(!editing)}
             >
+              <Pencil
+                aria-hidden="true"
+                className="photo-review-edit-icon"
+                size={8.5}
+              />
               <span>修正</span>
             </button>
             {editing && (

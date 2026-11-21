@@ -1,5 +1,4 @@
 import { useModelPreload } from "../recognition/useModelPreload";
-import { usePhotoIdentification } from "../recognition/usePhotoIdentification";
 import {
   FuriganaProvider,
   loadFurigana,
@@ -26,7 +25,7 @@ import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { drawingEvaluator } from "../domain";
 import { tutorialSurveyUrl } from "../research/tutorialSurvey";
 import type { Evaluation, Stroke } from "../types";
-import { ReplicaCamera } from "./ReplicaCamera";
+import { ReplicaCamera, type CameraCapture } from "./ReplicaCamera";
 import { ReplicaGallery, type ReplicaRecord } from "./ReplicaGallery";
 import {
   ReplicaDraw,
@@ -112,7 +111,11 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
   }, [legacy, screen, surveyUrl]);
   const [introPage, setIntroPage] = useState(0);
   const [tutorial, setTutorial] = useState(false);
-  useModelPreload({ enabled: tutorial && !legacy, allowMetered: true });
+  useModelPreload({
+    enabled: tutorial && !legacy,
+    photo: false,
+    allowMetered: true,
+  });
   const [framedExample, setFramedExample] = useState(false);
   const [groupId, setGroupId] = useState("");
   const [record, setRecord] = useState<ReplicaRecord>();
@@ -131,14 +134,16 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
   const writingPhoto = useRef<Promise<void>>(Promise.resolve());
   const activeCapture = useRef<string | undefined>(undefined);
   const reduce = useReducedMotion();
-  const chosen = groups.find((choice) => choice.id === groupId);
+  const selectedGroup = groups.find((choice) => choice.id === groupId);
+  const chosen =
+    selectedGroup && record?.groupId === selectedGroup.id && record.animalName
+      ? { ...selectedGroup, name: record.animalName }
+      : selectedGroup;
   const group = chosen ?? choices[0];
-  const task = tasksForGroup(group.id)[0] ?? taskById.giraffe;
-  const identification = usePhotoIdentification(
-    !legacy && screen === "review" && !record?.samplePhoto && !groupId
-      ? record?.photo
-      : undefined,
-  );
+  const task =
+    (record?.taskId && taskById[record.taskId]) ||
+    tasksForGroup(group.id)[0] ||
+    taskById.giraffe;
 
   useEffect(() => {
     const send = () => {
@@ -211,21 +216,26 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     setFramedExample(!!record?.samplePhoto);
   }
 
-  function takePhoto({ photo, sample }: { photo?: string; sample: boolean }) {
+  function takePhoto({ photo, sample, animal }: CameraCapture) {
+    const captured = sample ? { groupId: "giraffe", name: "キリン" } : animal;
     const next: ReplicaRecord = {
       id: recordId(),
       createdAt: new Date().toISOString(),
       photo,
       photoLocation: photo ? galleryPhotoLocation : undefined,
-      groupId: sample ? "giraffe" : undefined,
-      taskId: sample ? taskById.giraffe.id : undefined,
+      groupId: captured?.groupId,
+      taskId: captured
+        ? (captured.taskId ?? tasksForGroup(captured.groupId)[0]?.id)
+        : undefined,
       samplePhoto: sample,
-      animalName: sample ? "キリン" : undefined,
-      photoDescription: sample ? zooAnimalSummary("giraffe") : undefined,
+      animalName: captured?.name,
+      photoDescription: captured
+        ? zooAnimalSummary(captured.groupId)
+        : undefined,
     };
     activeCapture.current = next.id;
     setRecord(next);
-    setGroupId(sample ? "giraffe" : "");
+    setGroupId(captured?.groupId ?? "");
     setError("");
     setScreen("review");
     if (!photo) {
@@ -247,12 +257,6 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
         setError("写真を保存できませんでした。続けて描くことはできます。");
     });
   }
-
-  const selectAnimal = useRef<(id: string) => void>(() => {});
-  useEffect(() => {
-    if (!groupId && screen === "review" && identification.candidate)
-      selectAnimal.current(identification.candidate.groupId);
-  }, [groupId, identification.candidate, screen]);
 
   function selectCapturedAnimal(id: string) {
     const selected = groups.find((item) => item.id === id);
@@ -281,8 +285,6 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
           setError("写真の動物名を保存できませんでした。");
       });
   }
-
-  selectAnimal.current = selectCapturedAnimal;
 
   function startDrawing() {
     dispatchDrawing({ type: "reset" });
@@ -492,14 +494,6 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                     canRetake={legacy || !tutorial}
                   />
                 </div>
-                {!groupId && screen === "review" && identification.message && (
-                  <p
-                    role="status"
-                    className="quiet-note replica-recognition-status"
-                  >
-                    {identification.message}
-                  </p>
-                )}
                 {screen === "cheer" && (
                   <PhotoCelebration
                     onContinue={legacy ? undefined : () => setScreen("easel")}

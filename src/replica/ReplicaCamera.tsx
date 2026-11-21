@@ -19,9 +19,18 @@ export const samplePhoto = () =>
 const liveSetting = "zooketch-live-detection-v1";
 const photoRatio = [4, 5] as const;
 
-type Capture = {
+const recognizedAnimals = new Map([
+  ["キリン", { groupId: "giraffe" }],
+  ["シマウマ", { groupId: "zebra" }],
+  ["ゾウ", { groupId: "elephant" }],
+  ["クマ", { groupId: "bear" }],
+  ["ヒツジ", { groupId: "goat", taskId: "sheep" }],
+]);
+
+export type CameraCapture = {
   photo?: string;
   sample: boolean;
+  animal?: { groupId: string; name: string; taskId?: string };
 };
 
 export function ReplicaCamera({
@@ -38,14 +47,14 @@ export function ReplicaCamera({
   tutorial: boolean;
   legacy?: boolean;
   framedExample: boolean;
-  onCapture: (capture: Capture) => void;
+  onCapture: (capture: CameraCapture) => void;
   onGallery: () => void;
   onHome: () => void;
   onFreeDraw: () => void;
   onSettings?: (trigger: HTMLButtonElement) => void;
   suspended?: boolean;
 }) {
-  useModelPreload({ allowMetered: true });
+  useModelPreload({ enabled: legacy, allowMetered: true });
   const photoModelDownloading = usePhotoModelDownloading();
   const [sample, setSample] = useState((legacy && tutorial) || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
@@ -90,9 +99,20 @@ export function ReplicaCamera({
   const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
   const sampleVisible = sampleHasAnimal || (legacy && cameraZoom.zoom === 0.5);
+  const bestMatch =
+    !legacy && liveActive
+      ? live.boxes.find(({ label }) => recognizedAnimals.has(label))
+      : undefined;
+  const selection = bestMatch && recognizedAnimals.get(bestMatch.label);
+  const animal =
+    bestMatch && selection
+      ? { ...selection, name: bestMatch.label }
+      : undefined;
   const recognized = sample
     ? sampleVisible
-    : liveActive && live.boxes.length > 0;
+    : legacy
+      ? liveActive && live.boxes.length > 0
+      : !!animal;
   const figmaNode = tutorial
     ? recognized
       ? "43-1745"
@@ -278,7 +298,11 @@ export function ReplicaCamera({
       const shot =
         frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
       if (shot) {
-        onCapture({ photo: shot.canvas.toDataURL("image/jpeg", 0.82), sample });
+        onCapture({
+          photo: shot.canvas.toDataURL("image/jpeg", 0.82),
+          sample,
+          animal,
+        });
       } else if (legacy && sample) {
         onCapture({ photo: samplePhoto(), sample: true });
       }
@@ -307,8 +331,8 @@ export function ReplicaCamera({
               src={assetPath("replica-assets/camera-found.svg")}
               text="キリンがいるよ！"
             />
-          ) : !legacy && recognized ? (
-            <BubbleLine text={`${live.boxes[0]?.label ?? ""}かな？`} />
+          ) : animal ? (
+            <BubbleLine text={`${animal.name}がいるよ！`} />
           ) : (
             <CardLettering
               className="camera-prompt-art"
@@ -345,13 +369,6 @@ export function ReplicaCamera({
               }
             />
             <span className="replica-sample-label">見本写真</span>
-            {sampleVisible && (
-              <img
-                alt=""
-                className="design3-camera-guides"
-                src={assetPath("figma/entry/camera-guides.svg")}
-              />
-            )}
           </>
         ) : (
           <>
@@ -383,7 +400,17 @@ export function ReplicaCamera({
             )}
           </>
         )}
-        {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
+        {((sample && sampleVisible) || !!animal) && (
+          <img
+            alt=""
+            className="design3-camera-guides"
+            src={assetPath("figma/entry/camera-guides.svg")}
+            style={
+              !tutorial && animal ? { top: "6.16%", left: "7.71%" } : undefined
+            }
+          />
+        )}
+        {legacy && liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
         {legacy && ((!sample && !message) || photoModelDownloading) && (
           <div className="live-camera-control">
             {!sample && !message && (
@@ -408,7 +435,7 @@ export function ReplicaCamera({
             )}
           </div>
         )}
-        {!legacy && photoModelDownloading && (
+        {!legacy && !sample && livePreparing && (
           <p className="replica-camera-model-status" role="status">
             画像認識モデルをダウンロード中…
           </p>

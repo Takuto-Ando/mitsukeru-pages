@@ -29,6 +29,22 @@ ruby[data-reading]::after {
   pointer-events: none;
 }
 
+/* Keep the annotation clear of the preceding line without changing line boxes. */
+.replica-app[data-variant="product"] ruby[data-reading]::after {
+  inset-block-end: calc(100% - 1px);
+}
+
+/* The photo detail reserves room below these rows inside its fixed card. */
+.replica-app[data-variant="product"] .replica-gallery-photo-metadata p + p {
+  translate: 0 4px;
+}
+
+.replica-app[data-variant="product"]
+  .replica-gallery-photo-fact
+  .zoo-card-summary-line + .zoo-card-summary-line {
+  translate: 0 2px;
+}
+
 /* ふりがなが付く行は、ルビの分だけ行間を少し広げて読みやすくする。 */
 .result-fact,
 .gallery-detail-fact p,

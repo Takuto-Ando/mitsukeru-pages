@@ -23,13 +23,8 @@ function button(page: Page, name: string) {
   return page.getByRole("button", { name, exact: true });
 }
 
-test("撮影画面でライブ検出を自動で準備し、失敗時も操作なしで再試行する", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 375, height: 667 });
+async function useMockCamera(page: Page) {
   await page.addInitScript((photo) => {
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
-    localStorage.setItem("zooketch-live-detection-v1", "0");
     const image = new Image();
     image.src = photo;
     const track = { stop() {} };
@@ -56,6 +51,25 @@ test("撮影画面でライブ検出を自動で準備し、失敗時も操作�
       return draw.apply(this, args);
     };
   }, sample);
+}
+
+test("ライブ認識を再試行し、白い枠とセリフを表示して撮影時の動物名を引き継ぐ", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    localStorage.setItem("zooketch-live-detection-v1", "0");
+  });
+  await useMockCamera(page);
+  let photoModelRequests = 0;
+  await page.route(
+    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
+    (route) => {
+      photoModelRequests++;
+      return route.abort();
+    },
+  );
   let requests = 0;
   await page.route("**/models/yolox*.onnx", async (route) => {
     if (++requests === 1) await route.abort();
@@ -72,11 +86,18 @@ test("撮影画面でライブ検出を自動で準備し、失敗時も操作�
     0,
   );
   await expect(camera.locator(".replica-camera-alternatives")).toHaveCount(0);
-  const box = page
-    .locator(".live-animal-box")
-    .filter({ hasText: "キリンの候補" })
-    .first();
-  await expect(box).toBeVisible({ timeout: 15_000 });
+  await expect(camera.locator(".design3-camera-guides")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(camera.locator(".design3-camera-guides")).toHaveAttribute(
+    "src",
+    /figma\/entry\/camera-guides\.svg$/,
+  );
+  await expect(camera.locator(".pitsune-bubble")).toHaveText(
+    "キリンがいるよ！",
+  );
+  await expect(camera.locator(".live-animal-overlay")).toHaveCount(0);
+  await expect(camera.getByText(/の候補/)).toHaveCount(0);
   await expect(camera).toHaveAttribute("data-figma-node", "43-1494");
   expect(requests).toBeGreaterThanOrEqual(2);
 
@@ -94,22 +115,30 @@ test("撮影画面でライブ検出を自動で準備し、失敗時も操作�
   await expect(middle).toHaveCSS("fill", color);
   await page.mouse.move(0, 0);
   await page.mouse.up();
+
+  await shutter.click();
+  const review = page.locator(".design3-photo-review");
+  await expect(review).toHaveAttribute("data-figma-node", "66-7554");
+  await expect(
+    review.getByRole("heading", { name: "キリン", exact: true }),
+  ).toBeVisible();
+  await expect(button(page, "ピツネに見せる")).toBeEnabled();
+  await expect(page.getByText(/写真から動物の候補を探しています/)).toHaveCount(
+    0,
+  );
+  expect(photoModelRequests).toBe(0);
 });
 
-test("チュートリアルで写真認識を事前に準備し、撮影画面で通信中を表示する", async ({
+test("チュートリアルではライブ認識だけを事前準備し、撮影画面で通信中を表示する", async ({
   page,
 }) => {
-  const model = "https://huggingface.co/Xenova/clip-vit-base-patch32/**";
-  // Keep this scenario independent of the live model transfer and cache warmup.
-  await page.route("**/models/*.onnx", (route) =>
-    route.fulfill({ status: 503, body: "offline" }),
-  );
+  await useMockCamera(page);
   let requestArrived = false;
   let releaseRequest!: () => void;
   const hold = new Promise<void>((resolve) => {
     releaseRequest = resolve;
   });
-  await page.route(model, async (route) => {
+  await page.route("**/models/yolox*.onnx", async (route) => {
     requestArrived = true;
     await hold;
     await route.abort();
