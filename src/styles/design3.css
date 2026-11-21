@@ -947,3 +947,53 @@ body:has(.design3-shell) {
   from { opacity: 0; transform: translate(0, 0) scale(0.35); }
   to { opacity: 1; transform: translate(var(--star-x), var(--star-y)); }
 }
+
+.live-animal-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.live-animal-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #ffe07c;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #362b1a;
+}
+
+.live-animal-box span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: calc(100cqw - 10px);
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #332919;
+  white-space: nowrap;
+  color: #fff6d1;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.live-animal-box[data-align-end="true"] span {
+  right: 0;
+  left: auto;
+}
+
+.live-camera-control {
+  margin-block: 4px;
+  text-align: center;
+}
+
+.live-camera-control p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.recognition-downloads {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-block: 8px;
+}

@@ -1,3 +1,4 @@
+import { photoModel } from "./photoModel";
 import { remoteWhileOffline } from "./cachePolicy";
 import {
   CLIPModel,
@@ -16,8 +17,7 @@ import {
 } from "./labels";
 // v4 metadata probes ignore per-component revision. Pin the URL template too,
 // so tokenizer/processor existence checks see the same cached revision.
-env.remotePathTemplate =
-  "{model}/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/";
+env.remotePathTemplate = `{model}/resolve/${photoModel.revision}/`;
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 // Never attempt remote model fetches while offline. The runtime checks Cache API first.
@@ -40,9 +40,9 @@ if (env.backends.onnx.wasm) {
 let classifier: ReturnType<typeof createClassifier> | undefined;
 let lastProgress = 0;
 async function createClassifier() {
-  const modelId = "Xenova/clip-vit-base-patch32";
+  const modelId = photoModel.id;
   const options = {
-    revision: "d15189d7028b43f1d3e65039190477f6af591c2a",
+    revision: photoModel.revision,
     device: "wasm" as const,
     dtype: "q8" as const,
     progress_callback: (p: { status: string; progress?: number }) => {

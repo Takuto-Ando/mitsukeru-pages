@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { X, Volume2, BookOpenText } from "lucide-react";
+import { RecognitionPreparation } from "./RecognitionPreparation";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
@@ -177,6 +178,7 @@ export function SettingsDialog({
           )}
         </details>
         <OfflineStatus />
+        {open && <RecognitionPreparation />}
         <details
           className="observation-tools-settings"
           onToggle={(event) => {

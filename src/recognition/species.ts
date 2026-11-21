@@ -16,6 +16,7 @@ export interface SpeciesRecognizer {
   prepare(progress?: (text: string) => void): Promise<SpeciesResult>;
   isReady(): boolean;
   release(): void;
+  unload(): void;
   cancel(): void;
 }
 let ready = false;
@@ -36,6 +37,12 @@ export const speciesRecognizer: SpeciesRecognizer = {
   isReady: () => ready,
   release: () => {
     if (finish) cancel();
+  },
+  unload: () => {
+    if (finish) return;
+    worker?.terminate();
+    worker = undefined;
+    ready = false;
   },
   prepare: (progress) => run(undefined, progress),
   recognize: (photo, progress) => run(photo, progress),

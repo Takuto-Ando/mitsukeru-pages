@@ -6,6 +6,12 @@ import { PhotoCelebration } from "./components/ChallengeIntro";
 import { assetPath } from "./content/artwork";
 import { useEffect, useRef, useState } from "react";
 import { CameraOff } from "lucide-react";
+import { photoModelCached } from "./recognition/photoModel";
+import { downloadLiveModel } from "./recognition/liveModel";
+import {
+  useLiveDetection,
+  useLiveModelCached,
+} from "./recognition/useLiveDetection";
 import { speciesRecognizer } from "./recognition/species";
 import { PHOTO_FRAMES, drawPhotoFrame, frameSvg } from "./future/frames";
 
@@ -51,6 +57,7 @@ export function CameraView({
   const cameraZoom = useCameraZoom(cameraTrack);
   const [captured, setCaptured] = useState("");
   const [modelReady, setModelReady] = useState(speciesRecognizer.isReady());
+  const [photoCached, setPhotoCached] = useState(false);
   const [recognizing, setRecognizing] = useState(false);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const video = useRef<HTMLVideoElement>(null),
@@ -63,6 +70,53 @@ export function CameraView({
       "waiting" | "live" | "paused" | "failed" | "review"
     >("waiting"),
     [message, setMessage] = useState("");
+  const liveCached = useLiveModelCached();
+  const [liveEnabled, setLiveEnabled] = useState(true);
+  const [livePreparing, setLivePreparing] = useState(false);
+  const [liveMessage, setLiveMessage] = useState("");
+  const liveActive =
+    status === "live" &&
+    liveCached &&
+    liveEnabled &&
+    !recognizing &&
+    !suspended &&
+    !livePreparing;
+  const live = useLiveDetection(video, liveActive, cameraZoom.digital);
+  useEffect(() => {
+    if (!liveActive) return;
+    speciesRecognizer.unload();
+  }, [liveActive]);
+
+  useEffect(() => {
+    if (suspended) return;
+    let mounted = true;
+    void photoModelCached().then((cached) => {
+      if (mounted) setPhotoCached(cached);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [suspended]);
+
+  async function toggleLive() {
+    if (liveCached && live.status !== "error") {
+      setLiveEnabled(!liveEnabled);
+      return;
+    }
+    setLivePreparing(true);
+    setLiveMessage("ライブ検出モデルをダウンロードしています…");
+    try {
+      await downloadLiveModel();
+      setLiveEnabled(true);
+      setLiveMessage("");
+    } catch {
+      setLiveMessage(
+        "ライブ検出を準備できませんでした。通信と空き容量を確認してください。",
+      );
+    } finally {
+      setLivePreparing(false);
+    }
+  }
   useEffect(
     () => () => {
       generation.current++;
@@ -365,6 +419,25 @@ export function CameraView({
               ))}
             </div>
           )}
+          {liveActive && live.boxes.length > 0 && (
+            <div className="live-animal-overlay" aria-label="ライブ検出の候補">
+              {live.boxes.map(({ label, left, top, right, bottom }, index) => (
+                <div
+                  key={index}
+                  className="live-animal-box"
+                  data-align-end={left > 0.62}
+                  style={{
+                    left: left * 100 + "%",
+                    top: top * 100 + "%",
+                    width: (right - left) * 100 + "%",
+                    height: (bottom - top) * 100 + "%",
+                  }}
+                >
+                  <span>{label}の候補</span>
+                </div>
+              ))}
+            </div>
+          )}
           <CameraZoom {...cameraZoom} />
           {status === "live" && <span className="sr-only">カメラで観察中</span>}
         </div>
@@ -425,6 +498,32 @@ export function CameraView({
             )}
           </p>
         )}
+        {status === "live" && (
+          <div className="live-camera-control">
+            <button
+              type="button"
+              className="text-button"
+              aria-pressed={liveCached ? liveEnabled : undefined}
+              disabled={livePreparing}
+              onClick={() => void toggleLive()}
+            >
+              {live.status === "error"
+                ? "ライブ検出を再準備"
+                : liveCached
+                  ? `ライブ検出 ${liveEnabled ? "ON" : "OFF"}`
+                  : "ライブ検出を準備（約3.7 MB）"}
+            </button>
+            {liveMessage && <p role="status">{liveMessage}</p>}
+            {liveActive && live.status === "starting" && (
+              <p role="status">ライブ検出を起動しています…</p>
+            )}
+            {liveActive && live.status === "error" && (
+              <p role="status">
+                ライブ検出を開けませんでした。モデルを再準備できます。
+              </p>
+            )}
+          </div>
+        )}
         <div className="design3-camera-alternatives">
           <button className="text-button" onClick={chooseWithoutPhoto}>
             写真なしで始める
@@ -467,10 +566,10 @@ export function CameraView({
           <>
             <button
               className="text-button"
-              disabled={recognizing || modelReady}
+              disabled={recognizing || modelReady || photoCached}
               onClick={() => void prepare()}
             >
-              {modelReady
+              {modelReady || photoCached
                 ? "識別モデル準備済み"
                 : "識別モデルを先にダウンロード"}
             </button>
