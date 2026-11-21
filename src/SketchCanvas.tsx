@@ -69,6 +69,7 @@ export function SketchCanvas({
   initialPenColors,
   fixedPortrait = false,
   inkBehindArtwork = false,
+  hideZoomAndEraserTip = false,
   dopa = false,
   actions,
   drawingDecoration,
@@ -91,6 +92,7 @@ export function SketchCanvas({
   initialPenColors?: PenColors;
   fixedPortrait?: boolean;
   inkBehindArtwork?: boolean;
+  hideZoomAndEraserTip?: boolean;
   dopa?: boolean;
   actions?: ReactNode;
   drawingDecoration?: ReactNode;
@@ -1138,7 +1140,7 @@ export function SketchCanvas({
           </div>
         </div>
         {actions && <div className="drawing-actions">{actions}</div>}
-        {erase && (
+        {erase && !hideZoomAndEraserTip && (
           <p className="eraser-tip">
             なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。
           </p>
@@ -1168,28 +1170,37 @@ export function SketchCanvas({
             <span className="stamp-tip">画用紙をタップすると置けるよ</span>
           </div>
         )}
-        <div className="drawing-zoom-row">
-          <div className="zoom-controls" role="group" aria-label="拡大・縮小">
-            <button
-              type="button"
-              aria-label="縮小する"
-              disabled={zoom <= 1}
-              onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
-            >
-              −
-            </button>
-            <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
-            <button
-              type="button"
-              aria-label="拡大する"
-              disabled={zoom >= 2}
-              onClick={() => setZoom((z) => Math.min(2, z + 0.5))}
-            >
-              ＋
-            </button>
+        {(!hideZoomAndEraserTip ||
+          (layout !== "landscape" && layoutSwitch)) && (
+          <div className="drawing-zoom-row">
+            {!hideZoomAndEraserTip && (
+              <div
+                className="zoom-controls"
+                role="group"
+                aria-label="拡大・縮小"
+              >
+                <button
+                  type="button"
+                  aria-label="縮小する"
+                  disabled={zoom <= 1}
+                  onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
+                >
+                  −
+                </button>
+                <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
+                <button
+                  type="button"
+                  aria-label="拡大する"
+                  disabled={zoom >= 2}
+                  onClick={() => setZoom((z) => Math.min(2, z + 0.5))}
+                >
+                  ＋
+                </button>
+              </div>
+            )}
+            {layout !== "landscape" && layoutSwitch}
           </div>
-          {layout !== "landscape" && layoutSwitch}
-        </div>
+        )}
         {layout !== "landscape" && drawingAssists}
       </div>
       {layout === "landscape" && layoutSwitch}

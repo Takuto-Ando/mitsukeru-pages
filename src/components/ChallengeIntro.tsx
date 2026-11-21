@@ -62,6 +62,7 @@ export function ChallengeIntro({
   tapAnywhere = false,
   tapLabel = "描きはじめる",
   autoAdvance = false,
+  hideAction = false,
 }: {
   taskId: string;
   animal: string;
@@ -71,6 +72,7 @@ export function ChallengeIntro({
   tapAnywhere?: boolean;
   tapLabel?: string;
   autoAdvance?: boolean;
+  hideAction?: boolean;
 }) {
   const title = taskId === "giraffe" ? "キリンの舌" : `${animal}の${part}`;
 
@@ -112,7 +114,7 @@ export function ChallengeIntro({
         />
       </h1>
       <DifficultyPill regionCount={regionCount} />
-      {tapAnywhere ? (
+      {hideAction ? null : tapAnywhere ? (
         <button
           className="design3-challenge-tap"
           type="button"

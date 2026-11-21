@@ -285,9 +285,9 @@
   z-index: 4;
   inset: calc(0px - var(--title-art-crop)) auto auto
     min(65.8%, calc(50% + 64px));
-  width: min(97cqw, 363px);
+  width: min(97cqw, 363px, calc(101px + 40dvh));
   height: auto;
-  translate: -50% -29%;
+  translate: -50% calc(-29% - clamp(0px, (650px - 100dvh) * 0.42, 76px));
   transform: rotate(-99.47deg) scaleX(-1);
   filter: drop-shadow(0 3px 3px #7a4a2124);
 }
@@ -440,6 +440,10 @@
   width: min(86cqw, 325.04px, 54dvh * 1.177);
 }
 
+.design3-intro-picture {
+  display: contents;
+}
+
 .design3-intro[data-figma-art] .design3-intro-next {
   align-self: start;
   margin-top: var(--entry-action-gap);
@@ -528,7 +532,8 @@
     animation: pitsune-breathe 3.1s ease-in-out infinite;
   }
 
-  .design3-intro[data-figma-art="easel"] .design3-intro-original {
+  .design3-intro:is([data-figma-art="easel"], [data-figma-art="loading"])
+    .design3-intro-original {
     animation: none;
   }
 }

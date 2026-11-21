@@ -79,7 +79,19 @@ function IntroPanel({
           message
         )}
       </p>
-      {artwork ? (
+      {artwork === "loading" ? (
+        <picture className="design3-intro-picture">
+          <source
+            media="(prefers-reduced-motion: reduce)"
+            srcSet={assetPath("figma/entry/loading.svg")}
+          />
+          <img
+            alt=""
+            className="design3-intro-original"
+            src={assetPath("illustrations/pdf-design/pitsune-easel.svg")}
+          />
+        </picture>
+      ) : artwork ? (
         <img
           key={artwork}
           alt=""

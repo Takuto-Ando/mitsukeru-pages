@@ -191,20 +191,34 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await button(page, "シャッター").click();
   await chooseAnimal(page, "キリン");
   await button(page, "ピツネに見せる").click();
-  await expect(page.locator("[data-screen=easel]")).toHaveAttribute(
-    "data-figma-node",
-    "43-1903",
-  );
-  await button(page, "スケッチの準備を確認してつぎへ").click();
+  const preparation = page.locator("[data-screen=easel]");
+  await expect(preparation).toHaveAttribute("data-figma-node", "43-1903");
+  await expect
+    .poll(() =>
+      preparation
+        .locator(".design3-intro-original")
+        .evaluate((image) => (image as HTMLImageElement).currentSrc),
+    )
+    .toMatch(/\/figma\/entry\/loading\.svg$/);
   await expect(page.locator("[data-screen=challenge]")).toHaveAttribute(
     "data-figma-node",
     "66-8272",
   );
   await expect(page.getByRole("img", { name: /^難易度/ })).toBeVisible();
   await expect(button(page, "描きはじめる")).toHaveCount(0);
-  await button(page, "課題を確認してつぎへ").click();
   await drawGiraffeTongue(page);
   await button(page, "できた！").click();
+  const result = page.locator("[data-screen=result]");
+  await expect(result.getByTestId("user-lines")).toBeVisible();
+  await expect(result.getByRole("group", { name: "比較の表示" })).toHaveCount(
+    0,
+  );
+  await expect(
+    result.getByRole("button", { name: "描きなおす" }),
+  ).toBeEnabled();
+  await expect(
+    result.getByRole("button", { name: "写真を撮る" }),
+  ).toBeEnabled();
   await expect
     .poll(async () =>
       (await savedObservations(page)).find((item) => !!item.sketch),

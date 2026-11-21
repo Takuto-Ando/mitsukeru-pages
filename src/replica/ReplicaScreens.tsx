@@ -26,22 +26,22 @@ import type { Evaluation, Stroke } from "../types";
 
 const backgrounds = {
   wave: [
-    "やあ、ぼくはピツネ。絵を描くのが大好きなんだ！",
+    "やあ､ぼくは ピツネ。絵を描くのが大好きなんだ！",
     "こんにちは！",
     "green",
   ],
   book: [
-    "ねえ、一緒にスケッチしない？ うまくなくても大丈夫！",
+    "ねえ､一緒に スケッチ しない？ うまくなくても大丈夫！",
     "やってみる！",
     "green",
   ],
   camera: [
-    "まずは、動物の写真を撮ってぼくに見せてね！",
+    "まずは､ 動物の写真 を撮ってぼくに見せてね！",
     "撮ってみる！",
     "orange",
   ],
   easel: [
-    "ぼくが途中までスケッチしたから、きみの手で完成させてみて！",
+    "ぼくが 途中まで スケッチしたからきみの手で完成させてみて！",
     "描いてみる！",
     "orange",
   ],
@@ -118,12 +118,14 @@ export function ReplicaDraw({
   showHint,
   onHint,
   onDone,
+  hideZoomAndEraserTip,
   ...drawing
 }: DrawingProps & {
   task: ObservationTask;
   showHint: boolean;
   onHint: () => void;
   onDone: () => void;
+  hideZoomAndEraserTip?: boolean;
 }) {
   const prompt = sketchPresentationFor(task.scene)?.prompt;
   return (
@@ -133,6 +135,7 @@ export function ReplicaDraw({
         {...drawing}
         scene={task.scene}
         initialPenColors={penColorsFor(task.groupId)}
+        hideZoomAndEraserTip={hideZoomAndEraserTip}
         fixedPortrait
         inkBehindArtwork
         showTarget={showHint}
@@ -202,6 +205,7 @@ export function ReplicaResult({
   saving,
   onRedraw,
   canRedraw = true,
+  showComparisonModes = true,
   onConfirm,
   onDone,
 }: {
@@ -213,6 +217,7 @@ export function ReplicaResult({
   saving: boolean;
   onRedraw: () => void;
   canRedraw?: boolean;
+  showComparisonModes?: boolean;
   onConfirm: () => void;
   onDone: () => void;
 }) {
@@ -248,6 +253,7 @@ export function ReplicaResult({
         initialMode="drawing"
         animateDrawingFor={task.id}
         showReplay={false}
+        showModes={showComparisonModes}
         viewport={designCardViewport(task.scene)}
         cardFooter={
           fact && <ZooCardSummary className="result-fact" text={fact} />

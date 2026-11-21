@@ -17,7 +17,9 @@ test("公式図鑑の各種に短い2行の説明と種別出典がある", () =
 });
 
 test("キリンの舌には園の追加解説を使い、動物未確定時は表示文を返さない", () => {
-  expect(zooAnimalSummary("giraffe", "giraffe")).toContain("高い木の葉を舌で");
+  expect(zooAnimalSummary("giraffe", "giraffe")).toBe(
+    "長い舌は枝から葉だけを食べるのに役立ちます。\n紫色は日差しから舌を守るための色です。",
+  );
   expect(zooAnimalSummary("giraffe")).not.toContain("舌");
   expect(zooAnimalSummarySource("giraffe", "giraffe")).toContain(
     "anone758.pdf",

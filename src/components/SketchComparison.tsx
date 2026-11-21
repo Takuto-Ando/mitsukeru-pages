@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { sketchPresentationFor } from "../content/sketchPresentation";
 import { celebrationFor } from "../content/celebrations";
 import { celebrationOrigin } from "./FeatureCelebration";
+import { GiraffeLeafBite, giraffeTongueTip } from "./GiraffeLeafBite";
 import { getStrokeStyle } from "../drawing/styles";
 import type { SceneViewport } from "../drawing/viewport";
 import { motion, useReducedMotion } from "motion/react";
@@ -26,6 +27,7 @@ export function SketchComparison({
   viewport,
   animateDrawingFor,
   showReplay = true,
+  showModes = true,
 }: {
   strokes: Stroke[];
   scene?: Scene;
@@ -38,6 +40,7 @@ export function SketchComparison({
   viewport?: SceneViewport;
   animateDrawingFor?: string;
   showReplay?: boolean;
+  showModes?: boolean;
   onSliderCommit?: (
     from: number,
     to: number,
@@ -55,9 +58,9 @@ export function SketchComparison({
     reduce = useReducedMotion();
   const drag = useRef<{ id: number; from: number } | undefined>(undefined),
     value = useRef(position);
-  const userLines = useMemo(() => {
-    const clipped = clipStrokes(strokes, scene);
-    return (
+  const clipped = useMemo(() => clipStrokes(strokes, scene), [strokes, scene]);
+  const userLines = useMemo(
+    () => (
       <>
         {clipped.map((stroke, index) => {
           const fill = getStrokeStyle(stroke)?.fill;
@@ -75,8 +78,9 @@ export function SketchComparison({
         })}
         <SketchLines strokes={clipped} replayKey={replayKey} />
       </>
-    );
-  }, [strokes, scene, replayKey]);
+    ),
+    [clipped, scene.frameHeight, replayKey],
+  );
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
   const authoredMotion = sketchPresentationFor(scene)?.motion;
@@ -90,6 +94,13 @@ export function SketchComparison({
         drawingMotion === "tongue" ? "sway" : drawingMotion,
       ))
     : undefined;
+  const giraffeTip =
+    completed &&
+    scene.id === "giraffe" &&
+    drawingMotion === "tongue" &&
+    mode === "drawing"
+      ? giraffeTongueTip(clipped)
+      : undefined;
   const viewX = viewport?.x ?? 0;
   const viewY = viewport?.y ?? 0;
   const viewWidth = viewport?.width ?? 600;
@@ -190,34 +201,42 @@ export function SketchComparison({
                 </g>
               )}
             </motion.g>
-            <g clipPath={mode === "slider" ? `url(#${left})` : undefined}>
-              <g clipPath={`url(#${clip})`}>
-                <motion.g
-                  data-testid="user-lines"
-                  visibility={mode === "answer" ? "hidden" : "visible"}
-                  animate={{ opacity: mode === "answer" ? 0 : 1 }}
-                  transition={{ duration: reduce ? 0 : 0.2 }}
-                >
-                  {drawingMotion && drawingPivot ? (
-                    <g
-                      transform={`translate(${drawingPivot.x} ${drawingPivot.y})`}
-                    >
+            {giraffeTip ? (
+              <GiraffeLeafBite tip={giraffeTip}>
+                <g clipPath={`url(#${clip})`} data-testid="user-lines">
+                  {userLines}
+                </g>
+              </GiraffeLeafBite>
+            ) : (
+              <g clipPath={mode === "slider" ? `url(#${left})` : undefined}>
+                <g clipPath={`url(#${clip})`}>
+                  <motion.g
+                    data-testid="user-lines"
+                    visibility={mode === "answer" ? "hidden" : "visible"}
+                    animate={{ opacity: mode === "answer" ? 0 : 1 }}
+                    transition={{ duration: reduce ? 0 : 0.2 }}
+                  >
+                    {drawingMotion && drawingPivot ? (
                       <g
-                        className={`feature-lines feature-anim-${drawingMotion} comparison-drawing-motion`}
+                        transform={`translate(${drawingPivot.x} ${drawingPivot.y})`}
                       >
                         <g
-                          transform={`translate(${-drawingPivot.x} ${-drawingPivot.y})`}
+                          className={`feature-lines feature-anim-${drawingMotion} comparison-drawing-motion`}
                         >
-                          {userLines}
+                          <g
+                            transform={`translate(${-drawingPivot.x} ${-drawingPivot.y})`}
+                          >
+                            {userLines}
+                          </g>
                         </g>
                       </g>
-                    </g>
-                  ) : (
-                    userLines
-                  )}
-                </motion.g>
+                    ) : (
+                      userLines
+                    )}
+                  </motion.g>
+                </g>
               </g>
-            </g>
+            )}
           </motion.svg>
           {mode === "slider" && (
             <div
@@ -288,51 +307,65 @@ export function SketchComparison({
         {cardFooter}
       </div>
       {afterCard}
-      <div className="comparison-modes" role="group" aria-label="比較の表示">
-        {(
-          [
-            ["slider", "左右で比べる"],
-            ["drawing", "自分の絵"],
-            ["overlay", "重ね合わせ"],
-            ["answer", "お手本"],
-          ] as const
-        ).map(([v, label]) => (
-          <button key={v} aria-pressed={mode === v} onClick={() => setMode(v)}>
-            {label}
-          </button>
-        ))}
-        {showReplay && (
-          <button
-            className="replay-button"
-            onClick={() => {
-              setMode("drawing");
-              setReplayKey((k) => k + 1);
-            }}
+      {showModes ? (
+        <>
+          <div
+            className="comparison-modes"
+            role="group"
+            aria-label="比較の表示"
           >
-            リプレイ
-          </button>
-        )}
-      </div>
-      <p className="comparison-legend">
-        {mode === "slider" ? (
-          <>
-            <span>左：自分の絵</span>
-            <span>右：お手本</span>
-          </>
-        ) : (
-          <>
-            <span>自分の絵：描いた線</span>
-            <span>完成した動物：お手本</span>
-          </>
-        )}
-      </p>
-      <p className="result-caption">
-        {note || "自分の絵とお手本を、同じ場所で見くらべよう。"}
-        <br />
-        {mode === "slider"
-          ? "境目を動かして、見つけた形を比べてみよう。"
-          : "そっくりでなくても大丈夫。見えた形を確かめよう。"}
-      </p>
+            {(
+              [
+                ["slider", "左右で比べる"],
+                ["drawing", "自分の絵"],
+                ["overlay", "重ね合わせ"],
+                ["answer", "お手本"],
+              ] as const
+            ).map(([v, label]) => (
+              <button
+                key={v}
+                aria-pressed={mode === v}
+                onClick={() => setMode(v)}
+              >
+                {label}
+              </button>
+            ))}
+            {showReplay && (
+              <button
+                className="replay-button"
+                onClick={() => {
+                  setMode("drawing");
+                  setReplayKey((k) => k + 1);
+                }}
+              >
+                リプレイ
+              </button>
+            )}
+          </div>
+          <p className="comparison-legend">
+            {mode === "slider" ? (
+              <>
+                <span>左：自分の絵</span>
+                <span>右：お手本</span>
+              </>
+            ) : (
+              <>
+                <span>自分の絵：描いた線</span>
+                <span>完成した動物：お手本</span>
+              </>
+            )}
+          </p>
+          <p className="result-caption">
+            {note || "自分の絵とお手本を、同じ場所で見くらべよう。"}
+            <br />
+            {mode === "slider"
+              ? "境目を動かして、見つけた形を比べてみよう。"
+              : "そっくりでなくても大丈夫。見えた形を確かめよう。"}
+          </p>
+        </>
+      ) : (
+        note && <p className="result-caption">{note}</p>
+      )}
     </div>
   );
 }

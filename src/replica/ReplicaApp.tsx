@@ -179,20 +179,20 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!legacy) return;
+    if (!legacy && (tutorial || screen !== "easel")) return;
     const next =
       screen === "cheer"
         ? "easel"
-        : screen === "loading"
+        : screen === "loading" || screen === "easel"
           ? "challenge"
           : undefined;
     if (!next) return;
     const timer = window.setTimeout(
       () => setScreen(next),
-      screen === "cheer" ? 1200 : 950,
+      legacy ? (screen === "cheer" ? 1200 : 950) : 1800,
     );
     return () => window.clearTimeout(timer);
-  }, [legacy, screen]);
+  }, [legacy, screen, tutorial]);
 
   function renderGalleryRecord(entry: ReplicaRecord) {
     if (mounted.current)
@@ -508,7 +508,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                   onNext={() => setScreen("challenge")}
                 />
               ) : (
-                <IntroLoadingScreen onContinue={() => setScreen("challenge")} />
+                <IntroLoadingScreen />
               ))}
             {screen === "loading" && <IntroLoadingScreen />}
             {screen === "challenge" && (
@@ -519,13 +519,14 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                 regionCount={task.scene.regions.length}
                 onStart={startDrawing}
                 tapAnywhere
-                tapLabel={legacy ? undefined : "課題を確認してつぎへ"}
-                autoAdvance={legacy && tutorial && task.id === "giraffe"}
+                hideAction={!legacy}
+                autoAdvance={!legacy || (tutorial && task.id === "giraffe")}
               />
             )}
             {screen === "draw" && (
               <ReplicaDraw
                 task={task}
+                hideZoomAndEraserTip={!legacy && !tutorial}
                 strokes={drawing.present}
                 canUndo={drawing.past.length > 0}
                 canRedo={drawing.future.length > 0}
@@ -575,6 +576,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                   saving={saving}
                   onRedraw={() => setScreen("draw")}
                   canRedraw={legacy || !tutorial}
+                  showComparisonModes={legacy}
                   onConfirm={() =>
                     setFeedback({
                       passed: true,

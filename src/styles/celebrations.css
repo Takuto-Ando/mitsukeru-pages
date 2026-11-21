@@ -160,3 +160,66 @@
     animation: none;
   }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .giraffe-result-branch,
+  .giraffe-result-leaf,
+  .giraffe-result-tongue {
+    animation-duration: 2s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+    transform-origin: 0 0;
+  }
+
+  .giraffe-result-branch {
+    animation-name: giraffe-branch-arrive;
+  }
+  .giraffe-result-leaf {
+    animation-name: giraffe-leaf-detach;
+  }
+  .giraffe-result-tongue {
+    animation-name: giraffe-tongue-bite;
+  }
+
+  @keyframes giraffe-branch-arrive {
+    0% {
+      transform: translateY(-65px);
+      opacity: 0;
+    }
+    23%,
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes giraffe-leaf-detach {
+    0%,
+    50% {
+      transform: none;
+      opacity: 1;
+    }
+    69% {
+      opacity: 0.8;
+    }
+    75%,
+    100% {
+      transform: translate(var(--leaf-travel-x), var(--leaf-travel-y));
+      opacity: 0;
+    }
+  }
+
+  @keyframes giraffe-tongue-bite {
+    0%,
+    25%,
+    100% {
+      transform: none;
+    }
+    50% {
+      transform: var(--tongue-reach);
+    }
+    75% {
+      transform: var(--tongue-tuck);
+    }
+  }
+}

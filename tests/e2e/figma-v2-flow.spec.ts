@@ -156,11 +156,8 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
       .locator(".card-lettering-text"),
   ).toHaveCSS("color", "rgb(249, 168, 70)");
   await expect(button("描きはじめる")).toHaveCount(0);
-  await page.waitForTimeout(3200);
-  await expect(node("52-5984")).toBeVisible();
+  await expect(button("課題を確認してつぎへ")).toHaveCount(0);
   const canvas = page.getByTestId("canvas");
-  await expect(canvas).toHaveCount(0);
-  await button("課題を確認してつぎへ").click();
   await expect(node("43-1966")).toBeVisible();
   await expect(canvas).toBeVisible();
   await drawGiraffeTongue(page);
@@ -224,9 +221,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   await expect(node("66-7554")).toBeVisible();
   await button("ピツネに見せる").click();
   await expect(node("43-1903")).toBeVisible();
-  await button("スケッチの準備を確認してつぎへ").click();
   await expect(node("66-8272")).toBeVisible();
-  await button("課題を確認してつぎへ").click();
   await expect(node("66-7869")).toBeVisible();
   await button("ヒントを見る").click();
   await expect(node("66-8070")).toBeVisible();

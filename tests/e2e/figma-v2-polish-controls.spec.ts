@@ -24,8 +24,6 @@ async function openDrawing(page: Page, animal: string) {
   await button(page, "修正").click();
   await button(page, animal).click();
   await button(page, "ピツネに見せる").click();
-  await button(page, "スケッチの準備を確認してつぎへ").click();
-  await button(page, "課題を確認してつぎへ").click();
   await page.getByTestId("canvas").waitFor();
   await page.evaluate(() => document.fonts.ready);
 }

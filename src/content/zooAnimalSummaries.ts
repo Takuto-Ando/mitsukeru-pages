@@ -5,7 +5,7 @@ const linesBySpecies: Record<string, readonly string[]> = summaries;
 const zebraSource =
   "https://zoo.city.kyoto.lg.jp/zoo/enjoy/blog/crew-blog/20250516-80561.html";
 const giraffeTongue = {
-  text: "舌の長さは50センチくらい。\n高い木の葉を舌で引きよせるよ。",
+  text: "長い舌は枝から葉だけを食べるのに役立ちます。\n紫色は日差しから舌を守るための色です。",
   source: "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/anone758.pdf",
 };
 
