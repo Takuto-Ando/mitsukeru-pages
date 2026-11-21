@@ -1680,8 +1680,8 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
     name: "つづきから",
     exact: true,
   });
-  await expect(continueButton).toBeDisabled();
-  await expect(continueButton).toHaveCSS("opacity", "0.5");
+  await expect(continueButton).toBeEnabled();
+  await expect(continueButton).toHaveAttribute("aria-haspopup", "dialog");
   const qr = page.getByRole("button", { name: "QRで課題を開く", exact: true });
   await expect(qr).toHaveCount(0);
   await expect(page.getByRole("button")).toHaveCount(4);
