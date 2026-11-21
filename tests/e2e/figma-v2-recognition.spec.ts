@@ -150,9 +150,13 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
           onmessage: undefined,
           terminate() {},
           postMessage(message: { type: string }) {
-            const giraffe = sessionStorage.getItem("test:animal-moved")
-              ? { left: 0.26, top: 0.21, right: 0.71, bottom: 0.52 }
-              : { left: 0.12, top: 0.14, right: 0.47, bottom: 0.56 };
+            const distance = sessionStorage.getItem("test:animal-moved");
+            const giraffe =
+              distance === "far"
+                ? { left: 0.36, top: 0.27, right: 0.54, bottom: 0.45 }
+                : distance
+                  ? { left: 0.26, top: 0.21, right: 0.71, bottom: 0.52 }
+                  : { left: 0.12, top: 0.14, right: 0.47, bottom: 0.56 };
             const boxes = [{ label: "キリン", score: 0.8, ...giraffe }];
             if (sessionStorage.getItem("test:animal-moved")) {
               boxes.unshift({
@@ -211,7 +215,10 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
           width: rect.width,
           height: rect.height,
           viewBox: corner.getAttribute("viewBox"),
-          stroke: corner.querySelector("path")?.getAttribute("stroke-width"),
+          stroke: getComputedStyle(corner.querySelector("path")!).strokeWidth,
+          vectorEffect: corner
+            .querySelector("path")
+            ?.getAttribute("vector-effect"),
         };
       }),
     );
@@ -220,7 +227,8 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   for (const corner of beforeCorners) {
     expect(corner.width).toBeGreaterThan(0);
     expect(corner.width).toBe(corner.height);
-    expect(corner.stroke).toBe("8");
+    expect(parseFloat(corner.stroke)).toBeCloseTo(6.8);
+    expect(corner.vectorEffect).toBe("non-scaling-stroke");
   }
   const cornerSpacing = async () => {
     const [topLeft, topRight, bottomLeft] = await Promise.all(
@@ -247,6 +255,23 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   const afterSpacing = await cornerSpacing();
   expect(afterSpacing.horizontal).toBeGreaterThan(beforeSpacing.horizontal);
   expect(afterSpacing.vertical).toBeLessThan(beforeSpacing.vertical);
+
+  await page.evaluate(() => sessionStorage.setItem("test:animal-moved", "far"));
+  await expect
+    .poll(async () => (await guide.boundingBox())?.width)
+    .toBeLessThan(before.width * 0.65);
+  const farCorners = await cornerGeometry();
+  expect(farCorners).toHaveLength(4);
+  for (const [index, corner] of farCorners.entries()) {
+    expect(corner.width).toBeLessThan(beforeCorners[index].width);
+    expect(corner.width).toBe(corner.height);
+    expect(corner.viewBox).toBe(beforeCorners[index].viewBox);
+    expect(corner.stroke).toBe(beforeCorners[index].stroke);
+    expect(corner.vectorEffect).toBe("non-scaling-stroke");
+  }
+  const farSpacing = await cornerSpacing();
+  expect(farSpacing.horizontal).toBeGreaterThanOrEqual(5);
+  expect(farSpacing.vertical).toBeGreaterThanOrEqual(5);
   await expect(camera.locator(".pitsune-bubble")).toHaveText(
     "キリンがいるよ！",
   );

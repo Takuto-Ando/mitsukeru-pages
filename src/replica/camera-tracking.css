@@ -1,6 +1,8 @@
 .replica-camera-tracking {
-  --corner-size: 56px;
-  --min-tracking-size: calc(2 * var(--corner-size) + 6px);
+  --min-corner-size: 18px;
+  --corner-gap: 6px;
+  --corner-stroke: 6.8px;
+  --min-tracking-size: calc(2 * var(--min-corner-size) + var(--corner-gap));
   --box-width: min(100%, max(var(--tracking-width), var(--min-tracking-size)));
   --box-height: min(100%, max(var(--tracking-height), var(--min-tracking-size)));
   position: absolute;
@@ -16,14 +18,27 @@
   );
   width: var(--box-width);
   height: var(--box-height);
+  container-type: size;
   pointer-events: none;
 }
 
-/* Each corner uses the original guide's proportions, independent of the box. */
+/* Keep the full-size corners until there is too little room between them. */
 .replica-camera-tracking > svg {
+  --corner-size: clamp(
+    var(--min-corner-size),
+    calc((100cqmin - var(--corner-gap)) / 2),
+    56px
+  );
   position: absolute;
+  box-sizing: border-box;
+  padding: calc(var(--corner-stroke) / 2);
+  overflow: visible;
   width: var(--corner-size);
   height: var(--corner-size);
+}
+
+.replica-camera-tracking path {
+  stroke-width: var(--corner-stroke);
 }
 
 .replica-camera-tracking > [data-corner="top-left"] {

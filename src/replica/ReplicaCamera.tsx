@@ -441,12 +441,12 @@ export function ReplicaCamera({
             {(
               ["top-left", "top-right", "bottom-left", "bottom-right"] as const
             ).map((corner) => (
-              <svg key={corner} data-corner={corner} viewBox="0 0 66 66">
+              <svg key={corner} data-corner={corner} viewBox="4 4 58 58">
                 <path
                   d="M61 4H39C19.67 4 4 19.67 4 39V62"
                   fill="none"
                   stroke="white"
-                  strokeWidth={8}
+                  vectorEffect="non-scaling-stroke"
                   strokeLinecap="round"
                 />
               </svg>
