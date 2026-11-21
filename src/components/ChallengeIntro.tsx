@@ -1,5 +1,5 @@
 import { ChevronRight, Sparkles } from "lucide-react";
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, type CSSProperties } from "react";
 import { CardLettering } from "./CardLettering";
 import { DifficultyPill } from "./DifficultyPill";
 import { Furi } from "../furigana/Furigana";
@@ -70,7 +70,6 @@ export function ChallengeIntro({
   tapAnywhere = false,
   tapLabel = "描きはじめる",
   autoAdvance = false,
-  hideAction = false,
 }: {
   taskId: string;
   animal: string;
@@ -80,7 +79,6 @@ export function ChallengeIntro({
   tapAnywhere?: boolean;
   tapLabel?: string;
   autoAdvance?: boolean;
-  hideAction?: boolean;
 }) {
   const title = taskId === "giraffe" ? "キリンの舌" : `${animal}の${part}`;
 
@@ -89,12 +87,18 @@ export function ChallengeIntro({
   } as CSSProperties;
   const start = useRef(onStart);
   start.current = onStart;
+  const startedTask = useRef<string | undefined>(undefined);
+  const proceed = useCallback(() => {
+    if (startedTask.current === taskId) return;
+    startedTask.current = taskId;
+    start.current();
+  }, [taskId]);
 
   useEffect(() => {
     if (!autoAdvance) return;
-    const timer = window.setTimeout(() => start.current(), 3000);
+    const timer = window.setTimeout(proceed, 3000);
     return () => window.clearTimeout(timer);
-  }, [autoAdvance, taskId]);
+  }, [autoAdvance, proceed]);
 
   return (
     <section className="design3-challenge">
@@ -122,18 +126,18 @@ export function ChallengeIntro({
         />
       </h1>
       <DifficultyPill regionCount={regionCount} />
-      {hideAction ? null : tapAnywhere ? (
+      {tapAnywhere ? (
         <button
           className="design3-challenge-tap"
           type="button"
           aria-label={tapLabel}
-          onClick={onStart}
+          onClick={proceed}
         />
       ) : (
         <button
           className="design3-pill design3-challenge-start"
           type="button"
-          onClick={onStart}
+          onClick={proceed}
         >
           描きはじめる
           <ChevronRight size={20} aria-hidden="true" />

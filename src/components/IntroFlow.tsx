@@ -185,7 +185,7 @@ export function IntroLoadingScreen({
       pose="easel"
       artwork="loading"
       lettering="loading"
-      loading={!onContinue}
+      loading
     >
       {onContinue && (
         <button

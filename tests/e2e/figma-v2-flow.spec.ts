@@ -40,7 +40,7 @@ async function drawGiraffeTongue(page: Page) {
   await page.mouse.up();
 }
 
-test("フローAは付録のノード順にタップで進み、描いた絵だけを送信して撮影へ合流する", async ({
+test("フローAは付録のノード順に進み、描いた絵だけを送信して撮影へ合流する", async ({
   page,
 }) => {
   const base = test.info().project.use.baseURL!;
@@ -83,7 +83,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
   await expect(shell).toHaveAttribute("data-figma-node", "28-100");
   await expectLicensedTypeface(page, ".design3-title-tagline");
-  await expect(button("つづきから")).toBeDisabled();
+  await expect(button("つづきから")).toBeEnabled();
   await expect(
     page.getByText("Google連携（準備中）", { exact: true }),
   ).toHaveCount(0);
@@ -149,12 +149,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   await expect(starGroups.first()).toHaveCSS("animation-delay", "0.1s");
   await expect(starGroups.last()).toHaveCSS("animation-delay", "0.4s");
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.waitForTimeout(1400);
-  await expect(node("52-5335")).toBeVisible();
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
-  await page
-    .locator(".photo-celebration-tap")
-    .click({ position: { x: 100, y: 100 } });
   await expect(node("38-1056")).toBeVisible();
   await expect(
     button("描いてみる！").locator(".intro-action-icon"),
@@ -171,7 +166,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
       .locator(".card-lettering-text"),
   ).toHaveCSS("color", "rgb(249, 168, 70)");
   await expect(button("描きはじめる")).toHaveCount(0);
-  await expect(button("課題を確認してつぎへ")).toHaveCount(0);
+  await expect(button("課題を確認してつぎへ")).toBeVisible();
   const canvas = page.getByTestId("canvas");
   await expect(node("43-1966")).toBeVisible();
   await expect(canvas).toBeVisible();
@@ -325,4 +320,53 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   } else {
     await expect(consent).not.toBeChecked();
   }
+});
+
+test("撮影成功・スケッチ準備・課題タイトルをタップすると各画面をスキップできる", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("Permission denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  const button = (name: string) =>
+    page.getByRole("button", { name, exact: true });
+  const shell = page.locator(".replica-app");
+  await page.goto("./");
+  await button("はじめから").click();
+  await button("こんにちは！").click();
+  await button("やってみる！").click();
+  await button("撮ってみる！").click();
+  await button("シャッター").click();
+  await button("シャッター").click();
+  await button("ピツネに見せる").click();
+  await expect(shell).toHaveAttribute("data-screen", "cheer");
+  await page
+    .locator(".photo-celebration-tap")
+    .click({ position: { x: 100, y: 100 } });
+  await expect(shell).toHaveAttribute("data-screen", "easel");
+  await button("描いてみる！").click();
+  await expect(shell).toHaveAttribute("data-screen", "challenge");
+  await button("課題を確認してつぎへ").click({ position: { x: 100, y: 100 } });
+  await expect(page.getByTestId("canvas")).toBeVisible();
+
+  await page.evaluate(() =>
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1"),
+  );
+  await page.reload();
+  await button("はじめから").click();
+  await button("シャッター").click();
+  await button("修正").click();
+  await button("キリン").click();
+  await button("ピツネに見せる").click();
+  await expect(shell).toHaveAttribute("data-screen", "easel");
+  await button("スケッチの準備を確認してつぎへ").click({
+    position: { x: 100, y: 100 },
+  });
+  await expect(shell).toHaveAttribute("data-screen", "challenge");
 });

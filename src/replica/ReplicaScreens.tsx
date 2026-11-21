@@ -18,7 +18,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { useId, useRef, useState } from "react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
 import { SketchComparison } from "../components/SketchComparison";
 import { assetPath } from "../content/artwork";
@@ -351,6 +351,7 @@ export function ReplicaPhotoReview({
       ? { success: "43-1815", unknown: "52-5265", edit: "63-6420" }
       : { success: "66-7554", unknown: "66-7655", edit: "66-7604" };
   const fact = zooAnimalSummary(group?.id);
+  const animalName = group?.name ?? "？？？？？";
   const photoHeading = photo
     ? saved
       ? "写真をアルバムに保存しました。"
@@ -392,7 +393,15 @@ export function ReplicaPhotoReview({
         )}
         <div className="design3-photo-meta">
           <div className="design3-photo-animal">
-            <h2>{group?.name ?? "？？？？？"}</h2>
+            <h2
+              style={
+                {
+                  "--photo-name-length": Array.from(animalName).length,
+                } as CSSProperties
+              }
+            >
+              {animalName}
+            </h2>
             <button
               className="design3-photo-edit"
               type="button"

@@ -6,7 +6,7 @@ import {
 } from "../furigana/Furigana";
 import { SettingsDialog } from "../components/SettingsDialog";
 import { enqueueShare, flushShareQueue } from "../future/share";
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "../components/HomeScreen";
 import {
@@ -179,22 +179,23 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     };
   }, []);
 
+  const advanceScreen = useCallback((current: Screen, next: Screen) => {
+    setScreen((active) => (active === current ? next : active));
+  }, []);
+
   useEffect(() => {
     window.scrollTo(0, 0);
-    if (!legacy && (tutorial || screen !== "easel")) return;
     const next =
       screen === "cheer"
         ? "easel"
-        : screen === "loading" || screen === "easel"
+        : screen === "loading" || (screen === "easel" && (legacy || !tutorial))
           ? "challenge"
           : undefined;
     if (!next) return;
-    const timer = window.setTimeout(
-      () => setScreen(next),
-      legacy ? (screen === "cheer" ? 1200 : 950) : 1800,
-    );
+    const delay = legacy ? (screen === "cheer" ? 1200 : 950) : 1800;
+    const timer = window.setTimeout(() => advanceScreen(screen, next), delay);
     return () => window.clearTimeout(timer);
-  }, [legacy, screen, tutorial]);
+  }, [advanceScreen, legacy, screen, tutorial]);
 
   function renderGalleryRecord(entry: ReplicaRecord) {
     if (mounted.current)
@@ -499,7 +500,9 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                 </div>
                 {screen === "cheer" && (
                   <PhotoCelebration
-                    onContinue={legacy ? undefined : () => setScreen("easel")}
+                    onContinue={
+                      legacy ? undefined : () => advanceScreen("cheer", "easel")
+                    }
                   />
                 )}
               </>
@@ -511,7 +514,9 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                   onNext={() => setScreen("challenge")}
                 />
               ) : (
-                <IntroLoadingScreen />
+                <IntroLoadingScreen
+                  onContinue={() => advanceScreen("easel", "challenge")}
+                />
               ))}
             {screen === "loading" && <IntroLoadingScreen />}
             {screen === "challenge" && (
@@ -522,7 +527,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                 regionCount={task.scene.regions.length}
                 onStart={startDrawing}
                 tapAnywhere
-                hideAction={!legacy}
+                tapLabel={legacy ? undefined : "課題を確認してつぎへ"}
                 autoAdvance={!legacy || (tutorial && task.id === "giraffe")}
               />
             )}

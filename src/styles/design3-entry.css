@@ -26,14 +26,6 @@
   pointer-events: none;
 }
 
-.design3-title-tail {
-  top: 0;
-  right: 0;
-  width: 100%;
-  height: min(66vw, 34dvh, 295px);
-  object-fit: contain;
-}
-
 .design3-tail-shape {
   filter: drop-shadow(0 3px 3px #7a4a2124);
 }
@@ -282,13 +274,23 @@
 }
 
 .design3-title-tail {
+  --title-tail-offset-y: calc(
+    -29% - clamp(0px, (650px - 100dvh) * 0.42, 76px)
+  );
   z-index: 4;
   inset: calc(0px - var(--title-art-crop)) auto auto
     min(65.8%, calc(50% + 64px));
+  /* Reserve the SVG's proportions even before the image arrives. Keep a
+     size cap independent of the container and dynamic viewport units. */
+  width: min(97%, 363px);
   width: min(97cqw, 363px, calc(101px + 40dvh));
+  max-width: 363px;
+  max-height: 366px;
   height: auto;
-  translate: -50% calc(-29% - clamp(0px, (650px - 100dvh) * 0.42, 76px));
-  transform: rotate(-99.47deg) scaleX(-1);
+  aspect-ratio: 362.806 / 365.978;
+  object-fit: contain;
+  transform: translate(-50%, var(--title-tail-offset-y, -29%))
+    rotate(-99.47deg) scaleX(-1);
   filter: drop-shadow(0 3px 3px #7a4a2124);
 }
 
@@ -539,9 +541,18 @@
 }
 
 @keyframes title-tail-sway {
-  0%, 100% { rotate: 0deg; }
-  35% { rotate: 4deg; }
-  68% { rotate: -3deg; }
+  0%, 100% {
+    transform: translate(-50%, var(--title-tail-offset-y, -29%))
+      rotate(-99.47deg) scaleX(-1);
+  }
+  35% {
+    transform: translate(-50%, var(--title-tail-offset-y, -29%))
+      rotate(-95.47deg) scaleX(-1);
+  }
+  68% {
+    transform: translate(-50%, var(--title-tail-offset-y, -29%))
+      rotate(-102.47deg) scaleX(-1);
+  }
 }
 
 @keyframes intro-lettering-in {

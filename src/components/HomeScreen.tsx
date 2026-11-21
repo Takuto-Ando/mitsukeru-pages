@@ -1,10 +1,12 @@
 import { CardLettering } from "./CardLettering";
 import { BookOpen, Settings, Sparkles } from "lucide-react";
+import { useId, useRef, useState } from "react";
 import { groups } from "../content/groups";
 import { assetPath } from "../content/artwork";
 import { DopaTitleArt } from "./DopaEffects";
 import { DopaBar } from "../dopagaki/DopaBar";
 import "../styles/design3-entry.css";
+import "../styles/login-demo.css";
 
 const today = new Date();
 const dayIndex = Math.floor(
@@ -31,6 +33,11 @@ export function HomeScreen({
 }) {
   const dopaMode = edition === "dopa";
   const lettering = dopaMode ? "" : "-brown";
+  const googleLogo = assetPath("figma/entry/google-g.svg");
+  const resumeButton = useRef<HTMLButtonElement>(null);
+  const loginDemo = useRef<HTMLDialogElement>(null);
+  const loginHeading = useId();
+  const [demoFinished, setDemoFinished] = useState(false);
 
   return (
     <section className="design3-title" aria-label="ズーケッチのタイトル">
@@ -95,11 +102,18 @@ export function HomeScreen({
             src={assetPath("illustrations/pdf-design/entry-title-start.svg")}
           />
         </button>
-        <button className="design3-continue" disabled aria-label="つづきから">
+        <button
+          ref={resumeButton}
+          type="button"
+          className="design3-continue"
+          aria-label="つづきから"
+          aria-haspopup="dialog"
+          onClick={() => loginDemo.current?.showModal()}
+        >
           <img
             className="design3-title-resume-mark"
             alt=""
-            src={assetPath("figma/entry/google-g.svg")}
+            src={googleLogo}
             width={19.2164}
             height={19.2164}
           />
@@ -137,6 +151,39 @@ export function HomeScreen({
           {onScanQr && <button onClick={onScanQr}>QRで課題を開く</button>}
         </div>
       </div>
+      <dialog
+        ref={loginDemo}
+        className="login-demo"
+        aria-labelledby={loginHeading}
+        onClose={() => {
+          setDemoFinished(false);
+          resumeButton.current?.focus({ preventScroll: true });
+        }}
+      >
+        <div className="login-demo-heading">
+          <img src={googleLogo} width={24} height={24} alt="" />
+          <h2 id={loginHeading}>Googleログインのデモ</h2>
+        </div>
+        {demoFinished ? (
+          <p role="status">デモが完了しました。</p>
+        ) : (
+          <p>サンプルで、ズーケッチへのログインを体験できます。</p>
+        )}
+        <div className="login-demo-actions">
+          {!demoFinished && (
+            <button
+              type="button"
+              className="login-demo-start"
+              onClick={() => setDemoFinished(true)}
+            >
+              サンプルでつづける
+            </button>
+          )}
+          <button type="button" onClick={() => loginDemo.current?.close()}>
+            {demoFinished ? "タイトルに戻る" : "閉じる"}
+          </button>
+        </div>
+      </dialog>
       {edition && (
         <nav className="design3-title-editions" aria-label="版の切り替え">
           <a href={assetPath("figma/")}>Figma再現版を開く</a>

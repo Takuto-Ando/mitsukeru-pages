@@ -101,6 +101,48 @@ async function drawGiraffeTongue(page: Page) {
   await page.mouse.up();
 }
 
+test("写真確認の日付とカレンダーは長い動物名でも同じ位置に留まる", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await useTestCamera(page, true);
+  await page.goto("./");
+  await button(page, "はじめから").click();
+  await button(page, "シャッター").click();
+  await expect(
+    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+  ).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+
+  const metadata = page.locator(".design3-photo-date");
+  const calendar = metadata.locator("img").first();
+  const date = metadata.locator("time");
+  const name = page.locator(".design3-photo-animal h2");
+  await expect(date).toBeVisible();
+
+  await chooseAnimal(page, "カバ");
+  const before = await Promise.all([
+    calendar.boundingBox(),
+    date.boundingBox(),
+  ]);
+  const shortSize = await name.evaluate((node) =>
+    parseFloat(getComputedStyle(node).fontSize),
+  );
+
+  await chooseAnimal(page, "シロテテナガザル");
+  await expect(name).toHaveText("シロテテナガザル");
+  const after = await Promise.all([calendar.boundingBox(), date.boundingBox()]);
+  expect(after).toEqual(before);
+  const longSize = await name.evaluate((node) =>
+    parseFloat(getComputedStyle(node).fontSize),
+  );
+  expect(longSize).toBeLessThan(shortSize);
+  const nameBox = (await name.boundingBox())!;
+  const editBox = (await button(page, "修正").boundingBox())!;
+  expect(nameBox.x + nameBox.width).toBeLessThanOrEqual(editBox.x);
+  expect(editBox.x + editBox.width).toBeLessThanOrEqual(after[0]!.x);
+});
+
 test("写真は撮影直後に端末へ保存し、スケッチ完了時に同じ位置へ並べる", async ({
   page,
 }) => {
