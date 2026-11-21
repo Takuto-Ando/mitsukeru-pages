@@ -674,7 +674,9 @@ export function SketchCanvas({
                   alt={missionTitle}
                 />
               ) : missionTitle ? (
-                <Furi text={missionTitle} />
+                <span>
+                  <Furi text={missionTitle} />
+                </span>
               ) : (
                 missionTitle
               )}

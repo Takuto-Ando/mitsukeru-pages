@@ -290,6 +290,10 @@ for (const t of tasks.filter(
             : `${t.part}をよく観察してみて！`,
       }),
     ).toBeVisible();
+    if (t.provisional) {
+      const heading = await page.locator(".mission-pitsune-row h1").boundingBox();
+      expect(heading?.height).toBeLessThan(100);
+    }
     const href = await page
       .locator(".eye-template image")
       .first()

@@ -2,6 +2,5 @@
   <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
     <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
     <path d="M111 390Q160 362 208 312Q270 255 338 270Q349 213 408 208Q460 210 471 264Q475 326 423 365Q376 425 262 422Q207 413 164 413Z" fill="#7b8595" stroke-width="5"/><path d="M224 353Q285 298 360 317Q342 384 267 397Q237 390 224 353Z" fill="#ad9e88" stroke-width="5"/><ellipse cx="258" cy="364" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="281" cy="376" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="304" cy="352" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="327" cy="364" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="425" cy="252" rx="9" ry="10" fill="#302e2e"/><path d="M314 411L307 453L285 468M347 405L359 448L382 457" fill="none" stroke-width="5"/>
-    
   </g>
 </svg>

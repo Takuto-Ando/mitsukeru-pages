@@ -416,8 +416,7 @@ for (const species of catalog) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="${species.id}" data-illustration="${complete ? "complete" : "incomplete"}">
   <g stroke="${dark}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
     ${background}
-    ${base}
-    ${feature}
+    ${base}${feature ? "\n    " + feature : ""}
   </g>
 </svg>
 `;
