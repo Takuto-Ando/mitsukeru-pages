@@ -112,9 +112,10 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
-  const useFullForeground = unrestrictedDrawing && scene.id === "giraffe";
+  // The giraffe artwork itself masks the ink wherever its pixels are opaque.
+  const useFullForeground = scene.id === "giraffe";
   const drawForeground =
-    inkBehindArtwork && (!unrestrictedDrawing || useFullForeground);
+    useFullForeground || (inkBehindArtwork && !unrestrictedDrawing);
   const foregroundMask = useId();
   const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
   const [fillMode, setFillMode] = useState(false);
@@ -748,7 +749,8 @@ export function SketchCanvas({
               src={assetPath("figma/entry/sketch-face.svg")}
             />
             <h1 className="pitsune-bubble" aria-label={missionTitle}>
-              {missionLettering ? (
+              {missionLettering &&
+              import.meta.env.VITE_LEGACY_EDITIONS === "1" ? (
                 <CardLettering
                   className="drawing-lettering"
                   src={assetPath(missionLettering)}
@@ -756,7 +758,10 @@ export function SketchCanvas({
                   highlights={missionHighlights}
                 />
               ) : (
-                <BubbleLine text={missionTitle} />
+                <BubbleLine
+                  text={missionTitle}
+                  highlights={missionHighlights}
+                />
               )}
             </h1>
             {cheer && (

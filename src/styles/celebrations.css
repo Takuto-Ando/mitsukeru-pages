@@ -161,40 +161,21 @@
   }
 }
 
-.giraffe-result-grip {
-  opacity: 0;
-}
-
 @media (prefers-reduced-motion: no-preference) {
   .giraffe-result-branch {
     animation: giraffe-branch-arrive 420ms ease-out both;
   }
 
-  .giraffe-result-leaf,
-  .giraffe-result-grip,
-  .giraffe-result-curl {
+  .giraffe-result-leaf {
+    animation-name: giraffe-leaf-detach;
     animation-duration: 1800ms;
     animation-timing-function: ease-in-out;
     animation-fill-mode: both;
     transform-origin: 0 0;
   }
 
-  .giraffe-result-leaf[data-bite="2"],
-  .giraffe-result-grip[data-bite="2"],
-  .giraffe-result-grip[data-bite="2"] .giraffe-result-curl {
+  .giraffe-result-leaf[data-bite="2"] {
     animation-delay: 1800ms;
-  }
-
-  .giraffe-result-leaf {
-    animation-name: giraffe-leaf-detach;
-  }
-
-  .giraffe-result-grip {
-    animation-name: giraffe-grip-carry;
-  }
-
-  .giraffe-result-curl {
-    animation-name: giraffe-curl-tip;
   }
 
   .giraffe-result-tongue {
@@ -220,22 +201,6 @@
       transform: translate(var(--leaf-travel-x), var(--leaf-travel-y));
       opacity: 0;
     }
-  }
-
-  @keyframes giraffe-grip-carry {
-    0%, 44% { opacity: 0; }
-    45%, 76% { opacity: 1; }
-    0%, 59% { transform: translate(0, 0); }
-
-    86%, 100% {
-      transform: translate(var(--leaf-travel-x), var(--leaf-travel-y));
-      opacity: 0;
-    }
-  }
-
-  @keyframes giraffe-curl-tip {
-    0%, 44% { stroke-dashoffset: 1; }
-    59%, 100% { stroke-dashoffset: 0; }
   }
 
   @keyframes giraffe-tongue-bites {

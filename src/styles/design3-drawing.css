@@ -85,8 +85,10 @@
   box-shadow: var(--d3-shadow);
 }
 
-.drawing-foreground {
+.scene-stage > .drawing-foreground {
+  position: absolute;
   z-index: 3;
+  pointer-events: none;
 }
 
 .sketch-card .drawing-paper {
@@ -643,6 +645,8 @@
 }
 
 .design3-draw .mission-pitsune-row .pitsune-bubble {
+  display: block;
+  align-content: center;
   background-image: url("../../public/figma/entry/sketch-bubble.svg");
 }
 

@@ -3,7 +3,7 @@ import { taskById } from "../../src/content/tasks";
 
 test.use({ reducedMotion: "no-preference" });
 
-test("通常スケッチはズームと消しゴムの説明を省き、キリンは描いた舌を巻きつけて葉を2枚取る", async ({
+test("通常スケッチはズームと消しゴムの説明を省き、キリンは描いた舌を伸ばして葉を2枚取る", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -27,6 +27,9 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
 
   const canvas = page.getByTestId("canvas");
   await expect(canvas).toBeVisible();
+  const speech = page.locator(".mission-pitsune-row .bubble-line-text");
+  await expect(speech).toHaveText("舌をよく観察してみて！");
+  await expect(speech).toBeVisible();
   await expect(page.getByRole("group", { name: "拡大・縮小" })).toHaveCount(0);
   await button("消しゴム").click();
   await expect(button("消しゴム")).toHaveAttribute("aria-pressed", "true");
@@ -44,6 +47,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   );
   await expect(foreground.locator("mask")).toHaveCount(0);
   await button("ヒントを見る").click();
+  await expect(speech).toHaveText("もうすこし観察してみて！");
   const target = page.getByTestId("drawing-target");
   await expect(target).toBeVisible();
   const layers = await target.evaluate((hint) => {
@@ -62,6 +66,68 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
       bounds.x + (bounds.width * x) / 600,
       bounds.y + (bounds.height * y) / drawingHeight,
     ] as const;
+  const [bodyX, bodyY] = position(170, 395);
+  const bodyClip = {
+    x: Math.round(bodyX) - 2,
+    y: Math.round(bodyY) - 2,
+    width: 4,
+    height: 4,
+  };
+  const bodyPixels = async () => {
+    const png = await page.screenshot({ clip: bodyClip });
+    return page.evaluate(async (base64) => {
+      const image = new Image();
+      image.src = "data:image/png;base64," + base64;
+      await image.decode();
+      const sample = document.createElement("canvas");
+      sample.width = image.naturalWidth;
+      sample.height = image.naturalHeight;
+      const context = sample.getContext("2d")!;
+      context.drawImage(image, 0, 0);
+      return Array.from(
+        context.getImageData(0, 0, sample.width, sample.height).data,
+      );
+    }, png.toString("base64"));
+  };
+  await page.mouse.move(...position(155, 395));
+  await page.mouse.down();
+  await page.mouse.move(...position(185, 395), { steps: 8 });
+  await page.mouse.up();
+  await expect
+    .poll(() =>
+      canvas.evaluate((surface, height) => {
+        const element = surface as HTMLCanvasElement;
+        return element
+          .getContext("2d")!
+          .getImageData(
+            Math.round((element.width * 170) / 600),
+            Math.round((element.height * 395) / height),
+            1,
+            1,
+          ).data[3];
+      }, drawingHeight),
+    )
+    .toBeGreaterThan(0);
+  await page.mouse.move(2, 2);
+  const setCanvasVisibility = (value: string) =>
+    canvas.evaluate((element, visibility) => {
+      (element as HTMLCanvasElement).style.visibility = visibility;
+    }, value);
+  const visibleWithInk = await bodyPixels();
+  await setCanvasVisibility("hidden");
+  const visibleWithoutInk = await bodyPixels();
+  await setCanvasVisibility("");
+  // Minor RGB rounding can change when WebKit composites the canvas; the
+  // purple stroke would change the blue channel by more than 50 here.
+  expect(
+    Math.max(
+      ...visibleWithInk.map((value, i) =>
+        Math.abs(value - visibleWithoutInk[i]),
+      ),
+    ),
+  ).toBeLessThanOrEqual(7);
+  await button("ひとつ戻す").click();
+
   await page.mouse.move(...position(480, 140));
   await page.mouse.down();
   await page.mouse.move(...position(520, 144), { steps: 8 });
@@ -147,8 +213,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await expect(drawing).toBeVisible();
   const points = await drawing.getAttribute("points");
   const tongue = effect.locator(".giraffe-result-tongue");
-  const firstCurl = effect.locator(".giraffe-result-curl").nth(0);
-  const secondCurl = effect.locator(".giraffe-result-curl").nth(1);
+  await expect(effect.locator("path")).toHaveCount(0);
   const seek = (time: number) =>
     effect.evaluate(async (element, milliseconds) => {
       const animations = element.getAnimations({ subtree: true });
@@ -156,17 +221,9 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
       await Promise.all(animations.map((animation) => animation.ready));
       for (const animation of animations) animation.currentTime = milliseconds;
     }, time);
-  const wrapAmount = (curl: typeof firstCurl) =>
-    curl.evaluate((element) =>
-      parseFloat(getComputedStyle(element).strokeDashoffset),
-    );
-
   await seek(970);
   await expect(firstLeaf).toHaveCSS("opacity", "1");
   await expect(secondLeaf).toHaveCSS("opacity", "1");
-  expect(await wrapAmount(firstCurl)).toBeLessThan(1);
-  expect(await wrapAmount(firstCurl)).toBeGreaterThan(0);
-  expect(await wrapAmount(secondCurl)).toBe(1);
   const reachingFirst = await tongue.evaluate(
     (element) => getComputedStyle(element).transform,
   );
@@ -176,17 +233,9 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
     "transform",
     "matrix(1, 0, 0, 1, 0, 0)",
   );
-  await expect(firstLeaf).toHaveCSS(
-    "transform",
-    await firstCurl
-      .locator("..")
-      .evaluate((element) => getComputedStyle(element).transform),
-  );
   await seek(2770);
   await expect(firstLeaf).toHaveCSS("opacity", "0");
   await expect(secondLeaf).toHaveCSS("opacity", "1");
-  expect(await wrapAmount(secondCurl)).toBeLessThan(1);
-  expect(await wrapAmount(secondCurl)).toBeGreaterThan(0);
   const reachingSecond = await tongue.evaluate(
     (element) => getComputedStyle(element).transform,
   );
@@ -199,8 +248,6 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(firstLeaf).toHaveCSS("opacity", "1");
   await expect(secondLeaf).toHaveCSS("opacity", "1");
-  await expect(firstCurl.locator("..")).toHaveCSS("opacity", "0");
-  await expect(secondCurl.locator("..")).toHaveCSS("opacity", "0");
   await expect(tongue).toHaveCSS("transform", "none");
   await expect(drawing).toHaveAttribute("points", points!);
 });

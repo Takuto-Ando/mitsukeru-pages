@@ -67,6 +67,11 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
 }) => {
   const tip = () => button(page, "ペン").locator("svg path").first();
   await openDrawing(page, "ヤギ・ヒツジ");
+  const speech = page.locator(".mission-pitsune-row .bubble-line-text");
+  await expect(speech).toBeVisible();
+  expect(
+    await speech.evaluate((text) => getComputedStyle(text).fontSize),
+  ).not.toBe("0px");
   await expect(tip()).toHaveAttribute("fill", penColorsFor("goat")[0]);
   await openDrawing(page, "キリン");
   await expect(tip()).toHaveAttribute("fill", "#6b5c7a");
