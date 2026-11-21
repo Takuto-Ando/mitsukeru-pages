@@ -1,3 +1,9 @@
+import { LiveAnimalOverlay } from "../components/LiveAnimalOverlay";
+import {
+  useLiveDetection,
+  useLiveModelCached,
+} from "../recognition/useLiveDetection";
+import { CardLettering } from "../components/CardLettering";
 import { useEffect, useRef, useState } from "react";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
@@ -36,6 +42,10 @@ export function ReplicaCamera({
   const [requestNumber, retryCamera] = useState(0);
   const [visible, setVisible] = useState(() => !document.hidden);
   const video = useRef<HTMLVideoElement>(null);
+  const liveCached = useLiveModelCached();
+  const liveActive =
+    !sample && streamReady && visible && !menuOpen && liveCached;
+  const live = useLiveDetection(video, liveActive, cameraZoom.digital);
   const example = useRef<HTMLImageElement>(null);
   const sampleVisible = sampleHasAnimal || cameraZoom.zoom === 0.5;
   const streamRef = useRef<MediaStream | undefined>(undefined);
@@ -150,10 +160,10 @@ export function ReplicaCamera({
               alt="キリンがいるよ！"
             />
           ) : (
-            <img
+            <CardLettering
               className="camera-prompt-art"
               src={assetPath(art + "camera-prompt.svg")}
-              alt="動物の写真を撮ろう！"
+              text="動物の写真を撮ろう！"
             />
           )}
         </p>
@@ -209,6 +219,7 @@ export function ReplicaCamera({
             )}
           </>
         )}
+        {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
         <CameraZoom {...cameraZoom} />
       </div>
       <div className="camera-controls">

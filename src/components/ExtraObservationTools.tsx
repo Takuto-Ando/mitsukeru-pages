@@ -1,3 +1,5 @@
+import { useFuriganaEnabled } from "../furigana/Furigana";
+import { furiganaSegments } from "../furigana/tokenize";
 import { lazy, Suspense, useId, useState } from "react";
 import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
@@ -35,6 +37,16 @@ function ObservationTaskSelect({
   disabled?: boolean;
 }) {
   const id = useId();
+  const showReadings = useFuriganaEnabled();
+  // Native pickers display text only, so use inline readings there.
+  const option = (text: string) =>
+    showReadings
+      ? furiganaSegments(text)
+          .map(({ text: word, reading }) =>
+            reading ? `${word}（${reading}）` : word,
+          )
+          .join("")
+      : text;
   return (
     <div className="observation-tool-field">
       <label htmlFor={id}>観察した特徴</label>
@@ -44,12 +56,12 @@ function ObservationTaskSelect({
         disabled={disabled}
         onChange={(event) => onChange(event.currentTarget.value)}
       >
-        <option value={freeObservation}>自由な観察</option>
+        <option value={freeObservation}>{option("自由な観察")}</option>
         {groups.map((group) => (
-          <optgroup key={group.id} label={group.name}>
+          <optgroup key={group.id} label={option(group.name)}>
             {tasksForGroup(group.id).map((task) => (
               <option key={task.id} value={task.id}>
-                {task.part}
+                {option(task.part)}
               </option>
             ))}
           </optgroup>

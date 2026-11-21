@@ -1,5 +1,11 @@
 import { useEffect, useState, type RefObject } from "react";
-import { cameraWindow, inputSize, type LiveBox } from "./liveBoxes";
+import {
+  cameraWindow,
+  inputSize,
+  trackLiveBoxes,
+  type LiveBox,
+  type TrackedLiveBox,
+} from "./liveBoxes";
 import { liveModelCached, liveModelEvent } from "./liveModel";
 
 export function useLiveModelCached() {
@@ -30,7 +36,7 @@ export function useLiveDetection(
 ) {
   const [result, setResult] = useState<{
     status: "idle" | "starting" | "running" | "error";
-    boxes: LiveBox[];
+    boxes: TrackedLiveBox[];
   }>({
     status: "idle",
     boxes: [],
@@ -46,6 +52,8 @@ export function useLiveDetection(
     let watchdog = 0;
     let closed = false;
     let aspect = 0;
+    let nextId = 0;
+    let tracked: TrackedLiveBox[] = [];
     const input = document.createElement("canvas");
     input.width = input.height = inputSize;
     const context = input.getContext("2d", { willReadFrequently: true });
@@ -69,6 +77,7 @@ export function useLiveDetection(
         !element.clientHeight ||
         document.hidden
       ) {
+        tracked = [];
         setResult({ status: "running", boxes: [] });
         timer = window.setTimeout(nextFrame, 300);
         return;
@@ -125,7 +134,10 @@ export function useLiveDetection(
             element &&
             Math.abs(aspect - element.clientWidth / element.clientHeight) <
               0.015;
-          setResult({ status: "running", boxes: fits ? data.boxes : [] });
+          tracked = fits
+            ? trackLiveBoxes(tracked, data.boxes, () => ++nextId)
+            : [];
+          setResult({ status: "running", boxes: tracked });
           timer = window.setTimeout(nextFrame, 420);
         } else fail();
       };

@@ -195,7 +195,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    margin-block: 4px;
+    margin-block: 1px;
   }
 
   .design3-shell .design3-draw .observation-hints ol {

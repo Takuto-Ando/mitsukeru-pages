@@ -94,6 +94,8 @@ import {
 } from "./drawing/styles";
 import "./styles/cards.css";
 import "./styles/design3.css";
+import "./styles/card-motion.css";
+import "./styles/furigana.css";
 import "./styles/dopa.css";
 import "./styles/dopagaki.css";
 import "./styles/viewport-fit.css";
@@ -140,9 +142,12 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const [qrOpen, setQrOpen] = useState(false);
   const openLinkedTaskRef = useRef(openLinkedTask);
   openLinkedTaskRef.current = openLinkedTask;
-  // 未送信の絵があれば、起動時にまとめて送る（同意済み端末のみ）
+  // 同意済み端末の未送信分は、起動時と通信の復帰時に再試行する。
   useEffect(() => {
-    void flushShareQueue();
+    const send = () => { void flushShareQueue(); };
+    send();
+    window.addEventListener("online", send);
+    return () => window.removeEventListener("online", send);
   }, []);
   // QRコード／共有リンク（#task=...）から課題へ直行する
   useEffect(() => {
@@ -1047,7 +1052,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                         ? "観察を保存中…"
                         : savedId
                           ? "気づきを更新する"
-                          : "観察を保存する"}
+                          : "マイギャラリーに保存"}
                   </button>
                   {strokes.length > 0 && (
                     <div className="png-actions">

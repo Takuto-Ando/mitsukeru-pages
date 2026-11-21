@@ -1,0 +1,203 @@
+.entry-caption-line {
+  display: block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .design3-shell
+    button:not(:disabled, .shutter-button, .design3-challenge-tap):active,
+  .design3-shell a.design3-intro-next:active {
+    scale: 0.96;
+  }
+
+  .design3-shell button:not(.shutter-button, .design3-challenge-tap),
+  .design3-shell a.design3-intro-next {
+    transition-property: transform, scale, background, box-shadow;
+    transition-duration: 160ms;
+  }
+
+  .design3-intro .entry-caption-line {
+    animation: card-fade-up 380ms ease-out both;
+  }
+
+  .design3-intro .entry-caption-line + .entry-caption-line {
+    animation-delay: 150ms;
+  }
+
+  .design3-intro[data-figma-art] .design3-intro-original {
+    animation:
+      card-mascot-in 460ms ease-out both,
+      pitsune-breathe 3.1s 480ms ease-in-out infinite;
+  }
+
+  .design3-intro[data-figma-art="easel"] .design3-intro-original {
+    animation: card-mascot-in 460ms ease-out both;
+  }
+
+  .camera-pitsune .pitsune-bubble,
+  .design3-result .result-pitsune-face,
+  .mission-pitsune-face {
+    transform-origin: 50% 100%;
+    animation: card-mascot-in 340ms ease-out both;
+  }
+
+  .design3-challenge h1 {
+    animation: card-heading-in 420ms ease-out both;
+  }
+
+  .design3-challenge h1[data-auto-advance="true"] {
+    animation:
+      card-heading-in 420ms ease-out both,
+      card-heading-out 320ms 2640ms ease-in both;
+  }
+
+  .design3-challenge .difficulty-active {
+    animation: difficulty-fill 450ms 320ms ease-out both;
+  }
+
+  .design3-challenge .difficulty-active:nth-child(2) {
+    animation-delay: 440ms;
+  }
+  .design3-challenge .difficulty-active:nth-child(3) {
+    animation-delay: 560ms;
+  }
+
+  .photo-preview-wrap {
+    animation: card-mascot-in 410ms ease-out both;
+  }
+
+  .tongue-party-stage > g.tongue-tree {
+    animation: card-heading-in 480ms ease-out both;
+  }
+
+  .gallery-screen .collection-card {
+    animation: card-fade-up 360ms ease-out both;
+  }
+
+  .gallery-screen .collection-card:nth-child(3n + 2) {
+    animation-delay: 65ms;
+  }
+  .gallery-screen .collection-card:nth-child(3n + 3) {
+    animation-delay: 130ms;
+  }
+
+  .collection-card[data-photo-sparkle="true"] .collection-open {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .collection-card[data-photo-sparkle="true"] .collection-open::after {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 30%;
+    transform: skewX(-20deg) translateX(-180%);
+    background: #fffcdb;
+    pointer-events: none;
+    content: "";
+    animation: gallery-photo-shine 640ms 340ms ease-out both;
+  }
+
+  .gallery-screen .gallery-camera:active .gallery-mark--camera {
+    animation: gallery-camera-tap 250ms ease-out;
+  }
+
+  .live-animal-box {
+    transition:
+      left 155ms ease-out,
+      top 155ms ease-out,
+      width 155ms ease-out,
+      height 155ms ease-out;
+  }
+}
+
+@keyframes card-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-mascot-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.91);
+  }
+  66% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.025);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes card-heading-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-heading-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes difficulty-fill {
+  0% {
+    opacity: 0.26;
+    scale: 0.94;
+  }
+  70% {
+    opacity: 1;
+    scale: 1.07;
+  }
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@keyframes gallery-photo-shine {
+  0% {
+    opacity: 0;
+    transform: skewX(-20deg) translateX(-180%);
+  }
+  35% {
+    opacity: 0.47;
+  }
+  100% {
+    opacity: 0;
+    transform: skewX(-20deg) translateX(460%);
+  }
+}
+
+@keyframes gallery-camera-tap {
+  45% {
+    rotate: -9deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .design3-shell button,
+  .design3-shell a.design3-intro-next {
+    transition: none;
+  }
+
+  .design3-shell button:active:not(:disabled) {
+    transform: none;
+  }
+}

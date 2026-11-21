@@ -104,6 +104,21 @@ export async function loadObservations() {
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+export async function loadObservation(
+  id: string,
+): Promise<ObservationRecord | undefined> {
+  const db = await database();
+  const tx = db.transaction("observations", "readonly");
+  const done = transactionDone(tx);
+  const [record] = await Promise.all([
+    requestValue<ObservationRecord | undefined>(
+      tx.objectStore("observations").get(id),
+    ),
+    done,
+  ]);
+  return record && fromStorable(record);
+}
+
 export async function addObservation(record: ObservationRecord) {
   const storable = await toStorable(record);
   const db = await database(),

@@ -1,6 +1,7 @@
 import { ChevronRight, Sparkles, Star } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { artwork } from "../content/artwork";
+import { CardLettering } from "./CardLettering";
 import { DifficultyPill } from "./DifficultyPill";
 import { Furi } from "../furigana/Furigana";
 import { assetPath } from "../content/artwork";
@@ -79,24 +80,27 @@ export function ChallengeIntro({
 
   return (
     <section className="design3-challenge">
-      <h1 aria-label={`${title}を描いてみよう！`}>
+      <h1
+        data-auto-advance={autoAdvance || undefined}
+        aria-label={`${title}を描いてみよう！`}
+      >
         {taskId === "giraffe" ? (
-          <img
+          <CardLettering
+            text={title}
             className="design3-challenge-giraffe-title"
             src={assetPath(
               "illustrations/pdf-design/challenge-giraffe-title.svg",
             )}
-            alt=""
           />
         ) : (
           <strong>
             <Furi text={title} />
           </strong>
         )}
-        <img
+        <CardLettering
+          text="を描いてみよう！"
           className="design3-challenge-prompt"
           src={assetPath("illustrations/pdf-design/challenge-prompt.svg")}
-          alt=""
         />
       </h1>
       <DifficultyPill regionCount={regionCount} />

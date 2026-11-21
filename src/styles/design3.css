@@ -601,10 +601,6 @@ body:has(.design3-shell) {
   --zoom-offset: 1.65px;
 }
 
-.design3-zoom button:last-child {
-  --zoom-offset: -1.65px;
-}
-
 .design3-zoom button::before {
   position: absolute;
   z-index: -1;
@@ -828,11 +824,13 @@ body:has(.design3-shell) {
   fill: #e27b27;
 }
 
-.design3-camera .camera-side-button[aria-label="ギャラリー"]:disabled {
+.design3-camera .camera-side-button:disabled {
   opacity: 0.5;
 }
 
 .design3-zoom .zoom-text {
+  place-self: center;
+  line-height: 1;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -962,12 +960,12 @@ body:has(.design3-shell) {
   box-shadow: 0 0 0 1px #362b1a;
 }
 
-.live-animal-box span {
+.live-animal-box > span {
   position: absolute;
   top: 0;
   left: 0;
   max-width: calc(100cqw - 10px);
-  padding: 3px 7px;
+  padding: 6px 7px 3px;
   border-radius: 4px;
   background: #332919;
   white-space: nowrap;
@@ -976,7 +974,7 @@ body:has(.design3-shell) {
   font-weight: 700;
 }
 
-.live-animal-box[data-align-end="true"] span {
+.live-animal-box[data-align-end="true"] > span {
   right: 0;
   left: auto;
 }

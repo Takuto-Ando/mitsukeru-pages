@@ -1,11 +1,12 @@
 import { FURIGANA_READINGS } from "./dictionary";
+import generated from "./generated-readings.json";
+
+const readings: Record<string, string> = { ...generated, ...FURIGANA_READINGS };
 
 export type FuriganaSegment = { text: string; reading?: string };
 
 // 辞書キーを長い順に並べた照合用リスト（最長一致）。
-const KEYS = Object.keys(FURIGANA_READINGS).sort(
-  (a, b) => b.length - a.length,
-);
+const KEYS = Object.keys(readings).sort((a, b) => b.length - a.length);
 const BY_FIRST_CHAR = new Map<string, string[]>();
 for (const key of KEYS) {
   const list = BY_FIRST_CHAR.get(key[0]);
@@ -37,7 +38,7 @@ export function furiganaSegments(text: string): FuriganaSegment[] {
     }
     if (matched) {
       flush();
-      segments.push({ text: matched, reading: FURIGANA_READINGS[matched] });
+      segments.push({ text: matched, reading: readings[matched] });
       index += matched.length;
     } else {
       buffer += text[index];

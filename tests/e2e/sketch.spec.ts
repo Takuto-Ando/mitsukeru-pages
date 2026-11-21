@@ -999,7 +999,7 @@ test("研究用ログ：同意前は記録せず、同意後の記録・JSON/CSV
   await slider.focus();
   await page.keyboard.press("ArrowLeft");
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
-  await page.getByRole("button", { name: "観察を保存する" }).click();
+  await page.getByRole("button", { name: "マイギャラリーに保存" }).click();
   await finishTutorial(page);
   await openSettings(page);
   await page.getByRole("button", { name: "研究記録を終了する" }).click();
@@ -1173,7 +1173,7 @@ test("研究モードで2回描き、画像・回ごとの指標を記録して�
   expect(json.pairs[0].before.strokes).toBeUndefined();
   await closeSettings(page);
   await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
+    .getByRole("button", { name: "マイギャラリーに保存", exact: true })
     .click();
   await finishTutorial(page);
   await openSettings(page);
@@ -1984,7 +1984,7 @@ test("気づきを任意保存・解説で追記・再読込して復元", async
   );
   await page.getByRole("button", { name: "特徴について知ろう →" }).click();
   await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
+    .getByRole("button", { name: "マイギャラリーに保存", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "保存したよ！", exact: true }),
@@ -2051,4 +2051,56 @@ test("検証用はチュートリアルの保存後にだけGoogleフォーム�
   expect(visits).toBe(1);
   await page.goto("./");
   await openGalleryFromHome(page, 1);
+});
+
+test("マイギャラリーへの保存で筆跡の位置を復元し、同意済みの端末から絵だけを送る", async ({
+  page,
+}) => {
+  const endpoint = "https://script.google.com/macros/s/zooketch-test/exec";
+  await page.addInitScript((url) => {
+    localStorage.setItem(
+      "zooketch-share-v1",
+      JSON.stringify({ consent: true, endpoint: url, token: "test-token" }),
+    );
+  }, endpoint);
+  await page.route(endpoint, (route) =>
+    route.fulfill({ status: 200, body: '{"ok":true}' }),
+  );
+  await select(page, "giraffe");
+  await draw(page, "giraffe");
+  await compare(page);
+  await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
+  const line = () => page.getByTestId("user-lines").locator("polyline").first();
+  const points = await line().getAttribute("points");
+  expect(points).toBeTruthy();
+  const roundPoints = (value: string) =>
+    value
+      .split(" ")
+      .map((point) =>
+        point.split(",").map((coord) => Number(coord).toFixed(2)),
+      );
+  const viewBox = () =>
+    line().evaluate((node) =>
+      (node as SVGElement).ownerSVGElement?.getAttribute("viewBox"),
+    );
+  const originalViewBox = await viewBox();
+  const sending = page.waitForRequest((request) => request.url() === endpoint);
+  await page
+    .getByRole("button", { name: "マイギャラリーに保存", exact: true })
+    .click();
+  const data = (await sending).postDataJSON();
+  expect(data).toMatchObject({ token: "test-token", groupId: "giraffe" });
+  expect(data.pngBase64).toMatch(/^iVBOR/);
+  expect(data.strokes.length).toBeGreaterThan(0);
+  expect(data).not.toHaveProperty("photo");
+  expect(data).not.toHaveProperty("audio");
+  await finishTutorial(page);
+  await page.reload();
+  await openGalleryFromHome(page, 1);
+  await page.getByRole("button", { name: "キリンの絵を見返す" }).click();
+  await page.getByRole("button", { name: "重ね合わせ", exact: true }).click();
+  expect(roundPoints((await line().getAttribute("points"))!)).toEqual(
+    roundPoints(points!),
+  );
+  expect(await viewBox()).toBe(originalViewBox);
 });

@@ -47,3 +47,26 @@ test("写真なしでは推測せず個体識別も行わない", async () => {
     (await individualRecognizer.identify("test-photo", "goat")).status,
   ).toBe("unknown");
 });
+
+test("ライブ検出は位置と大きさが変わっても同じ枠を更新する", async () => {
+  const { trackLiveBoxes } = await import("../../src/recognition/liveBoxes");
+  const left = {
+    label: "キリン",
+    score: 0.8,
+    left: 0.1,
+    top: 0.1,
+    right: 0.35,
+    bottom: 0.6,
+  };
+  const right = { ...left, left: 0.6, right: 0.9 };
+  let id = 0;
+  const before = trackLiveBoxes([], [left, right], () => ++id);
+  const after = trackLiveBoxes(
+    before,
+    [right, { ...left, right: 0.42, bottom: 0.72 }],
+    () => ++id,
+  );
+  expect(after.map((box) => box.id)).toEqual([before[1].id, before[0].id]);
+  expect(after[1].bottom).toBe(0.72);
+  expect(trackLiveBoxes(after, [], () => ++id)).toEqual([]);
+});

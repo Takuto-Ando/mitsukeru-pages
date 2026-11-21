@@ -36,6 +36,30 @@ function overlap(first: LiveBox, second: LiveBox) {
   return intersection / (area(first) + area(second) - intersection);
 }
 
+export type TrackedLiveBox = LiveBox & { id: number };
+
+export function trackLiveBoxes(
+  previous: readonly TrackedLiveBox[],
+  boxes: readonly LiveBox[],
+  nextId: () => number,
+): TrackedLiveBox[] {
+  const unmatched = new Set(previous);
+  return boxes.map((box) => {
+    let best: TrackedLiveBox | undefined;
+    let bestOverlap = 0.18;
+    for (const candidate of unmatched) {
+      if (candidate.label !== box.label) continue;
+      const shared = overlap(candidate, box);
+      if (shared > bestOverlap) {
+        best = candidate;
+        bestOverlap = shared;
+      }
+    }
+    if (best) unmatched.delete(best);
+    return { ...box, id: best?.id ?? nextId() };
+  });
+}
+
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 export function decodeLiveBoxes(

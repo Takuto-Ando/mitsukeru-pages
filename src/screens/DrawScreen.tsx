@@ -1,3 +1,4 @@
+import { CardLettering } from "../components/CardLettering";
 import { useEffect, useReducer, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { ChevronLeft, CircleHelp, CornerDownLeft, Flame } from "lucide-react";
@@ -171,12 +172,12 @@ export function DrawScreen({
               ) : hasHint ? (
                 "ヒントを表示中"
               ) : (
-                <img
+                <CardLettering
                   className="drawing-lettering"
                   src={assetPath(
                     "illustrations/pdf-design/drawing-action-hint.svg",
                   )}
-                  alt="ヒントを見る"
+                  text="ヒントを見る"
                 />
               )}
             </button>
@@ -334,11 +335,7 @@ export function FreeDrawScreen({
         >
           <ChevronLeft size={22} aria-hidden="true" />
         </button>
-        <div
-          className="coloring-picker"
-          role="group"
-          aria-label="ぬりえの下絵"
-        >
+        <div className="coloring-picker" role="group" aria-label="ぬりえの下絵">
           <span>ぬりえ</span>
           <button
             type="button"
