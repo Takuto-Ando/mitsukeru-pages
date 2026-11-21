@@ -56,19 +56,21 @@ function Sketch({ entry }: { entry: ReplicaRecord }) {
       />
     );
   }
-  // Stored PNGs use the whole scene. Match the crop of the original paper card.
+  // Keep the paper card crop inside the saved image at every screen width.
+  const sceneWidth = 600;
+  const sceneHeight = scene.frameHeight || 400;
+  const width = Math.min(viewport.width, sceneWidth);
+  const height = Math.min(viewport.height, sceneHeight);
+  const x = Math.max(0, Math.min(viewport.x, sceneWidth - width));
+  const y = Math.max(0, Math.min(viewport.y, sceneHeight - height));
   return (
     <svg
       className="replica-sketch-image"
-      viewBox={`${viewport.x} ${viewport.y} ${viewport.width} ${viewport.height}`}
+      viewBox={`${x} ${y} ${width} ${height}`}
       preserveAspectRatio="none"
       aria-hidden="true"
     >
-      <image
-        href={entry.sketch}
-        width="600"
-        height={scene.frameHeight || 400}
-      />
+      <image href={entry.sketch} width={sceneWidth} height={sceneHeight} />
     </svg>
   );
 }
@@ -91,7 +93,7 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
         <div className="gallery-detail-actions">
           <DifficultyPill regionCount={regionCount} />
         </div>
-        <div className="gallery-detail-scroll" tabIndex={-1} autoFocus>
+        <div className="gallery-detail-scroll" tabIndex={-1}>
           <article className="sketch-comparison-card">
             <Sketch entry={entry} />
             {summary && (
@@ -109,7 +111,6 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
     <div
       className="gallery-detail-scroll replica-gallery-photo-scroll"
       tabIndex={-1}
-      autoFocus
     >
       <article className="replica-gallery-photo-card">
         <img
@@ -179,7 +180,12 @@ export function ReplicaGallery({
 
   useEffect(() => {
     const modal = dialog.current;
-    if (activeEntry && modal && !modal.open) modal.showModal();
+    if (activeEntry && modal && !modal.open) {
+      modal.showModal();
+      modal.querySelector<HTMLElement>(".gallery-detail-scroll")?.focus({
+        preventScroll: true,
+      });
+    }
   }, [activeEntry]);
 
   function closeDetail() {

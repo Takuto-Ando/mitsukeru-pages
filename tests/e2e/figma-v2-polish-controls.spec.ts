@@ -6,7 +6,7 @@ const button = (page: Page, name: string) =>
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
     Object.defineProperty(navigator, "mediaDevices", {
       value: {
         getUserMedia: async () => {
@@ -96,4 +96,76 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   await slider.press("ArrowLeft");
   await expect(preview).toBeVisible();
   await expect(preview).toBeHidden();
+});
+
+test("撮影・描画のセリフを強調し、京都市動物園と修正のルビを文字幅に収める", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("./");
+  await page.evaluate(() => {
+    navigator.mediaDevices.getUserMedia = async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 480;
+      const context = canvas.getContext("2d")!;
+      let frame = 0;
+      const paint = () => {
+        context.fillStyle = frame++ % 2 ? "#74bbb0" : "#7dbbb0";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+      };
+      paint();
+      const stream = canvas.captureStream(10);
+      const timer = window.setInterval(() => {
+        if (stream.active) paint();
+        else window.clearInterval(timer);
+      }, 100);
+      return stream;
+    };
+  });
+  await button(page, "はじめから").click();
+  const accent = page.locator(".pitsune-bubble .pitsune-text-highlight");
+  await expect(accent).toHaveText("動物の写真");
+  await expect(accent).toHaveCSS("color", "rgb(249, 168, 70)");
+
+  await expect(page.locator(".camera-frame video")).toBeVisible();
+  await button(page, "シャッター").click();
+  const labels = [
+    button(page, "修正").locator("ruby[data-reading]"),
+    page.locator('.design3-photo-card ruby[data-reading="きょうとし"]'),
+    page.locator('.design3-photo-card ruby[data-reading="どうぶつえん"]'),
+  ];
+  await page.evaluate(() => document.fonts.ready);
+  for (const label of labels) {
+    await expect(label).toBeVisible();
+    const widths = await label.evaluate((ruby) => {
+      const style = getComputedStyle(ruby, "::after");
+      const context = document.createElement("canvas").getContext("2d")!;
+      context.font = [style.fontWeight, style.fontSize, style.fontFamily].join(
+        " ",
+      );
+      const aspect = Number(
+        style.getPropertyValue("--ruby-aspect").trim() || 1,
+      );
+      return {
+        reading:
+          context.measureText(ruby.getAttribute("data-reading")!).width *
+          aspect,
+        kanji: ruby.getBoundingClientRect().width,
+      };
+    });
+    expect(widths.reading).toBeLessThanOrEqual(widths.kanji + 0.25);
+  }
+
+  await button(page, "修正").click();
+  await button(page, "キリン").click();
+  await button(page, "ピツネに見せる").click();
+  const titleRuby = page.locator(".design3-challenge h1 ruby").first();
+  await expect(titleRuby).toBeVisible();
+  expect(
+    await titleRuby.evaluate((ruby) => getComputedStyle(ruby, "::after").color),
+  ).toBe("rgb(255, 255, 255)");
+  await expect(page.getByTestId("canvas")).toBeVisible();
+  await expect(accent).toHaveText("舌");
+  await expect(accent).toHaveCSS("color", "rgb(249, 168, 70)");
 });

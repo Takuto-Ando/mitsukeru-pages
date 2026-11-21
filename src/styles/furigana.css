@@ -13,9 +13,12 @@ ruby[data-reading] > rt {
 
 ruby[data-reading]::after {
   content: attr(data-reading);
-  font-size: max(9px, 0.52em);
+  font-size: min(
+    var(--ruby-size, max(9px, 0.52em)),
+    calc(1em * var(--ruby-fit, 1) / var(--ruby-aspect, 1))
+  );
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   color: inherit;
   -webkit-text-stroke-width: 0;
   opacity: 0.96;
@@ -23,7 +26,7 @@ ruby[data-reading]::after {
   position: absolute;
   inset-block-end: calc(100% + 1px);
   inset-inline-start: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(var(--ruby-aspect, 1));
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -108,7 +111,7 @@ button .card-lettering-text {
   width: 100%;
 }
 .design3-challenge h1 ruby[data-reading]::after {
-  color: var(--d3-brown);
+  color: #fff;
 }
 .design3-challenge h1 .card-lettering {
   display: grid;
@@ -189,4 +192,8 @@ button .card-lettering-text {
 
 .replica-app[data-variant="product"] .camera-prompt-art .card-lettering-text {
   font-size: clamp(12px, 4.48vw, 18px);
+}
+
+.pitsune-text-highlight {
+  color: #f9a846;
 }

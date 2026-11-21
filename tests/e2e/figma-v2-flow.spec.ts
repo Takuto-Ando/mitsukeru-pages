@@ -198,7 +198,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
     Object.defineProperty(navigator, "mediaDevices", {
       value: {
         getUserMedia: async () => {
@@ -265,7 +265,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   page,
 }) => {
   await page.addInitScript(() =>
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1"),
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1"),
   );
   for (const url of ["./", "plus/", "dopa/", "figma/"]) {
     await page.goto(url);

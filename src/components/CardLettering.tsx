@@ -1,15 +1,17 @@
-import { Furi, useFuriganaEnabled } from "../furigana/Furigana";
+import { HighlightedFuri, useFuriganaEnabled } from "../furigana/Furigana";
 
 export function CardLettering({
   text,
   src,
   className,
   lines,
+  highlights,
 }: {
   text: string;
   src: string;
   className?: string;
   lines?: readonly string[];
+  highlights?: readonly string[];
 }) {
   const annotated = useFuriganaEnabled() && /[\p{Script=Han}々]/u.test(text);
   if (
@@ -26,11 +28,11 @@ export function CardLettering({
         {lines ? (
           lines.map((line) => (
             <span className="entry-caption-line" key={line}>
-              <Furi text={line} />
+              <HighlightedFuri text={line} highlights={highlights} />
             </span>
           ))
         ) : (
-          <Furi text={text} />
+          <HighlightedFuri text={text} highlights={highlights} />
         )}
       </span>
     </span>
@@ -44,4 +46,11 @@ export const tutorialLines = {
   easel: ["ぼくが 途中まで スケッチしたから", "きみの手で完成させてみて！"],
   loading: ["写真を見ながら", "スケッチを描いています。"],
   finish: ["チュートリアルはこれでおしまい！", "いろんな動物を描きにいこう！"],
+};
+
+export const tutorialHighlights = {
+  wave: ["ピツネ"],
+  book: ["スケッチ"],
+  camera: ["動物の写真"],
+  easel: ["途中まで"],
 };

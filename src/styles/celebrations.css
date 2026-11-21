@@ -161,65 +161,88 @@
   }
 }
 
+.giraffe-result-grip {
+  opacity: 0;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .giraffe-result-branch,
+  .giraffe-result-branch {
+    animation: giraffe-branch-arrive 420ms ease-out both;
+  }
+
   .giraffe-result-leaf,
-  .giraffe-result-tongue {
-    animation-duration: 2s;
+  .giraffe-result-grip,
+  .giraffe-result-curl {
+    animation-duration: 1800ms;
     animation-timing-function: ease-in-out;
     animation-fill-mode: both;
     transform-origin: 0 0;
   }
 
-  .giraffe-result-branch {
-    animation-name: giraffe-branch-arrive;
+  .giraffe-result-leaf[data-bite="2"],
+  .giraffe-result-grip[data-bite="2"],
+  .giraffe-result-grip[data-bite="2"] .giraffe-result-curl {
+    animation-delay: 1800ms;
   }
+
   .giraffe-result-leaf {
     animation-name: giraffe-leaf-detach;
   }
+
+  .giraffe-result-grip {
+    animation-name: giraffe-grip-carry;
+  }
+
+  .giraffe-result-curl {
+    animation-name: giraffe-curl-tip;
+  }
+
   .giraffe-result-tongue {
-    animation-name: giraffe-tongue-bite;
+    transform-origin: 0 0;
+    animation: giraffe-tongue-bites 3600ms ease-in-out both;
   }
 
   @keyframes giraffe-branch-arrive {
-    0% {
+    from {
       transform: translateY(-65px);
       opacity: 0;
-    }
-    23%,
-    100% {
-      transform: translateY(0);
-      opacity: 1;
     }
   }
 
   @keyframes giraffe-leaf-detach {
-    0%,
-    50% {
-      transform: none;
-      opacity: 1;
+    0%, 59% {
+      transform: translate(0, 0);
     }
-    69% {
-      opacity: 0.8;
-    }
-    75%,
-    100% {
+
+    0%, 76% { opacity: 1; }
+
+    86%, 100% {
       transform: translate(var(--leaf-travel-x), var(--leaf-travel-y));
       opacity: 0;
     }
   }
 
-  @keyframes giraffe-tongue-bite {
-    0%,
-    25%,
-    100% {
-      transform: none;
+  @keyframes giraffe-grip-carry {
+    0%, 44% { opacity: 0; }
+    45%, 76% { opacity: 1; }
+    0%, 59% { transform: translate(0, 0); }
+
+    86%, 100% {
+      transform: translate(var(--leaf-travel-x), var(--leaf-travel-y));
+      opacity: 0;
     }
-    50% {
-      transform: var(--tongue-reach);
-    }
-    75% {
-      transform: var(--tongue-tuck);
-    }
+  }
+
+  @keyframes giraffe-curl-tip {
+    0%, 44% { stroke-dashoffset: 1; }
+    59%, 100% { stroke-dashoffset: 0; }
+  }
+
+  @keyframes giraffe-tongue-bites {
+    0%, 10%, 47%, 60%, 97%, 100% { transform: none; }
+    22%, 29.5% { transform: var(--tongue-reach-first); }
+    43% { transform: var(--tongue-tuck-first); }
+    72%, 79.5% { transform: var(--tongue-reach-second); }
+    93% { transform: var(--tongue-tuck-second); }
   }
 }

@@ -40,7 +40,7 @@ function button(page: Page, name: string) {
 
 async function useTestCamera(page: Page, completedTutorial: boolean) {
   await page.addInitScript((completed) => {
-    if (completed) localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    if (completed) localStorage.setItem("zooketch-replica-tutorial-v2", "1");
     const track = { stop() {} };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
@@ -269,8 +269,37 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
     slots.evaluateAll((elements) =>
       elements.map((element) => element.getAttribute("data-record-id")),
     );
-  await expect(button(page, "キリンのスケッチを見る")).toBeVisible();
+  const giraffeSketch = button(page, "キリンのスケッチを見る");
+  await expect(giraffeSketch).toBeVisible();
   expect(await slotIds()).toEqual(["sketch-only", completed.id]);
+  const tile = giraffeSketch.locator(".replica-sketch-image");
+  const crop = await tile.evaluate((svg: SVGSVGElement) => {
+    const { x, y, width, height } = svg.viewBox.baseVal;
+    const image = svg.querySelector("image")!;
+    return {
+      x,
+      y,
+      right: x + width,
+      bottom: y + height,
+      imageWidth: image.width.baseVal.value,
+      imageHeight: image.height.baseVal.value,
+    };
+  });
+  expect(crop.x).toBeGreaterThanOrEqual(0);
+  expect(crop.y).toBeGreaterThanOrEqual(0);
+  expect(crop.right).toBeLessThanOrEqual(crop.imageWidth);
+  expect(crop.bottom).toBeLessThanOrEqual(crop.imageHeight);
+  await giraffeSketch.click();
+  const sketchDetail = page.getByRole("dialog", { name: "キリンのスケッチ" });
+  await expect(sketchDetail.locator(".gallery-detail-scroll")).toBeFocused();
+  const closeSketch = sketchDetail.getByRole("button", { name: "一覧に戻る" });
+  await expect(closeSketch).toHaveCSS("outline-style", "none");
+  await closeSketch.focus();
+  await expect(closeSketch).toBeFocused();
+  await closeSketch.press("Shift");
+  await expect(closeSketch).toHaveCSS("outline-color", "rgb(255, 255, 255)");
+  await closeSketch.press("Enter");
+  await expect(sketchDetail).toHaveCount(0);
   await photos.click();
   await expect(slots.first()).toHaveClass("gallery-slot");
   expect(await slotIds()).toEqual(["sketch-only", completed.id]);
@@ -329,7 +358,7 @@ test("カメラ権限が得られなくても下部の追加ボタンを使わ�
   page,
 }) => {
   await page.addInitScript(() => {
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {

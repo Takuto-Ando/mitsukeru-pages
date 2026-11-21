@@ -12,6 +12,7 @@ import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
 import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
+import "./camera-tracking.css";
 
 export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
@@ -98,10 +99,14 @@ export function ReplicaCamera({
   const liveError = (!liveCached && liveFailed) || live.status === "error";
   const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
+  const [trackedAnimalId, setTrackedAnimalId] = useState<number>();
   const sampleVisible = sampleHasAnimal || (legacy && cameraZoom.zoom === 0.5);
   const bestMatch =
     !legacy && liveActive
-      ? live.boxes.find(({ label }) => recognizedAnimals.has(label))
+      ? (live.boxes.find(
+          ({ id, label }) =>
+            id === trackedAnimalId && recognizedAnimals.has(label),
+        ) ?? live.boxes.find(({ label }) => recognizedAnimals.has(label)))
       : undefined;
   const selection = bestMatch && recognizedAnimals.get(bestMatch.label);
   const animal =
@@ -122,6 +127,11 @@ export function ReplicaCamera({
       : "38-1026";
   const streamRef = useRef<MediaStream | undefined>(undefined);
   const menu = useRef<HTMLDialogElement>(null);
+  const bestMatchId = bestMatch?.id;
+
+  useEffect(() => {
+    setTrackedAnimalId(bestMatchId);
+  }, [bestMatchId]);
 
   useEffect(() => {
     if (!realCamera || liveCached || !liveEnabled) return;
@@ -330,14 +340,19 @@ export function ReplicaCamera({
               className="camera-prompt-art replica-found-art"
               src={assetPath("replica-assets/camera-found.svg")}
               text="キリンがいるよ！"
+              highlights={["キリン"]}
             />
           ) : animal ? (
-            <BubbleLine text={`${animal.name}がいるよ！`} />
+            <BubbleLine
+              text={`${animal.name}がいるよ！`}
+              highlights={[animal.name]}
+            />
           ) : (
             <CardLettering
               className="camera-prompt-art"
               src={assetPath(art + "camera-prompt.svg")}
               text="動物の写真を撮ろう！"
+              highlights={["動物の写真"]}
             />
           )}
         </p>
@@ -383,31 +398,44 @@ export function ReplicaCamera({
                 setStreamReady(Boolean(video.current?.videoWidth))
               }
             />
-            {!streamReady && (
+            {!streamReady && (legacy || cameraUnavailable) && (
               <div className="camera-fallback">
                 <img
                   className="camera-placeholder-art"
                   alt=""
                   src={assetPath(art + "camera-placeholder.svg")}
                 />
-                <span role="status">
-                  {message || "カメラを準備しています。"}
-                  {!legacy && cameraUnavailable && (
-                    <> シャッターで動物を選べます。</>
-                  )}
-                </span>
+                {message && (
+                  <span role="status">
+                    {message}
+                    {!legacy && cameraUnavailable && (
+                      <> シャッターで動物を選べます。</>
+                    )}
+                  </span>
+                )}
               </div>
             )}
           </>
         )}
-        {((sample && sampleVisible) || !!animal) && (
+        {sample && sampleVisible && (
           <img
             alt=""
             className="design3-camera-guides"
             src={assetPath("figma/entry/camera-guides.svg")}
-            style={
-              !tutorial && animal ? { top: "6.16%", left: "7.71%" } : undefined
-            }
+          />
+        )}
+        {bestMatch && (
+          <img
+            key={bestMatch.id}
+            alt=""
+            className="design3-camera-guides replica-camera-tracking"
+            src={assetPath("figma/entry/camera-guides.svg")}
+            style={{
+              left: `${bestMatch.left * 100}%`,
+              top: `${bestMatch.top * 100}%`,
+              width: `${(bestMatch.right - bestMatch.left) * 100}%`,
+              height: `${(bestMatch.bottom - bestMatch.top) * 100}%`,
+            }}
           />
         )}
         {legacy && liveActive && <LiveAnimalOverlay boxes={live.boxes} />}

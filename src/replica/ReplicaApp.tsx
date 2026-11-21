@@ -17,7 +17,6 @@ import {
 import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
 import { FreeDrawScreen } from "../screens/DrawScreen";
 import { groups } from "../content/groups";
-import { clipStrokes } from "../content/scenes";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { composeObservationImages } from "../notebook/images";
@@ -64,7 +63,6 @@ type Screen =
   | "gallery"
   | "free";
 
-const tutorialKey = "zooketch-replica-tutorial-v1";
 const introSteps = [
   { pose: "wave", node: "29-683" },
   { pose: "book", node: "36-778" },
@@ -85,6 +83,10 @@ function recordId() {
 }
 
 export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
+  // The revised tutorial should also appear once for devices using the old flow.
+  const tutorialKey = legacy
+    ? "zooketch-replica-tutorial-v1"
+    : "zooketch-replica-tutorial-v2";
   const [screen, setScreen] = useState<Screen>(legacy ? "splash" : "title");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
@@ -321,6 +323,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
       const { ownPng } = await composeObservationImages(
         task.scene,
         drawing.present,
+        { unrestrictedDrawing: !legacy },
       );
       const sketch = await imageDataURL(ownPng);
       const saved = record ? await loadReplicaRecord(record.id) : undefined;
@@ -527,6 +530,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
               <ReplicaDraw
                 task={task}
                 hideZoomAndEraserTip={!legacy && !tutorial}
+                unrestrictedDrawing={!legacy}
                 strokes={drawing.present}
                 canUndo={drawing.past.length > 0}
                 canRedo={drawing.future.length > 0}
@@ -544,8 +548,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                   );
                   if (
                     !legacy &&
-                    (!clipStrokes(drawing.present, task.scene).length ||
-                      evaluation.status === "retry")
+                    (!drawing.present.length || evaluation.status === "retry")
                   ) {
                     setShowHint(true);
                     return;
@@ -576,6 +579,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                   saving={saving}
                   onRedraw={() => setScreen("draw")}
                   canRedraw={legacy || !tutorial}
+                  unrestrictedDrawing={!legacy}
                   showComparisonModes={legacy}
                   onConfirm={() =>
                     setFeedback({

@@ -14,6 +14,34 @@ import { SketchLines } from "../Illustrations";
 import type { ObservationGroup } from "../content/groups";
 import type { Stroke } from "../types";
 type Mode = "slider" | "drawing" | "answer" | "overlay";
+function UserSketchLines({
+  strokes,
+  height,
+  replayKey,
+}: {
+  strokes: Stroke[];
+  height: number;
+  replayKey: number;
+}) {
+  return (
+    <>
+      {strokes.map((stroke, index) => {
+        const fill = getStrokeStyle(stroke)?.fill;
+        return fill ? (
+          <image
+            key={index}
+            href={fill}
+            width={600}
+            height={height}
+            preserveAspectRatio="none"
+          />
+        ) : null;
+      })}
+      <SketchLines strokes={strokes} replayKey={replayKey} />
+    </>
+  );
+}
+
 export function SketchComparison({
   strokes,
   scene = scenes.goat,
@@ -28,6 +56,7 @@ export function SketchComparison({
   animateDrawingFor,
   showReplay = true,
   showModes = true,
+  unrestrictedDrawing = false,
 }: {
   strokes: Stroke[];
   scene?: Scene;
@@ -41,6 +70,7 @@ export function SketchComparison({
   animateDrawingFor?: string;
   showReplay?: boolean;
   showModes?: boolean;
+  unrestrictedDrawing?: boolean;
   onSliderCommit?: (
     from: number,
     to: number,
@@ -58,31 +88,42 @@ export function SketchComparison({
     reduce = useReducedMotion();
   const drag = useRef<{ id: number; from: number } | undefined>(undefined),
     value = useRef(position);
-  const clipped = useMemo(() => clipStrokes(strokes, scene), [strokes, scene]);
-  const userLines = useMemo(
-    () => (
-      <>
-        {clipped.map((stroke, index) => {
-          const fill = getStrokeStyle(stroke)?.fill;
-          return fill ? (
-            <image
-              key={`fill-${index}`}
-              href={fill}
-              x={0}
-              y={0}
-              width={600}
-              height={scene.frameHeight || 400}
-              preserveAspectRatio="none"
-            />
-          ) : null;
-        })}
-        <SketchLines strokes={clipped} replayKey={replayKey} />
-      </>
-    ),
-    [clipped, scene.frameHeight, replayKey],
+  const art = scene.artworkOverride || artwork[scene.id];
+  const height = scene.frameHeight || 400;
+  const giraffeInFront =
+    unrestrictedDrawing && scene.id === "giraffe" && mode === "drawing";
+  const { visible, target, targetShape, outside } = useMemo(() => {
+    if (!unrestrictedDrawing) {
+      const clipped = clipStrokes(strokes, scene);
+      return {
+        visible: clipped,
+        target: clipped,
+        targetShape: clipped,
+        outside: [],
+      };
+    }
+    if (scene.id !== "giraffe")
+      return { visible: strokes, target: [], targetShape: [], outside: [] };
+    const target: Stroke[] = [];
+    const outside: Stroke[] = [];
+    const targetShape: Stroke[] = [];
+    for (const stroke of strokes) {
+      const withinTarget = getStrokeStyle(stroke)?.fill
+        ? []
+        : clipStrokes([stroke], scene);
+      if (withinTarget.length) {
+        target.push(stroke);
+        targetShape.push(...withinTarget);
+      } else {
+        outside.push(stroke);
+      }
+    }
+    return { visible: strokes, target, targetShape, outside };
+  }, [strokes, scene, unrestrictedDrawing]);
+  const userLines = (
+    <UserSketchLines strokes={visible} height={height} replayKey={replayKey} />
   );
-  const art = scene.artworkOverride || artwork[scene.id],
-    height = scene.frameHeight || 400;
+  const userClip = unrestrictedDrawing ? undefined : `url(#${clip})`;
   const authoredMotion = sketchPresentationFor(scene)?.motion;
   const drawingMotion = animateDrawingFor
     ? (authoredMotion?.kind ?? celebrationFor(animateDrawingFor).kind)
@@ -99,7 +140,7 @@ export function SketchComparison({
     scene.id === "giraffe" &&
     drawingMotion === "tongue" &&
     mode === "drawing"
-      ? giraffeTongueTip(clipped)
+      ? giraffeTongueTip(targetShape)
       : undefined;
   const viewX = viewport?.x ?? 0;
   const viewY = viewport?.y ?? 0;
@@ -159,7 +200,9 @@ export function SketchComparison({
                 />
               </clipPath>
             </defs>
-            {!images && <SceneBase scene={scene} completed />}
+            {!images && !giraffeInFront && (
+              <SceneBase scene={scene} completed />
+            )}
             <g
               clipPath={mode === "slider" ? `url(#${left})` : undefined}
               visibility={mode === "answer" ? "hidden" : "visible"}
@@ -168,7 +211,7 @@ export function SketchComparison({
               {images ? (
                 <image href={images.own} width="600" height={height} />
               ) : (
-                <SceneBase scene={scene} completed />
+                !giraffeInFront && <SceneBase scene={scene} completed />
               )}
             </g>
             <motion.g
@@ -202,21 +245,36 @@ export function SketchComparison({
               )}
             </motion.g>
             {giraffeTip ? (
-              <GiraffeLeafBite tip={giraffeTip}>
-                <g clipPath={`url(#${clip})`} data-testid="user-lines">
-                  {userLines}
-                </g>
-              </GiraffeLeafBite>
+              <>
+                {outside.length > 0 && (
+                  <g data-testid="untargeted-lines">
+                    <UserSketchLines
+                      strokes={outside}
+                      height={height}
+                      replayKey={replayKey}
+                    />
+                  </g>
+                )}
+                <GiraffeLeafBite tip={giraffeTip}>
+                  <g clipPath={userClip} data-testid="user-lines">
+                    <UserSketchLines
+                      strokes={target}
+                      height={height}
+                      replayKey={replayKey}
+                    />
+                  </g>
+                </GiraffeLeafBite>
+              </>
             ) : (
               <g clipPath={mode === "slider" ? `url(#${left})` : undefined}>
-                <g clipPath={`url(#${clip})`}>
+                <g clipPath={userClip}>
                   <motion.g
                     data-testid="user-lines"
                     visibility={mode === "answer" ? "hidden" : "visible"}
                     animate={{ opacity: mode === "answer" ? 0 : 1 }}
                     transition={{ duration: reduce ? 0 : 0.2 }}
                   >
-                    {drawingMotion && drawingPivot ? (
+                    {drawingMotion && drawingPivot && !giraffeInFront ? (
                       <g
                         transform={`translate(${drawingPivot.x} ${drawingPivot.y})`}
                       >
@@ -237,6 +295,7 @@ export function SketchComparison({
                 </g>
               </g>
             )}
+            {giraffeInFront && <SceneBase scene={scene} completed foreground />}
           </motion.svg>
           {mode === "slider" && (
             <div

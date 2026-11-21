@@ -1,12 +1,14 @@
 import type { CSSProperties, ReactNode } from "react";
-import { Furi } from "../furigana/Furigana";
+import { HighlightedFuri } from "../furigana/Furigana";
 
 export function BubbleLine({
   text,
   children,
+  highlights,
 }: {
   text: string;
   children?: ReactNode;
+  highlights?: readonly string[];
 }) {
   return (
     <span className="bubble-line">
@@ -18,7 +20,7 @@ export function BubbleLine({
           } as CSSProperties
         }
       >
-        {children ?? <Furi text={text} />}
+        {children ?? <HighlightedFuri text={text} highlights={highlights} />}
       </span>
     </span>
   );

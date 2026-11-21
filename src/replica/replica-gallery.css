@@ -28,13 +28,6 @@
   display: block;
   width: 100%;
   height: 100%;
-}
-
-.replica-gallery .replica-sketch-image {
-  object-fit: contain;
-}
-
-.replica-gallery .replica-photo-tile {
   object-fit: cover;
 }
 
@@ -75,13 +68,18 @@
   height: var(--replica-gallery-close-size);
   place-items: center;
   padding: 0;
-  border-radius: 50%;
+  border-radius: 8px;
   color: white;
 }
 
 .replica-gallery-detail .replica-gallery-close .gallery-mark--close {
   width: 34px;
   height: 34px;
+}
+
+.replica-gallery-detail .replica-gallery-close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -3px;
 }
 
 .replica-gallery-detail .replica-gallery-close:active {

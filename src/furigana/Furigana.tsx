@@ -1,5 +1,10 @@
 /** @jsxImportSource react */
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { furiganaSegments } from "./tokenize";
 
 // 子ども向けのふりがな表示。設定は App が持ち、Context 経由で各画面に届く。
@@ -45,7 +50,17 @@ export function saveFurigana(enabled: boolean): void {
 export function furiganaNodes(text: string): ReactNode[] {
   return furiganaSegments(text).map((segment, index) =>
     segment.reading ? (
-      <ruby key={index} data-reading={segment.reading}>
+      <ruby
+        key={index}
+        data-reading={segment.reading}
+        style={
+          {
+            "--ruby-fit":
+              (0.96 * Array.from(segment.text).length) /
+              Array.from(segment.reading).length,
+          } as CSSProperties
+        }
+      >
         {segment.text}
         <rt aria-hidden="true" data-reading={segment.reading} />
       </ruby>
@@ -67,5 +82,35 @@ export function Furi({
   if (!enabled || !text) return <>{text}</>;
   return (
     <span aria-label={label ? text : undefined}>{furiganaNodes(text)}</span>
+  );
+}
+
+/** Keep the phrase's Figma emphasis when live lettering replaces SVG text. */
+export function HighlightedFuri({
+  text,
+  highlights,
+}: {
+  text: string;
+  highlights?: readonly string[];
+}) {
+  const terms = highlights?.filter(Boolean);
+  if (!terms?.length) return <Furi text={text} />;
+  const escaped = terms.map((term) =>
+    term.replace(/[.*+?^$\{\}()|[\]\\]/g, "\\$&"),
+  );
+  const chunks = text.split(new RegExp("(" + escaped.join("|") + ")", "g"));
+
+  return (
+    <span aria-label={text}>
+      {chunks.map((chunk, index) =>
+        index % 2 ? (
+          <span key={index} className="pitsune-text-highlight">
+            <Furi text={chunk} label={false} />
+          </span>
+        ) : (
+          <Furi key={index} text={chunk} label={false} />
+        ),
+      )}
+    </span>
   );
 }

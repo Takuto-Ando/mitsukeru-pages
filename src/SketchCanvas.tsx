@@ -66,9 +66,11 @@ export function SketchCanvas({
   canRedo,
   missionTitle,
   missionLettering,
+  missionHighlights,
   initialPenColors,
   fixedPortrait = false,
   inkBehindArtwork = false,
+  unrestrictedDrawing = false,
   hideZoomAndEraserTip = false,
   dopa = false,
   actions,
@@ -89,9 +91,11 @@ export function SketchCanvas({
   canRedo?: boolean;
   missionTitle?: string;
   missionLettering?: string;
+  missionHighlights?: readonly string[];
   initialPenColors?: PenColors;
   fixedPortrait?: boolean;
   inkBehindArtwork?: boolean;
+  unrestrictedDrawing?: boolean;
   hideZoomAndEraserTip?: boolean;
   dopa?: boolean;
   actions?: ReactNode;
@@ -108,6 +112,9 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
+  const useFullForeground = unrestrictedDrawing && scene.id === "giraffe";
+  const drawForeground =
+    inkBehindArtwork && (!unrestrictedDrawing || useFullForeground);
   const foregroundMask = useId();
   const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
   const [fillMode, setFillMode] = useState(false);
@@ -255,13 +262,13 @@ export function SketchCanvas({
   const working = useRef(strokes);
   if (active.current === null) working.current = strokes;
   const paintFrame = useRef<number | undefined>(undefined);
-  const paintState = useRef({ scene, frameHeight });
-  paintState.current = { scene, frameHeight };
+  const paintState = useRef({ scene, frameHeight, unrestrictedDrawing });
+  paintState.current = { scene, frameHeight, unrestrictedDrawing };
   function paint() {
     if (paintFrame.current !== undefined) return;
     paintFrame.current = requestAnimationFrame(() => {
       paintFrame.current = undefined;
-      const { scene, frameHeight } = paintState.current;
+      const { scene, frameHeight, unrestrictedDrawing } = paintState.current;
       const canvas = ref.current;
       if (!canvas) return;
       // Allocate pixels for the displayed size, retaining logical 600-unit coordinates.
@@ -278,15 +285,17 @@ export function SketchCanvas({
       context.setTransform(width / 600, 0, 0, height / frameHeight, 0, 0);
       context.clearRect(0, 0, 600, frameHeight);
       context.save();
-      context.beginPath();
-      for (const r of drawingRegions(scene))
-        context.rect(
-          r.x * 600,
-          r.y * frameHeight,
-          r.width * 600,
-          r.height * frameHeight,
-        );
-      context.clip();
+      if (!unrestrictedDrawing) {
+        context.beginPath();
+        for (const r of drawingRegions(scene))
+          context.rect(
+            r.x * 600,
+            r.y * frameHeight,
+            r.width * 600,
+            r.height * frameHeight,
+          );
+        context.clip();
+      }
       context.lineCap = "round";
       context.lineJoin = "round";
       const draw = (stroke: Stroke, current = false) => {
@@ -351,7 +360,7 @@ export function SketchCanvas({
   }
   useEffect(() => {
     paint();
-  }, [strokes, scene]);
+  }, [strokes, scene, unrestrictedDrawing]);
   useEffect(() => {
     const observer = new ResizeObserver(paint);
     if (ref.current) observer.observe(ref.current);
@@ -434,7 +443,10 @@ export function SketchCanvas({
     paint();
   }
   function doFill(center: Point) {
-    const region = drawingRegions(scene).find(
+    const regions = unrestrictedDrawing
+      ? BLANK_SCENE.regions
+      : drawingRegions(scene);
+    const region = regions.find(
       (r) =>
         center.x >= r.x * 600 &&
         center.x <= (r.x + r.width) * 600 &&
@@ -588,7 +600,7 @@ export function SketchCanvas({
           ...next[0],
           x: next[0].x + (next[0].x < 600 ? 0.01 : -0.01),
         });
-      if (clipStrokes([next], scene).length) {
+      if (unrestrictedDrawing || clipStrokes([next], scene).length) {
         setStrokeStyle(next, { ...activeBrush.current });
         working.current = [...working.current, next];
         callbacks.current.onChange(working.current, "draw");
@@ -741,6 +753,7 @@ export function SketchCanvas({
                   className="drawing-lettering"
                   src={assetPath(missionLettering)}
                   text={missionTitle}
+                  highlights={missionHighlights}
                 />
               ) : (
                 <BubbleLine text={missionTitle} />
@@ -804,7 +817,9 @@ export function SketchCanvas({
               }
               role="img"
             >
-              {!isFreeDrawing && <SceneBase scene={scene} />}
+              {!isFreeDrawing && !useFullForeground && (
+                <SceneBase scene={scene} />
+              )}
               {showTarget && <TargetRegions scene={scene} />}
             </svg>
             {assist.ghost && ghostSrc && (
@@ -937,31 +952,37 @@ export function SketchCanvas({
                 hideBrushRing();
               }}
             />
-            {inkBehindArtwork && !isFreeDrawing && (
+            {drawForeground && !isFreeDrawing && (
               <svg
                 className="eye-template drawing-foreground"
                 viewBox={`0 0 600 ${frameHeight}`}
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                <defs>
-                  <mask
-                    id={foregroundMask}
-                    maskUnits="userSpaceOnUse"
-                    x="0"
-                    y="0"
-                    width="600"
-                    height={frameHeight}
-                  >
-                    <rect width="600" height={frameHeight} fill="white" />
-                    <g fill="black">
-                      <SceneRegions scene={scene} />
-                    </g>
-                  </mask>
-                </defs>
-                <g mask={`url(#${foregroundMask})`}>
+                {useFullForeground ? (
                   <SceneBase scene={scene} foreground />
-                </g>
+                ) : (
+                  <>
+                    <defs>
+                      <mask
+                        id={foregroundMask}
+                        maskUnits="userSpaceOnUse"
+                        x="0"
+                        y="0"
+                        width="600"
+                        height={frameHeight}
+                      >
+                        <rect width="600" height={frameHeight} fill="white" />
+                        <g fill="black">
+                          <SceneRegions scene={scene} />
+                        </g>
+                      </mask>
+                    </defs>
+                    <g mask={`url(#${foregroundMask})`}>
+                      <SceneBase scene={scene} foreground />
+                    </g>
+                  </>
+                )}
               </svg>
             )}
             {erase && (

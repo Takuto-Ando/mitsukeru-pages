@@ -1,0 +1,14 @@
+.design3-camera-guides.replica-camera-tracking {
+  max-height: none;
+  object-fit: fill;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .replica-camera-tracking {
+    transition:
+      left 220ms ease-out,
+      top 220ms ease-out,
+      width 220ms ease-out,
+      height 220ms ease-out;
+  }
+}

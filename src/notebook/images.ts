@@ -36,6 +36,7 @@ function png(canvas: HTMLCanvasElement) {
 export async function composeObservationImages(
   scene: Scene,
   strokes: Stroke[],
+  { unrestrictedDrawing = false }: { unrestrictedDrawing?: boolean } = {},
 ) {
   const height = scene.frameHeight || 400,
     art = scene.artworkOverride || artwork[scene.id];
@@ -48,6 +49,7 @@ export async function composeObservationImages(
     loadImage(answerUrl),
   ]);
   const regions = drawingRegions(scene);
+  const artworkInFront = unrestrictedDrawing && scene.id === "giraffe";
 
   const ownCanvas = document.createElement("canvas");
   ownCanvas.width = 1200;
@@ -58,7 +60,7 @@ export async function composeObservationImages(
   ownCtx.scale(2, 2);
   ownCtx.fillStyle = "#faf7ec";
   ownCtx.fillRect(0, 0, 600, height);
-  ownCtx.drawImage(baseImage, 0, 0, 600, height);
+  if (!artworkInFront) ownCtx.drawImage(baseImage, 0, 0, 600, height);
   if (art.blankFill && art.blankFill !== "transparent") {
     ownCtx.fillStyle = art.blankFill;
     for (const r of regions) {
@@ -71,11 +73,13 @@ export async function composeObservationImages(
     }
   }
   ownCtx.save();
-  ownCtx.beginPath();
-  for (const r of regions) {
-    ownCtx.rect(r.x * 600, r.y * height, r.width * 600, r.height * height);
+  if (!unrestrictedDrawing) {
+    ownCtx.beginPath();
+    for (const r of regions) {
+      ownCtx.rect(r.x * 600, r.y * height, r.width * 600, r.height * height);
+    }
+    ownCtx.clip();
   }
-  ownCtx.clip();
   ownCtx.lineCap = "round";
   ownCtx.lineJoin = "round";
   for (const stroke of strokes) {
@@ -106,6 +110,7 @@ export async function composeObservationImages(
     ownCtx.stroke();
   }
   ownCtx.restore();
+  if (artworkInFront) ownCtx.drawImage(baseImage, 0, 0, 600, height);
   ownCtx.restore();
   const ownPng = await png(ownCanvas);
 

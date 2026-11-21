@@ -5,7 +5,11 @@ import {
 import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
-import { CardLettering, tutorialLines } from "../components/CardLettering";
+import {
+  CardLettering,
+  tutorialHighlights,
+  tutorialLines,
+} from "../components/CardLettering";
 import {
   Camera,
   ChevronRight,
@@ -72,6 +76,7 @@ export function ReplicaIntro({
         <CardLettering
           text={message}
           lines={tutorialLines[pose]}
+          highlights={tutorialHighlights[pose]}
           src={assetPath(folder + "entry-" + pose + "-message.svg")}
         />
       </p>
@@ -119,6 +124,7 @@ export function ReplicaDraw({
   onHint,
   onDone,
   hideZoomAndEraserTip,
+  unrestrictedDrawing,
   ...drawing
 }: DrawingProps & {
   task: ObservationTask;
@@ -126,6 +132,7 @@ export function ReplicaDraw({
   onHint: () => void;
   onDone: () => void;
   hideZoomAndEraserTip?: boolean;
+  unrestrictedDrawing?: boolean;
 }) {
   const prompt = sketchPresentationFor(task.scene)?.prompt;
   return (
@@ -136,6 +143,7 @@ export function ReplicaDraw({
         scene={task.scene}
         initialPenColors={penColorsFor(task.groupId)}
         hideZoomAndEraserTip={hideZoomAndEraserTip}
+        unrestrictedDrawing={unrestrictedDrawing}
         fixedPortrait
         inkBehindArtwork
         showTarget={showHint}
@@ -143,6 +151,9 @@ export function ReplicaDraw({
           showHint
             ? "もうすこし観察してみて！"
             : (prompt?.text ?? task.part + "をよく観察してみて！")
+        }
+        missionHighlights={
+          !showHint && task.id === "giraffe" ? ["舌"] : undefined
         }
         missionLettering={
           showHint
@@ -206,6 +217,7 @@ export function ReplicaResult({
   onRedraw,
   canRedraw = true,
   showComparisonModes = true,
+  unrestrictedDrawing,
   onConfirm,
   onDone,
 }: {
@@ -218,6 +230,7 @@ export function ReplicaResult({
   onRedraw: () => void;
   canRedraw?: boolean;
   showComparisonModes?: boolean;
+  unrestrictedDrawing?: boolean;
   onConfirm: () => void;
   onDone: () => void;
 }) {
@@ -254,6 +267,7 @@ export function ReplicaResult({
         animateDrawingFor={task.id}
         showReplay={false}
         showModes={showComparisonModes}
+        unrestrictedDrawing={unrestrictedDrawing}
         viewport={designCardViewport(task.scene)}
         cardFooter={
           fact && <ZooCardSummary className="result-fact" text={fact} />

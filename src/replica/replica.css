@@ -245,7 +245,8 @@
 
 .replica-app .design3-photo-edit ruby[data-reading]::after {
   inset-block-end: calc(100% - 1px);
-  font-size: 6.5px;
+  --ruby-size: 6.5px;
+  --ruby-aspect: 0.43;
 }
 
 .replica-app .design3-photo-edit > span:has(ruby[data-reading]) {
