@@ -5,6 +5,7 @@ import { DopaResultBanner } from "../components/DopaEffects";
 import { ReflectionNote } from "../components/ReflectionNote";
 import { SketchComparison } from "../components/SketchComparison";
 import { TongueCelebration } from "../components/TongueCelebration";
+import { FeatureCelebration } from "../components/FeatureCelebration";
 import type { ObservationGroup } from "../content/groups";
 import type { ObservationTask } from "../content/tasks";
 import { ReadAloud } from "../speech/Speech";
@@ -172,6 +173,13 @@ export function ResultScreen({
       </div>
       {task.id === "giraffe" && (
         <TongueCelebration strokes={strokes} scene={task.scene} />
+      )}
+      {task.id !== "giraffe" && (
+        <FeatureCelebration
+          strokes={strokes}
+          scene={task.scene}
+          taskId={task.id}
+        />
       )}
       <ReflectionNote
         value={reflection}
