@@ -125,6 +125,6 @@ Zen Maru Gothic（Medium・Bold）は [Google Fonts の公式ソース](https://
 
 ## Figma 指定の Web フォント
 
-DNP 秀英丸ゴシック Std B を公開する場合は、サイト管理者自身の [Adobe Fonts の Web プロジェクト](https://fonts.adobe.com/fonts/dnp-shuei-mgothic-std) に B のみを追加します。発行された JavaScript 埋め込みコードのプロジェクト ID を `VITE_ADOBE_FONTS_KIT_ID` としてビルドに渡します。GitHub Pages では同名のリポジトリ変数を設定し、Cloudflare Pages では公開 ZIP の生成時に設定します。対象サイトのドメインと動的サブセットを Web プロジェクトで確認します。
+DNP 秀英丸ゴシック Std B を公開する場合は、サイト管理者自身の [Adobe Fonts の Web プロジェクト](https://fonts.adobe.com/fonts/dnp-shuei-mgothic-std) に B のみを追加します。B の Web での指定は `dnp-shuei-mgothic-std` のウェイト600です。発行された JavaScript 埋め込みコードのプロジェクト ID を `VITE_ADOBE_FONTS_KIT_ID` としてビルドに渡します。GitHub Pages では同名のリポジトリ変数を設定し、Cloudflare Pages では公開 ZIP の生成時に設定します。対象サイトのドメインと動的サブセットを Web プロジェクトで確認します。
 
 有効な埋め込みが未設定の環境は、現在の Zen Maru Gothic 表示を維持します。Adobe Fonts から取得した書体ファイルのコピーを同梱しません。

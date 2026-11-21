@@ -144,3 +144,33 @@ button .card-lettering-text {
   white-space: nowrap;
   font-size: 11px;
 }
+
+/* Text dimensions from the Figma prototype, at its 402px reference width. */
+.replica-app[data-variant="product"] .design3-title-tagline .card-lettering-text {
+  font-size: clamp(14px, 4.74cqw, 19.05px);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.replica-app[data-variant="product"] .design3-challenge-prompt {
+  position: relative;
+  width: min(90vw, 342px);
+  aspect-ratio: 342 / 40.5;
+  transform: translateX(2%);
+}
+
+.replica-app[data-variant="product"] .design3-challenge-prompt .card-lettering-text {
+  position: absolute;
+  display: grid;
+  inset: 0;
+  place-content: center;
+  color: #fff;
+  font-size: clamp(24px, 10.24vw, 41.17px);
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke-width: 0;
+}
+
+.replica-app[data-variant="product"] .camera-prompt-art .card-lettering-text {
+  font-size: clamp(12px, 4.48vw, 18px);
+}

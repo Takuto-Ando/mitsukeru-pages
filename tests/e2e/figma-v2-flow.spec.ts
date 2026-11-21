@@ -5,6 +5,24 @@ function usesProductionShare(baseURL: string): boolean {
   return process.env.E2E_PREVIEW === "1" || baseURL.startsWith("https://");
 }
 
+async function expectLicensedTypeface(page: Page, selector: string) {
+  if (!process.env.VITE_ADOBE_FONTS_KIT_ID) return;
+  await expect(page.locator("html")).toHaveAttribute("data-ui-font", "dnp");
+  await expect(page.locator(selector)).toHaveCSS(
+    "font-family",
+    /^"?dnp-shuei-mgothic-std"?[, ]/,
+  );
+  const adobeFace = await page.evaluate(() =>
+    [...document.fonts].some(
+      (face) =>
+        face.family.replace(/["']/g, "") === "dnp-shuei-mgothic-std" &&
+        face.weight === "600" &&
+        face.status === "loaded",
+    ),
+  );
+  expect(adobeFace).toBe(true);
+}
+
 async function drawGiraffeTongue(page: Page) {
   const canvas = page.getByTestId("canvas");
   const bounds = (await canvas.boundingBox())!;
@@ -64,6 +82,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   const shell = page.locator(".replica-app");
   const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
   await expect(shell).toHaveAttribute("data-figma-node", "28-100");
+  await expectLicensedTypeface(page, ".design3-title-tagline");
   await expect(button("つづきから")).toBeDisabled();
   await expect(
     page.getByText("Google連携（準備中）", { exact: true }),
@@ -123,6 +142,10 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   await expect(node("38-1056")).toBeVisible();
   await button("描いてみる！").click();
   await expect(node("52-5984")).toBeVisible();
+  await expectLicensedTypeface(
+    page,
+    ".design3-challenge-prompt .card-lettering-text",
+  );
   await expect(
     node("52-5984")
       .getByRole("img", { name: "難易度 1 / 3" })
@@ -257,6 +280,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   await profile.click();
   const settings = page.getByRole("dialog", { name: "設定" });
   const settingsAction = settings.getByRole("button", { name: "体験に戻る" });
+  await expectLicensedTypeface(page, ".settings-dialog h2");
   const layoutBefore = await settingsAction.boundingBox();
   expect(layoutBefore).not.toBeNull();
   await expect(settingsAction.locator("ruby").first()).toBeVisible();
@@ -268,7 +292,6 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   ).toBeVisible();
   await expect(settingsAction.locator("ruby")).toHaveCount(0);
   expect(await settingsAction.boundingBox()).toEqual(layoutBefore);
-  await expect(settingsAction).toHaveCSS("font-family", /Zen Maru Gothic/);
   await settings.getByText("絵の自動送信（研究用）", { exact: true }).click();
   const consent = settings.getByRole("checkbox");
   if (usesProductionShare(test.info().project.use.baseURL!)) {

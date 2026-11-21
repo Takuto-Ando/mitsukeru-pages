@@ -1,5 +1,7 @@
 type AdobeFonts = {
   load(options: {
+    kitId: string;
+    scriptTimeout: number;
     async: boolean;
     fontactive: (family: string, variation: string) => void;
   }): void;
@@ -16,9 +18,11 @@ export function loadLicensedTypography(projectId: string | undefined) {
   script.addEventListener("load", () => {
     const adobe = (window as Window & { Typekit?: AdobeFonts }).Typekit;
     adobe?.load({
+      kitId,
+      scriptTimeout: 3000,
       async: true,
       fontactive: (family, variation) => {
-        if (family === "dnp-shuei-mgothic-std" && variation === "n7")
+        if (family === "dnp-shuei-mgothic-std" && variation === "n6")
           document.documentElement.dataset.uiFont = "dnp";
       },
     });

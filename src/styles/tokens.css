@@ -53,7 +53,7 @@
 }
 
 :root[data-ui-font="dnp"] {
-  --licensed-font-family: dnp-shuei-mgothic-std, sans-serif;
+  --licensed-font-family: dnp-shuei-mgothic-std, "Zen Maru Gothic", sans-serif;
 }
 
 :where(button, input, select, textarea, optgroup, option, output) {

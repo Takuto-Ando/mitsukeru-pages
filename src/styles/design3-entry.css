@@ -545,9 +545,9 @@
 }
 
 .design3-title-start-lettering .card-lettering-text {
-  font-size: clamp(19px, 6.7cqw, 28px);
+  font-size: clamp(19px, 6.98cqw, 28.08px);
 }
 
 .design3-title-resume-lettering .card-lettering-text {
-  font-size: clamp(16px, 5.4cqw, 22px);
+  font-size: clamp(16px, 5.37cqw, 21.58px);
 }

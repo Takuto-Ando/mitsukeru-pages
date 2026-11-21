@@ -10,8 +10,8 @@
 }
 
 .difficulty-label {
-  flex: 0 0 21.6%;
-  width: 21.6%;
+  flex: 0 0 22.3%;
+  width: 22.3%;
   height: auto;
   color: var(--d3-orange, #f9a846);
 }
@@ -21,7 +21,7 @@
 }
 
 .difficulty-label.card-lettering .card-lettering-text {
-  font-size: min(19px, 28cqi);
+  font-size: min(25.14px, 33cqi);
   white-space: nowrap;
 }
 

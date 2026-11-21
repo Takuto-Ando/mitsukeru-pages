@@ -141,7 +141,12 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   const savedHeading = page.getByRole("heading", {
     name: "写真をアルバムに保存しました。",
   });
-  await expect(savedHeading).toHaveCSS("font-family", /Zen Maru Gothic/);
+  await expect(savedHeading).toHaveCSS(
+    "font-family",
+    process.env.VITE_ADOBE_FONTS_KIT_ID
+      ? /^"?dnp-shuei-mgothic-std"?[, ]/
+      : /^"?Zen Maru Gothic"?[, ]/,
+  );
   await expect(savedHeading).toHaveCSS("font-weight", "700");
   await expect(
     savedHeading.locator('ruby[data-reading="ほぞん"]'),

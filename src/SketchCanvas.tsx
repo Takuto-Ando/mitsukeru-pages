@@ -693,7 +693,7 @@ export function SketchCanvas({
       </button>
     </div>
   );
-  const layoutSwitch = missionTitle && (
+  const layoutSwitch = missionTitle && !fixedPortrait && (
     <div className="sketch-layout-switch" role="group" aria-label="画面の向き">
       <button
         type="button"
