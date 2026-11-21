@@ -43,6 +43,7 @@ import { tasksForGroup, taskById } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
 import { currentProfileId } from "./future/profiles";
 import { parseTaskHash } from "./future/deeplink";
+import { enqueueShare, flushShareQueue } from "./future/share";
 import { QrScanner, qrScanSupported } from "./components/QrScanner";
 import { drawingEvaluator } from "./domain";
 
@@ -136,6 +137,11 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const [qrOpen, setQrOpen] = useState(false);
   const openLinkedTaskRef = useRef(openLinkedTask);
   openLinkedTaskRef.current = openLinkedTask;
+  // 未送信の絵があれば、起動時にまとめて送る（同意済み端末のみ）
+  useEffect(() => {
+    void flushShareQueue();
+  }, []);
+  // QRコード／共有リンク（#task=...）から課題へ直行する
   useEffect(() => {
     const followHash = () => {
       const id = parseTaskHash(window.location.hash);
@@ -384,6 +390,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });
+      enqueueShare(record.id);
       removeDraft(taskId);
       if (generation === taskGeneration.current) {
         setSavedId(record.id);
