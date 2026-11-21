@@ -1,7 +1,7 @@
 import { challengeProvider } from "./domain";
 import { recordStudy } from "./research/study";
 import { groups } from "./content/groups";
-import type { Candidate } from "./recognition/labels";
+import { canAutoSelect, type Candidate } from "./recognition/labels";
 import { PhotoReview } from "./components/PhotoReview";
 import { PhotoCelebration } from "./components/ChallengeIntro";
 import { assetPath } from "./content/artwork";
@@ -217,7 +217,8 @@ export function CameraView({
       const context = canvas.getContext("2d");
       if (!context) throw new Error("canvas");
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
-      if (frameId) drawPhotoFrame(context, frameId, canvas.width, canvas.height);
+      if (frameId)
+        drawPhotoFrame(context, frameId, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       clearReview();
       setDetected("");
@@ -252,8 +253,8 @@ export function CameraView({
         const [first, second] = result.candidates;
         if (
           first &&
-          first.score >= 0.55 &&
-          first.score - (second?.score ?? 0) >= 0.12 &&
+          (result.recognition?.status === "identified" ||
+            (!result.recognition && canAutoSelect(first, second))) &&
           challengeProvider.forSpecies(first.speciesId || first.groupId)
             .length > 0
         ) {

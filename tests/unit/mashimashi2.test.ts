@@ -3,6 +3,7 @@ import { parseTaskHash, taskHash } from "../../src/future/deeplink";
 import { COURSES, courseProgress } from "../../src/future/courses";
 import { KNOWLEDGE } from "../../src/future/knowledge";
 import { groups } from "../../src/content/groups";
+import { kyotoDrafts } from "../../src/content/kyotoCatalog";
 import type { ObservationRecord } from "../../src/notebook/types";
 
 function record(groupId: string): ObservationRecord {
@@ -50,8 +51,10 @@ describe("courses", () => {
 });
 
 describe("knowledge", () => {
-  it("covers every animal group with food, night and keeper notes", () => {
-    for (const g of groups) {
+  it("keeps legacy food, night and keeper notes", () => {
+    for (const g of groups.filter(
+      (group) => !kyotoDrafts.some((entry) => entry.groupId === group.id),
+    )) {
       const k = KNOWLEDGE[g.id];
       expect(k, g.id).toBeDefined();
       expect(k.food.length).toBeGreaterThan(0);

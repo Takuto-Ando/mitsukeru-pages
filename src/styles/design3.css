@@ -809,3 +809,34 @@ body:has(.design3-shell) {
   width: min(88vw, 353px);
   height: auto;
 }
+
+.design3-photo-options.photo-picker {
+  width: min(58vw, 230px);
+}
+
+.photo-picker input {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px;
+  border: 1px solid var(--d3-green);
+  border-radius: 8px;
+  background: var(--d3-cream);
+  font: inherit;
+  font-size: 16px;
+}
+
+.photo-picker ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.photo-ai-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-block: 12px;
+}

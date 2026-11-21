@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-e-macularius" data-illustration="incomplete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M262 357Q343 310 406 329Q443 293 492 313Q528 329 505 360Q458 390 406 382Q338 415 262 405Z" fill="#d6aa6c" stroke-width="5"/><path d="M315 377L288 432L250 434M363 344L339 300L302 286M433 371L465 415L492 411" fill="none" stroke-width="5"/><ellipse cx="472" cy="328" rx="9" ry="10" fill="#302e2e"/><ellipse cx="284" cy="373" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="307" cy="385" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="330" cy="361" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="353" cy="373" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="376" cy="385" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="399" cy="361" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="422" cy="373" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="445" cy="385" rx="7" ry="4" fill="#fff7e6"/>
+    
+  </g>
+</svg>

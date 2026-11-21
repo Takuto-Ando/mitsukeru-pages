@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-c-mouhotii" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M66 425Q83 417 101 423M427 456Q484 463 535 447" fill="none" stroke-width="3"/><path d="M107 368Q124 288 188 259Q261 226 354 254Q404 277 432 332Q451 294 484 304Q515 310 510 336Q505 360 454 372L438 396L457 429Q421 446 387 425L371 395Q265 421 183 396L164 430Q139 442 116 423L132 388Z" fill="#9f8964" stroke-width="5"/><ellipse cx="481" cy="323" rx="9" ry="10" fill="#302e2e"/><path d="M449 351Q478 339 504 338M451 362L489 350" fill="none" stroke-width="5"/>
+    <path d="M150 356Q276 322 409 353M185 346Q176 308 211 276M254 335Q243 280 274 253M332 336Q343 296 324 259M381 344Q390 324 378 280" fill="none" stroke-width="6"/>
+  </g>
+</svg>

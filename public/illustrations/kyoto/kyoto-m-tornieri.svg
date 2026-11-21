@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-m-tornieri" data-illustration="incomplete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M107 368Q124 288 188 259Q261 226 354 254Q404 277 432 332Q451 294 484 304Q515 310 510 336Q505 360 454 372L438 396L457 429Q421 446 387 425L371 395Q265 421 183 396L164 430Q139 442 116 423L132 388Z" fill="#b08d67" stroke-width="5"/><ellipse cx="482" cy="326" rx="9" ry="10" fill="#302e2e"/><path d="M137 380Q276 405 421 373" fill="none" stroke-width="5"/><ellipse cx="160" cy="400" rx="7" ry="3" fill="#fff7e6"/><ellipse cx="183" cy="412" rx="7" ry="3" fill="#fff7e6"/><ellipse cx="206" cy="388" rx="7" ry="3" fill="#fff7e6"/><ellipse cx="229" cy="400" rx="7" ry="3" fill="#fff7e6"/><ellipse cx="252" cy="412" rx="7" ry="3" fill="#fff7e6"/><ellipse cx="275" cy="388" rx="7" ry="3" fill="#fff7e6"/>
+    
+  </g>
+</svg>

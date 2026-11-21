@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-g-antigone" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M106 365Q160 307 271 334Q339 356 350 273Q349 201 409 193Q464 188 469 241Q459 273 425 281Q403 294 400 334Q389 431 263 428Q178 429 106 365Z" fill="#b9b3ae" stroke-width="5"/><path d="M250 417L246 487L234 535L268 537M291 417L298 492L329 535L349 534" fill="none" stroke-width="5"/><ellipse cx="431" cy="226" rx="9" ry="10" fill="#302e2e"/><ellipse cx="417" cy="204" rx="25" ry="8" fill="#a45450"/>
+    <path d="M452 234L544 250L456 251Z" fill="#d7a66b" stroke-width="6"/>
+  </g>
+</svg>

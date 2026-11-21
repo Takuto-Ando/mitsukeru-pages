@@ -992,7 +992,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                       task.explanation.form,
                       task.explanation.ecology,
                       task.next,
-                    ].join("。")}
+                    ].filter(Boolean).join("。")}
                   />
                   <div className="figma-science">
                     <svg
@@ -1014,8 +1014,17 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                   <div className="figma-explanation">
                     <h2>よく見ると…</h2>
                     <p>{task.explanation.form}</p>
-                    <h2>くらしとのつながり</h2>
-                    <p>{task.explanation.ecology}</p>
+                    {task.explanation.ecology && (
+                      <>
+                        <h2>くらしとのつながり</h2>
+                        <p>{task.explanation.ecology}</p>
+                      </>
+                    )}
+                    {task.provisional && task.source && (
+                      <a href={task.source} target="_blank" rel="noreferrer">
+                        京都市動物園の図鑑を見る
+                      </a>
+                    )}
                   </div>
                   <ReflectionNote
                     value={reflection}

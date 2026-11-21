@@ -1,9 +1,10 @@
 import { test, expect } from "vitest";
 import { existsSync } from "node:fs";
 import { artwork } from "../../src/content/artwork";
+import { tasks } from "../../src/content/tasks";
 import { scenes } from "../../src/content/scenes";
-test("34個の専用素材スロットがあり、未提供を完成扱いしない", () => {
-  expect(Object.keys(artwork)).toHaveLength(34);
+test("全課題の素材スロットがあり、未提供を完成扱いしない", () => {
+  expect(Object.keys(artwork)).toHaveLength(tasks.length);
   expect(Object.keys(scenes).every((id) => artwork[id])).toBe(true);
   for (const a of Object.values(artwork)) {
     expect(a.alt.length).toBeGreaterThan(0);

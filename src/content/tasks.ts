@@ -5,6 +5,7 @@ import { observationHints } from "./hints";
 import { fullBodyLayouts } from "./fullBodyLayouts";
 import partScenes from "./partScenes";
 import { groups } from "./groups";
+import { kyotoDraftTasks } from "./kyotoDrafts";
 import { scenes, type Scene } from "./scenes";
 import { profiles, type Profile } from "./profiles";
 export type JudgingMethod =
@@ -24,6 +25,7 @@ export interface ObservationTask {
   next: string;
   method: JudgingMethod;
   automatic: boolean;
+  provisional?: boolean;
   allowAbsent?: boolean;
   comparisonNote?: string;
   scene: Scene;
@@ -304,10 +306,6 @@ for (const m of materialTasks) {
     sourceNote: `提供PDF ${m.page}ページのカードをもとに描画課題を設計。模様の働きの未検証説明は採用していない。`,
   });
 }
-export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
-export const tasksForGroup = (id: string) =>
-  tasks.filter((t) => t.groupId === id);
-
 // Position the missing part in the shared 600×600 illustration. The giraffe
 // tongue task alone uses a head close-up from the owner's design reference;
 // giraffe-hoof, giraffe-horns, giraffe-lashes and all other tasks stay full-body.
@@ -362,3 +360,8 @@ if (pdfGiraffe) {
   };
   pdfGiraffe.scene.answerAsset = base + "-complete.svg";
 }
+
+tasks.push(...kyotoDraftTasks);
+export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
+export const tasksForGroup = (id: string) =>
+  tasks.filter((t) => t.groupId === id);

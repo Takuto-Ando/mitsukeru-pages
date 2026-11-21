@@ -8,7 +8,10 @@ const POSITIONS: Record<string, { x: number; y: number }> = Object.fromEntries(
     const row = Math.floor(i / 5);
     return [
       g.id,
-      { x: 10 + col * 20 + (row % 2) * 4, y: 14 + row * 22 },
+      {
+        x: 10 + col * 20 + (row % 2) * 4,
+        y: ((row + 0.5) / Math.ceil(groups.length / 5)) * 100,
+      },
     ] as const;
   }),
 );
@@ -20,7 +23,10 @@ export function ZooMap({ drawings }: { drawings: ObservationRecord[] }) {
       <h3 className="extras-heading">
         思い出マップ（{observed.size} / {groups.length} 種）
       </h3>
-      <div className="zoo-map">
+      <div
+        className="zoo-map"
+        style={{ minHeight: Math.ceil(groups.length / 5) * 64 }}
+      >
         <div className="zoo-map-path" aria-hidden="true" />
         {groups.map((g) => {
           const pos = POSITIONS[g.id];

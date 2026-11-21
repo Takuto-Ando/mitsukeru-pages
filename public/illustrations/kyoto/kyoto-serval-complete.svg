@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-serval" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M159 385Q66 423 78 343Q82 325 102 328Q93 392 165 346Z" fill="#d9ac64" stroke-width="5"/><path d="M116 372Q93 308 165 273Q236 235 335 282Q371 239 410 247Q454 244 477 290L515 318Q520 340 476 355L432 352Q415 400 414 447Q393 466 366 448L356 387Q305 415 219 394L196 451Q176 462 150 448L146 395Z" fill="#d9ac64" stroke-width="5"/><ellipse cx="458" cy="292" rx="9" ry="10" fill="#302e2e"/><ellipse cx="198" cy="332" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="221" cy="308" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="244" cy="320" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="267" cy="332" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="290" cy="308" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="313" cy="320" rx="7" ry="5" fill="#fff7e6"/><ellipse cx="336" cy="332" rx="7" ry="5" fill="#fff7e6"/>
+    <path d="M380 257Q368 185 389 166L421 240Q443 187 460 188L467 269" fill="#d9ac64" stroke-width="6"/>
+  </g>
+</svg>

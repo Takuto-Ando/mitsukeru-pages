@@ -249,6 +249,7 @@ export function DrawScreen({
       )}
       <div className="draw-afterword">
         <p className="figma-support">{task.question}</p>
+        {task.provisional && <small>仮イラスト</small>}
         <ReadAloud id="question" text={task.question} />
         <div className="drawing-reference">{reference}</div>
       </div>

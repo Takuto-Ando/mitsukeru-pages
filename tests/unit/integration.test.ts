@@ -18,7 +18,7 @@ for (const task of tasks)
     ];
     const answer = drawingEvaluator.evaluate(task, [line]);
     expect(answer.challengeId).toBe(task.id);
-    expect(answer.method).toBe("automatic");
+    expect(answer.method).toBe(task.automatic ? "automatic" : "comparison");
     expect(answer.passed).toBe(false);
   });
 test("羊を種として区別し、対象外・曖昧な推定は確定しない", () => {

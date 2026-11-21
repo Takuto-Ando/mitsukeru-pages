@@ -1,3 +1,6 @@
+import { kyotoDraftTasks } from "./kyotoDrafts";
+import { kyotoSpeciesById } from "./kyotoCatalog";
+
 export interface ObservationGroup {
   id: string;
   name: string;
@@ -212,6 +215,20 @@ export const groups: ObservationGroup[] = rows.map(
     media: groupPhotos[id],
     answer: { kind: id === "goat" ? "pupil" : "pending" },
   }),
+);
+groups.push(
+  ...kyotoDraftTasks.map((task): ObservationGroup => ({
+    id: task.groupId,
+    name: kyotoSpeciesById.get(task.groupId)!.name,
+    part: task.part,
+    question: task.question,
+    fact: task.explanation.form,
+    source: task.source,
+    evaluation: "features",
+    explanationStatus: "unverified",
+    answer: { kind: "pending" },
+    media: groupPhotos[task.groupId],
+  })),
 );
 export const rosterNote =
   "提供PDFの全30カードを20グループに整理。既存の追加課題も保持。動物の掲載は現地の展示を保証しません。";

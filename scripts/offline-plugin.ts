@@ -163,6 +163,7 @@ export function offlinePlugin(): Plugin {
             name.startsWith("illustrations/pdf-design/") ||
             name.startsWith("replica-assets/") ||
             name.startsWith("illustrations/whole/") ||
+            name.startsWith("illustrations/kyoto/") ||
             name.startsWith("illustrations/simple/")
           )
             files.push(name);

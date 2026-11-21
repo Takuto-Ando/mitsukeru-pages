@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-p-versicolor" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M111 390Q160 362 208 312Q270 255 338 270Q349 213 408 208Q460 210 471 264Q475 326 423 365Q376 425 262 422Q207 413 164 413Z" fill="#526c60" stroke-width="5"/><path d="M461 258Q505 258 535 283Q496 294 464 281Z" fill="#f5d9ac" stroke-width="5"/><ellipse cx="436" cy="252" rx="9" ry="10" fill="#302e2e"/><ellipse cx="230" cy="362" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="253" cy="374" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="276" cy="350" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="299" cy="362" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="322" cy="374" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="345" cy="350" rx="7" ry="4" fill="#fff7e6"/><ellipse cx="368" cy="362" rx="7" ry="4" fill="#fff7e6"/><path d="M313 412L306 455L287 462M349 411L363 459L381 461" fill="none" stroke-width="5"/>
+    <path d="M216 377Q104 372 42 251Q133 271 232 330Q120 316 61 313Q122 373 197 387Z" fill="#526c60" stroke-width="6"/>
+  </g>
+</svg>

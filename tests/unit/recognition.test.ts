@@ -28,14 +28,17 @@ test("対象外と曖昧な写真を断定しない", () => {
   expect(chooseCandidates([{ label: "a goat", score: NaN }])).toEqual([]);
   expect(chooseCandidates([])).toEqual([]);
 });
-test("ヤギとヒツジは同一グループでまとめる", () =>
+test("ヤギとヒツジは候補を区別して同じ保存グループを使う", () =>
   expect(
     chooseCandidates([
       { label: "a goat", score: 0.6 },
       { label: "a sheep", score: 0.3 },
       { label: "a dog", score: 0.01 },
     ]),
-  ).toHaveLength(1));
+  ).toMatchObject([
+    { groupId: "goat", speciesId: "goat" },
+    { groupId: "goat", speciesId: "sheep" },
+  ]));
 test("写真なしでは推測せず個体識別も行わない", async () => {
   expect((await speciesRecognizer.recognize("test-photo")).status).toBe(
     "unavailable",

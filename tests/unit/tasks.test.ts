@@ -4,13 +4,16 @@ import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 import { artwork } from "../../src/content/artwork";
 import { createResearchRecorder } from "../../src/research/recorder";
+const legacyTasks = tasks.filter((task) => !task.provisional);
 test("20グループ34課題、別部位を別IDと固有素材・マスクで管理", () => {
-  expect(tasks).toHaveLength(34);
-  expect(new Set(tasks.map((t) => t.id)).size).toBe(34);
-  expect(new Set(tasks.map((t) => artwork[t.id].incomplete)).size).toBe(34);
+  expect(legacyTasks).toHaveLength(34);
+  expect(new Set(legacyTasks.map((t) => t.id)).size).toBe(34);
+  expect(new Set(legacyTasks.map((t) => artwork[t.id].incomplete)).size).toBe(
+    34,
+  );
   for (const group of groups)
     expect(tasksForGroup(group.id).length).toBeGreaterThan(0);
-  for (const t of tasks) {
+  for (const t of legacyTasks) {
     expect(t.question.length).toBeGreaterThan(8);
     expect(t.explanation.form.length).toBeGreaterThan(10);
     expect(t.explanation.ecology.length).toBeGreaterThan(10);
@@ -33,7 +36,7 @@ test("20グループ34課題、別部位を別IDと固有素材・マスクで�
     expect(t.scene.answerPath || t.id === "goat").toBeTruthy();
     expect(t.hints?.length).toBeGreaterThanOrEqual(2);
   }
-  const allHints = tasks.flatMap((t) => t.hints || []);
+  const allHints = legacyTasks.flatMap((t) => t.hints || []);
   expect(new Set(allHints).size).toBe(allHints.length);
   expect(tasks.find((t) => t.id === "goat")?.hints).toEqual([
     "目の真ん中を見てみよう。",
@@ -41,7 +44,7 @@ test("20グループ34課題、別部位を別IDと固有素材・マスクで�
   ]);
 });
 test("全課題に特徴に合う自動判定がある", () => {
-  for (const t of tasks) {
+  for (const t of legacyTasks) {
     expect([
       "orientation",
       "curvature",
@@ -80,7 +83,7 @@ test("資料の全30カードを重複なく追跡し、追加課題と区別す
     await import("../../src/content/materialTasks");
   expect(sourceCards).toHaveLength(30);
   expect(new Set(sourceCards.map(([id]) => id)).size).toBe(30);
-  expect(groups).toHaveLength(20);
+  expect(new Set(legacyTasks.map((task) => task.groupId)).size).toBe(20);
   for (const [id, page] of sourceCards) {
     expect(
       tasks.find((t) => t.id === id),
@@ -90,7 +93,7 @@ test("資料の全30カードを重複なく追跡し、追加課題と区別す
     expect(page).toBeLessThanOrEqual(20);
   }
   expect(
-    tasks
+    legacyTasks
       .filter(
         (t) =>
           !sourceCards.some(

@@ -1,9 +1,30 @@
 import { useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { groups } from "../content/groups";
+import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
 import { Furi } from "../furigana/Furigana";
+
+const speciesName = (choice: Pick<Candidate, "groupId" | "speciesId">) =>
+  kyotoSpeciesById.get(choice.speciesId ?? choice.groupId)?.name ??
+  groups.find((entry) => entry.id === choice.groupId)?.name;
+
+const pickerChoices = [
+  ...groups.map((group) => ({
+    groupId: group.id,
+    name: group.name,
+    speciesId: undefined as string | undefined,
+  })),
+  { groupId: "goat", speciesId: "sheep", name: "ヒツジ" },
+];
+const normalize = (text: string) =>
+  text
+    .normalize("NFKC")
+    .replace(/[ァ-ヶ]/g, (character) =>
+      String.fromCharCode(character.charCodeAt(0) - 0x60),
+    )
+    .trim();
 
 export function PhotoReview({
   dopa = false,
@@ -25,12 +46,20 @@ export function PhotoReview({
   onConfirm: () => void;
 }) {
   const [choosing, setChoosing] = useState(false);
+  const [query, setQuery] = useState("");
   const editButton = useRef<HTMLButtonElement>(null);
   const group = groups.find((item) => item.id === selection?.groupId);
-  const name = selection?.speciesId === "sheep" ? "ヒツジ" : group?.name;
+  const name = selection?.speciesId ? speciesName(selection) : group?.name;
+  const search = normalize(query);
+  const choices = pickerChoices.filter(
+    (choice) =>
+      normalize(choice.name).includes(search) ||
+      normalize(speciesName(choice) ?? "").includes(search),
+  );
   function select(choice: Pick<Candidate, "groupId" | "speciesId">) {
     onChange(choice);
     setChoosing(false);
+    setQuery("");
     editButton.current?.focus();
   }
   return (
@@ -81,10 +110,9 @@ export function PhotoReview({
               />
             </button>
             {choosing && (
-              <ul
+              <div
                 id="photo-animal-options"
-                className="design3-photo-options"
-                aria-label="動物の一覧"
+                className="design3-photo-options photo-picker"
                 onKeyDown={(event) => {
                   if (event.key === "Escape") {
                     setChoosing(false);
@@ -92,41 +120,32 @@ export function PhotoReview({
                   }
                 }}
               >
-                {groups.map((item) => {
-                  const candidate = candidates.find(
-                    (option) => option.groupId === item.id,
-                  );
-                  return (
-                    <li key={item.id}>
+                <input
+                  type="search"
+                  aria-label="動物の名前で探す"
+                  placeholder="動物の名前で探す"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+                <ul aria-label="動物の一覧">
+                  {choices.map(({ groupId, speciesId, name }) => (
+                    <li key={speciesId ?? groupId}>
                       <button
                         type="button"
                         aria-pressed={
-                          item.id === group?.id &&
-                          selection?.speciesId !== "sheep"
+                          selection?.groupId === groupId &&
+                          (selection?.speciesId === "sheep") ===
+                            (speciesId === "sheep")
                         }
-                        aria-description={
-                          candidate && candidate.speciesId !== "sheep"
-                            ? "AIの候補"
-                            : undefined
-                        }
-                        onClick={() => select({ groupId: item.id })}
+                        onClick={() => select({ groupId, speciesId })}
                       >
-                        {item.name}
+                        {name}
                       </button>
-                      {candidate?.speciesId === "sheep" && (
-                        <button
-                          type="button"
-                          aria-pressed={selection?.speciesId === "sheep"}
-                          aria-description="AIの候補"
-                          onClick={() => select(candidate)}
-                        >
-                          ヒツジ
-                        </button>
-                      )}
                     </li>
-                  );
-                })}
-              </ul>
+                  ))}
+                </ul>
+                {choices.length === 0 && <p>名前が見つかりません。</p>}
+              </div>
             )}
           </div>
           {takenAt && (
@@ -158,6 +177,20 @@ export function PhotoReview({
           {group?.fact ? <Furi text={group.fact} /> : "?????"}
         </p>
       </article>
+      {!selection && candidates.length > 0 && (
+        <div className="photo-ai-candidates" aria-label="写真から見つけた候補">
+          {candidates.map((candidate) => (
+            <button
+              type="button"
+              key={candidate.speciesId ?? candidate.groupId}
+              className="design3-pill design3-pill--green"
+              onClick={() => select(candidate)}
+            >
+              {speciesName(candidate)}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="design3-actions">
         <button
           className="design3-pill design3-pill--green"

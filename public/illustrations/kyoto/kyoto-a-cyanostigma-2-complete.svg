@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-a-cyanostigma-2" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M195 296Q268 196 411 234Q483 248 518 299Q468 352 358 368Q252 381 194 321Z" fill="#92a8a2" stroke-width="5"/><path d="M274 248L311 184L390 232M286 361L351 400L391 363" fill="#92a8a2" stroke-width="5"/><path d="M223 324Q307 334 389 307M441 252Q418 304 442 347" fill="none" stroke-width="5"/><ellipse cx="476" cy="285" rx="9" ry="10" fill="#302e2e"/>
+    <path d="M210 293Q131 250 78 232L96 306L70 374Q133 353 209 318Z" fill="#92a8a2" stroke-width="6"/>
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-a-fulgens" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M165 302Q85 293 54 370Q101 372 174 350Z" fill="#b66b51" stroke-width="5"/><path d="M116 372Q93 308 165 273Q236 235 335 282Q371 239 410 247Q454 244 477 290L515 318Q520 340 476 355L432 352Q415 400 414 447Q393 466 366 448L356 387Q305 415 219 394L196 451Q176 462 150 448L146 395Z" fill="#b66b51" stroke-width="5"/><path d="M475 311Q488 306 515 318L509 334L490 336Z" fill="#f5d9ac" stroke-width="5"/><ellipse cx="451" cy="291" rx="9" ry="10" fill="#302e2e"/>
+    <path d="M381 258L383 167Q393 158 427 236Q445 197 462 201L467 265" fill="#b66b51" stroke-width="6"/>
+  </g>
+</svg>

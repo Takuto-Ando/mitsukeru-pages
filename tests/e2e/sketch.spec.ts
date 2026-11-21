@@ -6,8 +6,10 @@ import { drawingEvaluator } from "../../src/domain";
 import { fullBodyLayouts } from "../../src/content/fullBodyLayouts";
 import partScenes from "../../src/content/partScenes";
 
+const automaticTasks = tasks.filter((task) => task.automatic);
+
 test("全34課題のお手本から取った線が特徴判定を通る", async ({ page }) => {
-  const targets = tasks.map((task) => {
+  const targets = automaticTasks.map((task) => {
     const layout = fullBodyLayouts[task.id];
     const part = partScenes[task.id as keyof typeof partScenes];
     const d = layout?.answerPath ?? part?.answerPath ?? task.scene.answerPath!;
@@ -40,7 +42,7 @@ test("全34課題のお手本から取った線が特徴判定を通る", async 
         }),
     );
   }, targets);
-  const failures = tasks.flatMap((task, index) => {
+  const failures = automaticTasks.flatMap((task, index) => {
     const result = drawingEvaluator.evaluate(task, drawings[index]);
     return result.passed ? [] : [{ task: task.id, metrics: result.debug }];
   });
@@ -251,13 +253,35 @@ test("giraffe: 描いた舌が葉に届き、葉を食べて再演できる", as
   ).toBeHidden();
   await expect(stage.locator(".leaf-bite-1")).toHaveCSS("opacity", "0");
 });
-for (const t of tasks)
+for (const t of tasks.filter(
+  (task) =>
+    !task.provisional ||
+    [
+      "kyoto-o-cuniculus",
+      "kyoto-s-humboldti",
+      "kyoto-g-elegans",
+      "kyoto-a-cyanostigma-2",
+    ].includes(task.id),
+))
   test(`${t.id}: 専用イラスト・描画・比較・確認・解説・再観察`, async ({
     page,
   }) => {
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
-    await select(page, t.id);
+    if (t.provisional) {
+      await page.goto("./");
+      await startCamera(page);
+      const picker = await openAnimalPicker(page);
+      const name = groups.find((group) => group.id === t.groupId)!.name;
+      await page
+        .getByRole("searchbox", { name: "動物の名前で探す" })
+        .fill(name);
+      await expect(picker.getByRole("button")).toHaveCount(1);
+      await picker.getByRole("button", { name, exact: true }).click();
+      await beginChallenge(page);
+    } else {
+      await select(page, t.id);
+    }
     await expect(
       page.getByRole("heading", {
         name:
@@ -350,7 +374,7 @@ for (const t of tasks)
     await page.getByRole("button", { name: "次の動物を撮る" }).click();
     await expect(
       (await openAnimalPicker(page)).getByRole("button"),
-    ).toHaveCount(groups.length);
+    ).toHaveCount(groups.length + 1);
     expect(errors).toEqual([]);
   });
 test("描画画面の向きを手動で切り替えても線が残る", async ({ page }) => {

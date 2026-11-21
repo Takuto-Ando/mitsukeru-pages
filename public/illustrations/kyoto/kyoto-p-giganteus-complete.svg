@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-p-giganteus" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M329 264Q391 155 548 156Q523 215 558 281Q503 240 474 331Q433 287 400 395Q381 325 326 343Z" fill="#72554b" stroke-width="5"/><ellipse cx="300" cy="325" rx="53" ry="92" fill="#72554b"/><path d="M262 253L262 202L283 225L320 225L341 205L338 266Z" fill="#72554b" stroke-width="5"/><ellipse cx="288" cy="247" rx="9" ry="10" fill="#302e2e"/><ellipse cx="318" cy="247" rx="9" ry="10" fill="#302e2e"/>
+    <path d="M264 265Q208 159 51 156Q81 204 46 281Q103 240 131 331Q177 287 198 395Q214 324 274 343Z" fill="#72554b" stroke-width="6"/>
+  </g>
+</svg>

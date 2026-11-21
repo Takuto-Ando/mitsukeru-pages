@@ -1,3 +1,4 @@
+import { kyotoDraftTasks } from "./kyotoDrafts";
 import { materialTasks } from "./materialTasks";
 export interface Artwork {
   blankFill?: string;
@@ -81,4 +82,7 @@ for (const m of materialTasks) {
   };
 }
 
+for (const task of kyotoDraftTasks) {
+  artwork[task.id] = task.scene.artworkOverride!;
+}
 Object.assign(artwork, suppliedArtwork);

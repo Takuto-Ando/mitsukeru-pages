@@ -1,3 +1,4 @@
+import { kyotoCatalog } from "../content/kyotoCatalog";
 import { speciesModelVersion } from "./contracts";
 export const animalLabels = [
   ["mandrill", "a mandrill monkey"],
@@ -31,55 +32,82 @@ export const rejectionLabels = [
   "an unclear blurry photograph",
 ];
 export type Candidate = { groupId: string; score: number; speciesId?: string };
+const confirmedPromptIds = new Set(
+  animalLabels.map(([id, label]): string =>
+    label === "a sheep" ? "sheep" : id,
+  ),
+);
+const byPrompt = new Map<string, Omit<Candidate, "score">>();
+for (const [groupId, label] of animalLabels) {
+  byPrompt.set(label, {
+    groupId,
+    speciesId: label === "a sheep" ? "sheep" : groupId,
+  });
+}
+for (const entry of kyotoCatalog) {
+  if (entry.prompt) {
+    byPrompt.set(entry.prompt, { groupId: entry.groupId, speciesId: entry.id });
+  }
+}
+export const speciesPrompts = [...byPrompt.keys()];
 export const recognitionThresholds = { minimum: 0.3, margin: 0.07 };
+const reviewThresholds = { minimum: 0.12, rejectionMargin: 0.025 };
+
 export function chooseCandidates(
   output: { label: string; score: number }[],
 ): Candidate[] {
   const valid = output
     .filter((o) => Number.isFinite(o.score) && o.score >= 0 && o.score <= 1)
     .sort((a, b) => b.score - a.score);
-  const top = valid[0];
-  if (!top) return [];
-  const labelMap = new Map<string, string>(
-    animalLabels.map(([id, label]) => [label, id]),
-  );
-  const id = labelMap.get(top.label);
-  if (!id || top.score < recognitionThresholds.minimum) return [];
-  const next = valid.find((v) => labelMap.get(v.label) !== id);
-  if (top.score - (next?.score || 0) < recognitionThresholds.margin) return [];
-  const byGroup = new Map<string, number>();
-  for (const item of valid) {
-    const group = labelMap.get(item.label);
-    if (group)
-      byGroup.set(group, Math.max(byGroup.get(group) || 0, item.score));
+  const [top] = valid;
+  const match = top && byPrompt.get(top.label);
+  if (!match) return [];
+
+  const isLegacy = confirmedPromptIds.has(match.speciesId ?? match.groupId);
+  const minimum = isLegacy
+    ? recognitionThresholds.minimum
+    : reviewThresholds.minimum;
+  const runner = isLegacy
+    ? valid.find(
+        (item) => byPrompt.get(item.label)?.speciesId !== match.speciesId,
+      )
+    : valid.find((item) => !byPrompt.has(item.label));
+  const margin = isLegacy
+    ? recognitionThresholds.margin
+    : reviewThresholds.rejectionMargin;
+  if (top.score < minimum || top.score - (runner?.score ?? 0) < margin)
+    return [];
+
+  const candidates = new Map<string, Candidate>();
+  for (const { label, score } of valid) {
+    const choice = byPrompt.get(label);
+    if (!choice || score < 0.08) continue;
+    const key = choice.speciesId ?? choice.groupId;
+    if (!candidates.has(key)) candidates.set(key, { ...choice, score });
+    if (candidates.size === 3) break;
   }
-  return [...byGroup]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .filter(([, score]) => score >= 0.08)
-    .map(([groupId, score]) => ({
-      groupId,
-      score,
-      speciesId:
-        groupId === "goat" &&
-        valid.find((v) => labelMap.get(v.label) === groupId)?.label ===
-          "a sheep"
-          ? "sheep"
-          : groupId,
-    }));
+  return [...candidates.values()];
+}
+
+export function canAutoSelect(first?: Candidate, second?: Candidate) {
+  return Boolean(
+    first &&
+    confirmedPromptIds.has(first.speciesId ?? first.groupId) &&
+    first.score >= 0.55 &&
+    first.score - (second?.score ?? 0) >= 0.12,
+  );
 }
 
 export function recognitionFromOutput(
   output: { label: string; score: number }[],
 ) {
-  const candidates = chooseCandidates(output),
-    top = candidates[0];
+  const [top, second] = chooseCandidates(output);
   return {
-    speciesId: top?.speciesId || null,
-    confidence: top?.score || 0,
+    speciesId: top?.speciesId ?? null,
+    confidence: top?.score ?? 0,
     status: !top
       ? ("unknown" as const)
-      : top.score >= 0.55 && top.score - (candidates[1]?.score || 0) >= 0.12
+      : canAutoSelect(top, second)
         ? ("identified" as const)
         : ("uncertain" as const),
     modelVersion: speciesModelVersion,

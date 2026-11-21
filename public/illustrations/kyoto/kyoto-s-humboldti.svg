@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-s-humboldti" data-illustration="incomplete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M223 247Q218 158 301 135Q374 116 427 195L472 213L435 231Q463 312 439 411Q430 482 367 483L230 484Q177 469 177 417Q114 385 134 347Q143 316 213 307Z" fill="#4f5961" stroke-width="5"/><ellipse cx="344" cy="347" rx="86" ry="117" fill="#f8edda"/><ellipse cx="393" cy="187" rx="9" ry="10" fill="#302e2e"/><path d="M184 473L167 501L245 500L264 476M347 479L329 499L432 501L403 478" fill="#f5d9ac" stroke-width="5"/>
+    
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600" data-full-animal="kyoto-o-tetraspis" data-illustration="complete">
+  <g stroke="#514844" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="300" cy="510" rx="205" ry="13" fill="#eee4d1"/>
+    <path d="M70 382Q174 384 228 325Q299 265 388 291L399 350Q305 391 232 376Q132 420 70 382Z" fill="#8a916c" stroke-width="5"/><path d="M252 361L219 422L258 421M348 360L355 412L392 404" fill="none" stroke-width="5"/><ellipse cx="380" cy="304" rx="9" ry="10" fill="#302e2e"/>
+    <path d="M388 291Q487 288 548 313Q563 333 524 342L394 346" fill="none" stroke-width="6"/>
+  </g>
+</svg>

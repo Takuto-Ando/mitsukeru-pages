@@ -9,7 +9,7 @@ import {
 import wasmUrl from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm?url";
 import runtimeUrl from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs?url";
 import {
-  animalLabels,
+  speciesPrompts,
   rejectionLabels,
   chooseCandidates,
   recognitionFromOutput,
@@ -37,7 +37,7 @@ if (env.backends.onnx.wasm) {
   env.backends.onnx.wasm.proxy = false;
   env.backends.onnx.wasm.wasmPaths = { wasm: wasmUrl, mjs: runtimeUrl };
 }
-let classifier: Awaited<ReturnType<typeof createClassifier>> | undefined;
+let classifier: ReturnType<typeof createClassifier> | undefined;
 let lastProgress = 0;
 async function createClassifier() {
   const modelId = "Xenova/clip-vit-base-patch32";
@@ -74,15 +74,15 @@ self.onmessage = async (
   event: MessageEvent<{ photo?: string; offline?: boolean }>,
 ) => {
   try {
-    classifier ??= await createClassifier();
+    const ready = await (classifier ??= createClassifier());
     if (!event.data.photo) {
       postMessage({ type: "result", result: { status: "ready" } });
       return;
     }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
-    const output = await classifier(
+    const output = await ready(
       event.data.photo,
-      [...animalLabels.map(([, label]) => label), ...rejectionLabels],
+      [...speciesPrompts, ...rejectionLabels],
       { hypothesis_template: "This is a photo of {}." },
     );
     const candidates = chooseCandidates(output);
