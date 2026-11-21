@@ -12,6 +12,8 @@ export interface DrawingRecord {
   strokes: Stroke[];
   styles?: (import("../types").StrokeStyle | null)[];
   outcome: "correct" | "self-confirmed";
+  /** きょうだいプロフィールのID（未設定は既定の「みんな」）。 */
+  profileId?: string;
 }
 export interface CollectionData {
   version: 1;

@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { groups } from "../content/groups";
 import { tasksForGroup } from "../content/tasks";
+import { monthStats, observationsToCsv } from "../future/extras";
 import type { ObservationRecord } from "../notebook/types";
 import "../styles/future4.css";
 
@@ -85,6 +86,16 @@ export function ParentReport({
               {mostObserved.cards} 枚）です。
             </p>
           )}
+          {(() => {
+            const stats = monthStats(drawings);
+            return (
+              <p>
+                今月は {stats.thisMonth.cards} 枚（{stats.thisMonth.species}{" "}
+                種）、先月は {stats.lastMonth.cards} 枚（
+                {stats.lastMonth.species} 種）の観察でした。
+              </p>
+            );
+          })()}
           <h3>動物ごとの進みぐあい</h3>
           <ul className="report-groups">
             {perGroup.map((row) => (
@@ -120,6 +131,23 @@ export function ParentReport({
             onClick={() => window.print()}
           >
             レポートを印刷する
+          </button>
+          <button
+            type="button"
+            className="report-print"
+            onClick={() => {
+              const blob = new Blob(["\uFEFF" + observationsToCsv(drawings)], {
+                type: "text/csv;charset=utf-8",
+              });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "zooketch-observations.csv";
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+          >
+            観察データをCSVで書き出す
           </button>
         </>
       )}

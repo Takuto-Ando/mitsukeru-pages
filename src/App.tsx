@@ -41,6 +41,9 @@ import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
+import { currentProfileId } from "./future/profiles";
+import { parseTaskHash } from "./future/deeplink";
+import { QrScanner, qrScanSupported } from "./components/QrScanner";
 import { drawingEvaluator } from "./domain";
 
 import {
@@ -130,6 +133,17 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
   const [screen, setScreen] = useState<Screen>("splash");
+  const [qrOpen, setQrOpen] = useState(false);
+  // QRコード／共有リンク（#task=...）から課題へ直行する
+  useEffect(() => {
+    const id = parseTaskHash(window.location.hash);
+    if (id && taskById[id]) {
+      selectTask(id);
+      restart("intro");
+    }
+    // 初回マウント時のみ
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [photoPhase, setPhotoPhase] = useState<
     "cheer" | "loading" | "challenge"
   >();
@@ -357,6 +371,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
         strokes: visible,
         styles: stylesFor(visible),
         outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
+        profileId: currentProfileId(),
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });
@@ -754,6 +769,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             onSettings={openSettings}
             savedCount={collectionCount}
             studyTutorial={!!surveyUrl}
+            onScanQr={qrScanSupported() ? () => setQrOpen(true) : undefined}
           />
         ) : screen === "intro" ? (
           <IntroFlow onDone={() => setScreen("activity")} />
@@ -1103,6 +1119,18 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
               </nav>
             )}
           </>
+        )}
+        {qrOpen && (
+          <QrScanner
+            onClose={() => setQrOpen(false)}
+            onFound={(id) => {
+              setQrOpen(false);
+              if (taskById[id]) {
+                selectTask(id);
+                restart("intro");
+              }
+            }}
+          />
         )}
         <SettingsDialog
           open={settingsOpen}

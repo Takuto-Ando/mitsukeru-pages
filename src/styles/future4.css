@@ -285,3 +285,40 @@
     display: none;
   }
 }
+
+/* ましましバッチB：部位チップと音ボタン */
+.quiz-category {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quiz-category button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  color: #7a6a4a;
+}
+
+.quiz-category button.is-active {
+  border-color: #f6a83c;
+  background: #fff3d9;
+  color: #7a4a21;
+}
+
+.sound-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 999px;
+  background: #f6a83c;
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+}

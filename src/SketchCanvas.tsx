@@ -23,6 +23,8 @@ import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
 import { stabilizePoint } from "./drawing/smooth";
 import { getStrokeStyle, setStrokeStyle } from "./drawing/styles";
+import { STAMPS, drawStamp } from "./drawing/stamps";
+import { currentSeason } from "./future/seasons";
 import { designCardViewport } from "./drawing/viewport";
 import type { Point, Stroke } from "./types";
 
@@ -68,6 +70,7 @@ export function SketchCanvas({
   landscapeReselect,
   showTarget = false,
   photoUrl,
+  coloringSrc,
   canvasRef,
 }: {
   onDrawingActivity?: (
@@ -87,6 +90,8 @@ export function SketchCanvas({
   landscapeReselect?: ReactNode;
   showTarget?: boolean;
   photoUrl?: string;
+  /** ぬりえモード：線画風に薄く敷く下絵（assetPath 前の相対パス）。 */
+  coloringSrc?: string;
   canvasRef?: RefObject<HTMLCanvasElement | null>;
   template?: "eye" | "blank";
   scene?: Scene;
@@ -96,6 +101,9 @@ export function SketchCanvas({
   const frameHeight = scene.frameHeight || 400;
   const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
   const [fillMode, setFillMode] = useState(false);
+  const [stampMode, setStampMode] = useState(false);
+  const [stampId, setStampId] = useState(STAMPS[0].id);
+  const [zoom, setZoom] = useState(1);
   const fillImages = useRef(new Map<string, HTMLImageElement>());
   const ownCanvas = useRef<HTMLCanvasElement>(null);
   const ref = canvasRef ?? ownCanvas;
@@ -240,6 +248,18 @@ export function SketchCanvas({
       const draw = (stroke: Stroke, current = false) => {
         if (!stroke.length) return;
         if (!current && getStrokeStyle(stroke)?.fill) return;
+        const stampStyle = current ? undefined : getStrokeStyle(stroke);
+        if (stampStyle?.stamp && stroke.length <= 2) {
+          drawStamp(
+            context,
+            stampStyle.stamp,
+            stroke[0].x,
+            stroke[0].y,
+            Math.max(24, stampStyle.width),
+            stampStyle.color,
+          );
+          return;
+        }
         const style = current
           ? activeBrush.current
           : getStrokeStyle(stroke) || {
@@ -569,6 +589,19 @@ export function SketchCanvas({
         <PaintBucket size={15} aria-hidden="true" />
         バケツ
       </button>
+      {dopa && (
+        <button
+          type="button"
+          aria-pressed={stampMode}
+          onClick={() => {
+            setStampMode((v) => !v);
+            setFillMode(false);
+            setErase(false);
+          }}
+        >
+          スタンプ
+        </button>
+      )}
       <button
         type="button"
         aria-pressed={assist.grid}
@@ -681,6 +714,9 @@ export function SketchCanvas({
             {
               aspectRatio: viewport?.aspectRatio ?? `600 / ${frameHeight}`,
               "--scene-ratio": 600 / frameHeight,
+              transform: zoom !== 1 ? `scale(${zoom})` : undefined,
+              transformOrigin: "center center",
+              zIndex: zoom !== 1 ? 5 : undefined,
             } as CSSProperties
           }
         >
@@ -708,6 +744,14 @@ export function SketchCanvas({
               <img
                 className="underlay ghost-underlay"
                 src={assetPath(ghostSrc)}
+                alt=""
+                aria-hidden="true"
+              />
+            )}
+            {coloringSrc && (
+              <img
+                className="underlay coloring-underlay"
+                src={assetPath(coloringSrc)}
                 alt=""
                 aria-hidden="true"
               />
@@ -759,6 +803,23 @@ export function SketchCanvas({
                   /* The pointer may already have ended. */
                 }
                 const position = point(event);
+                if (stampMode) {
+                  active.current = null;
+                  const anchor: Stroke = [
+                    position,
+                    { x: position.x + 0.01, y: position.y },
+                  ];
+                  setStrokeStyle(anchor, {
+                    color: activeBrush.current.color,
+                    width: 52,
+                    stamp: stampId,
+                  });
+                  onChange([...strokes, anchor], "draw");
+                  if (ref.current?.hasPointerCapture(event.pointerId))
+                    ref.current.releasePointerCapture(event.pointerId);
+                  callbacks.current.onDrawingActivity?.(false, "pen");
+                  return;
+                }
                 if (fillMode) {
                   active.current = null;
                   doFill(position);
@@ -976,6 +1037,45 @@ export function SketchCanvas({
             線で囲んだ中をタップすると、選んだ色でぬれるよ。
           </p>
         )}
+        {stampMode && (
+          <div className="stamp-picker" role="group" aria-label="スタンプの形">
+            {STAMPS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                aria-pressed={stampId === s.id}
+                className={
+                  (stampId === s.id ? "is-active" : "") +
+                  (s.id === currentSeason().stampId ? " is-seasonal" : "")
+                }
+                onClick={() => setStampId(s.id)}
+              >
+                {s.label}
+                {s.id === currentSeason().stampId && "（季節限定）"}
+              </button>
+            ))}
+            <span className="stamp-tip">画用紙をタップすると置けるよ</span>
+          </div>
+        )}
+        <div className="zoom-controls" role="group" aria-label="拡大・縮小">
+          <button
+            type="button"
+            aria-label="縮小する"
+            disabled={zoom <= 1}
+            onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
+          >
+            －
+          </button>
+          <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
+          <button
+            type="button"
+            aria-label="拡大する"
+            disabled={zoom >= 2}
+            onClick={() => setZoom((z) => Math.min(2, z + 0.5))}
+          >
+            ＋
+          </button>
+        </div>
         {layout !== "landscape" && drawingAssists}
       </div>
       {missionTitle && (

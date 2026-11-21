@@ -3,13 +3,15 @@ import type { ComponentProps } from "react";
 import { ChevronLeft, CircleHelp, CornerDownLeft, Flame } from "lucide-react";
 import { SketchCanvas } from "../SketchCanvas";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
-import { assetPath } from "../content/artwork";
+import { artwork, assetPath } from "../content/artwork";
+import { groups } from "../content/groups";
+import { tasks } from "../content/tasks";
 import type { ObservationTask } from "../content/tasks";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { getStrokeStyle } from "../drawing/styles";
 import { addXp } from "../dopagaki/dopa";
 import { fireConfetti } from "../dopagaki/effects";
-import { dopaComboSound } from "../dopagaki/sounds";
+import { dopaComboSound, dopaPencilSound } from "../dopagaki/sounds";
 import { savePng } from "../notebook/images";
 import { ReadAloud } from "../speech/Speech";
 import type { Evaluation, Stroke } from "../types";
@@ -67,6 +69,7 @@ export function DrawScreen({
     canvasProps.onDrawingActivity?.(active, tool);
     if (active) {
       committedPenStroke.current = false;
+      if (tool === "pen") dopaPencilSound();
       return;
     }
     if (tool !== "pen" || !committedPenStroke.current) return;
@@ -268,6 +271,7 @@ export function FreeDrawScreen({
   const canvas = useRef<HTMLCanvasElement>(null);
   const previewFrame = useRef<number | undefined>(undefined);
   const [previewing, setPreviewing] = useState(false);
+  const [coloringId, setColoringId] = useState<string | null>(null);
   const [preview, setPreview] = useState<{ url: string; blob: Blob }>();
   const [error, setError] = useState("");
   useEffect(
@@ -329,9 +333,41 @@ export function FreeDrawScreen({
         >
           <ChevronLeft size={22} aria-hidden="true" />
         </button>
+        <div
+          className="coloring-picker"
+          role="group"
+          aria-label="ぬりえの下絵"
+        >
+          <span>ぬりえ</span>
+          <button
+            type="button"
+            aria-pressed={coloringId === null}
+            className={coloringId === null ? "is-active" : ""}
+            onClick={() => setColoringId(null)}
+          >
+            なし
+          </button>
+          {groups.map((g) => (
+            <button
+              key={g.id}
+              type="button"
+              aria-pressed={coloringId === g.id}
+              className={coloringId === g.id ? "is-active" : ""}
+              onClick={() => setColoringId(g.id)}
+            >
+              {g.name}
+            </button>
+          ))}
+        </div>
         <SketchCanvas
           template="blank"
           fixedPortrait={fixedPortrait}
+          coloringSrc={
+            coloringId
+              ? (artwork[tasks.find((t) => t.groupId === coloringId)?.id ?? ""]
+                  ?.answer ?? undefined)
+              : undefined
+          }
           missionTitle="よ〜く観察してみて！"
           canvasRef={canvas}
           strokes={drawing.present}

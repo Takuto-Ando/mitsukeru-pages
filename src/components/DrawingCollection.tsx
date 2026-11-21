@@ -3,6 +3,13 @@ import { QuizPanel } from "./QuizPanel";
 import { ParentReport } from "./ParentReport";
 import { FeatureCelebration } from "./FeatureCelebration";
 import { TongueCelebration } from "./TongueCelebration";
+import { GalleryExtras } from "./GalleryExtras";
+import { MissionCard } from "./MissionCard";
+import { MiniBook } from "./MiniBook";
+import { PosterPrint } from "./PosterPrint";
+import { VoiceNote } from "./VoiceNote";
+import { downloadTimelapse } from "../future/timelapse";
+import { knowledgeFor } from "../future/knowledge";
 import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
@@ -26,6 +33,7 @@ import {
 import { updateObservationImages } from "../notebook/storage";
 import type { ObservationRecord } from "../notebook/types";
 import { recordStudy } from "../research/study";
+import { loadProfiles, recordProfileId } from "../future/profiles";
 import "../styles/design3-gallery.css";
 
 function GalleryMark({
@@ -107,7 +115,7 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
 }
 
 export function DrawingCollection({
-  drawings,
+  drawings: allDrawings,
   onDelete,
   onBack,
   onCamera,
@@ -119,6 +127,14 @@ export function DrawingCollection({
   onCamera: () => void;
   onUpdate?: () => Promise<void> | void;
 }) {
+  const [profileFilter, setProfileFilter] = useState<string>("all");
+  const profiles = loadProfiles();
+  const drawings =
+    profileFilter === "all"
+      ? allDrawings
+      : allDrawings.filter(
+          (d) => recordProfileId(d) === profileFilter,
+        );
   const galleryId = useId();
   const detailId = useId();
   const detail = useRef<HTMLDialogElement>(null);
@@ -127,7 +143,11 @@ export function DrawingCollection({
   const [tab, setTab] = useState<"sketch" | "photo">("sketch");
   const [selected, setSelected] = useState<string>();
   const [sortMode, setSortMode] = useState<"new" | "animal">("new");
-  const [panel, setPanel] = useState<"quiz" | "report" | null>(null);
+  const [panel, setPanel] = useState<
+    "quiz" | "report" | "mission" | "book" | null
+  >(null);
+  const [nightMode, setNightMode] = useState(false);
+  const [posterOpen, setPosterOpen] = useState(false);
   const sortedDrawings = [...drawings].sort((a, b) =>
     sortMode === "new"
       ? b.createdAt.localeCompare(a.createdAt)
@@ -445,6 +465,33 @@ export function DrawingCollection({
               </ul>
             )}
           </div>
+          {profiles.length > 1 && (
+            <div
+              className="profile-filter"
+              role="group"
+              aria-label="プロフィールで絞り込み"
+            >
+              <button
+                type="button"
+                aria-pressed={profileFilter === "all"}
+                className={profileFilter === "all" ? "is-active" : ""}
+                onClick={() => setProfileFilter("all")}
+              >
+                ぜんぶ
+              </button>
+              {profiles.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={profileFilter === p.id}
+                  className={profileFilter === p.id ? "is-active" : ""}
+                  onClick={() => setProfileFilter(p.id)}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="gallery-actions">
             <button
               type="button"
@@ -460,10 +507,31 @@ export function DrawingCollection({
             >
               おうちの人レポート
             </button>
+            <button
+              type="button"
+              aria-pressed={panel === "mission"}
+              onClick={() => setPanel(panel === "mission" ? null : "mission")}
+            >
+              ミッションカード
+            </button>
+            <button
+              type="button"
+              aria-pressed={panel === "book"}
+              onClick={() => setPanel(panel === "book" ? null : "book")}
+            >
+              ミニ絵本
+            </button>
           </div>
+          <GalleryExtras drawings={drawings} />
           {panel === "quiz" && <QuizPanel onClose={() => setPanel(null)} />}
           {panel === "report" && (
             <ParentReport drawings={drawings} onClose={() => setPanel(null)} />
+          )}
+          {panel === "mission" && (
+            <MissionCard drawings={drawings} onClose={() => setPanel(null)} />
+          )}
+          {panel === "book" && (
+            <MiniBook drawings={drawings} onClose={() => setPanel(null)} />
           )}
           {drawings.length > 1 && (
             <div className="collection-sort" role="group" aria-label="並び替え">
@@ -481,7 +549,7 @@ export function DrawingCollection({
               </button>
             </div>
           )}
-          <NotebookTools drawings={drawings} onRestored={onUpdate} />
+          <NotebookTools drawings={allDrawings} onRestored={onUpdate} />
           <p className="quiet-note">
             スケッチはこのブラウザ・アプリの中に保存します。SafariとiPhoneアプリの保存は別々です。
           </p>
@@ -596,6 +664,65 @@ export function DrawingCollection({
               <h2 id={detailId}>
                 {drawing.animalName} <span>{drawing.taskName}</span>
               </h2>
+              <button
+                type="button"
+                onClick={() =>
+                  downloadTimelapse(
+                    drawing.strokes,
+                    scene.frameHeight || 400,
+                    `${drawing.animalName} ${drawing.taskName}`,
+                    `zooketch-timelapse-${drawing.id}.svg`,
+                  )
+                }
+              >
+                タイムラプス（アニメSVG）を保存
+              </button>
+              <VoiceNote drawing={drawing} onSaved={onUpdate} />
+              {(() => {
+                const knowledge = knowledgeFor(drawing.groupId);
+                if (!knowledge) return null;
+                return (
+                  <>
+                    <p className="keeper-memo">
+                      飼育員さんメモ：{knowledge.keeper}
+                    </p>
+                    <button
+                      type="button"
+                      aria-pressed={nightMode}
+                      onClick={() => setNightMode((v) => !v)}
+                    >
+                      {nightMode ? "昼の姿にもどす" : "夜の姿を見る"}
+                    </button>
+                    {nightMode && (
+                      <p className="night-note">
+                        夜の {drawing.animalName}：{knowledge.night}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
+              <button
+                type="button"
+                aria-pressed={posterOpen}
+                onClick={() => setPosterOpen((v) => !v)}
+              >
+                自由研究ポスター
+              </button>
+              {posterOpen && (
+                <>
+                  <PosterPrint
+                    drawing={drawing}
+                    ownUrl={urls?.id === drawing.id ? urls.own : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="report-print"
+                    onClick={() => window.print()}
+                  >
+                    ポスターを印刷する
+                  </button>
+                </>
+              )}
               <p className="quiet-note">
                 観察日{" "}
                 <time dateTime={drawing.createdAt}>

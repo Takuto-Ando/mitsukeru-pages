@@ -12,6 +12,8 @@ export interface StrokeStyle {
   width: number;
   /** Bucket-fill mask (PNG data URL) anchored by a micro stroke. */
   fill?: string;
+  /** Stamp shape id (see drawing/stamps) anchored by a micro stroke. */
+  stamp?: string;
 }
 export interface Challenge {
   animalId: string;

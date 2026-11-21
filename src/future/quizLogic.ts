@@ -67,6 +67,37 @@ export type AnimalQuestion = {
   choices: string[];
 };
 
+export type DifferenceQuestion = {
+  image: string;
+  animal: string;
+  part: string;
+  choices: string[];
+};
+
+/**
+ * まちがい探し：特徴が消えたイラストを見て「本物と違うのはどの部分か」を当てる。
+ */
+export function buildDifferenceQuestions(
+  items: { animal: string; part: string; image: string }[],
+  count: number,
+  rng: Rng = Math.random,
+): DifferenceQuestion[] {
+  const picked = sample(items, Math.min(count, items.length), rng);
+  return picked.map((item) => {
+    const distractors = sample(
+      items.filter((i) => i.part !== item.part),
+      2,
+      rng,
+    ).map((i) => i.part);
+    return {
+      image: item.image,
+      animal: item.animal,
+      part: item.part,
+      choices: shuffle([item.part, ...distractors], rng),
+    };
+  });
+}
+
 export function buildAnimalQuestions(
   items: { name: string; image: string }[],
   count: number,

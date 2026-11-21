@@ -87,6 +87,34 @@ function play(notes: readonly Note[]) {
   else schedule();
 }
 
+// 描き始めの小さな「サラッ」という鉛筆音（短いノイズバースト）。
+let lastPencilAt = 0;
+export function dopaPencilSound() {
+  if (!loadDopaSound() || !output) return;
+  const now = performance.now();
+  if (now - lastPencilAt < 300) return;
+  lastPencilAt = now;
+  try {
+    const { context, volume } = output;
+    const length = Math.floor(context.sampleRate * 0.07);
+    const buffer = context.createBuffer(1, length, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++)
+      data[i] = (Math.random() * 2 - 1) * (1 - i / length);
+    const source = context.createBufferSource();
+    source.buffer = buffer;
+    const filter = context.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.value = 2400;
+    const gain = context.createGain();
+    gain.gain.value = 0.12;
+    source.connect(filter).connect(gain).connect(volume);
+    source.start();
+  } catch {
+    // 音が出なくても描画は続けられる
+  }
+}
+
 export function dopaDing() {
   play([
     [1318.51, 0, 0.16],

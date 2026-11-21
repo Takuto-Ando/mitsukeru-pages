@@ -1,0 +1,520 @@
+/* ましましバッチA：チャレンジ・バッジ・次の動物・ミッションカード */
+.gallery-extras {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.challenge-card {
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fff8e6;
+  border: 2px solid #f6a83c;
+}
+
+.challenge-card h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #7a4a21;
+}
+
+.challenge-done {
+  margin-left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #f6a83c;
+  color: #fff;
+  font-size: 12px;
+}
+
+.challenge-card p {
+  margin: 4px 0;
+}
+
+.challenge-targets {
+  font-size: 13px;
+  color: #97794f;
+}
+
+.challenge-count {
+  font-weight: 700;
+  color: #7a4a21;
+  font-size: 13px;
+}
+
+.extras-heading {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #7a4a21;
+}
+
+.feature-badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge-chip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 2px dashed #cbb37e;
+  background: #fff;
+  color: #97794f;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.badge-chip span {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-chip.is-earned {
+  border-style: solid;
+  border-color: #7fa845;
+  background: #eef6df;
+  color: #4c6b1f;
+}
+
+.next-animals {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.next-animals li {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #2f5b8f;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.mission-panel {
+  margin-top: 14px;
+  padding: 18px 16px 20px;
+  border-radius: 20px;
+  background: #fffdf4;
+  border: 2px solid #f0e3bd;
+}
+
+.mission-date {
+  font-weight: 700;
+  color: #7a4a21;
+}
+
+.mission-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.mission-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.mission-box {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  border: 2.5px solid #7a4a21;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.mission-question {
+  display: block;
+  font-size: 13px;
+  color: #97794f;
+}
+
+.mission-note {
+  font-size: 13px;
+  color: #97794f;
+}
+
+/* 観察ビンゴ */
+.bingo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  max-width: 330px;
+}
+
+.bingo-cell {
+  display: grid;
+  gap: 2px;
+  place-items: center;
+  padding: 10px 4px;
+  border-radius: 12px;
+  border: 2px dashed #cbb37e;
+  background: #fff;
+  color: #97794f;
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+
+.bingo-cell span {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.bingo-cell.is-hit {
+  border-style: solid;
+  border-color: #f6a83c;
+  background: #fff3d9;
+  color: #7a4a21;
+}
+
+/* 思い出マップ */
+.zoo-map {
+  position: relative;
+  height: 300px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 20% 80%, #bcd8a8 0 60px, transparent 61px),
+    radial-gradient(circle at 82% 18%, #a8c8e8 0 52px, transparent 53px),
+    linear-gradient(160deg, #eef4da, #dcebc4);
+  border: 2px solid #b9cfa0;
+  overflow: hidden;
+}
+
+.zoo-map-path {
+  position: absolute;
+  inset: 46% 6% auto;
+  height: 10px;
+  border-radius: 999px;
+  background: #e5d9b8;
+}
+
+.zoo-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #c9c2ae;
+  color: #8a8272;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.zoo-pin small {
+  position: absolute;
+  top: 36px;
+  font-size: 9px;
+  white-space: nowrap;
+  color: #6f7a58;
+}
+
+.zoo-pin.is-hit {
+  background: #ffd968;
+  border-color: #d99a26;
+  color: #6b4a12;
+}
+
+/* ピツネのお部屋 */
+.room-wall {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.room-frame {
+  margin: 0;
+  padding: 6px;
+  background: #fff;
+  border: 3px solid #b08b57;
+  border-radius: 6px;
+}
+
+.room-frame svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #faf7ec;
+}
+
+.room-frame figcaption {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a4a21;
+}
+
+.room-pitsune {
+  text-align: center;
+  color: #7a4a21;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-pitsune-face {
+  width: 84px;
+}
+
+/* 声の発表・飼育員メモ・夜の姿 */
+.voice-note {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.voice-note audio {
+  max-width: 100%;
+}
+
+.keeper-memo {
+  background: #fdf6df;
+  border-left: 4px solid #f6a83c;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.night-note {
+  background: #26355e;
+  color: #e8ecff;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+/* コース・ライブカメラ・ミニ絵本 */
+.course-row {
+  margin-bottom: 10px;
+}
+
+.livecam-list {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.minibook-page {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+/* QRスキャナ */
+.qr-scanner {
+  position: fixed;
+  inset: 12px;
+  z-index: 60;
+  background: #fffdf6;
+  border-radius: 20px;
+  padding: 18px;
+  overflow: auto;
+  box-shadow: 0 18px 50px rgb(60 40 10 / 0.3);
+}
+
+.qr-video {
+  width: 100%;
+  border-radius: 14px;
+  background: #222;
+}
+
+/* 変身フォトフレーム */
+.photo-frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.photo-frame-picker {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 118px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 5;
+}
+
+.photo-frame-picker button {
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: rgb(40 30 60 / 0.65);
+  color: #fff;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+
+.photo-frame-picker button.is-active {
+  background: #ffd968;
+  color: #4c3410;
+}
+
+/* 自由研究ポスター */
+.poster-print {
+  border: 3px solid #277e78;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.poster-print h2,
+.poster-print h3 {
+  margin: 0;
+  color: #1d5a55;
+}
+
+.poster-kicker {
+  letter-spacing: 0.3em;
+  color: #277e78;
+  font-weight: 800;
+  margin: 0;
+}
+
+.poster-date {
+  color: #6b6252;
+  margin: 0;
+}
+
+.poster-image {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d8d2c2;
+}
+
+@media print {
+  body.poster-open * {
+    visibility: hidden;
+  }
+}
+
+.task-link-list {
+  word-break: break-all;
+  font-size: 12px;
+  display: grid;
+  gap: 4px;
+  padding-left: 18px;
+}
+
+/* プロフィール絞り込み（ギャラリー） */
+.profile-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.profile-filter button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  color: #7a6a4a;
+}
+
+.profile-filter button.is-active {
+  border-color: #7fa845;
+  background: #eef6df;
+  color: #4c6b1f;
+}
+
+/* 設定：プロフィール管理と辞書チェック */
+.profile-setting {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-setting-title {
+  margin: 0;
+  font-weight: 700;
+}
+
+.profile-setting-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.profile-setting-list button,
+.profile-setting-add button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.profile-setting-list button.is-active {
+  border-color: #7fa845;
+  background: #eef6df;
+}
+
+.profile-setting-add {
+  display: flex;
+  gap: 6px;
+}
+
+.profile-setting-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 2px solid #e5d9bd;
+  font-size: 14px;
+}
+
+.profile-setting-note {
+  margin: 0;
+  font-size: 12px;
+  color: #97794f;
+}
+
+.dictionary-check {
+  font-size: 13px;
+}
+
+.voice-input-button {
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #7fa845;
+  background: #eef6df;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+@media print {
+  .mission-panel,
+  .mission-panel * {
+    visibility: visible;
+  }
+  .mission-panel {
+    position: absolute;
+    inset: 0;
+    border: none;
+  }
+}
