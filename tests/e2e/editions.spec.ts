@@ -32,6 +32,24 @@ async function expectGiraffeChallenge(page: Page) {
   await expect(page.getByTestId("canvas")).toHaveCount(0);
 }
 
+test("共有URLと設定の課題リンクから直接描画に進める", async ({ page }) => {
+  await page.goto("plus/#task=giraffe");
+  await expectGiraffeChallenge(page);
+  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
+  await expect(page.getByTestId("canvas")).toBeVisible();
+
+  await page.goto("plus/");
+  await page.getByRole("button", { name: "設定", exact: true }).click();
+  await page
+    .getByText("動物ごとの課題リンク（QRポスター用）", { exact: true })
+    .click();
+  await page
+    .getByRole("link", { name: "キリンの課題を開く", exact: true })
+    .click();
+  await expectGiraffeChallenge(page);
+  await expect(page.getByRole("dialog", { name: "設定" })).toHaveCount(0);
+});
+
 test("機能拡張版の入口からFigma再現版を別のURLで開ける", async ({
   page,
   baseURL,

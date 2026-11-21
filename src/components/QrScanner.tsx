@@ -9,9 +9,7 @@ type Detector = {
 
 function createDetector(): Detector | null {
   const w = window as unknown as {
-    BarcodeDetector?: new (options: {
-      formats: string[];
-    }) => Detector;
+    BarcodeDetector?: new (options: { formats: string[] }) => Detector;
   };
   if (!w.BarcodeDetector) return null;
   try {
@@ -51,15 +49,20 @@ export function QrScanner({
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "environment" } })
       .then((s) => {
+        if (stopped) {
+          s.getTracks().forEach((track) => track.stop());
+          return;
+        }
         stream = s;
         if (video.current) {
           video.current.srcObject = s;
-          void video.current.play();
+          void video.current.play().catch(() => undefined);
         }
         const tick = async () => {
           if (stopped || !video.current) return;
           try {
             const codes = await detector.detect(video.current);
+            if (stopped) return;
             for (const code of codes) {
               const url = new URL(code.rawValue, location.href);
               const taskId = parseTaskHash(url.hash);
@@ -76,7 +79,9 @@ export function QrScanner({
         };
         void tick();
       })
-      .catch(() => setError("カメラを開けませんでした。"));
+      .catch(() => {
+        if (!stopped) setError("カメラを開けませんでした。");
+      });
     return () => {
       stopped = true;
       window.clearTimeout(timer);

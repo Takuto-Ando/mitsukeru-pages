@@ -160,7 +160,7 @@ export function SettingsDialog({
               if (!t) return null;
               return (
                 <li key={g.id}>
-                  {g.name}：{taskUrl(t.id)}
+                  <a href={taskUrl(t.id)}>{g.name}の課題を開く</a>
                 </li>
               );
             })}

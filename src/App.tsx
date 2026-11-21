@@ -134,15 +134,23 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const [step, setStep] = useState(0);
   const [screen, setScreen] = useState<Screen>("splash");
   const [qrOpen, setQrOpen] = useState(false);
-  // QRコード／共有リンク（#task=...）から課題へ直行する
+  const openLinkedTaskRef = useRef(openLinkedTask);
+  openLinkedTaskRef.current = openLinkedTask;
   useEffect(() => {
-    const id = parseTaskHash(window.location.hash);
-    if (id && taskById[id]) {
-      selectTask(id);
-      restart("intro");
-    }
-    // 初回マウント時のみ
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const followHash = () => {
+      const id = parseTaskHash(window.location.hash);
+      if (!id || !Object.hasOwn(taskById, id)) return;
+      const url = window.location;
+      window.history.replaceState(
+        window.history.state,
+        "",
+        url.pathname + url.search,
+      );
+      openLinkedTaskRef.current(id);
+    };
+    followHash();
+    window.addEventListener("hashchange", followHash);
+    return () => window.removeEventListener("hashchange", followHash);
   }, []);
   const [photoPhase, setPhotoPhase] = useState<
     "cheer" | "loading" | "challenge"
@@ -603,6 +611,13 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     setDraftOffer(undefined);
     setStudyContext();
     next(0);
+  }
+  function openLinkedTask(id: string) {
+    if (!Object.hasOwn(taskById, id)) return;
+    restart();
+    setSettingsOpen(false);
+    selectTask(id);
+    setPhotoPhase("challenge");
   }
   async function startSecondDrawing() {
     if (!feedback || saving) return;
@@ -1125,10 +1140,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             onClose={() => setQrOpen(false)}
             onFound={(id) => {
               setQrOpen(false);
-              if (taskById[id]) {
-                selectTask(id);
-                restart("intro");
-              }
+              openLinkedTask(id);
             }}
           />
         )}
