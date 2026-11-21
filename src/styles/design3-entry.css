@@ -278,7 +278,7 @@
   --title-art-crop: clamp(0px, calc((874px - 100dvh) * 0.43), 62px);
   color: var(--d3-brown);
   background: #fffaf0;
-  padding-top: clamp(150px, 39.25dvh, 344px);
+  padding-top: clamp(150px, calc(273px + (100dvh - 730px) * 0.43), 335px);
 }
 
 .design3-title-tail {
@@ -355,13 +355,12 @@
 .design3-title-actions .design3-continue {
   width: min(73%, 206.6px);
   min-height: 56px;
-  background: #ffffff66;
+  background: #fff;
 }
 
 .design3-title-resume-lettering {
-  width: min(34cqw, 105.5px);
+  width: min(34cqw, 108px);
   height: auto;
-  opacity: 0.64;
 }
 
 .design3-title-meta :is(button, a) {
@@ -506,7 +505,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: default;
 }
 

@@ -1,6 +1,10 @@
 import { expect, test, type Page } from "./fixtures";
 import { taskById } from "../../src/content/tasks";
 
+function usesProductionShare(baseURL: string): boolean {
+  return process.env.E2E_PREVIEW === "1" || baseURL.startsWith("https://");
+}
+
 async function drawGiraffeTongue(page: Page) {
   const canvas = page.getByTestId("canvas");
   const bounds = (await canvas.boundingBox())!;
@@ -21,22 +25,38 @@ async function drawGiraffeTongue(page: Page) {
 test("フローAは付録のノード順にタップで進み、描いた絵だけを送信して撮影へ合流する", async ({
   page,
 }) => {
-  const endpoint = "https://script.google.com/macros/s/zooketch-test/exec";
-  await page.addInitScript((url) => {
-    Object.defineProperty(navigator, "mediaDevices", {
-      value: {
-        getUserMedia: async () => {
-          throw new DOMException("Permission denied", "NotAllowedError");
+  const base = test.info().project.use.baseURL!;
+  const production = usesProductionShare(base);
+  const endpoint = production
+    ? new URL(
+        new URL(base).origin === "https://takuto-ando.github.io"
+          ? "https://zooketch.pages.dev/__zooketch-share"
+          : "__zooketch-share",
+        base,
+      ).href
+    : "https://script.google.com/macros/s/zooketch-test/exec";
+  await page.addInitScript(
+    ({ url, production }) => {
+      Object.defineProperty(navigator, "mediaDevices", {
+        value: {
+          getUserMedia: async () => {
+            throw new DOMException("Permission denied", "NotAllowedError");
+          },
         },
-      },
-    });
-    localStorage.setItem(
-      "zooketch-share-v1",
-      JSON.stringify({ consent: true, endpoint: url, token: "test" }),
-    );
-  }, endpoint);
+      });
+      if (!production)
+        localStorage.setItem(
+          "zooketch-share-v1",
+          JSON.stringify({ consent: true, endpoint: url, token: "test" }),
+        );
+    },
+    { url: endpoint, production },
+  );
   await page.route(endpoint, (route) =>
-    route.fulfill({ status: 200, body: '{"ok":true}' }),
+    route.fulfill({
+      status: 204,
+      headers: { "Access-Control-Allow-Origin": new URL(base).origin },
+    }),
   );
   await page.goto("./");
   const button = (name: string) =>
@@ -126,6 +146,7 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   expect(payload.pngBase64).toMatch(/^iVBOR/);
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
+  if (production) expect(payload).not.toHaveProperty("token");
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
   await button("ありがとう！").click();
@@ -249,5 +270,19 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   expect(await settingsAction.boundingBox()).toEqual(layoutBefore);
   await expect(settingsAction).toHaveCSS("font-family", /Zen Maru Gothic/);
   await settings.getByText("絵の自動送信（研究用）", { exact: true }).click();
-  await expect(settings.getByRole("checkbox")).not.toBeChecked();
+  const consent = settings.getByRole("checkbox");
+  if (usesProductionShare(test.info().project.use.baseURL!)) {
+    await expect(consent).toBeChecked();
+    await expect(settings.getByLabel(/送信先URL|トークン/)).toHaveCount(0);
+    await consent.uncheck();
+    await expect
+      .poll(() =>
+        page.evaluate(() =>
+          JSON.parse(localStorage.getItem("zooketch-share-v1") ?? "{}"),
+        ),
+      )
+      .toEqual({ consent: false });
+  } else {
+    await expect(consent).not.toBeChecked();
+  }
 });

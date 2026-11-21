@@ -1,4 +1,5 @@
 .figma-shell.replica-app {
+  --d3-cream: #fffaf0;
   max-width: 402px;
   margin-inline: auto;
 }
@@ -226,4 +227,42 @@
 .replica-app .design3-photo-edit > span {
   color: #fff;
   font-size: 11px;
+}
+
+.replica-app[data-variant="product"] .camera-frame,
+.replica-app[data-variant="product"] .design3-photo-placeholder {
+  background-color: #d9d9d9;
+}
+
+.replica-app[data-variant="product"] .design3-photo-celebration {
+  background-color: rgb(131 109 70 / 81%);
+}
+
+.replica-app[data-variant="product"] .design3-photo-review h1 {
+  margin-block-end: 29px;
+  font-size: clamp(14px, 4.48vw, 18px);
+}
+
+.replica-app[data-variant="product"] .design3-photo-date {
+  row-gap: 6px;
+  line-height: 1.9;
+}
+
+.replica-app[data-variant="product"] .design3-photo-fact .zoo-card-summary-line,
+.replica-app[data-variant="product"] .result-fact .zoo-card-summary-line {
+  line-height: 1.9;
+}
+
+.replica-app .design3-photo-review .design3-actions .design3-pill,
+.replica-app .design3-result .result-actions .drawing-pill {
+  font-size: clamp(12px, 3.86vw, 15.49px);
+  gap: clamp(3px, 1.25vw, 5px);
+  white-space: nowrap;
+}
+
+.replica-app
+  :is(.design3-photo-review .design3-actions, .result-actions)
+  button
+  > :is(img, svg) {
+  flex: none;
 }

@@ -116,12 +116,25 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
     await expect(start.or(gallery).first()).toBeVisible();
     if (await start.isVisible()) await start.click();
   };
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("./");
   await openCamera();
   await button(page, "シャッター").click();
   const reviewImage = page.getByRole("img", { name: "撮影した動物の写真" });
   await expect(reviewImage).toBeVisible();
   await expect(reviewImage).toHaveCSS("aspect-ratio", "4 / 5");
+  const photoCard = page.locator(".design3-photo-card");
+  const cardAnimation = () =>
+    photoCard.evaluate(
+      (card) => getComputedStyle(card, "::after").animationName,
+    );
+  await expect.poll(cardAnimation).toBe("photo-card-shine");
+  await expect(
+    page.locator(".design3-photo-review .photo-sparkle"),
+  ).toHaveCount(0);
+  await expect(page.getByText(/きらりん/)).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect.poll(cardAnimation).toBe("none");
   await expect
     .poll(async () => (await savedObservations(page))[0]?.photo)
     .toMatch(/^data:image\/jpeg/);

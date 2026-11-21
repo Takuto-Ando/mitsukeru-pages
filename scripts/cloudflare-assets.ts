@@ -65,15 +65,24 @@ export async function prepareCloudflareAssets(
   await writeFile(join(dir, "_headers"), headers.join("\n"));
   await writeFile(
     join(dir, "_routes.json"),
-    JSON.stringify({ version: 1, include: Object.keys(aliases), exclude: [] }),
+    JSON.stringify({
+      version: 1,
+      include: [...Object.keys(aliases), "/__zooketch-share"],
+      exclude: [],
+    }),
+  );
+  const shareWorker = await readFile(
+    new URL("./cloudflare-share-worker.mjs", import.meta.url),
+    "utf8",
   );
   await writeFile(
     join(dir, "_worker.js"),
-    `
+    `${shareWorker}
 const aliases = ${JSON.stringify(aliases)};
 export default {
   async fetch(request, env) {
     const url = new URL(request.url), assetPath = aliases[url.pathname];
+    if (url.pathname === sharePath) return relayShare(request, env);
     if (!assetPath) return env.ASSETS.fetch(request);
     url.pathname = assetPath;
     const asset = await env.ASSETS.fetch(new Request(url, request));

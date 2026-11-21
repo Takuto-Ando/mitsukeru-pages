@@ -10,16 +10,26 @@ import type { ObservationRecord } from "../notebook/types";
 const CONFIG_KEY = "zooketch-share-v1";
 export const automaticStudyShare =
   import.meta.env.DEV && import.meta.env.VITE_LOCAL_SHARE_CONSENT === "1";
+export const managedProductionShare =
+  import.meta.env.PROD &&
+  import.meta.env.VITE_LEGACY_EDITIONS !== "1" &&
+  typeof location !== "undefined" &&
+  /^https?:$/.test(location.protocol);
+const productionRelay = "__zooketch-share";
 const QUEUE_KEY = automaticStudyShare
   ? "zooketch-study-share-queue-v1"
   : "zooketch-share-queue-v1";
 
 function defaultConfig(): ShareConfig {
   return {
-    consent: automaticStudyShare,
+    consent: automaticStudyShare || managedProductionShare,
     endpoint: automaticStudyShare
       ? import.meta.env.BASE_URL + "__zooketch-test-share"
-      : "",
+      : managedProductionShare
+        ? (location.origin === "https://takuto-ando.github.io"
+            ? "https://zooketch.pages.dev/"
+            : import.meta.env.BASE_URL) + productionRelay
+        : "",
     token: "",
   };
 }
@@ -41,8 +51,13 @@ export function loadShareConfig(): ShareConfig {
       consent:
         typeof raw?.consent === "boolean" ? raw.consent : defaults.consent,
       endpoint:
-        typeof raw?.endpoint === "string" ? raw.endpoint : defaults.endpoint,
-      token: typeof raw?.token === "string" ? raw.token : defaults.token,
+        !managedProductionShare && typeof raw?.endpoint === "string"
+          ? raw.endpoint
+          : defaults.endpoint,
+      token:
+        !managedProductionShare && typeof raw?.token === "string"
+          ? raw.token
+          : defaults.token,
     };
   } catch {
     return defaultConfig();
@@ -51,7 +66,12 @@ export function loadShareConfig(): ShareConfig {
 
 export function saveShareConfig(config: ShareConfig) {
   try {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+    localStorage.setItem(
+      CONFIG_KEY,
+      JSON.stringify(
+        managedProductionShare ? { consent: config.consent } : config,
+      ),
+    );
   } catch {
     // 保存できなくてもアプリは動き続ける
   }
@@ -127,7 +147,7 @@ export async function buildSharePayload(
   }
   const strokesJson = JSON.stringify(record.strokes);
   return {
-    token,
+    token: token || undefined,
     id: record.id,
     createdAt: record.createdAt,
     animalName: record.animalName,
@@ -142,8 +162,10 @@ export async function buildSharePayload(
 }
 
 async function prepareShare(id: string, token: string) {
-  const observation = await loadObservation(id);
-  if (observation) return buildSharePayload(observation, token);
+  if (!managedProductionShare) {
+    const observation = await loadObservation(id);
+    if (observation) return buildSharePayload(observation, token);
+  }
   const record = await loadReplicaRecord(id);
   if (
     !record?.sketch ||
@@ -155,7 +177,7 @@ async function prepareShare(id: string, token: string) {
   const match = /^data:image\/png;base64,([a-z0-9+/=]+)$/i.exec(record.sketch);
   if (!match) throw new Error("Invalid sketch PNG");
   return {
-    token,
+    token: token || undefined,
     id,
     createdAt: record.createdAt,
     animalName: record.animalName,
@@ -193,16 +215,22 @@ export async function flushShareQueue(): Promise<number> {
             latest.token !== active.token
           )
             break;
-          // Apps Script allows the request but does not expose its result to the browser.
+          // Managed relays acknowledge a confirmed Apps Script delivery with 204.
           const relay =
-            automaticStudyShare && active.endpoint === defaultConfig().endpoint;
+            (automaticStudyShare || managedProductionShare) &&
+            active.endpoint === defaultConfig().endpoint;
           const response = await fetch(active.endpoint, {
             method: "POST",
-            mode: relay ? "same-origin" : "no-cors",
+            mode: relay
+              ? new URL(active.endpoint, location.href).origin ===
+                location.origin
+                ? "same-origin"
+                : "cors"
+              : "no-cors",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload),
           });
-          if (relay && !response.ok) break;
+          if (relay && response.status !== 204) break;
           sentNow++;
         } catch {
           break;

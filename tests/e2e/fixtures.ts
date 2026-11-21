@@ -16,6 +16,14 @@ export const test = base.extend<{
       );
       if (!testLiveModel)
         await context.route("**/models/*.onnx", (route) => route.abort());
+      // Public smoke runs must never add test sketches to the research Drive.
+      await context.route("**/__zooketch-share", (route) => {
+        const origin = route.request().headers().origin;
+        return route.fulfill({
+          status: 204,
+          headers: origin ? { "Access-Control-Allow-Origin": origin } : {},
+        });
+      });
       await use();
     },
     { auto: true },

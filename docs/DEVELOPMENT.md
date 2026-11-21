@@ -122,3 +122,9 @@ Figma書き出しで確認した画面接続と削除候補は [FIGMA_V2_SCOPE.m
 撮影した写真は撮影時に IndexedDB へ保存される。マイギャラリーではスケッチ完了後に同じ記録が写真タブとスケッチタブの同じ位置に並ぶ。
 
 Zen Maru Gothic（Medium・Bold）は [Google Fonts の公式ソース](https://github.com/google/fonts/tree/main/ofl/zenmarugothic) を WOFF2 に変換して配信しています。ライセンスは `public/fonts/OFL.txt` を参照してください。
+
+## Figma 指定の Web フォント
+
+DNP 秀英丸ゴシック Std B を公開する場合は、サイト管理者自身の [Adobe Fonts の Web プロジェクト](https://fonts.adobe.com/fonts/dnp-shuei-mgothic-std) に B のみを追加します。発行された JavaScript 埋め込みコードのプロジェクト ID を `VITE_ADOBE_FONTS_KIT_ID` としてビルドに渡します。GitHub Pages では同名のリポジトリ変数を設定し、Cloudflare Pages では公開 ZIP の生成時に設定します。対象サイトのドメインと動的サブセットを Web プロジェクトで確認します。
+
+有効な埋め込みが未設定の環境は、現在の Zen Maru Gothic 表示を維持します。Adobe Fonts から取得した書体ファイルのコピーを同梱しません。

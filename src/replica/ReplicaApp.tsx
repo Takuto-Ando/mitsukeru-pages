@@ -367,7 +367,13 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     cheer: "52-5335",
     easel: tutorial ? "38-1056" : "43-1903",
     challenge: tutorial ? "52-5984" : "66-8272",
-    draw: showHint ? "66-8070" : tutorial ? "43-1966" : "66-7869",
+    draw: tutorial
+      ? showHint
+        ? "66-7254"
+        : "43-1966"
+      : showHint
+        ? "66-8070"
+        : "66-7869",
     result: feedback?.passed ? (tutorial ? "66-8363" : "66-10524") : undefined,
     tutorial: "43-1269",
   };

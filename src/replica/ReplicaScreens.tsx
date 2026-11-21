@@ -6,7 +6,7 @@ import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering, tutorialLines } from "../components/CardLettering";
-import { CircleHelp } from "lucide-react";
+import { Camera, CircleHelp, CornerDownLeft } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
 import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
@@ -248,11 +248,8 @@ export function ReplicaResult({
               onClick={onRedraw}
               disabled={saving || !canRedraw}
             >
-              <CardLettering
-                className="drawing-lettering"
-                src={assetPath("replica-assets/result-redraw.svg")}
-                text="描きなおす"
-              />
+              <CornerDownLeft aria-hidden="true" width={21} height={20} />
+              <span>描きなおす</span>
             </button>
             {feedback.passed && (
               <button
@@ -260,15 +257,17 @@ export function ReplicaResult({
                 onClick={onDone}
                 disabled={saving}
               >
-                <CardLettering
-                  className="drawing-lettering"
-                  src={assetPath(
-                    tutorial
-                      ? "replica-assets/result-next.svg"
-                      : "replica-assets/result-camera.svg",
-                  )}
-                  text={tutorial ? "つぎへ" : "写真を撮る"}
-                />
+                {tutorial ? (
+                  <img
+                    alt=""
+                    src={assetPath("figma/entry/confirm.svg")}
+                    width={18.5146}
+                    height={17}
+                  />
+                ) : (
+                  <Camera aria-hidden="true" size={22} />
+                )}
+                <span>{tutorial ? "つぎへ" : "写真を撮る"}</span>
               </button>
             )}
           </div>
@@ -428,11 +427,8 @@ export function ReplicaPhotoReview({
           disabled={!canRetake}
           onClick={onRetake}
         >
-          <CardLettering
-            className="photo-review-retake-mark"
-            text="撮りなおす"
-            src={file("retake")}
-          />
+          <CornerDownLeft aria-hidden="true" width={21} height={20} />
+          <span>撮りなおす</span>
         </button>
         <button
           className="design3-pill"
@@ -440,11 +436,13 @@ export function ReplicaPhotoReview({
           disabled={!group}
           onClick={onConfirm}
         >
-          <CardLettering
-            className="photo-review-confirm-mark"
-            text="ピツネに見せる"
-            src={file("confirm")}
+          <img
+            alt=""
+            src={assetPath("figma/entry/confirm.svg")}
+            width={18.5146}
+            height={17}
           />
+          <span>ピツネに見せる</span>
         </button>
       </div>
     </section>
