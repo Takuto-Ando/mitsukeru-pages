@@ -5,7 +5,7 @@ import "./styles/tokens.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <MotionConfig reducedMotion="user">
-    <ReplicaApp />
+    <ReplicaApp legacy={import.meta.env.VITE_LEGACY_EDITIONS === "1"} />
   </MotionConfig>,
 );
 

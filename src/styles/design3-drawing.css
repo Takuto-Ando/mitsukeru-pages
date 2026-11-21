@@ -85,6 +85,10 @@
   box-shadow: var(--d3-shadow);
 }
 
+.drawing-foreground {
+  z-index: 3;
+}
+
 .sketch-card .drawing-paper {
   width: 100%;
   background: white;

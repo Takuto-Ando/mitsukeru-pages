@@ -1,23 +1,14 @@
 import { CardLettering } from "./CardLettering";
 import { NotebookTools } from "./NotebookTools";
-import { QuizPanel } from "./QuizPanel";
-import { ParentReport } from "./ParentReport";
 import { FeatureCelebration } from "./FeatureCelebration";
 import { TongueCelebration } from "./TongueCelebration";
-import { GalleryExtras } from "./GalleryExtras";
-import { MissionCard } from "./MissionCard";
-import { MiniBook } from "./MiniBook";
-import { PosterPrint } from "./PosterPrint";
-import { VoiceNote } from "./VoiceNote";
-import { downloadTimelapse } from "../future/timelapse";
-import { knowledgeFor } from "../future/knowledge";
 import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { groups } from "../content/groups";
 import { assetPath } from "../content/artwork";
 import { drawingScene } from "../collection/drawingScene";
-import { taskById, tasksForGroup } from "../content/tasks";
+import { taskById } from "../content/tasks";
 import { applyStyles } from "../drawing/styles";
 import { designCardViewport } from "../drawing/viewport";
 import { SceneBase, SceneRegions } from "./ObservationScene";
@@ -34,7 +25,6 @@ import {
 import { updateObservationImages } from "../notebook/storage";
 import type { ObservationRecord } from "../notebook/types";
 import { recordStudy } from "../research/study";
-import { loadProfiles, recordProfileId } from "../future/profiles";
 import "../styles/design3-gallery.css";
 
 function GalleryMark({
@@ -45,10 +35,8 @@ function GalleryMark({
     | "sketch"
     | "sketch-label"
     | "photo"
-    | "photo-label"
     | "camera"
     | "camera-empty"
-    | "camera-label"
     | "close";
 }) {
   const mask = `url("${assetPath(`figma/entry/gallery-${mark}.svg`)}")`;
@@ -116,7 +104,7 @@ function Thumbnail({ drawing }: { drawing: ObservationRecord }) {
 }
 
 export function DrawingCollection({
-  drawings: allDrawings,
+  drawings,
   onDelete,
   onBack,
   onCamera,
@@ -128,12 +116,6 @@ export function DrawingCollection({
   onCamera: () => void;
   onUpdate?: () => Promise<void> | void;
 }) {
-  const [profileFilter, setProfileFilter] = useState<string>("all");
-  const profiles = loadProfiles();
-  const drawings =
-    profileFilter === "all"
-      ? allDrawings
-      : allDrawings.filter((d) => recordProfileId(d) === profileFilter);
   const galleryId = useId();
   const detailId = useId();
   const detail = useRef<HTMLDialogElement>(null);
@@ -142,11 +124,6 @@ export function DrawingCollection({
   const [tab, setTab] = useState<"sketch" | "photo">("sketch");
   const [selected, setSelected] = useState<string>();
   const [sortMode, setSortMode] = useState<"new" | "animal">("new");
-  const [panel, setPanel] = useState<
-    "quiz" | "report" | "mission" | "book" | null
-  >(null);
-  const [nightMode, setNightMode] = useState(false);
-  const [posterOpen, setPosterOpen] = useState(false);
   const sortedDrawings = [...drawings].sort((a, b) =>
     sortMode === "new"
       ? b.createdAt.localeCompare(a.createdAt)
@@ -167,33 +144,9 @@ export function DrawingCollection({
     answer: string;
   }>();
   const drawing = drawings.find((d) => d.id === selected);
-  const speciesCount = new Set(drawings.map((d) => d.groupId)).size;
-  const observationDays = new Set(drawings.map((d) => d.createdAt.slice(0, 10)))
-    .size;
-  const streak = (() => {
-    const days = new Set(drawings.map((d) => d.createdAt.slice(0, 10)));
-    const cursor = new Date();
-    const key = (d: Date) => d.toISOString().slice(0, 10);
-    if (!days.has(key(cursor))) cursor.setUTCDate(cursor.getUTCDate() - 1);
-    let count = 0;
-    while (days.has(key(cursor))) {
-      count++;
-      cursor.setUTCDate(cursor.getUTCDate() - 1);
-    }
-    return count;
-  })();
   useEffect(() => {
     for (const d of drawings) applyStyles(d.strokes, d.styles);
   }, [drawings]);
-  const completeGroups = groups.filter((g) => {
-    const groupTasks = tasksForGroup(g.id);
-    return groupTasks.every((t) =>
-      drawings.some(
-        (d) =>
-          d.taskId === t.id || (groupTasks.length === 1 && d.groupId === g.id),
-      ),
-    );
-  });
   const group = drawing && groups.find((g) => g.id === drawing.groupId);
   const scene = drawing && (drawing.sceneSnapshot || drawingScene(drawing));
   const viewport = scene && designCardViewport(scene);
@@ -435,106 +388,7 @@ export function DrawingCollection({
           )}
           <div className="collection-progress" aria-live="polite">
             <p>{drawings.length}枚の観察カードを保存しています。</p>
-            <p>
-              <strong>
-                {speciesCount} / {groups.length}
-              </strong>{" "}
-              種・観察した日 {observationDays}日・れんぞく {streak}日
-            </p>
-            {speciesCount === groups.length && (
-              <p className="master-badge">
-                ずかんマスター！ ぜんぶの動物を観察したよ
-              </p>
-            )}
-            <div
-              className="progress-track"
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={groups.length}
-              aria-valuenow={speciesCount}
-              aria-label="集めた動物の種類"
-            >
-              <div
-                className="progress-fill"
-                style={{ width: `${(speciesCount / groups.length) * 100}%` }}
-              />
-            </div>
-            {completeGroups.length > 0 && (
-              <ul className="complete-badges">
-                {completeGroups.map((g) => (
-                  <li key={g.id}>{g.name} コンプリート！</li>
-                ))}
-              </ul>
-            )}
           </div>
-          {profiles.length > 1 && (
-            <div
-              className="profile-filter"
-              role="group"
-              aria-label="プロフィールで絞り込み"
-            >
-              <button
-                type="button"
-                aria-pressed={profileFilter === "all"}
-                className={profileFilter === "all" ? "is-active" : ""}
-                onClick={() => setProfileFilter("all")}
-              >
-                ぜんぶ
-              </button>
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  aria-pressed={profileFilter === p.id}
-                  className={profileFilter === p.id ? "is-active" : ""}
-                  onClick={() => setProfileFilter(p.id)}
-                >
-                  {p.name}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="gallery-actions">
-            <button
-              type="button"
-              aria-pressed={panel === "quiz"}
-              onClick={() => setPanel(panel === "quiz" ? null : "quiz")}
-            >
-              クイズであそぶ
-            </button>
-            <button
-              type="button"
-              aria-pressed={panel === "report"}
-              onClick={() => setPanel(panel === "report" ? null : "report")}
-            >
-              おうちの人レポート
-            </button>
-            <button
-              type="button"
-              aria-pressed={panel === "mission"}
-              onClick={() => setPanel(panel === "mission" ? null : "mission")}
-            >
-              ミッションカード
-            </button>
-            <button
-              type="button"
-              aria-pressed={panel === "book"}
-              onClick={() => setPanel(panel === "book" ? null : "book")}
-            >
-              ミニ絵本
-            </button>
-          </div>
-          <GalleryExtras drawings={drawings} />
-          {panel === "quiz" && <QuizPanel onClose={() => setPanel(null)} />}
-          {panel === "report" && (
-            <ParentReport drawings={drawings} onClose={() => setPanel(null)} />
-          )}
-          {panel === "mission" && (
-            <MissionCard drawings={drawings} onClose={() => setPanel(null)} />
-          )}
-          {panel === "book" && (
-            <MiniBook drawings={drawings} onClose={() => setPanel(null)} />
-          )}
           {drawings.length > 1 && (
             <div className="collection-sort" role="group" aria-label="並び替え">
               <button
@@ -551,7 +405,7 @@ export function DrawingCollection({
               </button>
             </div>
           )}
-          <NotebookTools drawings={allDrawings} onRestored={onUpdate} />
+          <NotebookTools drawings={drawings} onRestored={onUpdate} />
           <p className="quiet-note">
             スケッチはこのブラウザ・アプリの中に保存します。SafariとiPhoneアプリの保存は別々です。
           </p>
@@ -579,9 +433,9 @@ export function DrawingCollection({
           </div>
           <div className="gallery-photo-empty">
             <Pitsune pose="face" className="gallery-empty-pitsune" />
-            <h2>写真は保存されないよ</h2>
+            <h2>写真は撮影画面のマイギャラリーへ</h2>
             <p>
-              撮影した写真は動物の観察に使います。撮影写真や位置情報は保存しません。
+              撮影した写真は、撮影画面から開くマイギャラリーで確認できます。
             </p>
           </div>
         </div>
@@ -674,65 +528,6 @@ export function DrawingCollection({
               <h2 id={detailId}>
                 {drawing.animalName} <span>{drawing.taskName}</span>
               </h2>
-              <button
-                type="button"
-                onClick={() =>
-                  downloadTimelapse(
-                    drawing.strokes,
-                    scene.frameHeight || 400,
-                    `${drawing.animalName} ${drawing.taskName}`,
-                    `zooketch-timelapse-${drawing.id}.svg`,
-                  )
-                }
-              >
-                タイムラプス（アニメSVG）を保存
-              </button>
-              <VoiceNote drawing={drawing} onSaved={onUpdate} />
-              {(() => {
-                const knowledge = knowledgeFor(drawing.groupId);
-                if (!knowledge) return null;
-                return (
-                  <>
-                    <p className="keeper-memo">
-                      飼育員さんメモ：{knowledge.keeper}
-                    </p>
-                    <button
-                      type="button"
-                      aria-pressed={nightMode}
-                      onClick={() => setNightMode((v) => !v)}
-                    >
-                      {nightMode ? "昼の姿にもどす" : "夜の姿を見る"}
-                    </button>
-                    {nightMode && (
-                      <p className="night-note">
-                        夜の {drawing.animalName}：{knowledge.night}
-                      </p>
-                    )}
-                  </>
-                );
-              })()}
-              <button
-                type="button"
-                aria-pressed={posterOpen}
-                onClick={() => setPosterOpen((v) => !v)}
-              >
-                自由研究ポスター
-              </button>
-              {posterOpen && (
-                <>
-                  <PosterPrint
-                    drawing={drawing}
-                    ownUrl={urls?.id === drawing.id ? urls.own : undefined}
-                  />
-                  <button
-                    type="button"
-                    className="report-print"
-                    onClick={() => window.print()}
-                  >
-                    ポスターを印刷する
-                  </button>
-                </>
-              )}
               <p className="quiet-note">
                 観察日{" "}
                 <time dateTime={drawing.createdAt}>

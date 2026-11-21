@@ -1,3 +1,6 @@
+import { downloadLiveModel, liveModelCached } from "../recognition/liveModel";
+import { useModelPreload } from "../recognition/useModelPreload";
+import { usePhotoModelDownloading } from "../recognition/usePhotoIdentification";
 import { LiveAnimalOverlay } from "../components/LiveAnimalOverlay";
 import {
   useLiveDetection,
@@ -12,6 +15,8 @@ import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
 export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
 
+const liveSetting = "zooketch-live-detection-v1";
+
 type Capture = {
   photo?: string;
   sample: boolean;
@@ -24,6 +29,8 @@ export function ReplicaCamera({
   onGallery,
   onHome,
   onFreeDraw,
+  onSettings,
+  suspended = false,
 }: {
   tutorial: boolean;
   framedExample: boolean;
@@ -31,7 +38,11 @@ export function ReplicaCamera({
   onGallery: () => void;
   onHome: () => void;
   onFreeDraw: () => void;
+  onSettings?: (trigger: HTMLButtonElement) => void;
+  suspended?: boolean;
 }) {
+  useModelPreload({ allowMetered: true });
+  const photoModelDownloading = usePhotoModelDownloading();
   const [sample, setSample] = useState(tutorial || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
   const [streamReady, setStreamReady] = useState(false);
@@ -43,13 +54,60 @@ export function ReplicaCamera({
   const [visible, setVisible] = useState(() => !document.hidden);
   const video = useRef<HTMLVideoElement>(null);
   const liveCached = useLiveModelCached();
+  const [liveEnabled, setLiveEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(liveSetting) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  const [livePreparing, setLivePreparing] = useState(false);
+  const [liveFailed, setLiveFailed] = useState(false);
+  const [liveRetry, setLiveRetry] = useState(0);
   const liveActive =
-    !sample && streamReady && visible && !menuOpen && liveCached;
-  const live = useLiveDetection(video, liveActive, cameraZoom.digital);
+    !sample &&
+    streamReady &&
+    visible &&
+    !menuOpen &&
+    !suspended &&
+    liveCached &&
+    liveEnabled;
+  const live = useLiveDetection(
+    video,
+    liveActive,
+    cameraZoom.digital,
+    liveRetry,
+  );
+  const liveError = (!liveCached && liveFailed) || live.status === "error";
+  const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
   const sampleVisible = sampleHasAnimal || cameraZoom.zoom === 0.5;
   const streamRef = useRef<MediaStream | undefined>(undefined);
   const menu = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (!realCamera || liveCached || !liveEnabled) return;
+    let active = true;
+    const prepare = async () => {
+      if (!active || (await liveModelCached())) return;
+      if (!active) return;
+      setLiveFailed(false);
+      setLivePreparing(true);
+      try {
+        await downloadLiveModel();
+      } catch {
+        if (active) setLiveFailed(true);
+      } finally {
+        if (active) setLivePreparing(false);
+      }
+    };
+    void prepare();
+    window.addEventListener("online", prepare);
+    return () => {
+      active = false;
+      window.removeEventListener("online", prepare);
+    };
+  }, [liveCached, liveEnabled, liveRetry, realCamera]);
 
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
@@ -58,7 +116,7 @@ export function ReplicaCamera({
   }, []);
 
   useEffect(() => {
-    if (sample || menuOpen || !visible) return;
+    if (sample || menuOpen || suspended || !visible) return;
     let active = true;
     const element = video.current;
     function stopCamera() {
@@ -86,7 +144,10 @@ export function ReplicaCamera({
         setCameraTrack(stream.getVideoTracks?.()[0]);
         element.srcObject = stream;
         await element.play();
-        if (active) setMessage("");
+        if (active) {
+          setStreamReady(Boolean(element.videoWidth));
+          setMessage("");
+        }
       } catch {
         if (!active) return;
         stopCamera();
@@ -98,7 +159,7 @@ export function ReplicaCamera({
       active = false;
       stopCamera();
     };
-  }, [menuOpen, requestNumber, sample, visible]);
+  }, [menuOpen, requestNumber, sample, suspended, visible]);
 
   useEffect(() => {
     if (menuOpen) menu.current?.showModal();
@@ -109,6 +170,20 @@ export function ReplicaCamera({
     setSampleHasAnimal(false);
     setMessage("");
     setMenuOpen(false);
+  }
+
+  function toggleLive() {
+    if (liveError || (liveEnabled && !liveCached)) {
+      setLiveFailed(false);
+      setLiveRetry((attempt) => attempt + 1);
+    } else {
+      setLiveEnabled(!liveEnabled);
+      try {
+        localStorage.setItem(liveSetting, liveEnabled ? "0" : "1");
+      } catch {
+        // The switch still works for this camera when storage is unavailable.
+      }
+    }
   }
 
   function takePhoto() {
@@ -220,6 +295,30 @@ export function ReplicaCamera({
           </>
         )}
         {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
+        {((!sample && !message) || photoModelDownloading) && (
+          <div className="live-camera-control">
+            {!sample && !message && (
+              <button
+                type="button"
+                className="text-button"
+                aria-pressed={liveError ? undefined : liveEnabled}
+                onClick={toggleLive}
+                disabled={livePreparing && !liveCached}
+              >
+                {liveError
+                  ? "ライブ検出を再準備"
+                  : livePreparing && !liveCached
+                    ? "ライブ検出モデルをダウンロード中…"
+                    : liveCached || !liveEnabled
+                      ? `ライブ検出 ${liveEnabled ? "ON" : "OFF"}`
+                      : "ライブ検出を準備"}
+              </button>
+            )}
+            {photoModelDownloading && (
+              <p role="status">画像認識モデルをダウンロード中…</p>
+            )}
+          </div>
+        )}
         <CameraZoom {...cameraZoom} />
       </div>
       <div className="camera-controls">
@@ -249,7 +348,10 @@ export function ReplicaCamera({
           type="button"
           className="camera-side-button"
           aria-label="マイページ"
-          onClick={() => setMenuOpen(true)}
+          onClick={(event) => {
+            if (onSettings) onSettings(event.currentTarget);
+            else setMenuOpen(true);
+          }}
           disabled={tutorial}
         >
           <img

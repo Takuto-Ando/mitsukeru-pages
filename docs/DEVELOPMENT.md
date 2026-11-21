@@ -90,10 +90,25 @@ Xcodeで対象iPhoneと自分のSigning Teamを選んでRunします。証明書
 
 公開用ビルドの環境変数 `VITE_STUDY_FORM_URL` に、Googleフォームの**回答者向けURL**を設定します。 `https://forms.gle/…` または `https://docs.google.com/forms/…/viewform` が使えます。リンクのクエリやフラグメントは除去して開きます。GitHub Pagesで利用する場合は同名のActionsリポジトリ変数を設定してください。
 
-- 参加者に渡す入口は機能拡張版の `https://zooketch.pages.dev/plus/?study=1`、またはFigma再現版の `https://zooketch.pages.dev/figma/?study=1` です。
-- 機能拡張版では初回の観察カード保存後、Figma再現版では「はじめから」のチュートリアルの終了時に、同じタブでGoogleフォームが開きます。
+- Figma v2を公開する場合、検証用の入口は `/?study=1` です。
+- Figma v2では、チュートリアルの終了画面にある「アンケートを開く」を押すとGoogleフォームが開きます。
 - オフライン時やアプリに戻ったときは、終了画面に「アンケートを開く」のリンクが残ります。
 - 研究ログの記録開始には引き続き別途同意が必要です。フォームURLに氏名、参加者コード、観察データを付加しません。
-- URLを設定していないビルドや通常の入口では、これまでどおりホームへ戻ります。
+- URLを設定していないビルドや通常の入口では、終了画面から撮影に戻ります。
 
 ブラウザテストでは、設定したURLへの通信をモックして実際のフォームに回答せずに遷移を検証できます。`VITE_STUDY_FORM_URL` をビルド時とPlaywright実行時に同じ値で指定し、`npm run test:e2e -- -g 'Googleフォーム'` を実行します。
+
+## Figma v2 と以前の版のテスト
+
+Figma v2の通常ビルドは本体1つです。旧入口の `/plus/`、`/figma/`、`/replica/`、`/dopa/` は同じ画面を表示します。旧版のコードとデータは保持しています。
+
+```sh
+npm run build
+npm run test:e2e
+# 旧版の開発用構成で、引き継いだE2Eを確認するとき
+E2E_LEGACY=1 npm run test:e2e
+# 旧版の開発用構成をローカルでビルドするとき
+VITE_LEGACY_EDITIONS=1 npm run build
+```
+
+Figma書き出しで確認した画面接続と削除候補は [FIGMA_V2_SCOPE.md](FIGMA_V2_SCOPE.md) に記載しています。

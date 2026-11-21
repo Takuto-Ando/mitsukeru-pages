@@ -282,6 +282,7 @@
 }
 
 .design3-title-tail {
+  z-index: 4;
   inset: calc(0px - var(--title-art-crop)) auto auto
     min(65.8%, calc(50% + 64px));
   width: min(97cqw, 363px);

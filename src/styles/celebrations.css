@@ -72,6 +72,22 @@
   animation-name: feature-pulse;
 }
 
+.comparison-drawing-motion {
+  transform-origin: 0 0;
+  animation-duration: 1.2s;
+  animation-iteration-count: 1;
+}
+
+.feature-anim-tongue {
+  animation-name: feature-tongue;
+}
+
+@keyframes feature-tongue {
+  0%, 100% { transform: scale(1); }
+  38% { transform: rotate(-4deg) scaleX(1.13); }
+  68% { transform: rotate(3deg) scaleX(0.88); }
+}
+
 @keyframes feature-sway {
   0%, 100% { transform: rotate(0deg); }
   25% { transform: rotate(4.5deg); }

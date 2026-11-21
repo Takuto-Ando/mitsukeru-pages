@@ -1,16 +1,16 @@
 import { ChevronRight, Sparkles, Star } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { artwork } from "../content/artwork";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { CardLettering } from "./CardLettering";
 import { DifficultyPill } from "./DifficultyPill";
 import { Furi } from "../furigana/Furigana";
 import { assetPath } from "../content/artwork";
 
-export function PhotoCelebration({ taskId }: { taskId?: string }) {
-  const animal =
-    taskId === "giraffe"
-      ? artwork["giraffe-hoof"].reference
-      : taskId && artwork[taskId]?.reference;
+export function PhotoCelebration({
+  onContinue,
+}: {
+  taskId?: string;
+  onContinue?: () => void;
+}) {
   return (
     <section className="design3-photo-celebration" role="status">
       <p>ステキな写真だね！</p>
@@ -22,12 +22,15 @@ export function PhotoCelebration({ taskId }: { taskId?: string }) {
         {[0, 1, 2, 3, 4, 5].map((index) => (
           <Star key={index} aria-hidden="true" fill="currentColor" />
         ))}
-        {animal && (
-          <span className="photo-animal-bubble">
-            <img alt="" src={assetPath(animal)} />
-          </span>
-        )}
       </div>
+      {onContinue && (
+        <button
+          type="button"
+          className="photo-celebration-tap"
+          aria-label="つぎへ"
+          onClick={onContinue}
+        />
+      )}
     </section>
   );
 }
@@ -57,6 +60,7 @@ export function ChallengeIntro({
   regionCount,
   onStart,
   tapAnywhere = false,
+  tapLabel = "描きはじめる",
   autoAdvance = false,
 }: {
   taskId: string;
@@ -65,10 +69,14 @@ export function ChallengeIntro({
   regionCount: number;
   onStart: () => void;
   tapAnywhere?: boolean;
+  tapLabel?: string;
   autoAdvance?: boolean;
 }) {
   const title = taskId === "giraffe" ? "キリンの舌" : `${animal}の${part}`;
 
+  const titleSize = {
+    "--challenge-title-size": `calc(min(82vw, 328px) / ${Array.from(title).length})`,
+  } as CSSProperties;
   const start = useRef(onStart);
   start.current = onStart;
 
@@ -93,7 +101,7 @@ export function ChallengeIntro({
             )}
           />
         ) : (
-          <strong>
+          <strong style={titleSize}>
             <Furi text={title} />
           </strong>
         )}
@@ -108,7 +116,7 @@ export function ChallengeIntro({
         <button
           className="design3-challenge-tap"
           type="button"
-          aria-label="描きはじめる"
+          aria-label={tapLabel}
           onClick={onStart}
         />
       ) : (

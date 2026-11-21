@@ -1,5 +1,7 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { celebrationFor } from "../content/celebrations";
+import { celebrationOrigin } from "./FeatureCelebration";
 import { getStrokeStyle } from "../drawing/styles";
 import type { SceneViewport } from "../drawing/viewport";
 import { motion, useReducedMotion } from "motion/react";
@@ -21,6 +23,8 @@ export function SketchComparison({
   cardFooter,
   afterCard,
   viewport,
+  animateDrawingFor,
+  showReplay = true,
 }: {
   strokes: Stroke[];
   scene?: Scene;
@@ -31,6 +35,8 @@ export function SketchComparison({
   cardFooter?: ReactNode;
   afterCard?: ReactNode;
   viewport?: SceneViewport;
+  animateDrawingFor?: string;
+  showReplay?: boolean;
   onSliderCommit?: (
     from: number,
     to: number,
@@ -72,6 +78,14 @@ export function SketchComparison({
   }, [strokes, scene, replayKey]);
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
+  const drawingMotion = animateDrawingFor
+    ? celebrationFor(animateDrawingFor).kind
+    : undefined;
+  const drawingPivot = drawingMotion
+    ? scene.id === "giraffe"
+      ? { x: 326, y: 305 }
+      : celebrationOrigin(scene, drawingMotion)
+    : undefined;
   const viewX = viewport?.x ?? 0;
   const viewY = viewport?.y ?? 0;
   const viewWidth = viewport?.width ?? 600;
@@ -180,7 +194,23 @@ export function SketchComparison({
                   animate={{ opacity: mode === "answer" ? 0 : 1 }}
                   transition={{ duration: reduce ? 0 : 0.2 }}
                 >
-                  {userLines}
+                  {drawingMotion && drawingPivot ? (
+                    <g
+                      transform={`translate(${drawingPivot.x} ${drawingPivot.y})`}
+                    >
+                      <g
+                        className={`feature-lines feature-anim-${scene.id === "giraffe" ? "tongue" : drawingMotion} comparison-drawing-motion`}
+                      >
+                        <g
+                          transform={`translate(${-drawingPivot.x} ${-drawingPivot.y})`}
+                        >
+                          {userLines}
+                        </g>
+                      </g>
+                    </g>
+                  ) : (
+                    userLines
+                  )}
                 </motion.g>
               </g>
             </g>
@@ -267,15 +297,17 @@ export function SketchComparison({
             {label}
           </button>
         ))}
-        <button
-          className="replay-button"
-          onClick={() => {
-            setMode("drawing");
-            setReplayKey((k) => k + 1);
-          }}
-        >
-          リプレイ
-        </button>
+        {showReplay && (
+          <button
+            className="replay-button"
+            onClick={() => {
+              setMode("drawing");
+              setReplayKey((k) => k + 1);
+            }}
+          >
+            リプレイ
+          </button>
+        )}
       </div>
       <p className="comparison-legend">
         {mode === "slider" ? (

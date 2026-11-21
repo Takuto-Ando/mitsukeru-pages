@@ -65,6 +65,34 @@
   font-weight: 700;
 }
 
+.replica-camera .live-camera-control {
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 53px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.replica-camera .live-camera-control > :is(button, p) {
+  max-width: calc(100% - 16px);
+  padding-inline: 10px;
+  border-radius: 999px;
+  background: rgb(45 44 42 / 80%);
+  color: #fffaf0;
+}
+
+.replica-camera .live-camera-control button {
+  min-height: 44px;
+  pointer-events: auto;
+}
+
+.replica-camera .live-camera-control p {
+  padding-block: 4px;
+}
+
 .replica-camera-alternatives {
   display: flex;
   flex-wrap: wrap;

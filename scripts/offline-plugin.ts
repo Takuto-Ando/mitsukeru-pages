@@ -4,7 +4,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
 // Build-time precache. No remote resources, photographs, notebook or research data.
-export function offlinePlugin(): Plugin {
+export function offlinePlugin(legacy = false): Plugin {
   let config: ResolvedConfig;
   return {
     name: "zooketch-offline",
@@ -17,7 +17,12 @@ export function offlinePlugin(): Plugin {
         const [path, search] = (request.url || "").split(/(?=\?)/, 2);
         const aliases: Record<string, string> = {
           [base + "plus/"]: base + "index.html",
-          [base + "figma/"]: base + "replica/index.html",
+          [base + "figma/"]:
+            base + (legacy ? "replica/index.html" : "index.html"),
+          ...(!legacy && {
+            [base + "dopa/"]: base + "index.html",
+            [base + "replica/"]: base + "index.html",
+          }),
         };
         const target = aliases[path.endsWith("/") ? path : path + "/"];
         if (target) request.url = target + (search || "");
@@ -42,7 +47,7 @@ export function offlinePlugin(): Plugin {
         name: "ズーケッチ",
         short_name: "ズーケッチ",
         lang: "ja",
-        start_url: base + "plus/",
+        start_url: legacy ? base + "plus/" : base,
         scope: base,
         display: "standalone",
         background_color: "#faf7ec",
@@ -72,79 +77,61 @@ export function offlinePlugin(): Plugin {
         join(dir, "manifest.webmanifest"),
         JSON.stringify(manifest),
       );
-      const replicaBase = base + "replica/";
-      const replicaManifest = {
-        ...manifest,
-        id: replicaBase,
-        name: "ズーケッチ Figma再現版",
-        short_name: "ズーケッチ Figma版",
-        start_url: replicaBase,
-        scope: replicaBase,
-        background_color: "#fff9ef",
-        theme_color: "#fff9ef",
-      };
-      await mkdir(join(dir, "figma"), { recursive: true });
-      await mkdir(join(dir, "plus"), { recursive: true });
-      await writeFile(
-        join(dir, "replica", "manifest.webmanifest"),
-        JSON.stringify(replicaManifest),
-      );
-      await writeFile(
-        join(dir, "figma", "manifest.webmanifest"),
-        JSON.stringify({
-          ...replicaManifest,
-          start_url: base + "figma/",
-          scope: base + "figma/",
-        }),
-      );
-      const dopaBase = base + "dopa/";
-      await writeFile(
-        join(dir, "dopa", "manifest.webmanifest"),
-        JSON.stringify({
-          ...manifest,
-          id: dopaBase,
-          name: "ズーケッチ ドパガキ版",
-          short_name: "ズーケッチ ドパガキ版",
-          start_url: dopaBase,
-          scope: dopaBase,
-          background_color: "#f7f2ff",
-          theme_color: "#3d277e",
-        }),
-      );
-      const entries = [
-        ["", "", ""],
-        ["plus/", "", ""],
-        ["replica/", "replica/", "replica/"],
-        ["figma/", "replica/", "figma/"],
-        ["dopa/", "dopa/", "dopa/"],
-      ] as const;
-      const entryFiles = new Set(
-        entries.map(([entry]) => entry + "index.html"),
-      );
-      const [enhancedHtml, replicaHtml, dopaHtml] = await Promise.all([
-        readFile(join(dir, "index.html"), "utf8"),
-        readFile(join(dir, "replica", "index.html"), "utf8"),
-        readFile(join(dir, "dopa", "index.html"), "utf8"),
+      const aliases = ["plus/", "replica/", "figma/", "dopa/"] as const;
+      const entryFiles = new Set([
+        "index.html",
+        ...aliases.map((alias) => alias + "index.html"),
       ]);
-      const documents = {
-        "": enhancedHtml,
-        "replica/": replicaHtml,
-        "dopa/": dopaHtml,
-      };
-      for (const [entry, source, manifestPath] of entries) {
-        const html = documents[source];
+      const manifests = new Set(["manifest.webmanifest"]);
+      const enhancedHtml = await readFile(join(dir, "index.html"), "utf8");
+      const documentFor = (html: string, manifestPath: string) =>
+        html.replace(
+          "</head>",
+          `<link rel="manifest" href="${base}${manifestPath}"></head>`,
+        );
+
+      // Read all inputs before replacing them with their built HTML and manifest.
+      const legacyHtml = new Map<string, string>();
+      if (legacy) {
+        for (const source of ["replica/", "dopa/"])
+          legacyHtml.set(
+            source,
+            await readFile(join(dir, source, "index.html"), "utf8"),
+          );
+      }
+
+      for (const alias of aliases) {
+        await mkdir(join(dir, alias), { recursive: true });
+        const source = alias === "figma/" ? "replica/" : alias;
+        const alternateHtml = legacyHtml.get(source);
+        let manifestFile = "manifest.webmanifest";
+        if (alternateHtml) {
+          manifestFile = alias + "manifest.webmanifest";
+          const name =
+            alias === "dopa/"
+              ? "ズーケッチ ドパガキ版"
+              : "ズーケッチ Figma再現版";
+          await writeFile(
+            join(dir, manifestFile),
+            JSON.stringify({
+              ...manifest,
+              name,
+              short_name: name,
+              id: base + source,
+              start_url: base + alias,
+              scope: base + alias,
+            }),
+          );
+          manifests.add(manifestFile);
+        }
         await writeFile(
-          join(dir, entry, "index.html"),
-          html.replace(
-            "</head>",
-            `<link rel="manifest" href="${base}${manifestPath}manifest.webmanifest"></head>`,
-          ),
+          join(dir, alias, "index.html"),
+          documentFor(alternateHtml ?? enhancedHtml, manifestFile),
         );
       }
-      const manifests = new Set(
-        entries.map(
-          ([, , manifestPath]) => manifestPath + "manifest.webmanifest",
-        ),
+      await writeFile(
+        join(dir, "index.html"),
+        documentFor(enhancedHtml, "manifest.webmanifest"),
       );
       const files: string[] = [];
       async function scan(path: string) {

@@ -32,22 +32,20 @@ async function expectGiraffeChallenge(page: Page) {
   await expect(page.getByTestId("canvas")).toHaveCount(0);
 }
 
-test("共有URLと設定の課題リンクから直接描画に進める", async ({ page }) => {
+test("旧版から課題の直接リンクとQRの入口を取り除く", async ({ page }) => {
   await page.goto("plus/#task=giraffe");
-  await expectGiraffeChallenge(page);
-  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
-  await expect(page.getByTestId("canvas")).toBeVisible();
-
-  await page.goto("plus/");
+  await expect(
+    page.getByRole("button", { name: "はじめから", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".design3-challenge")).toHaveCount(0);
+  await expect(page.getByTestId("canvas")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "QRで課題を開く", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "設定", exact: true }).click();
-  await page
-    .getByText("動物ごとの課題リンク（QRポスター用）", { exact: true })
-    .click();
-  await page
-    .getByRole("link", { name: "キリンの課題を開く", exact: true })
-    .click();
-  await expectGiraffeChallenge(page);
-  await expect(page.getByRole("dialog", { name: "設定" })).toHaveCount(0);
+  await expect(
+    page.getByText("動物ごとの課題リンク（QRポスター用）", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("機能拡張版の入口からFigma再現版を別のURLで開ける", async ({
@@ -160,7 +158,7 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   await page
     .getByRole("button", { name: "ピツネに見せる", exact: true })
     .click();
-  await expect(page.locator(".photo-animal-bubble img")).toBeVisible();
+  await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
   await expect(
     page.locator(".design3-celebration-mascot .lucide-star"),
   ).toHaveCount(6);
@@ -364,38 +362,17 @@ test("拡張版でキリンを選ぶと描画の前に舌の課題と難易度�
   await expect(page.getByTestId("canvas")).toBeVisible();
 });
 
-test("拡張版の任意ツールを使っても研究への同意は変わらない", async ({
+test("設定から任意ツールを取り除き、研究の同意と絵の送信設定を残す", async ({
   page,
 }) => {
   await page.goto("./");
   await page.getByRole("button", { name: "設定", exact: true }).click();
   const settings = page.getByRole("dialog", { name: "設定", exact: true });
-  await settings.getByText("追加の観察ツール", { exact: true }).click();
-  await settings
-    .getByText("描く前・後の気づきを比べる", { exact: true })
-    .click();
-  await settings.getByLabel("描く前に気づいたこと").fill("目が見えた。");
-  await settings.getByLabel("描いた後に気づいたこと").fill("瞳が横長だった。");
-  await settings.getByRole("button", { name: "気づきを見くらべる" }).click();
   await expect(
-    settings.getByRole("definition").filter({ hasText: "瞳が横長だった。" }),
-  ).toBeVisible();
-  await settings.getByText("端末内の保存を確認", { exact: true }).click();
-  await settings.getByRole("button", { name: "保存の読み書きを試す" }).click();
-  await expect(
-    settings.getByText("小さなデータの書き込みと読み取りに成功しました。"),
-  ).toBeVisible();
-  await settings.getByText("利用後の質問を試す", { exact: true }).click();
-  await expect(
-    settings.getByRole("form", { name: "利用後の質問" }),
+    settings.getByText("追加の観察ツール", { exact: true }),
   ).toHaveCount(0);
-  await settings
-    .getByRole("checkbox", {
-      name: "説明を読み、試用アンケートの一時記録に同意します",
-    })
-    .check();
   await expect(
-    settings.getByRole("form", { name: "利用後の質問" }),
+    settings.getByText("絵の自動送信（研究用）", { exact: true }),
   ).toBeVisible();
   await settings.getByText("研究への参加・記録", { exact: true }).click();
   await expect(
@@ -423,14 +400,14 @@ test("読み仮名は既定で表示され、チュートリアルだけマイ�
   await expect(profile).toBeDisabled();
   await expect(profile).toHaveCSS("opacity", "0.5");
   const zoom = page.getByRole("button", { name: "2×", exact: true });
-  const buttonBox = (await zoom.boundingBox())!;
-  const textBox = (await zoom.locator(".zoom-text").boundingBox())!;
-  expect(
-    Math.abs(buttonBox.x + buttonBox.width / 2 - textBox.x - textBox.width / 2),
-  ).toBeLessThan(0.6);
-  expect(
-    Math.abs(
-      buttonBox.y + buttonBox.height / 2 - textBox.y - textBox.height / 2,
-    ),
-  ).toBeLessThan(0.6);
+  const drift = await zoom.evaluate((button) => {
+    const origin = button.getBoundingClientRect();
+    const circle = getComputedStyle(button, "::before");
+    const label = button.querySelector(".zoom-text")!.getBoundingClientRect();
+    return Math.hypot(
+      origin.x + Number.parseFloat(circle.left) - (label.x + label.width / 2),
+      origin.y + Number.parseFloat(circle.top) - (label.y + label.height / 2),
+    );
+  });
+  expect(drift).toBeLessThan(0.6);
 });

@@ -23,7 +23,7 @@ ruby rt[data-reading]::before {
 .gallery-detail-fact p,
 .design3-photo-fact,
 .design3-challenge h1 {
-  line-height: 1.9;
+  line-height: 1.6;
 }
 
 /* The original outline keeps the card's dimensions while ruby is enabled. */
@@ -72,7 +72,8 @@ ruby rt[data-reading]::before {
 }
 .design3-challenge-giraffe-title .card-lettering-text {
   color: var(--d3-orange);
-  font-size: clamp(32px, 11vw, 53px);
+  white-space: nowrap;
+  font-size: clamp(28px, 10vw, 46px);
   -webkit-text-stroke: 0.13em #fff;
   paint-order: stroke fill;
 }

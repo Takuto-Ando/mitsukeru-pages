@@ -19,7 +19,6 @@ import {
   useLiveModelCached,
 } from "./recognition/useLiveDetection";
 import { speciesRecognizer } from "./recognition/species";
-import { PHOTO_FRAMES, drawPhotoFrame, frameSvg } from "./future/frames";
 
 import { CameraShutter, CameraZoom } from "./components/CameraControls";
 import { drawCameraFrame, useCameraZoom } from "./camera/zoom";
@@ -58,7 +57,6 @@ export function CameraView({
   }>();
   const manuallySelected = useRef(false);
 
-  const [frameId, setFrameId] = useState<string>("");
   const [cameraTrack, setCameraTrack] = useState<MediaStreamTrack>();
   const cameraZoom = useCameraZoom(cameraTrack);
   const [captured, setCaptured] = useState("");
@@ -260,10 +258,7 @@ export function CameraView({
     try {
       const frame = drawCameraFrame(video.current, 1200, cameraZoom.digital);
       if (!frame) throw new Error("canvas");
-      const { canvas, context } = frame;
-      if (frameId)
-        drawPhotoFrame(context, frameId, canvas.width, canvas.height);
-      const image = canvas.toDataURL("image/jpeg", 0.8);
+      const image = frame.canvas.toDataURL("image/jpeg", 0.8);
       clearReview();
 
       setCaptured(image);
@@ -393,42 +388,6 @@ export function CameraView({
                     ? "カメラを準備しています"
                     : "手動で始められるよ"}
               </span>
-            </div>
-          )}
-          {status === "live" && frameId && (
-            <svg
-              className="photo-frame-overlay"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-              dangerouslySetInnerHTML={{ __html: frameSvg(frameId) }}
-            />
-          )}
-          {dopa && status === "live" && (
-            <div
-              className="photo-frame-picker"
-              role="group"
-              aria-label="変身フォトフレーム"
-            >
-              <button
-                type="button"
-                aria-pressed={frameId === ""}
-                className={frameId === "" ? "is-active" : ""}
-                onClick={() => setFrameId("")}
-              >
-                フレームなし
-              </button>
-              {PHOTO_FRAMES.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  aria-pressed={frameId === f.id}
-                  className={frameId === f.id ? "is-active" : ""}
-                  onClick={() => setFrameId(f.id)}
-                >
-                  {f.label}
-                </button>
-              ))}
             </div>
           )}
           {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}

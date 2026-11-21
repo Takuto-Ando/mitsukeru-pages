@@ -18,7 +18,7 @@ import {
   type Scene,
 } from "./content/scenes";
 import { Furi } from "./furigana/Furigana";
-import { SceneBase } from "./components/ObservationScene";
+import { SceneBase, SceneRegions } from "./components/ObservationScene";
 import { TargetRegions } from "./components/TargetRegions";
 import type { DrawingAction } from "./drawing/history";
 import { eraseStrokes } from "./drawing/erase";
@@ -65,6 +65,7 @@ export function SketchCanvas({
   missionTitle,
   missionLettering,
   fixedPortrait = false,
+  inkBehindArtwork = false,
   dopa = false,
   actions,
   drawingDecoration,
@@ -85,6 +86,7 @@ export function SketchCanvas({
   missionTitle?: string;
   missionLettering?: string;
   fixedPortrait?: boolean;
+  inkBehindArtwork?: boolean;
   dopa?: boolean;
   actions?: ReactNode;
   drawingDecoration?: ReactNode;
@@ -100,6 +102,7 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
+  const foregroundMask = useId();
   const activeTool = useRef<"pen" | "eraser" | "fill">("pen");
   const [fillMode, setFillMode] = useState(false);
   const [stampMode, setStampMode] = useState(false);
@@ -898,6 +901,33 @@ export function SketchCanvas({
                 hideBrushRing();
               }}
             />
+            {inkBehindArtwork && !isFreeDrawing && (
+              <svg
+                className="eye-template drawing-foreground"
+                viewBox={`0 0 600 ${frameHeight}`}
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <defs>
+                  <mask
+                    id={foregroundMask}
+                    maskUnits="userSpaceOnUse"
+                    x="0"
+                    y="0"
+                    width="600"
+                    height={frameHeight}
+                  >
+                    <rect width="600" height={frameHeight} fill="white" />
+                    <g fill="black">
+                      <SceneRegions scene={scene} />
+                    </g>
+                  </mask>
+                </defs>
+                <g mask={`url(#${foregroundMask})`}>
+                  <SceneBase scene={scene} foreground />
+                </g>
+              </svg>
+            )}
             {erase && (
               <div
                 ref={eraserRing}

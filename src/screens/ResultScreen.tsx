@@ -1,6 +1,6 @@
 import { CardLettering } from "../components/CardLettering";
 import { CornerDownLeft, Zap } from "lucide-react";
-import { Pitsune, PitsuneIcon } from "../components/Pitsune";
+import { PitsuneIcon } from "../components/Pitsune";
 import { assetPath } from "../content/artwork";
 import { DopaResultBanner } from "../components/DopaEffects";
 import { ReflectionNote } from "../components/ReflectionNote";
@@ -29,14 +29,12 @@ export function ResultScreen({
   saved,
   reflectionDirty,
   storageReady,
-  completedGroup,
   onConfirm,
   onRedraw,
   onNext,
   onUpdateReflection,
   onLearn,
   onExport,
-  onPhotoExport,
   onShare,
   onSliderCommit,
 }: {
@@ -52,14 +50,12 @@ export function ResultScreen({
   saved: boolean;
   reflectionDirty: boolean;
   storageReady: boolean;
-  completedGroup: string;
   onConfirm: () => void;
   onRedraw: () => void;
   onNext: () => void;
   onUpdateReflection?: () => void;
   onLearn: () => void;
   onExport: (kind: "own" | "comparison") => void;
-  onPhotoExport?: () => void;
   onShare: () => void;
   onSliderCommit: (
     from: number,
@@ -154,12 +150,6 @@ export function ResultScreen({
           </div>
         }
       />
-      {completedGroup && saved && (
-        <p className="group-complete-banner">
-          <Pitsune pose="cheer" className="group-complete-pitsune" />
-          {completedGroup} コンプリート！ ぜんぶの観察がそろったよ
-        </p>
-      )}
       {!passed && (
         <div className="self-check">
           <p>実物とお手本を見くらべて、気づいたところはあった？</p>
@@ -221,15 +211,6 @@ export function ResultScreen({
           >
             比較画像をPNGで保存
           </button>
-          {onPhotoExport && (
-            <button
-              className="text-button"
-              disabled={saving}
-              onClick={onPhotoExport}
-            >
-              写真とスケッチをPNGで保存
-            </button>
-          )}
           <button className="text-button" disabled={saving} onClick={onShare}>
             シェア
           </button>
