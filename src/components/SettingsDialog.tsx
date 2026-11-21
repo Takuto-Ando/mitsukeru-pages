@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { X, Volume2, BookOpenText } from "lucide-react";
+import { X, BookOpenText } from "lucide-react";
 import { RecognitionPreparation } from "./RecognitionPreparation";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
 import {
+  automaticStudyShare,
   flushShareQueue,
   loadShareConfig,
   pendingShareCount,
@@ -13,8 +14,6 @@ import {
 export function SettingsDialog({
   open,
   onClose,
-  sound,
-  onSoundChange,
   furigana,
   onFuriganaChange,
   returnFocus,
@@ -23,8 +22,6 @@ export function SettingsDialog({
   returnFocus?: React.RefObject<HTMLElement | null>;
   open: boolean;
   onClose: () => void;
-  sound?: boolean;
-  onSoundChange?: () => void;
   product?: boolean;
   furigana?: boolean;
   onFuriganaChange?: () => void;
@@ -65,17 +62,6 @@ export function SettingsDialog({
         </button>
       </div>
       <div className="settings-content">
-        {onSoundChange && (
-          <div className="sound-setting">
-            <span>
-              <Volume2 aria-hidden="true" size={19} />
-              効果音
-            </span>
-            <button aria-pressed={sound} onClick={onSoundChange}>
-              効果音 {sound ? "ON" : "OFF"}
-            </button>
-          </div>
-        )}
         {onFuriganaChange && (
           <div className="sound-setting">
             <span>
@@ -88,75 +74,78 @@ export function SettingsDialog({
           </div>
         )}
         {!product && <SpeechSettings />}
-        <details className="dictionary-check">
-          <summary>絵の自動送信（研究用）</summary>
-          <div className="share-setting">
-            <label className="share-consent">
-              <input
-                type="checkbox"
-                checked={share.consent}
-                onChange={(event) => {
-                  const next = { ...share, consent: event.target.checked };
-                  setShare(next);
-                  saveShareConfig(next);
-                  if (next.consent) void flushShareQueue().then(refreshPending);
+        {!automaticStudyShare && (
+          <details className="dictionary-check">
+            <summary>絵の自動送信（研究用）</summary>
+            <div className="share-setting">
+              <label className="share-consent">
+                <input
+                  type="checkbox"
+                  checked={share.consent}
+                  onChange={(event) => {
+                    const next = { ...share, consent: event.target.checked };
+                    setShare(next);
+                    saveShareConfig(next);
+                    if (next.consent)
+                      void flushShareQueue().then(refreshPending);
+                  }}
+                />
+                保存した絵と気づきのメモを研究のために送ることに同意します（おうちの人と
+                確認してからONにしてください）
+              </label>
+              <label>
+                送信先URL（Apps Script）
+                <input
+                  type="url"
+                  value={share.endpoint}
+                  placeholder="https://script.google.com/macros/s/…/exec"
+                  onChange={(event) => {
+                    const next = {
+                      ...share,
+                      endpoint: event.target.value.trim(),
+                    };
+                    setShare(next);
+                    saveShareConfig(next);
+                  }}
+                />
+              </label>
+              <label>
+                トークン
+                <input
+                  type="password"
+                  autoComplete="off"
+                  value={share.token}
+                  onChange={(event) => {
+                    const next = { ...share, token: event.target.value.trim() };
+                    setShare(next);
+                    saveShareConfig(next);
+                  }}
+                />
+              </label>
+              <p className="profile-setting-note">
+                未送信 {pending} 件。
+                完成した絵（PNG）、線のデータ、動物と課題の名前、日時、気づきのメモ、端末内の記録IDを送ります。
+                写真や声は送られません。
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  void flushShareQueue().then((sent) => {
+                    refreshPending();
+                    setShareNote(
+                      sent > 0
+                        ? `${sent}件を送信しました。受け取りはDriveで確認できます。`
+                        : "送れる絵はありませんでした（未送信が無いか、通信できませんでした）。",
+                    );
+                  });
                 }}
-              />
-              保存した絵と気づきのメモを研究のために送ることに同意します（おうちの人と
-              確認してからONにしてください）
-            </label>
-            <label>
-              送信先URL（Apps Script）
-              <input
-                type="url"
-                value={share.endpoint}
-                placeholder="https://script.google.com/macros/s/…/exec"
-                onChange={(event) => {
-                  const next = {
-                    ...share,
-                    endpoint: event.target.value.trim(),
-                  };
-                  setShare(next);
-                  saveShareConfig(next);
-                }}
-              />
-            </label>
-            <label>
-              トークン
-              <input
-                type="password"
-                autoComplete="off"
-                value={share.token}
-                onChange={(event) => {
-                  const next = { ...share, token: event.target.value.trim() };
-                  setShare(next);
-                  saveShareConfig(next);
-                }}
-              />
-            </label>
-            <p className="profile-setting-note">
-              未送信 {pending} 件。
-              完成した絵（PNG）、線のデータ、動物と課題の名前、日時、気づきのメモ、端末内の記録IDを送ります。
-              写真や声は送られません。
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                void flushShareQueue().then((sent) => {
-                  refreshPending();
-                  setShareNote(
-                    sent > 0
-                      ? `${sent}件を送信しました。受け取りはDriveで確認できます。`
-                      : "送れる絵はありませんでした（未送信が無いか、通信できませんでした）。",
-                  );
-                });
-              }}
-            >
-              いま送信を試す
-            </button>
-            {shareNote && <p role="status">{shareNote}</p>}
-          </div>
-        </details>
+              >
+                いま送信を試す
+              </button>
+              {shareNote && <p role="status">{shareNote}</p>}
+            </div>
+          </details>
+        )}
         {!product && (
           <>
             <OfflineStatus />

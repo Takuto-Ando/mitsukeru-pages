@@ -827,7 +827,7 @@ body:has(.design3-shell) {
 }
 
 .shutter-button:active:not(:disabled) .shutter-center {
-  fill: #e27b27;
+  opacity: 0.5;
 }
 
 .design3-camera .camera-side-button:disabled {

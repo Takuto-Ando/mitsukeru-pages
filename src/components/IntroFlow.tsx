@@ -163,7 +163,9 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function IntroLoadingScreen() {
+export function IntroLoadingScreen({
+  onContinue,
+}: { onContinue?: () => void } = {}) {
   return (
     <IntroPanel
       label="スケッチの準備中"
@@ -171,8 +173,17 @@ export function IntroLoadingScreen() {
       pose="easel"
       artwork="loading"
       lettering="loading"
-      loading
-    />
+      loading={!onContinue}
+    >
+      {onContinue && (
+        <button
+          type="button"
+          className="design3-challenge-tap"
+          aria-label="スケッチの準備を確認してつぎへ"
+          onClick={onContinue}
+        />
+      )}
+    </IntroPanel>
   );
 }
 

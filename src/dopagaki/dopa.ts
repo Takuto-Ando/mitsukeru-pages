@@ -1,8 +1,7 @@
-// ドパガキ版のXP・レベル・効果音設定。
+// ドパガキ版のXP・レベル。
 // 観察データ本体の保存形式には一切触れない。localStorage の専用キーだけを使う。
 
 export const DOPA_XP_KEY = "zooketch-dopa-xp-v1";
-export const DOPA_SOUND_KEY = "zooketch-dopa-sound-v1";
 
 const sessionValues = new Map<string, string>();
 
@@ -23,14 +22,6 @@ function write(key: string, value: string) {
   } catch {
     sessionValues.set(key, value);
   }
-}
-
-export function loadDopaSound(): boolean {
-  return read(DOPA_SOUND_KEY) !== "0";
-}
-
-export function saveDopaSound(on: boolean) {
-  write(DOPA_SOUND_KEY, on ? "1" : "0");
 }
 
 export function getXp(): number {

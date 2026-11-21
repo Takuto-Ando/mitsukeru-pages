@@ -4,11 +4,11 @@ ruby {
 }
 
 ruby rt {
-  font-size: 0.52em;
+  font-size: max(9px, 0.52em);
   font-weight: 500;
   letter-spacing: 0.02em;
   color: inherit;
-  opacity: 0.85;
+  opacity: 0.96;
   user-select: none;
   position: relative;
   inset-block-start: 0.25em;

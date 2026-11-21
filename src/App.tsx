@@ -67,22 +67,10 @@ import {
   savePng,
 } from "./notebook/images";
 import type { ObservationRecord } from "./notebook/types";
-import { createFeedbackAudio } from "./audio";
 import { drawingHistory, emptyDrawing } from "./drawing/history";
 import type { Evaluation, Stroke, StrokeStyle } from "./types";
-import {
-  addXp,
-  loadDopaSound,
-  pickPraise,
-  saveDopaSound,
-} from "./dopagaki/dopa";
+import { addXp, pickPraise } from "./dopagaki/dopa";
 import { celebrateDopa, DopaOverlay, fireConfetti } from "./dopagaki/effects";
-import {
-  dopaDing,
-  dopaShutter,
-  silenceDopaAudio,
-  unlockDopaAudio,
-} from "./dopagaki/sounds";
 import {
   applyStyles,
   getStrokeStyle,
@@ -103,7 +91,6 @@ type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
 export default function App({ dopa = false }: { dopa?: boolean }) {
   useModelPreload();
-  const [dopaSound, setDopaSound] = useState(loadDopaSound);
   const [dopaPraise, setDopaPraise] = useState<string>();
   const awardedDopaPass = useRef(false);
 
@@ -119,7 +106,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
       theme.content = previous;
     };
   }, [dopa]);
-  useEffect(() => () => silenceDopaAudio(), []);
 
   const reduce = useReducedMotion();
   const study = useSyncExternalStore(subscribeStudy, studyStatus);
@@ -245,13 +231,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const [feedback, setFeedback] = useState<Evaluation>();
   const [hintLevel, setHintLevel] = useState(0);
   const [furigana, setFurigana] = useState(loadFurigana);
-  const [sound, setSound] = useState(false);
-  const soundRef = useRef(sound);
-  soundRef.current = sound;
-  const audio = useRef<ReturnType<typeof createFeedbackAudio> | null>(null);
-  if (!audio.current)
-    audio.current = createFeedbackAudio(() => soundRef.current);
-  useEffect(() => () => audio.current?.dispose(), []);
   const [collectionOpen, setCollectionOpen] = useState(false);
   const collectionOpenRef = useRef(collectionOpen);
   collectionOpenRef.current = collectionOpen;
@@ -409,7 +388,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   }
   async function finishObservation(advance: boolean) {
     const generation = taskGeneration.current;
-    if (dopa) unlockDopaAudio();
     const result = !savedId || reflectionDirty ? await save() : undefined;
     if (generation !== taskGeneration.current) return;
     if (dopa && result === "created") {
@@ -422,7 +400,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
           xp: 30,
         });
       } else {
-        dopaDing();
         fireConfetti(48);
       }
     }
@@ -628,8 +605,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
       });
       return;
     }
-    audio.current?.unlock();
-    audio.current?.success();
   }
   function confirm() {
     setFeedback({
@@ -726,10 +701,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
         ) : screen === "home" ? (
           <HomeScreen
             edition={dopa ? "dopa" : "plus"}
-            onStart={() => {
-              if (dopa) unlockDopaAudio();
-              restart("intro");
-            }}
+            onStart={() => restart("intro")}
             onCollection={openCollection}
             onSettings={openSettings}
             savedCount={collectionCount}
@@ -776,7 +748,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                 <CameraView
                   dopa={dopa}
                   tutorial={inTutorial}
-                  onCapture={dopa ? dopaShutter : undefined}
                   suspended={settingsOpen}
                   celebrating={photoPhase === "cheer"}
                   onCollection={openCollection}
@@ -1092,20 +1063,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
           open={settingsOpen}
           returnFocus={settingsTrigger}
           onClose={() => setSettingsOpen(false)}
-          sound={dopa ? dopaSound : sound}
-          onSoundChange={() => {
-            if (dopa) {
-              saveDopaSound(!dopaSound);
-              setDopaSound(!dopaSound);
-              if (dopaSound) silenceDopaAudio();
-              else dopaDing();
-              return;
-            }
-            soundRef.current = !sound;
-            setSound(!sound);
-            if (!sound) audio.current?.unlock();
-            else audio.current?.silence();
-          }}
           furigana={furigana}
           onFuriganaChange={() => {
             saveFurigana(!furigana);

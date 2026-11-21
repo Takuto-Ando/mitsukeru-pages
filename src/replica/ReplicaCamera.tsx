@@ -16,6 +16,7 @@ export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
 
 const liveSetting = "zooketch-live-detection-v1";
+const photoRatio = [4, 5] as const;
 
 type Capture = {
   photo?: string;
@@ -24,6 +25,7 @@ type Capture = {
 
 export function ReplicaCamera({
   tutorial,
+  legacy = false,
   framedExample,
   onCapture,
   onGallery,
@@ -33,6 +35,7 @@ export function ReplicaCamera({
   suspended = false,
 }: {
   tutorial: boolean;
+  legacy?: boolean;
   framedExample: boolean;
   onCapture: (capture: Capture) => void;
   onGallery: () => void;
@@ -45,16 +48,20 @@ export function ReplicaCamera({
   const photoModelDownloading = usePhotoModelDownloading();
   const [sample, setSample] = useState(tutorial || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
+  const [sampleReady, setSampleReady] = useState(false);
+  const [sampleUnavailable, setSampleUnavailable] = useState(false);
   const [streamReady, setStreamReady] = useState(false);
   const [cameraTrack, setCameraTrack] = useState<MediaStreamTrack>();
   const cameraZoom = useCameraZoom(cameraTrack, sample);
   const [message, setMessage] = useState("");
+  const [cameraUnavailable, setCameraUnavailable] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestNumber, retryCamera] = useState(0);
   const [visible, setVisible] = useState(() => !document.hidden);
   const video = useRef<HTMLVideoElement>(null);
   const liveCached = useLiveModelCached();
   const [liveEnabled, setLiveEnabled] = useState(() => {
+    if (!legacy) return true;
     try {
       return localStorage.getItem(liveSetting) !== "0";
     } catch {
@@ -81,33 +88,76 @@ export function ReplicaCamera({
   const liveError = (!liveCached && liveFailed) || live.status === "error";
   const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
-  const sampleVisible = sampleHasAnimal || cameraZoom.zoom === 0.5;
+  const sampleVisible = sampleHasAnimal || (legacy && cameraZoom.zoom === 0.5);
+  const recognized = sample
+    ? sampleVisible
+    : liveActive && live.boxes.length > 0;
+  const figmaNode = tutorial
+    ? recognized
+      ? "43-1745"
+      : "43-1681"
+    : recognized
+      ? "43-1494"
+      : "38-1026";
   const streamRef = useRef<MediaStream | undefined>(undefined);
   const menu = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     if (!realCamera || liveCached || !liveEnabled) return;
     let active = true;
+    let pending = false;
+    let attempt = 0;
+    let timer = 0;
     const prepare = async () => {
-      if (!active || (await liveModelCached())) return;
-      if (!active) return;
-      setLiveFailed(false);
-      setLivePreparing(true);
+      if (!active || pending || !navigator.onLine) return;
+      pending = true;
       try {
+        if ((await liveModelCached()) || !active) return;
+        setLiveFailed(false);
+        setLivePreparing(true);
         await downloadLiveModel();
       } catch {
-        if (active) setLiveFailed(true);
+        if (active) {
+          setLiveFailed(true);
+          // Brief interruptions retry automatically without adding camera controls.
+          if (!legacy && attempt < 2)
+            timer = window.setTimeout(prepare, ++attempt * 1200);
+        }
       } finally {
+        pending = false;
         if (active) setLivePreparing(false);
       }
     };
+    const networkReturned = () => {
+      window.clearTimeout(timer);
+      attempt = 0;
+      void prepare();
+    };
     void prepare();
-    window.addEventListener("online", prepare);
+    window.addEventListener("online", networkReturned);
     return () => {
       active = false;
-      window.removeEventListener("online", prepare);
+      window.clearTimeout(timer);
+      window.removeEventListener("online", networkReturned);
     };
-  }, [liveCached, liveEnabled, liveRetry, realCamera]);
+  }, [legacy, liveCached, liveEnabled, liveRetry, realCamera]);
+
+  const retriedWorker = useRef(false);
+  useEffect(() => {
+    if (!liveActive) retriedWorker.current = false;
+    if (
+      legacy ||
+      !liveActive ||
+      live.status !== "error" ||
+      retriedWorker.current
+    )
+      return;
+    const retry = window.setTimeout(() => {
+      retriedWorker.current = true;
+      setLiveRetry((attempt) => attempt + 1);
+    }, 1500);
+    return () => window.clearTimeout(retry);
+  }, [legacy, live.status, liveActive]);
 
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
@@ -127,7 +177,9 @@ export function ReplicaCamera({
       setStreamReady(false);
     }
     async function startCamera() {
+      setCameraUnavailable(false);
       if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraUnavailable(true);
         setMessage("この端末ではカメラを開けません。");
         return;
       }
@@ -151,6 +203,7 @@ export function ReplicaCamera({
       } catch {
         if (!active) return;
         stopCamera();
+        setCameraUnavailable(true);
         setMessage("カメラを開けませんでした。");
       }
     }
@@ -166,7 +219,12 @@ export function ReplicaCamera({
   }, [menuOpen]);
 
   function chooseMode(nextSample: boolean) {
+    if (nextSample !== sample) {
+      setSampleReady(false);
+      setSampleUnavailable(false);
+    }
     setSample(nextSample);
+    setCameraUnavailable(false);
     setSampleHasAnimal(false);
     setMessage("");
     setMenuOpen(false);
@@ -187,31 +245,35 @@ export function ReplicaCamera({
   }
 
   function takePhoto() {
-    if (sample) {
-      if (!sampleVisible) {
-        setSampleHasAnimal(true);
-        return;
-      }
-      const zoomed =
-        cameraZoom.digital > 1 && example.current
-          ? drawCameraFrame(example.current, 1000, cameraZoom.digital)?.canvas
-          : undefined;
-      onCapture({
-        photo: zoomed?.toDataURL("image/jpeg", 0.82) ?? samplePhoto(),
-        sample: true,
-      });
+    if (sample && !sampleVisible) {
+      setSampleHasAnimal(true);
+      return;
+    }
+    if (!legacy && cameraUnavailable) {
+      onCapture({ sample: false });
       return;
     }
 
-    const frame = video.current;
-    if (!frame?.videoWidth || !frame.videoHeight) return;
+    if (!legacy && sample && sampleUnavailable) {
+      onCapture({ sample: true });
+      return;
+    }
+
+    if (legacy && sample && cameraZoom.digital === 1) {
+      onCapture({ photo: samplePhoto(), sample: true });
+      return;
+    }
+
+    const frame = sample ? example.current : video.current;
+    const ratio = legacy ? undefined : photoRatio;
     try {
-      const shot = drawCameraFrame(frame, 1000, cameraZoom.digital);
-      if (!shot) return;
-      onCapture({
-        photo: shot.canvas.toDataURL("image/jpeg", 0.82),
-        sample: false,
-      });
+      const shot =
+        frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
+      if (shot) {
+        onCapture({ photo: shot.canvas.toDataURL("image/jpeg", 0.82), sample });
+      } else if (legacy && sample) {
+        onCapture({ photo: samplePhoto(), sample: true });
+      }
     } catch {
       setMessage("撮影できませんでした。もう一度試してね。");
     }
@@ -219,7 +281,10 @@ export function ReplicaCamera({
 
   const art = "illustrations/pdf-design/";
   return (
-    <section className="camera-page design3-camera replica-camera">
+    <section
+      className="camera-page design3-camera replica-camera"
+      data-figma-node={figmaNode}
+    >
       <h1 className="sr-only">動物を撮影しよう</h1>
       <div className="camera-pitsune">
         <img
@@ -234,6 +299,8 @@ export function ReplicaCamera({
               src={assetPath("replica-assets/camera-found.svg")}
               alt="キリンがいるよ！"
             />
+          ) : !legacy && recognized ? (
+            <span>{live.boxes[0]?.label}かな？</span>
           ) : (
             <CardLettering
               className="camera-prompt-art"
@@ -252,6 +319,17 @@ export function ReplicaCamera({
               ref={example}
               style={{ transform: `scale(${cameraZoom.digital})` }}
               src={samplePhoto()}
+              onLoad={({ currentTarget: image }) => {
+                void image.decode().then(
+                  () => {
+                    if (example.current === image) setSampleReady(true);
+                  },
+                  () => {
+                    if (example.current === image) setSampleUnavailable(true);
+                  },
+                );
+              }}
+              onError={() => setSampleUnavailable(true)}
               alt={
                 sampleVisible
                   ? "見本写真のキリン"
@@ -289,13 +367,16 @@ export function ReplicaCamera({
                 />
                 <span role="status">
                   {message || "カメラを準備しています。"}
+                  {!legacy && cameraUnavailable && (
+                    <> シャッターで動物を選べます。</>
+                  )}
                 </span>
               </div>
             )}
           </>
         )}
         {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
-        {((!sample && !message) || photoModelDownloading) && (
+        {legacy && ((!sample && !message) || photoModelDownloading) && (
           <div className="live-camera-control">
             {!sample && !message && (
               <button
@@ -319,6 +400,11 @@ export function ReplicaCamera({
             )}
           </div>
         )}
+        {!legacy && photoModelDownloading && (
+          <p className="replica-camera-model-status" role="status">
+            画像認識モデルをダウンロード中…
+          </p>
+        )}
         <CameraZoom {...cameraZoom} />
       </div>
       <div className="camera-controls">
@@ -341,7 +427,15 @@ export function ReplicaCamera({
           />
         </button>
         <CameraShutter
-          disabled={(!sample && !streamReady) || cameraZoom.busy}
+          disabled={
+            (!sample && !streamReady && (legacy || !cameraUnavailable)) ||
+            (!legacy &&
+              sample &&
+              sampleVisible &&
+              !sampleReady &&
+              !sampleUnavailable) ||
+            cameraZoom.busy
+          }
           onClick={takePhoto}
         />
         <button
@@ -366,7 +460,7 @@ export function ReplicaCamera({
           />
         </button>
       </div>
-      {!sample && message && (
+      {legacy && !sample && message && (
         <div className="replica-camera-alternatives">
           <button
             className="text-button"

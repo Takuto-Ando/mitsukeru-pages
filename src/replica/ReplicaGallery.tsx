@@ -1,3 +1,5 @@
+import { ZooCardSummary } from "../components/ZooCardSummary";
+import { zooAnimalIdByName, zooAnimalSummary } from "../content/zooAnimalSummaries";
 import type { Stroke } from "../types";
 import { CardLettering } from "../components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
@@ -69,6 +71,11 @@ function Sketch({ entry }: { entry: ReplicaRecord }) {
 }
 
 function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
+  const task = entry.taskId ? taskById[entry.taskId] : undefined;
+  const summary = zooAnimalSummary(
+    entry.groupId ?? task?.groupId ?? zooAnimalIdByName(entry.animalName) ?? (entry.samplePhoto ? "giraffe" : undefined),
+    tab === "sketch" ? task?.id : undefined,
+  );
   if (tab === "sketch") {
     const regionCount = entry.taskId
       ? (taskById[entry.taskId]?.scene.regions.length ?? 1)
@@ -81,9 +88,9 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
         <div className="gallery-detail-scroll" tabIndex={-1} autoFocus>
           <article className="sketch-comparison-card">
             <Sketch entry={entry} />
-            {entry.description && (
+            {summary && (
               <div className="gallery-detail-fact">
-                <p>{entry.description}</p>
+                <ZooCardSummary text={summary} />
               </div>
             )}
           </article>
@@ -129,11 +136,7 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
             </p>
           </div>
         </div>
-        {(entry.photoDescription ?? entry.description) && (
-          <p className="replica-gallery-photo-fact">
-            {entry.photoDescription ?? entry.description}
-          </p>
-        )}
+        {summary && <ZooCardSummary className="replica-gallery-photo-fact" text={summary} />}
       </article>
     </div>
   );
@@ -172,6 +175,8 @@ export function ReplicaGallery({
   return (
     <section
       className="drawing-collection gallery-screen replica-gallery"
+      data-tab={tab}
+      data-figma-node={tab === "photo" ? "66-10991" : "63-6390"}
       aria-labelledby={id}
     >
       <header className="gallery-header">

@@ -11,7 +11,9 @@
   position: relative;
 }
 
-.replica-gallery .collection-card:has(.replica-photo-tile[data-sample="true"]) {
+.replica-app[data-variant="replica"]
+  .replica-gallery
+  .collection-card:has(.replica-photo-tile[data-sample="true"]) {
   margin-inline-start: 2px;
 }
 
@@ -36,7 +38,10 @@
   object-fit: cover;
 }
 
-.replica-gallery .collection-open > .replica-photo-tile[data-sample="true"] {
+.replica-app[data-variant="replica"]
+  .replica-gallery
+  .collection-open
+  > .replica-photo-tile[data-sample="true"] {
   position: absolute;
   /* Crop of the sample photograph in the supplied Figma thumbnail. */
   inset: -3.97% auto auto -11.01%;
@@ -44,6 +49,12 @@
   max-width: none;
   height: 103.99%;
   object-fit: fill;
+}
+
+.replica-app[data-variant="product"]
+  .replica-gallery[data-tab="photo"]
+  :is(.collection-card, .gallery-slot) {
+  aspect-ratio: 4 / 5;
 }
 
 .replica-gallery-detail {
@@ -129,7 +140,7 @@
 .replica-gallery-photo-preview {
   display: block;
   width: min(100%, 263px);
-  aspect-ratio: 263 / 332;
+  aspect-ratio: 4 / 5;
   object-fit: cover;
 }
 

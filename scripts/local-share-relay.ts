@@ -8,7 +8,11 @@ export function localShareRelay(): Plugin {
       const env = loadEnv(mode, process.cwd(), "ZOOKETCH_TEST_SHARE_");
       const endpoint = env.ZOOKETCH_TEST_SHARE_ENDPOINT ?? "";
       const token = env.ZOOKETCH_TEST_SHARE_TOKEN ?? "";
-      const enabled = !isPreview && isAppsScriptEndpoint(endpoint) && !!token;
+      const enabled =
+        mode === "study" &&
+        !isPreview &&
+        isAppsScriptEndpoint(endpoint) &&
+        !!token;
       return {
         define: {
           "import.meta.env.VITE_LOCAL_SHARE_CONSENT": JSON.stringify(
@@ -18,6 +22,7 @@ export function localShareRelay(): Plugin {
       };
     },
     configureServer(server) {
+      if (server.config.mode !== "study") return;
       const env = loadEnv(
         server.config.mode,
         server.config.root,

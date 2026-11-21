@@ -12,7 +12,6 @@ import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { getStrokeStyle } from "../drawing/styles";
 import { addXp } from "../dopagaki/dopa";
 import { fireConfetti } from "../dopagaki/effects";
-import { dopaComboSound, dopaPencilSound } from "../dopagaki/sounds";
 import { savePng } from "../notebook/images";
 import { ReadAloud } from "../speech/Speech";
 import type { Evaluation, Stroke } from "../types";
@@ -70,7 +69,6 @@ export function DrawScreen({
     canvasProps.onDrawingActivity?.(active, tool);
     if (active) {
       committedPenStroke.current = false;
-      if (tool === "pen") dopaPencilSound();
       return;
     }
     if (tool !== "pen" || !committedPenStroke.current) return;
@@ -78,7 +76,6 @@ export function DrawScreen({
     window.clearTimeout(comboTimer.current);
     const count = ++streak.current;
     setCombo(count);
-    if (count >= 3) dopaComboSound(count);
     if (count % 10 === 0) {
       addXp(5);
       fireConfetti(42);

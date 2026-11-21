@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sparkles, Zap } from "lucide-react";
 import { Pitsune } from "../components/Pitsune";
-import { dopaFanfare, dopaJackpotSound } from "./sounds";
 
 const colors = [
   "#ff579f",
@@ -95,13 +94,7 @@ export type DopaCelebration = {
 };
 
 export function celebrateDopa(celebration: DopaCelebration) {
-  if (celebration.kind === "jackpot") {
-    dopaJackpotSound();
-    fireConfetti(156);
-  } else {
-    dopaFanfare();
-    fireConfetti(112);
-  }
+  fireConfetti(celebration.kind === "jackpot" ? 156 : 112);
   window.dispatchEvent(
     new CustomEvent<DopaCelebration>("dopa:celebrate", { detail: celebration }),
   );

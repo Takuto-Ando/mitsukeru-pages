@@ -1,7 +1,24 @@
-import { expect, test } from "./fixtures";
+import { expect, test, type Page } from "./fixtures";
 import { taskById } from "../../src/content/tasks";
 
-test("初回はタップで進み、描いた絵だけを送信して撮影ホームに戻る", async ({
+async function drawGiraffeTongue(page: Page) {
+  const canvas = page.getByTestId("canvas");
+  const bounds = (await canvas.boundingBox())!;
+  const region = taskById.giraffe.scene.regions[0];
+  for (let index = 0; index <= 20; index++) {
+    const t = index / 20;
+    await page.mouse.move(
+      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
+      bounds.y +
+        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
+          bounds.height,
+    );
+    if (!index) await page.mouse.down();
+  }
+  await page.mouse.up();
+}
+
+test("フローAは付録のノード順にタップで進み、描いた絵だけを送信して撮影へ合流する", async ({
   page,
 }) => {
   const endpoint = "https://script.google.com/macros/s/zooketch-test/exec";
@@ -18,7 +35,13 @@ test("初回はタップで進み、描いた絵だけを送信して撮影ホ�
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
   const shell = page.locator(".replica-app");
-  await expect(shell).toHaveAttribute("data-screen", "title");
+  const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
+  await expect(shell).toHaveAttribute("data-figma-node", "28-100");
+  await expect(button("つづきから")).toBeDisabled();
+  await expect(
+    page.getByText("Google連携（準備中）", { exact: true }),
+  ).toHaveCount(0);
+  await expect(button("つづきから").locator("img")).toHaveCount(1);
   await expect(
     page.getByRole("link", { name: /ドパガキ版|機能拡張版/ }),
   ).toHaveCount(0);
@@ -27,39 +50,48 @@ test("初回はタップで進み、描いた絵だけを送信して撮影ホ�
   ).toBeVisible();
   await button("はじめから").click();
   await expect(button("スキップ")).toHaveCount(0);
-  for (const choice of ["こんにちは！", "やってみる！", "撮ってみる！"]) {
+  for (const [id, choice] of [
+    ["29-683", "こんにちは！"],
+    ["36-778", "やってみる！"],
+    ["38-898", "撮ってみる！"],
+  ]) {
+    await expect(node(id)).toBeVisible();
     await button(choice).click();
   }
+  await expect(node("43-1681")).toBeVisible();
   await expect(button("マイページ")).toBeDisabled();
   await button("シャッター").click();
+  await expect(node("43-1745")).toBeVisible();
   await button("シャッター").click();
+  await expect(node("43-1815")).toBeVisible();
+  const photoSize = await page
+    .getByRole("img", { name: "見本写真のキリン", exact: true })
+    .evaluate(async (element: HTMLImageElement) => {
+      await element.decode();
+      return [element.naturalWidth, element.naturalHeight];
+    });
+  expect(photoSize[0] * 5).toBe(photoSize[1] * 4);
   await expect(button("撮りなおす")).toBeDisabled();
   await button("ピツネに見せる").click();
-  await expect(shell).toHaveAttribute("data-screen", "cheer");
+  await expect(node("52-5335")).toBeVisible();
   await page.waitForTimeout(1400);
-  await expect(shell).toHaveAttribute("data-screen", "cheer");
+  await expect(node("52-5335")).toBeVisible();
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
   await page
     .locator(".photo-celebration-tap")
     .click({ position: { x: 100, y: 100 } });
+  await expect(node("38-1056")).toBeVisible();
   await button("描いてみる！").click();
+  await expect(node("52-5984")).toBeVisible();
   await expect(button("描きはじめる")).toHaveCount(0);
   const canvas = page.getByTestId("canvas");
+  await expect(canvas).toHaveCount(0);
+  await button("課題を確認してつぎへ").click();
+  await expect(node("43-1966")).toBeVisible();
   await expect(canvas).toBeVisible();
-  const bounds = (await canvas.boundingBox())!;
-  const region = taskById.giraffe.scene.regions[0];
-  for (let index = 0; index <= 20; index++) {
-    const t = index / 20;
-    await page.mouse.move(
-      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
-      bounds.y +
-        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
-          bounds.height,
-    );
-    if (!index) await page.mouse.down();
-  }
-  await page.mouse.up();
+  await drawGiraffeTongue(page);
   await button("できた！").click();
+  await expect(node("66-8363")).toBeVisible();
   await expect(button("描きなおす")).toBeDisabled();
   await expect(button("もう一度見る")).toHaveCount(0);
   const sending = page.waitForRequest((request) => request.url() === endpoint);
@@ -68,10 +100,57 @@ test("初回はタップで進み、描いた絵だけを送信して撮影ホ�
   expect(payload.pngBase64).toMatch(/^iVBOR/);
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
+  await expect(node("43-1269")).toBeVisible();
   await button("ありがとう！").click();
-  await expect(shell).toHaveAttribute("data-screen", "camera");
+  await expect(node("38-1026")).toBeVisible();
   await button("ギャラリー").click();
+  await expect(node("63-6390")).toBeVisible();
   await expect(button("キリンのスケッチを見る")).toBeVisible();
+  await page.getByRole("tab", { name: "写真", exact: true }).click();
+  await expect(node("66-10991")).toBeVisible();
+  await button("写真を撮る").click();
+  await expect(node("38-1026")).toBeVisible();
+});
+
+test("フローBは写真確認から通常の難易度選択と描画を通って撮影に戻る", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    Object.defineProperty(navigator, "mediaDevices", {
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("Permission denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  const button = (name: string) =>
+    page.getByRole("button", { name, exact: true });
+  const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
+  await button("はじめから").click();
+  await expect(node("38-1026")).toBeVisible();
+  await button("シャッター").click();
+  await expect(node("66-7655")).toBeVisible();
+  await button("修正").click();
+  await expect(node("66-7604")).toBeVisible();
+  await button("キリン").click();
+  await expect(node("66-7554")).toBeVisible();
+  await button("ピツネに見せる").click();
+  await expect(node("43-1903")).toBeVisible();
+  await button("スケッチの準備を確認してつぎへ").click();
+  await expect(node("66-8272")).toBeVisible();
+  await button("課題を確認してつぎへ").click();
+  await expect(node("66-7869")).toBeVisible();
+  await button("ヒントを見る").click();
+  await expect(node("66-8070")).toBeVisible();
+  await drawGiraffeTongue(page);
+  await button("できた！").click();
+  await expect(node("66-10524")).toBeVisible();
+  await expect(button("つぎへ")).toHaveCount(0);
+  await button("写真を撮る").click();
+  await expect(node("38-1026")).toBeVisible();
 });
 
 test("旧URLからも同一本体が開き、設定でふりがなをOFFにできる", async ({

@@ -5,7 +5,8 @@ import { offlinePlugin } from "./scripts/offline-plugin";
 import react from "@vitejs/plugin-react";
 const legacy = process.env.VITE_LEGACY_EDITIONS === "1";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  cacheDir: `node_modules/.vite-${legacy ? "legacy" : mode}`,
   base: process.env.VITE_BASE_PATH || "/",
   plugins: [
     react({ jsxImportSource: "@zooketch/ruby" }),
@@ -40,4 +41,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

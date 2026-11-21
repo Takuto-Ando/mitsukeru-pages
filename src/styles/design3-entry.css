@@ -503,20 +503,13 @@
 
 .design3-title-actions .design3-continue:disabled {
   display: grid;
-  justify-items: center;
-  gap: 4px;
+  place-items: center;
   opacity: 0.5;
   cursor: default;
 }
 
 .design3-title-actions .design3-continue:disabled img {
   opacity: 1;
-}
-
-.design3-continue small {
-  font-size: 0.73rem;
-  line-height: 1.2;
-  color: #55402c;
 }
 
 @media (prefers-reduced-motion: no-preference) {

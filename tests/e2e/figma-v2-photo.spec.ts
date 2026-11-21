@@ -84,12 +84,20 @@ test("撮影直後に端末に保存し、動物の選択を写真の詳細に�
   await page.goto("./");
   await enterCamera();
   await shutter.click();
-  await expect(
-    page.getByRole("img", { name: "撮影した動物の写真" }),
-  ).toBeVisible();
+  const reviewImage = page.getByRole("img", { name: "撮影した動物の写真" });
+  await expect(reviewImage).toBeVisible();
+  await expect(reviewImage).toHaveCSS("aspect-ratio", "4 / 5");
   await expect
     .poll(async () => (await savedPhoto(page))?.photo)
     .toMatch(/^data:image\/jpeg/);
+  const jpeg = (await savedPhoto(page))!.photo!;
+  const storedRatio = await page.evaluate(async (source) => {
+    const image = new Image();
+    image.src = source;
+    await image.decode();
+    return image.naturalWidth / image.naturalHeight;
+  }, jpeg);
+  expect(storedRatio).toBe(4 / 5);
 
   const choose = async (name: string) => {
     await page.getByRole("button", { name: "修正", exact: true }).click();
@@ -109,7 +117,20 @@ test("撮影直後に端末に保存し、動物の選択を写真の詳細に�
   await page
     .getByRole("button", { name: "ピツネに見せる", exact: true })
     .click();
-  await expect(page.locator("[data-screen=challenge]")).toBeVisible();
+  await expect(page.locator("[data-screen=easel]")).toHaveAttribute(
+    "data-figma-node",
+    "43-1903",
+  );
+  await page
+    .getByRole("button", {
+      name: "スケッチの準備を確認してつぎへ",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("[data-screen=challenge]")).toHaveAttribute(
+    "data-figma-node",
+    "66-8272",
+  );
   await expect(page.getByRole("img", { name: /^難易度/ })).toBeVisible();
   await expect(
     page.getByRole("button", { name: "描きはじめる", exact: true }),
@@ -127,10 +148,37 @@ test("撮影直後に端末に保存し、動物の選択を写真の詳細に�
     .getByRole("button", { name: "カバの写真を見る", exact: true })
     .click();
   const detail = page.getByRole("dialog", { name: "カバの写真", exact: true });
-  await expect(detail.getByRole("img", { name: "撮影した写真" })).toBeVisible();
+  const detailImage = detail.getByRole("img", { name: "撮影した写真" });
+  await expect(detailImage).toBeVisible();
+  await expect(detailImage).toHaveCSS("aspect-ratio", "4 / 5");
   await expect(detail.getByRole("heading", { name: "カバ" })).toBeVisible();
   await expect(detail.locator("time")).toHaveAttribute("datetime", /^\d{4}-/);
   await expect(detail.getByText("京都市動物園", { exact: true })).toBeVisible();
   await expect(detail.locator(".replica-gallery-photo-fact")).not.toBeEmpty();
   expect(uploads).toBe(0);
+});
+
+test("カメラ権限が得られなくても下部の追加ボタンを使わず動物選択へ進める", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("Denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  await page.goto("./");
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await expect(page.getByText(/シャッターで動物を選べます/)).toBeVisible();
+  await expect(page.locator(".replica-camera-alternatives")).toHaveCount(0);
+  await page.getByRole("button", { name: "シャッター", exact: true }).click();
+  await expect(page.locator("[data-screen=review]")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "ピツネに見せる", exact: true }),
+  ).toBeDisabled();
 });

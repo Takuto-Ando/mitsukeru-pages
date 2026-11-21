@@ -25,7 +25,6 @@ import { drawCameraFrame, useCameraZoom } from "./camera/zoom";
 
 export function CameraView({
   dopa = false,
-  onCapture,
   onSelect,
   onCollection,
   onSettings,
@@ -35,7 +34,6 @@ export function CameraView({
   onFreeDraw,
 }: {
   dopa?: boolean;
-  onCapture?: () => void;
   suspended?: boolean;
   tutorial?: boolean;
   celebrating?: boolean;
@@ -266,7 +264,6 @@ export function CameraView({
       stopCamera();
       needsResume.current = false;
       setStatus("review");
-      onCapture?.();
       recordStudy(
         "animal_photographed",
         {},

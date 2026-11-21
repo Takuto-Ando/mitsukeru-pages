@@ -19,6 +19,7 @@ import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
 import { FreeDrawScreen } from "../screens/DrawScreen";
 import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
+import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { composeObservationImages } from "../notebook/images";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { drawingEvaluator } from "../domain";
@@ -31,7 +32,6 @@ import {
   ReplicaIntro,
   ReplicaPhotoReview,
   ReplicaResult,
-  giraffeFact,
 } from "./ReplicaScreens";
 import {
   galleryPhotoLocation,
@@ -65,7 +65,11 @@ type Screen =
   | "free";
 
 const tutorialKey = "zooketch-replica-tutorial-v1";
-const introSteps = ["wave", "book", "camera"] as const;
+const introSteps = [
+  { pose: "wave", node: "29-683" },
+  { pose: "book", node: "36-778" },
+  { pose: "camera", node: "38-898" },
+] as const;
 const choiceIds = ["giraffe", "hippo", "meerkat", "fennec", "elephant"];
 const choices = choiceIds.map((id) => groups.find((group) => group.id === id)!);
 
@@ -214,7 +218,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
       taskId: sample ? taskById.giraffe.id : undefined,
       samplePhoto: sample,
       animalName: sample ? "キリン" : undefined,
-      photoDescription: sample ? giraffeFact : undefined,
+      photoDescription: sample ? zooAnimalSummary("giraffe") : undefined,
     };
     activeCapture.current = next.id;
     setRecord(next);
@@ -256,7 +260,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
       groupId: id,
       taskId: tasksForGroup(id)[0]?.id,
       animalName: selected.name,
-      photoDescription: id === "giraffe" ? giraffeFact : selected.fact,
+      photoDescription: zooAnimalSummary(id),
     };
     const captureId = record.id;
     setRecord((current) =>
@@ -329,8 +333,8 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
         groupId: group.id,
         taskId: task.id,
         animalName: group.name,
-        description: task.explanation.ecology || task.explanation.form,
-        photoDescription: group.id === "giraffe" ? giraffeFact : group.fact,
+        description: zooAnimalSummary(group.id),
+        photoDescription: zooAnimalSummary(group.id),
       };
       await saveReplicaRecord(next);
       if (!legacy) enqueueShare(next.id);
@@ -350,11 +354,22 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
 
   const camera = screen === "camera";
   const review = screen === "review" || screen === "cheer";
+  const figmaNodes: Partial<Record<Screen, string>> = {
+    title: "28-100",
+    intro: introSteps[introPage].node,
+    cheer: "52-5335",
+    easel: tutorial ? "38-1056" : "43-1903",
+    challenge: tutorial ? "52-5984" : "66-8272",
+    draw: showHint ? "66-8070" : tutorial ? "43-1966" : "66-7869",
+    result: feedback?.passed ? (tutorial ? "66-8363" : "66-10524") : undefined,
+    tutorial: "43-1269",
+  };
   return (
     <FuriganaProvider enabled={furigana}>
       <div
         className="figma-shell design3-shell replica-app"
         data-screen={screen}
+        data-figma-node={legacy ? undefined : figmaNodes[screen]}
         data-variant={legacy ? "replica" : "product"}
       >
         <main>
@@ -400,7 +415,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
             )}
             {screen === "intro" && (
               <ReplicaIntro
-                pose={introSteps[introPage]}
+                pose={introSteps[introPage].pose}
                 onSkip={
                   legacy
                     ? () => {
@@ -418,6 +433,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
             )}
             {camera && (
               <ReplicaCamera
+                legacy={legacy}
                 tutorial={tutorial}
                 framedExample={framedExample}
                 onCapture={takePhoto}
@@ -446,11 +462,18 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                     saved={records.some((item) => item.id === record?.id)}
                     group={chosen}
                     choices={choices}
+                    figmaFlow={
+                      !legacy && screen === "review"
+                        ? tutorial
+                          ? "tutorial"
+                          : "regular"
+                        : undefined
+                    }
                     onSelect={selectCapturedAnimal}
                     onRetake={retakePhoto}
                     onConfirm={() =>
                       setScreen(
-                        tutorial ? "cheer" : legacy ? "loading" : "challenge",
+                        tutorial ? "cheer" : legacy ? "loading" : "easel",
                       )
                     }
                     canRetake={legacy || !tutorial}
@@ -471,12 +494,15 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                 )}
               </>
             )}
-            {screen === "easel" && (
-              <ReplicaIntro
-                pose="easel"
-                onNext={legacy ? () => setScreen("challenge") : startDrawing}
-              />
-            )}
+            {screen === "easel" &&
+              (tutorial || legacy ? (
+                <ReplicaIntro
+                  pose="easel"
+                  onNext={() => setScreen("challenge")}
+                />
+              ) : (
+                <IntroLoadingScreen onContinue={() => setScreen("challenge")} />
+              ))}
             {screen === "loading" && <IntroLoadingScreen />}
             {screen === "challenge" && (
               <ChallengeIntro

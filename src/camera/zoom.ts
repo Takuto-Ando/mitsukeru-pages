@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { cameraWindow } from "../recognition/liveBoxes";
 
 type Zoom = 0.5 | 1 | 2;
 type ZoomCapabilities = MediaTrackCapabilities & {
@@ -62,25 +63,32 @@ export function drawCameraFrame(
   source: HTMLVideoElement | HTMLImageElement,
   maxSize: number,
   digital: number,
+  ratio?: readonly [width: number, height: number],
 ) {
   const video = source instanceof HTMLVideoElement;
   const sourceWidth = video ? source.videoWidth : source.naturalWidth;
   const sourceHeight = video ? source.videoHeight : source.naturalHeight;
   if (!sourceWidth || !sourceHeight) return;
-  const width = sourceWidth / digital;
-  const height = sourceHeight / digital;
-  const scale = Math.min(1, maxSize / Math.max(width, height));
+  const aspect = ratio ? ratio[0] / ratio[1] : sourceWidth / sourceHeight;
+  const crop = cameraWindow(sourceWidth, sourceHeight, aspect, digital);
+  const scale = Math.min(1, maxSize / Math.max(crop.width, crop.height));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(width * scale);
-  canvas.height = Math.round(height * scale);
+  if (ratio) {
+    const units = Math.max(1, Math.floor((crop.width * scale) / ratio[0]));
+    canvas.width = units * ratio[0];
+    canvas.height = units * ratio[1];
+  } else {
+    canvas.width = Math.round(crop.width * scale);
+    canvas.height = Math.round(crop.height * scale);
+  }
   const context = canvas.getContext("2d");
   if (!context) return;
   context.drawImage(
     source,
-    (sourceWidth - width) / 2,
-    (sourceHeight - height) / 2,
-    width,
-    height,
+    crop.x,
+    crop.y,
+    crop.width,
+    crop.height,
     0,
     0,
     canvas.width,

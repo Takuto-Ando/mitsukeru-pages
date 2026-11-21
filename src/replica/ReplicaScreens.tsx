@@ -1,3 +1,5 @@
+import { ZooCardSummary } from "../components/ZooCardSummary";
+import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering, tutorialLines } from "../components/CardLettering";
 import { CircleHelp } from "lucide-react";
 import { useId, useRef, useState } from "react";
@@ -202,7 +204,7 @@ export function ReplicaResult({
   onConfirm: () => void;
   onDone: () => void;
 }) {
-  const fact = task.explanation.ecology || task.explanation.form;
+  const fact = zooAnimalSummary(group.id, task.id);
 
   return (
     <section className="design3-result">
@@ -235,7 +237,9 @@ export function ReplicaResult({
         animateDrawingFor={task.id}
         showReplay={false}
         viewport={designCardViewport(task.scene)}
-        cardFooter={<p className="result-fact">{fact}</p>}
+        cardFooter={
+          fact && <ZooCardSummary className="result-fact" text={fact} />
+        }
         afterCard={
           <div className="drawing-actions result-actions">
             <button
@@ -281,9 +285,6 @@ export function ReplicaResult({
   );
 }
 
-export const giraffeFact =
-  "キリンはアフリカのサバンナにすんでいるよ。今いる動物の中で一番背が高く、オスは5m以上になることもあるんだ。長い首を使って高い木の葉っぱを食べたり、遠くにいる敵を見つけたりするよ。実は、首の骨の数は人間と同じ7個なんだ！";
-
 export function ReplicaPhotoReview({
   photo,
   sample,
@@ -292,6 +293,7 @@ export function ReplicaPhotoReview({
   saved,
   group,
   choices,
+  figmaFlow,
   onSelect,
   onRetake,
   canRetake = true,
@@ -304,6 +306,7 @@ export function ReplicaPhotoReview({
   saved: boolean;
   group?: ObservationGroup;
   choices: ObservationGroup[];
+  figmaFlow?: "tutorial" | "regular";
   onSelect: (id: string) => void;
   onRetake: () => void;
   canRetake?: boolean;
@@ -312,6 +315,11 @@ export function ReplicaPhotoReview({
   const [editing, setEditing] = useState(false);
   const edit = useRef<HTMLButtonElement>(null);
   const optionsId = useId();
+  const reviewNodes =
+    figmaFlow === "tutorial"
+      ? { success: "43-1815", unknown: "52-5265", edit: "63-6420" }
+      : { success: "66-7554", unknown: "66-7655", edit: "66-7604" };
+  const fact = zooAnimalSummary(group?.id);
   const photoHeading = photo
     ? saved
       ? "写真をアルバムに保存しました。"
@@ -322,6 +330,11 @@ export function ReplicaPhotoReview({
   return (
     <section
       className="design3-photo-review"
+      data-figma-node={
+        figmaFlow
+          ? reviewNodes[editing ? "edit" : group ? "success" : "unknown"]
+          : undefined
+      }
       aria-labelledby="replica-photo-heading"
     >
       <h1 id="replica-photo-heading">
@@ -421,16 +434,7 @@ export function ReplicaPhotoReview({
             </div>
           )}
         </div>
-        <p className="design3-photo-fact">
-          {group?.id === "giraffe" ? (
-            <CardLettering
-              src={assetPath("replica-assets/review-description.svg")}
-              text={giraffeFact}
-            />
-          ) : (
-            (group?.fact ?? "？？？？？")
-          )}
-        </p>
+        {fact && <ZooCardSummary className="design3-photo-fact" text={fact} />}
       </article>
       <div className="design3-actions">
         <button

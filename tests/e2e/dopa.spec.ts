@@ -52,17 +52,13 @@ async function drawPupil(page: Page) {
   await page.mouse.up();
 }
 
-test("ドパガキ版のXP表示と消音設定が再読み込み後も残る", async ({ page }) => {
+test("ドパガキ版のXP表示を保ち、設定に効果音がない", async ({ page }) => {
   await page.goto("dopa/");
   await expect(page.locator(".dopa-bar")).toContainText("あと 40 XP");
   await page.getByRole("button", { name: "設定", exact: true }).click();
-  await page.getByRole("button", { name: "効果音 ON", exact: true }).click();
+  await expect(page.getByRole("button", { name: /効果音/ })).toHaveCount(0);
   await page.reload();
   await expect(page.locator(".dopa-bar")).toContainText("あと 40 XP");
-  await page.getByRole("button", { name: "設定", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "効果音 OFF", exact: true }),
-  ).toBeVisible();
 });
 
 test("10筆で5 XP、合格で50 XP、新規保存で30 XPとレベルアップ", async ({

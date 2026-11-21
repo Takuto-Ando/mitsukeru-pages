@@ -2,6 +2,18 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "./fixtures";
 
 test.skip(process.env.VITE_LEGACY_EDITIONS === "1", "Figma v2の本体専用");
+test.use({ serviceWorkers: "block" });
+test.beforeEach(async ({ page }) => {
+  // A controlling worker can bypass Playwright routes in WebKit.
+  await page.addInitScript(() => {
+    if (navigator.serviceWorker) {
+      Object.defineProperty(navigator.serviceWorker, "register", {
+        configurable: true,
+        value: () => Promise.reject(new Error("Disabled for model routing")),
+      });
+    }
+  });
+});
 
 const sample =
   "data:image/png;base64," +
@@ -11,12 +23,13 @@ function button(page: Page, name: string) {
   return page.getByRole("button", { name, exact: true });
 }
 
-test("撮影画面でライブ検出を自動で準備し、通信失敗から再試行できる", async ({
+test("撮影画面でライブ検出を自動で準備し、失敗時も操作なしで再試行する", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.addInitScript((photo) => {
     localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+    localStorage.setItem("zooketch-live-detection-v1", "0");
     const image = new Image();
     image.src = photo;
     const track = { stop() {} };
@@ -44,30 +57,43 @@ test("撮影画面でライブ検出を自動で準備し、通信失敗から�
     };
   }, sample);
   let requests = 0;
-  let fail = true;
   await page.route("**/models/yolox*.onnx", async (route) => {
-    requests++;
-    if (fail) await route.abort();
+    if (++requests === 1) await route.abort();
     else await route.continue();
   });
 
   await page.goto("./");
   await button(page, "はじめから").click();
-  const retry = button(page, "ライブ検出を再準備");
-  await expect(retry).toBeInViewport();
-  await expect(button(page, "シャッター")).toBeInViewport();
-  expect(requests).toBeGreaterThan(0);
-  fail = false;
-  await retry.click();
+  const camera = page.locator(".replica-camera");
+  await expect(camera).toHaveAttribute("data-figma-node", "38-1026");
+  const shutter = button(page, "シャッター");
+  await expect(shutter).toBeInViewport();
+  await expect(camera.getByRole("button", { name: /ライブ検出/ })).toHaveCount(
+    0,
+  );
+  await expect(camera.locator(".replica-camera-alternatives")).toHaveCount(0);
   const box = page
     .locator(".live-animal-box")
     .filter({ hasText: "キリンの候補" })
     .first();
   await expect(box).toBeVisible({ timeout: 15_000 });
-  await button(page, "ライブ検出 ON").click();
-  await expect(box).toHaveCount(0);
-  await button(page, "ライブ検出 OFF").click();
-  await expect(box).toBeVisible({ timeout: 15_000 });
+  await expect(camera).toHaveAttribute("data-figma-node", "43-1494");
+  expect(requests).toBeGreaterThanOrEqual(2);
+
+  const middle = shutter.locator(".shutter-center");
+  const color = await middle.evaluate(
+    (element) => getComputedStyle(element).fill,
+  );
+  const bounds = (await shutter.boundingBox())!;
+  await page.mouse.move(
+    bounds.x + bounds.width / 2,
+    bounds.y + bounds.height / 2,
+  );
+  await page.mouse.down();
+  await expect(middle).toHaveCSS("opacity", "0.5");
+  await expect(middle).toHaveCSS("fill", color);
+  await page.mouse.move(0, 0);
+  await page.mouse.up();
 });
 
 test("チュートリアルで写真認識を事前に準備し、撮影画面で通信中を表示する", async ({
@@ -96,8 +122,8 @@ test("チュートリアルで写真認識を事前に準備し、撮影画面�
     await button(page, "やってみる！").click();
     await button(page, "撮ってみる！").click();
     await expect(
-      page.getByText("画像認識モデルをダウンロード中…", { exact: true }),
-    ).toBeVisible();
+      page.locator(".camera-frame .replica-camera-model-status"),
+    ).toHaveText("画像認識モデルをダウンロード中…");
     await expect(button(page, "シャッター")).toBeEnabled();
   } finally {
     releaseRequest();

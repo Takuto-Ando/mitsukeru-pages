@@ -5,18 +5,19 @@ import { loadReplicaRecord } from "../replica/storage";
 import { taskById } from "../content/tasks";
 import type { ObservationRecord } from "../notebook/types";
 
-// お客さんの絵を研究用に自動送信する仕組み（Google Apps Script 経由で
-// Googleドライブへ集める）。既定はOFF。保護者の同意（設定でON）にした
-// 端末からだけ、保存のたびにキューへ入り、オンライン時に送信される。
+// The study server supplies its own relay. Its pending sketches are kept apart
+// from sketches submitted from users' ordinary sharing settings.
 const CONFIG_KEY = "zooketch-share-v1";
-const QUEUE_KEY = "zooketch-share-queue-v1";
-const localRelay =
+export const automaticStudyShare =
   import.meta.env.DEV && import.meta.env.VITE_LOCAL_SHARE_CONSENT === "1";
+const QUEUE_KEY = automaticStudyShare
+  ? "zooketch-study-share-queue-v1"
+  : "zooketch-share-queue-v1";
 
 function defaultConfig(): ShareConfig {
   return {
-    consent: localRelay,
-    endpoint: localRelay
+    consent: automaticStudyShare,
+    endpoint: automaticStudyShare
       ? import.meta.env.BASE_URL + "__zooketch-test-share"
       : "",
     token: "",
@@ -30,6 +31,7 @@ export type ShareConfig = {
 };
 
 export function loadShareConfig(): ShareConfig {
+  if (automaticStudyShare) return defaultConfig();
   try {
     const raw = JSON.parse(
       localStorage.getItem(CONFIG_KEY) ?? "null",
@@ -193,7 +195,7 @@ export async function flushShareQueue(): Promise<number> {
             break;
           // Apps Script allows the request but does not expose its result to the browser.
           const relay =
-            localRelay && active.endpoint === defaultConfig().endpoint;
+            automaticStudyShare && active.endpoint === defaultConfig().endpoint;
           const response = await fetch(active.endpoint, {
             method: "POST",
             mode: relay ? "same-origin" : "no-cors",

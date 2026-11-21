@@ -1758,10 +1758,10 @@ test("スケッチ中に設定を開閉しても筆跡・Undo・キーボード�
   await draw(page);
   await expect(page.getByRole("button", { name: "できた！" })).toBeEnabled();
   await openSettings(page);
-  await page.getByRole("button", { name: "効果音 OFF", exact: true }).click();
+  await page.getByRole("button", { name: "ふりがな ON", exact: true }).click();
   await expect(
-    page.getByRole("button", { name: "効果音 ON", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+    page.getByRole("button", { name: "ふりがな OFF", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
   await page.screenshot({
     path: "test-results/settings-mobile.png",
     fullPage: true,

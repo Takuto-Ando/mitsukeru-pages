@@ -99,14 +99,12 @@ export function HomeScreen({
           className="design3-continue"
           disabled
           aria-label="つづきから"
-          aria-describedby="continue-google-note"
         >
           <img
             className="design3-title-resume-lettering"
             alt=""
             src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
           />
-          <small id="continue-google-note">Google連携（準備中）</small>
         </button>
         {dopaMode && <DopaBar />}
       </div>
