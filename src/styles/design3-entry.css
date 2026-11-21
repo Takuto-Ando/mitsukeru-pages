@@ -502,8 +502,10 @@
 }
 
 .design3-title-actions .design3-continue:disabled {
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   opacity: 0.5;
   cursor: default;
 }

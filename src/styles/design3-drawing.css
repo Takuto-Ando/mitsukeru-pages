@@ -945,3 +945,16 @@
   border-color: #7fa845;
   background: #eef6df;
 }
+
+.brush-width-preview {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 100;
+  width: var(--preview-diameter);
+  height: var(--preview-diameter);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--preview-ink);
+  opacity: 0.6;
+  pointer-events: none;
+}

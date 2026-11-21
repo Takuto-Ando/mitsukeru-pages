@@ -8,6 +8,7 @@ import {
 } from "../recognition/useLiveDetection";
 import { CardLettering } from "../components/CardLettering";
 import { useEffect, useRef, useState } from "react";
+import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
 import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
@@ -46,7 +47,7 @@ export function ReplicaCamera({
 }) {
   useModelPreload({ allowMetered: true });
   const photoModelDownloading = usePhotoModelDownloading();
-  const [sample, setSample] = useState(tutorial || framedExample);
+  const [sample, setSample] = useState((legacy && tutorial) || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
   const [sampleReady, setSampleReady] = useState(false);
   const [sampleUnavailable, setSampleUnavailable] = useState(false);
@@ -176,11 +177,19 @@ export function ReplicaCamera({
       if (element) element.srcObject = null;
       setStreamReady(false);
     }
+    function cameraFailed(message: string) {
+      if (tutorial && !legacy) {
+        setSample(true);
+      } else {
+        setCameraUnavailable(true);
+      }
+      setMessage(message);
+    }
+
     async function startCamera() {
       setCameraUnavailable(false);
       if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraUnavailable(true);
-        setMessage("この端末ではカメラを開けません。");
+        cameraFailed("この端末ではカメラを開けません。");
         return;
       }
       try {
@@ -203,8 +212,7 @@ export function ReplicaCamera({
       } catch {
         if (!active) return;
         stopCamera();
-        setCameraUnavailable(true);
-        setMessage("カメラを開けませんでした。");
+        cameraFailed("カメラを開けませんでした。");
       }
     }
     void startCamera();
@@ -212,7 +220,7 @@ export function ReplicaCamera({
       active = false;
       stopCamera();
     };
-  }, [menuOpen, requestNumber, sample, suspended, visible]);
+  }, [legacy, menuOpen, requestNumber, sample, suspended, tutorial, visible]);
 
   useEffect(() => {
     if (menuOpen) menu.current?.showModal();
@@ -300,7 +308,7 @@ export function ReplicaCamera({
               alt="キリンがいるよ！"
             />
           ) : !legacy && recognized ? (
-            <span>{live.boxes[0]?.label}かな？</span>
+            <BubbleLine text={`${live.boxes[0]?.label ?? ""}かな？`} />
           ) : (
             <CardLettering
               className="camera-prompt-art"

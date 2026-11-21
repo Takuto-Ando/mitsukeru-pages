@@ -1,5 +1,8 @@
 import { ZooCardSummary } from "../components/ZooCardSummary";
-import { zooAnimalIdByName, zooAnimalSummary } from "../content/zooAnimalSummaries";
+import {
+  zooAnimalIdByName,
+  zooAnimalSummary,
+} from "../content/zooAnimalSummaries";
 import type { Stroke } from "../types";
 import { CardLettering } from "../components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
@@ -73,7 +76,10 @@ function Sketch({ entry }: { entry: ReplicaRecord }) {
 function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
   const task = entry.taskId ? taskById[entry.taskId] : undefined;
   const summary = zooAnimalSummary(
-    entry.groupId ?? task?.groupId ?? zooAnimalIdByName(entry.animalName) ?? (entry.samplePhoto ? "giraffe" : undefined),
+    entry.groupId ??
+      task?.groupId ??
+      zooAnimalIdByName(entry.animalName) ??
+      (entry.samplePhoto ? "giraffe" : undefined),
     tab === "sketch" ? task?.id : undefined,
   );
   if (tab === "sketch") {
@@ -136,7 +142,12 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
             </p>
           </div>
         </div>
-        {summary && <ZooCardSummary className="replica-gallery-photo-fact" text={summary} />}
+        {summary && (
+          <ZooCardSummary
+            className="replica-gallery-photo-fact"
+            text={summary}
+          />
+        )}
       </article>
     </div>
   );
@@ -144,10 +155,12 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
 
 export function ReplicaGallery({
   records,
+  legacy = false,
   onBack,
   onCamera,
 }: {
   records: ReplicaRecord[];
+  legacy?: boolean;
   onBack: () => void;
   onCamera: () => void;
 }) {
@@ -158,9 +171,11 @@ export function ReplicaGallery({
   const [tab, setTab] = useState<GalleryTab>("sketch");
   const [selected, setSelected] = useState<string>();
   const entries = records
-    .filter((entry) => !!entry[tab])
+    .filter((entry) => (legacy ? !!entry[tab] : !!entry.sketch))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const activeEntry = entries.find((entry) => entry.id === selected);
+  const activeEntry = entries.find(
+    (entry) => entry.id === selected && !!entry[tab],
+  );
 
   useEffect(() => {
     const modal = dialog.current;
@@ -245,42 +260,52 @@ export function ReplicaGallery({
           aria-labelledby={`${id}-${tab}-tab`}
         >
           <div className="collection-grid">
-            {entries.map((entry) => (
-              <article
-                className="collection-card"
-                data-photo-sparkle={
-                  tab === "photo" && entry.animalName === "キリン"
-                    ? true
-                    : undefined
-                }
-                key={entry.id}
-              >
-                <button
-                  className="collection-open"
-                  type="button"
-                  onClick={() => setSelected(entry.id)}
-                  aria-label={`${entry.animalName ?? "動物"}の${tabs[tab]}を見る`}
+            {entries.map((entry) =>
+              entry[tab] ? (
+                <article
+                  className="collection-card"
+                  data-photo-sparkle={
+                    tab === "photo" && entry.animalName === "キリン"
+                      ? true
+                      : undefined
+                  }
+                  key={entry.id}
+                  data-record-id={entry.id}
                 >
-                  {tab === "sketch" ? (
-                    <Sketch entry={entry} />
-                  ) : (
-                    <img
-                      className="replica-photo-tile"
-                      data-sample={entry.samplePhoto || undefined}
-                      src={entry.photo}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  )}
-                </button>
-              </article>
-            ))}
+                  <button
+                    className="collection-open"
+                    type="button"
+                    onClick={() => setSelected(entry.id)}
+                    aria-label={`${entry.animalName ?? "動物"}の${tabs[tab]}を見る`}
+                  >
+                    {tab === "sketch" ? (
+                      <Sketch entry={entry} />
+                    ) : (
+                      <img
+                        className="replica-photo-tile"
+                        data-sample={entry.samplePhoto || undefined}
+                        src={entry.photo}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    )}
+                  </button>
+                </article>
+              ) : (
+                <div
+                  className="gallery-slot"
+                  data-record-id={entry.id}
+                  aria-hidden="true"
+                  key={entry.id}
+                />
+              ),
+            )}
             {Array.from({ length: Math.max(0, 6 - entries.length) }, (_, i) => (
               <div className="gallery-slot" aria-hidden="true" key={i} />
             ))}
           </div>
-          {!entries.length && (
+          {!entries.some((entry) => entry[tab]) && (
             <p className="sr-only">{tabs[tab]}はまだありません。</p>
           )}
         </div>

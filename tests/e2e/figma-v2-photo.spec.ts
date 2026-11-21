@@ -1,47 +1,55 @@
+import { taskById } from "../../src/content/tasks";
 import { expect, test, type Page } from "./fixtures";
 
-async function savedPhoto(page: Page) {
-  return page.evaluate(async () => {
+const galleryDatabase = "zooketch-figma-replica";
+
+async function savedObservations(page: Page) {
+  return page.evaluate(async (name) => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open("zooketch-figma-replica");
+      const request = indexedDB.open(name);
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
     try {
-      return await new Promise<{
-        photo?: string;
-        groupId?: string;
-        taskId?: string;
-        photoLocation?: string;
-        sketch?: string;
-      } | null>((resolve, reject) => {
-        if (!database.objectStoreNames.contains("gallery")) {
-          resolve(null);
-          return;
-        }
+      return await new Promise<
+        {
+          id: string;
+          photo?: string;
+          groupId?: string;
+          taskId?: string;
+          photoLocation?: string;
+          sketch?: string;
+        }[]
+      >((resolve, reject) => {
         const request = database
           .transaction("gallery")
           .objectStore("gallery")
           .getAll();
-        request.onsuccess = () => resolve(request.result[0] ?? null);
+        request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
     } finally {
       database.close();
     }
-  });
+  }, galleryDatabase);
 }
 
-test("撮影直後に端末に保存し、動物の選択を写真の詳細に反映する", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    localStorage.setItem("zooketch-replica-tutorial-v1", "1");
+function button(page: Page, name: string) {
+  return page.getByRole("button", { name, exact: true });
+}
+
+async function useTestCamera(page: Page, completedTutorial: boolean) {
+  await page.addInitScript((completed) => {
+    if (completed) localStorage.setItem("zooketch-replica-tutorial-v1", "1");
     const track = { stop() {} };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
-        getUserMedia: async () => ({ getTracks: () => [track] }),
+        getUserMedia: async (constraints: MediaStreamConstraints) => {
+          document.documentElement.dataset.cameraRequested =
+            JSON.stringify(constraints);
+          return { getTracks: () => [track], getVideoTracks: () => [track] };
+        },
       },
     });
     Object.defineProperties(HTMLVideoElement.prototype, {
@@ -67,30 +75,57 @@ test("撮影直後に端末に保存し、動物の選択を写真の詳細に�
       }
       return drawImage.apply(this, args);
     };
-  });
+  }, completedTutorial);
+}
+
+async function chooseAnimal(page: Page, name: string) {
+  await button(page, "修正").click();
+  await button(page, name).click();
+}
+
+async function drawGiraffeTongue(page: Page) {
+  const canvas = page.getByTestId("canvas");
+  await expect(canvas).toBeVisible();
+  const bounds = (await canvas.boundingBox())!;
+  const region = taskById.giraffe.scene.regions[0];
+  for (let index = 0; index <= 20; index++) {
+    const t = index / 20;
+    await page.mouse.move(
+      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
+      bounds.y +
+        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
+          bounds.height,
+    );
+    if (!index) await page.mouse.down();
+  }
+  await page.mouse.up();
+}
+
+test("写真は撮影直後に端末へ保存し、スケッチ完了時に同じ位置へ並べる", async ({
+  page,
+}) => {
+  await useTestCamera(page, true);
   let uploads = 0;
   await page.route("https://script.google.com/macros/**", (route) => {
     uploads++;
     return route.abort();
   });
-  const start = () =>
-    page.getByRole("button", { name: "はじめから", exact: true });
-  const shutter = page.getByRole("button", { name: "シャッター", exact: true });
-  const gallery = page.getByRole("button", { name: "ギャラリー", exact: true });
-  const enterCamera = async () => {
-    await expect(start().or(gallery).first()).toBeVisible();
-    if (await start().isVisible()) await start().click();
+  const gallery = button(page, "ギャラリー");
+  const openCamera = async () => {
+    const start = button(page, "はじめから");
+    await expect(start.or(gallery).first()).toBeVisible();
+    if (await start.isVisible()) await start.click();
   };
   await page.goto("./");
-  await enterCamera();
-  await shutter.click();
+  await openCamera();
+  await button(page, "シャッター").click();
   const reviewImage = page.getByRole("img", { name: "撮影した動物の写真" });
   await expect(reviewImage).toBeVisible();
   await expect(reviewImage).toHaveCSS("aspect-ratio", "4 / 5");
   await expect
-    .poll(async () => (await savedPhoto(page))?.photo)
+    .poll(async () => (await savedObservations(page))[0]?.photo)
     .toMatch(/^data:image\/jpeg/);
-  const jpeg = (await savedPhoto(page))!.photo!;
+  const jpeg = (await savedObservations(page))[0].photo!;
   const storedRatio = await page.evaluate(async (source) => {
     const image = new Image();
     image.src = source;
@@ -99,63 +134,146 @@ test("撮影直後に端末に保存し、動物の選択を写真の詳細に�
   }, jpeg);
   expect(storedRatio).toBe(4 / 5);
 
-  const choose = async (name: string) => {
-    await page.getByRole("button", { name: "修正", exact: true }).click();
-    await page.getByRole("button", { name, exact: true }).click();
-  };
-  await choose("キリン");
-  await choose("カバ");
+  await chooseAnimal(page, "キリン");
+  await chooseAnimal(page, "カバ");
   await expect
-    .poll(() => savedPhoto(page))
-    .toMatchObject({
-      groupId: "hippo",
-      taskId: "hippo",
-      photoLocation: "京都市動物園",
-    });
-  expect((await savedPhoto(page))?.sketch).toBeUndefined();
+    .poll(() => savedObservations(page))
+    .toMatchObject([
+      { groupId: "hippo", taskId: "hippo", photoLocation: "京都市動物園" },
+    ]);
+  expect((await savedObservations(page))[0].sketch).toBeUndefined();
 
-  await page
-    .getByRole("button", { name: "ピツネに見せる", exact: true })
-    .click();
+  await page.reload();
+  await openCamera();
+  await gallery.click();
+  const photos = page.getByRole("tab", { name: "写真", exact: true });
+  await photos.click();
+  await expect(button(page, "カバの写真を見る")).toHaveCount(0);
+
+  await button(page, "写真を撮る").click();
+  await button(page, "シャッター").click();
+  await chooseAnimal(page, "キリン");
+  await button(page, "ピツネに見せる").click();
   await expect(page.locator("[data-screen=easel]")).toHaveAttribute(
     "data-figma-node",
     "43-1903",
   );
-  await page
-    .getByRole("button", {
-      name: "スケッチの準備を確認してつぎへ",
-      exact: true,
-    })
-    .click();
+  await button(page, "スケッチの準備を確認してつぎへ").click();
   await expect(page.locator("[data-screen=challenge]")).toHaveAttribute(
     "data-figma-node",
     "66-8272",
   );
   await expect(page.getByRole("img", { name: /^難易度/ })).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "描きはじめる", exact: true }),
-  ).toHaveCount(0);
-  await page
-    .getByRole("button", { name: "課題を確認してつぎへ", exact: true })
-    .click();
-  await expect(page.getByTestId("canvas")).toBeVisible();
+  await expect(button(page, "描きはじめる")).toHaveCount(0);
+  await button(page, "課題を確認してつぎへ").click();
+  await drawGiraffeTongue(page);
+  await button(page, "できた！").click();
+  await expect
+    .poll(async () =>
+      (await savedObservations(page)).find((item) => !!item.sketch),
+    )
+    .toMatchObject({
+      groupId: "giraffe",
+      taskId: "giraffe",
+      sketch: /^data:image\/png/,
+      photo: /^data:image\/jpeg/,
+    });
+
+  const completed = (await savedObservations(page)).find(
+    (item) => item.sketch,
+  )!;
+  await page.evaluate(
+    async ({ databaseName, sketch }) => {
+      const database = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const write = database.transaction("gallery", "readwrite");
+          write.objectStore("gallery").put({
+            id: "sketch-only",
+            createdAt: new Date(Date.now() + 60_000).toISOString(),
+            groupId: "goat",
+            taskId: "goat",
+            animalName: "ヤギ",
+            sketch,
+          });
+          write.oncomplete = () => resolve();
+          write.onerror = () => reject(write.error);
+        });
+      } finally {
+        database.close();
+      }
+    },
+    { databaseName: galleryDatabase, sketch: completed.sketch },
+  );
 
   await page.reload();
-  await enterCamera();
+  await openCamera();
   await gallery.click();
-  await page.getByRole("tab", { name: "写真", exact: true }).click();
-  await page
-    .getByRole("button", { name: "カバの写真を見る", exact: true })
-    .click();
-  const detail = page.getByRole("dialog", { name: "カバの写真", exact: true });
+  const slots = page.locator(".collection-grid [data-record-id]");
+  const slotIds = () =>
+    slots.evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-record-id")),
+    );
+  await expect(button(page, "キリンのスケッチを見る")).toBeVisible();
+  expect(await slotIds()).toEqual(["sketch-only", completed.id]);
+  await photos.click();
+  await expect(slots.first()).toHaveClass("gallery-slot");
+  expect(await slotIds()).toEqual(["sketch-only", completed.id]);
+  await expect(button(page, "カバの写真を見る")).toHaveCount(0);
+  await button(page, "キリンの写真を見る").click();
+  const detail = page.getByRole("dialog", {
+    name: "キリンの写真",
+    exact: true,
+  });
   const detailImage = detail.getByRole("img", { name: "撮影した写真" });
   await expect(detailImage).toBeVisible();
   await expect(detailImage).toHaveCSS("aspect-ratio", "4 / 5");
-  await expect(detail.getByRole("heading", { name: "カバ" })).toBeVisible();
+  await expect(detail.getByRole("heading", { name: "キリン" })).toBeVisible();
   await expect(detail.locator("time")).toHaveAttribute("datetime", /^\d{4}-/);
   await expect(detail.getByText("京都市動物園", { exact: true })).toBeVisible();
   await expect(detail.locator(".replica-gallery-photo-fact")).not.toBeEmpty();
   expect(uploads).toBe(0);
+});
+
+test("チュートリアルでも背面カメラで撮り、認識の案内と写真の保存を確認できる", async ({
+  page,
+}) => {
+  await useTestCamera(page, false);
+  await page.goto("./");
+  for (const name of [
+    "はじめから",
+    "こんにちは！",
+    "やってみる！",
+    "撮ってみる！",
+  ])
+    await button(page, name).click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-camera-requested",
+    /"facingMode":{"ideal":"environment"}/,
+  );
+  await expect(button(page, "ギャラリー")).toBeDisabled();
+  await button(page, "シャッター").click();
+  await expect(
+    page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
+  ).toBeVisible();
+  await expect(button(page, "撮りなおす")).toBeDisabled();
+  await expect(
+    page.getByText(
+      /画像認識を利用できませんでした。動物の名前を選んでください。/,
+    ),
+  ).toBeVisible();
+  await chooseAnimal(page, "キリン");
+  await expect
+    .poll(() => savedObservations(page))
+    .toMatchObject([
+      { groupId: "giraffe", taskId: "giraffe", photo: /^data:image\/jpeg/ },
+    ]);
+  await expect(page.locator("[data-screen=review]")).toBeVisible();
+  await expect(button(page, "ピツネに見せる")).toBeEnabled();
 });
 
 test("カメラ権限が得られなくても下部の追加ボタンを使わず動物選択へ進める", async ({
@@ -173,12 +291,10 @@ test("カメラ権限が得られなくても下部の追加ボタンを使わ�
     });
   });
   await page.goto("./");
-  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await button(page, "はじめから").click();
   await expect(page.getByText(/シャッターで動物を選べます/)).toBeVisible();
   await expect(page.locator(".replica-camera-alternatives")).toHaveCount(0);
-  await page.getByRole("button", { name: "シャッター", exact: true }).click();
+  await button(page, "シャッター").click();
   await expect(page.locator("[data-screen=review]")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "ピツネに見せる", exact: true }),
-  ).toBeDisabled();
+  await expect(button(page, "ピツネに見せる")).toBeDisabled();
 });

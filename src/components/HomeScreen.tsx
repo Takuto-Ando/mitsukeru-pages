@@ -95,11 +95,14 @@ export function HomeScreen({
             src={assetPath("illustrations/pdf-design/entry-title-start.svg")}
           />
         </button>
-        <button
-          className="design3-continue"
-          disabled
-          aria-label="つづきから"
-        >
+        <button className="design3-continue" disabled aria-label="つづきから">
+          <img
+            className="design3-title-resume-mark"
+            alt=""
+            src={assetPath("figma/entry/google-g.svg")}
+            width={19.2164}
+            height={19.2164}
+          />
           <img
             className="design3-title-resume-lettering"
             alt=""

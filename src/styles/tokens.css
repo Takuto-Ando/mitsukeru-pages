@@ -2,13 +2,13 @@
    Semantic tokens can map directly to future Figma variables. */
 @font-face {
   font-family: "Zen Maru Gothic";
-  src: url("../../public/fonts/ZenMaruGothic-Medium.woff2") format("woff2");
+  src: url("/fonts/ZenMaruGothic-Medium.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
 }
 @font-face {
   font-family: "Zen Maru Gothic";
-  src: url("../../public/fonts/ZenMaruGothic-Bold.woff2") format("woff2");
+  src: url("/fonts/ZenMaruGothic-Bold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
@@ -45,4 +45,8 @@
   color: var(--color-ink);
   background: var(--color-paper);
   font-synthesis: none;
+}
+
+:where(button, input, select, textarea, optgroup, option, output) {
+  font-family: inherit;
 }

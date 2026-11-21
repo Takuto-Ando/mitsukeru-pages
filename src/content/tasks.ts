@@ -1,3 +1,4 @@
+import { applySketchDesign } from "./sketchPresentation";
 import { hasFeatureRule } from "../profileEvaluator";
 import { featureCues } from "./featureCues";
 import { materialTasks } from "./materialTasks";
@@ -342,26 +343,10 @@ for (const task of tasks) {
   if (layout.answerPath) task.scene.answerPath = layout.answerPath;
 }
 
-// Keep the established mouth anchor and 600px frame for existing drafts.
-const pdfGiraffe = tasks.find((task) => task.id === "giraffe");
-if (pdfGiraffe) {
-  const base = "illustrations/pdf-design/giraffe";
-  pdfGiraffe.scene.artworkOverride = {
-    status: "draft",
-    alt: pdfGiraffe.scene.label,
-    incomplete: base + ".svg",
-    completedBase: base + ".svg",
-    reference: base + "-complete.svg",
-    answer: base + "-complete.svg",
-    explanation: base + "-complete.svg",
-    blankFill: "transparent",
-    maskInApp: true,
-    credit: "提供されたデザインPDFの28・30ページのイラスト",
-  };
-  pdfGiraffe.scene.answerAsset = base + "-complete.svg";
-}
-
 tasks.push(...kyotoDraftTasks);
+for (const task of tasks) {
+  task.scene = applySketchDesign(task.id, task.scene);
+}
 export const taskById = Object.fromEntries(tasks.map((t) => [t.id, t]));
 export const tasksForGroup = (id: string) =>
   tasks.filter((t) => t.groupId === id);

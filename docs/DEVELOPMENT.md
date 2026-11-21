@@ -112,3 +112,13 @@ VITE_LEGACY_EDITIONS=1 npm run build
 ```
 
 Figma書き出しで確認した画面接続と削除候補は [FIGMA_V2_SCOPE.md](FIGMA_V2_SCOPE.md) に記載しています。
+
+## スケッチイラストの追加・差し替え
+
+1. `public/illustrations/` に未完成・完成イラストを同じ座標系で配置する。
+2. `src/content/sketchPresentation.ts` の `designs` に課題 ID を追加する。`artwork` で各画像を指定し、必要に応じて `geometry` で座標枠 `frameHeight`、正規化した描画領域 `regions` とマスク `maskHoles`、お手本 `answerAsset` を上書きし、`viewport` でカード表示範囲を指定する。既存課題の座標を変える場合は、保存済みの線と新素材が合うか確認する。
+3. 完成時の動きは `motion.kind` に既存のアニメーション、`motion.origin` にシーン上の支点を指定する。省略時は `src/content/celebrations.ts` の課題別設定を使用する。ペン色は `sketchPresentation.ts` の `colors` で動物グループごとに設定する。
+
+撮影した写真は撮影時に IndexedDB へ保存される。マイギャラリーではスケッチ完了後に同じ記録が写真タブとスケッチタブの同じ位置に並ぶ。
+
+Zen Maru Gothic（Medium・Bold）は [Google Fonts の公式ソース](https://github.com/google/fonts/tree/main/ofl/zenmarugothic) を WOFF2 に変換して配信しています。ライセンスは `public/fonts/OFL.txt` を参照してください。

@@ -10,6 +10,19 @@ export default defineConfig(({ mode }) => ({
   base: process.env.VITE_BASE_PATH || "/",
   plugins: [
     react({ jsxImportSource: "@zooketch/ruby" }),
+    {
+      name: "zooketch-shared-ruby-context",
+      enforce: "post",
+      config(config) {
+        // React's plugin includes its JSX source in dependency optimization.
+        // Keep our source wrapper in the app graph to share its React context.
+        const deps = config.optimizeDeps;
+        if (deps?.include)
+          deps.include = deps.include.filter(
+            (id) => !id.startsWith("@zooketch/ruby/"),
+          );
+      },
+    },
     offlinePlugin(legacy),
     localShareRelay(),
   ],

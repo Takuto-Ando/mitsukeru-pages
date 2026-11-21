@@ -985,3 +985,43 @@ body:has(.design3-shell) {
   gap: 6px;
   margin-block: 8px;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .design3-photo-card[data-photo-shine]::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 18px 4px #fff,
+      0 0 18px 5px #fff8cf;
+    animation: photo-card-shine 900ms ease-out both;
+  }
+}
+
+@keyframes photo-card-shine {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+}
+
+.design3-shell .pitsune-bubble {
+  min-inline-size: 0;
+  white-space: nowrap;
+}
+
+.bubble-line {
+  container-type: inline-size;
+  display: block;
+  inline-size: 100%;
+}
+
+.bubble-line-text {
+  font-size: min(1em, calc(100cqi / var(--bubble-characters)));
+  white-space: nowrap;
+}

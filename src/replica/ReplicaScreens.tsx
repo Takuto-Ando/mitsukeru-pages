@@ -1,13 +1,15 @@
+import {
+  penColorsFor,
+  sketchPresentationFor,
+} from "../content/sketchPresentation";
+import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering, tutorialLines } from "../components/CardLettering";
 import { CircleHelp } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
-import {
-  PhotoRecognitionGuide,
-  PhotoSparkle,
-} from "../components/ChallengeIntro";
+import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
 import { SketchComparison } from "../components/SketchComparison";
 import { assetPath } from "../content/artwork";
 import { designCardViewport } from "../drawing/viewport";
@@ -112,27 +114,26 @@ export function ReplicaDraw({
   onHint: () => void;
   onDone: () => void;
 }) {
+  const prompt = sketchPresentationFor(task.scene)?.prompt;
   return (
     <section className="design3-draw">
       <SketchCanvas
+        key={task.id}
         {...drawing}
         scene={task.scene}
+        initialPenColors={penColorsFor(task.groupId)}
         fixedPortrait
         inkBehindArtwork
         showTarget={showHint}
         missionTitle={
           showHint
             ? "もうすこし観察してみて！"
-            : task.id === "giraffe"
-              ? "舌をよく観察してみて！"
-              : task.part + "をよく観察してみて！"
+            : (prompt?.text ?? task.part + "をよく観察してみて！")
         }
         missionLettering={
           showHint
             ? "illustrations/pdf-design/drawing-prompt-hint.svg"
-            : task.id === "giraffe"
-              ? "illustrations/pdf-design/drawing-prompt-giraffe.svg"
-              : undefined
+            : prompt?.lettering
         }
         actions={
           <>
@@ -224,7 +225,7 @@ export function ReplicaResult({
               text="上手に描けたね！"
             />
           ) : (
-            feedback.message
+            <BubbleLine text={feedback.message} />
           )}
         </h1>
       </div>
@@ -347,7 +348,10 @@ export function ReplicaPhotoReview({
           photoHeading
         )}
       </h1>
-      <article className="design3-photo-card">
+      <article
+        className="design3-photo-card"
+        data-photo-shine={photo ? true : undefined}
+      >
         {photo ? (
           <div className="photo-preview-wrap">
             <img
@@ -356,7 +360,6 @@ export function ReplicaPhotoReview({
               alt={sample ? "見本写真のキリン" : "撮影した動物の写真"}
             />
             {sample && group?.id === "giraffe" && <PhotoRecognitionGuide />}
-            {saved && <PhotoSparkle />}
           </div>
         ) : (
           <div className="design3-photo-placeholder">

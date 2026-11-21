@@ -1,21 +1,31 @@
 /* ふりがな（ルビ）の見た目。本文の行間を圧迫しないよう小さめに添える。 */
-ruby {
-  ruby-position: over;
+ruby[data-reading] {
+  position: relative;
+  display: inline;
+  white-space: nowrap;
 }
 
-ruby rt {
+/* WebKit lays out native rt even with position:absolute. Paint the reading
+   outside the line box so it never changes the space reserved for the text. */
+ruby[data-reading] > rt {
+  display: none;
+}
+
+ruby[data-reading]::after {
+  content: attr(data-reading);
   font-size: max(9px, 0.52em);
   font-weight: 500;
   letter-spacing: 0.02em;
   color: inherit;
   opacity: 0.96;
   user-select: none;
-  position: relative;
-  inset-block-start: 0.25em;
-}
-
-ruby rt[data-reading]::before {
-  content: attr(data-reading);
+  position: absolute;
+  inset-block-end: 88%;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* ふりがなが付く行は、ルビの分だけ行間を少し広げて読みやすくする。 */
@@ -33,6 +43,18 @@ ruby rt[data-reading]::before {
   place-items: center;
   max-width: 100%;
   vertical-align: middle;
+}
+
+button .card-lettering {
+  position: relative;
+}
+
+button .card-lettering-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  white-space: nowrap;
 }
 
 .card-lettering > img,

@@ -38,7 +38,7 @@ export interface Challenge {
   tags: string[];
 }
 export interface Evaluation {
-  method?: "automatic" | "self-confirmed" | "comparison";
+  method?: "automatic" | "self-confirmed" | "comparison" | "completed";
   debug?: {
     turn?: number;
     horizontal?: number;

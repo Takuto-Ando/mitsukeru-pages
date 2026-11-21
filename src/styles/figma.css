@@ -8,7 +8,7 @@
   padding: env(safe-area-inset-top) 24px
     calc(28px + env(safe-area-inset-bottom));
   color: var(--ink);
-  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", sans-serif;
+  font-family: var(--font-body);
   min-height: 100dvh;
   background: var(--cream);
 }
@@ -258,18 +258,6 @@ body {
   .figma-mascot {
     right: 8px;
   }
-}
-@font-face {
-  font-family: "Zen Maru Gothic";
-  src: url("../../public/fonts/ZenMaruGothic-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-display: swap;
-}
-@font-face {
-  font-family: "Zen Maru Gothic";
-  src: url("../../public/fonts/ZenMaruGothic-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-display: swap;
 }
 .figma-mascot object {
   display: block;

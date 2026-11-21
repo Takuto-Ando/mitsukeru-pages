@@ -18,13 +18,14 @@ import {
 import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
 import { FreeDrawScreen } from "../screens/DrawScreen";
 import { groups } from "../content/groups";
+import { clipStrokes } from "../content/scenes";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { composeObservationImages } from "../notebook/images";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { drawingEvaluator } from "../domain";
 import { tutorialSurveyUrl } from "../research/tutorialSurvey";
-import type { Evaluation } from "../types";
+import type { Evaluation, Stroke } from "../types";
 import { ReplicaCamera } from "./ReplicaCamera";
 import { ReplicaGallery, type ReplicaRecord } from "./ReplicaGallery";
 import {
@@ -126,6 +127,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
   const [saving, setSaving] = useState(false);
   const mounted = useRef(true);
   const savingRef = useRef(false);
+  const savedDrawing = useRef<Stroke[] | undefined>(undefined);
   const writingPhoto = useRef<Promise<void>>(Promise.resolve());
   const activeCapture = useRef<string | undefined>(undefined);
   const reduce = useReducedMotion();
@@ -196,6 +198,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
 
   function restartCamera() {
     activeCapture.current = undefined;
+    savedDrawing.current = undefined;
     setFramedExample(false);
     setRecord(undefined);
     setGroupId("");
@@ -302,9 +305,12 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     }
   }
 
-  async function finishDrawing() {
-    if (savingRef.current || !feedback?.passed || !drawing.present.length)
+  async function finishDrawing(advance = true) {
+    if (savingRef.current || !drawing.present.length) return;
+    if (savedDrawing.current === drawing.present) {
+      if (advance) nextAfterResult();
       return;
+    }
     savingRef.current = true;
     setSaving(true);
     setError("");
@@ -339,8 +345,9 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
       await saveReplicaRecord(next);
       if (!legacy) enqueueShare(next.id);
       if (!mounted.current) return;
+      savedDrawing.current = drawing.present;
       renderGalleryRecord(next);
-      nextAfterResult();
+      if (advance) nextAfterResult();
     } catch {
       if (mounted.current)
         setError(
@@ -461,7 +468,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                     photoLocation={record?.photoLocation}
                     saved={records.some((item) => item.id === record?.id)}
                     group={chosen}
-                    choices={choices}
+                    choices={legacy ? choices : groups}
                     figmaFlow={
                       !legacy && screen === "review"
                         ? tutorial
@@ -534,12 +541,26 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
                     task,
                     drawing.present,
                   );
-                  if (!legacy && tutorial && !evaluation.passed) {
+                  if (
+                    !legacy &&
+                    (!clipStrokes(drawing.present, task.scene).length ||
+                      evaluation.status === "retry")
+                  ) {
                     setShowHint(true);
                     return;
                   }
-                  setFeedback(evaluation);
+                  setFeedback(
+                    !legacy && !evaluation.passed
+                      ? {
+                          ...evaluation,
+                          passed: true,
+                          method: "completed",
+                          message: "スケッチができたね！",
+                        }
+                      : evaluation,
+                  );
                   setScreen("result");
+                  if (!legacy) void finishDrawing(false);
                 }}
               />
             )}
@@ -586,6 +607,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
             {screen === "gallery" && (
               <ReplicaGallery
                 records={records}
+                legacy={legacy}
                 onBack={restartCamera}
                 onCamera={restartCamera}
               />

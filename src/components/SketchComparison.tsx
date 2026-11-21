@@ -1,5 +1,6 @@
 import { useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { sketchPresentationFor } from "../content/sketchPresentation";
 import { celebrationFor } from "../content/celebrations";
 import { celebrationOrigin } from "./FeatureCelebration";
 import { getStrokeStyle } from "../drawing/styles";
@@ -78,13 +79,16 @@ export function SketchComparison({
   }, [strokes, scene, replayKey]);
   const art = scene.artworkOverride || artwork[scene.id],
     height = scene.frameHeight || 400;
+  const authoredMotion = sketchPresentationFor(scene)?.motion;
   const drawingMotion = animateDrawingFor
-    ? celebrationFor(animateDrawingFor).kind
+    ? (authoredMotion?.kind ?? celebrationFor(animateDrawingFor).kind)
     : undefined;
   const drawingPivot = drawingMotion
-    ? scene.id === "giraffe"
-      ? { x: 326, y: 305 }
-      : celebrationOrigin(scene, drawingMotion)
+    ? (authoredMotion?.origin ??
+      celebrationOrigin(
+        scene,
+        drawingMotion === "tongue" ? "sway" : drawingMotion,
+      ))
     : undefined;
   const viewX = viewport?.x ?? 0;
   const viewY = viewport?.y ?? 0;
@@ -199,7 +203,7 @@ export function SketchComparison({
                       transform={`translate(${drawingPivot.x} ${drawingPivot.y})`}
                     >
                       <g
-                        className={`feature-lines feature-anim-${scene.id === "giraffe" ? "tongue" : drawingMotion} comparison-drawing-motion`}
+                        className={`feature-lines feature-anim-${drawingMotion} comparison-drawing-motion`}
                       >
                         <g
                           transform={`translate(${-drawingPivot.x} ${-drawingPivot.y})`}

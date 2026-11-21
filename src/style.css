@@ -383,7 +383,7 @@ svg {
   position: absolute;
   right: -7px;
   top: -7px;
-  font-family: Georgia, serif;
+  font-family: var(--font-body);
   font-size: 11px;
   color: #8d896b;
   background: var(--cream);
@@ -1000,7 +1000,7 @@ svg {
   transform: rotate(12deg);
 }
 .celebration > span {
-  font-family: Georgia, serif;
+  font-family: var(--font-body);
   font-size: 68px;
   color: #d9a33a;
   z-index: 1;

@@ -45,7 +45,7 @@ export function saveFurigana(enabled: boolean): void {
 export function furiganaNodes(text: string): ReactNode[] {
   return furiganaSegments(text).map((segment, index) =>
     segment.reading ? (
-      <ruby key={index}>
+      <ruby key={index} data-reading={segment.reading}>
         {segment.text}
         <rt aria-hidden="true" data-reading={segment.reading} />
       </ruby>

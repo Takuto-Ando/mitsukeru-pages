@@ -1,3 +1,4 @@
+import { BubbleLine } from "./components/BubbleLine";
 import { CardLettering } from "./components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
@@ -17,7 +18,8 @@ import {
   scenePoint,
   type Scene,
 } from "./content/scenes";
-import { Furi } from "./furigana/Furigana";
+import { createPortal } from "react-dom";
+import type { PenColors } from "./content/sketchPresentation";
 import { SceneBase, SceneRegions } from "./components/ObservationScene";
 import { TargetRegions } from "./components/TargetRegions";
 import type { DrawingAction } from "./drawing/history";
@@ -64,6 +66,7 @@ export function SketchCanvas({
   canRedo,
   missionTitle,
   missionLettering,
+  initialPenColors,
   fixedPortrait = false,
   inkBehindArtwork = false,
   dopa = false,
@@ -85,6 +88,7 @@ export function SketchCanvas({
   canRedo?: boolean;
   missionTitle?: string;
   missionLettering?: string;
+  initialPenColors?: PenColors;
   fixedPortrait?: boolean;
   inkBehindArtwork?: boolean;
   dopa?: boolean;
@@ -117,11 +121,45 @@ export function SketchCanvas({
     [erase, setErase] = useState(false),
     [brushWidth, setBrushWidth] = useState(7);
   const [selectedPen, setSelectedPen] = useState<0 | 1>(0);
-  const [penColors, setPenColors] = useState<[string, string]>([
-    missionTitle ? BRUSH_COLORS[0] : "#277e78",
-    BRUSH_COLORS[1],
+  const defaultPen =
+    initialPenColors?.[0] ?? (missionTitle ? BRUSH_COLORS[0] : "#277e78");
+  const [penColors, setPenColors] = useState<PenColors>([
+    defaultPen,
+    initialPenColors?.[1] ?? BRUSH_COLORS[1],
   ]);
   const brushColor = penColors[selectedPen];
+  const [brushPreview, setBrushPreview] = useState(false);
+  const widthPointer = useRef<number | null>(null);
+  const previewTimer = useRef<number | undefined>(undefined);
+
+  function hideBrushPreview() {
+    window.clearTimeout(previewTimer.current);
+    widthPointer.current = null;
+    setBrushPreview(false);
+  }
+
+  function showBrushPreview() {
+    window.clearTimeout(previewTimer.current);
+    setBrushPreview(true);
+    if (widthPointer.current === null) {
+      previewTimer.current = window.setTimeout(hideBrushPreview, 650);
+    }
+  }
+
+  useEffect(() => {
+    function endAdjustment(event: PointerEvent) {
+      if (event.pointerId === widthPointer.current) hideBrushPreview();
+    }
+    window.addEventListener("pointerup", endAdjustment);
+    window.addEventListener("pointercancel", endAdjustment);
+    window.addEventListener("blur", hideBrushPreview);
+    return () => {
+      window.removeEventListener("pointerup", endAdjustment);
+      window.removeEventListener("pointercancel", endAdjustment);
+      window.removeEventListener("blur", hideBrushPreview);
+      window.clearTimeout(previewTimer.current);
+    };
+  }, []);
   const [layoutChoice, setLayoutChoice] = useState<
     "portrait" | "landscape" | null
   >(null);
@@ -268,7 +306,7 @@ export function SketchCanvas({
           ? activeBrush.current
           : getStrokeStyle(stroke) || {
               width: 7,
-              color: missionTitle ? BRUSH_COLORS[0] : "#277e78",
+              color: defaultPen,
             };
         context.lineWidth = style.width;
         context.strokeStyle = style.color;
@@ -702,12 +740,8 @@ export function SketchCanvas({
                   src={assetPath(missionLettering)}
                   text={missionTitle}
                 />
-              ) : missionTitle ? (
-                <span>
-                  <Furi text={missionTitle} />
-                </span>
               ) : (
-                missionTitle
+                <BubbleLine text={missionTitle} />
               )}
             </h1>
             {cheer && (
@@ -1047,13 +1081,37 @@ export function SketchCanvas({
                   "--brush-range": `${(BRUSH_WIDTHS.indexOf(brushWidth) / (BRUSH_WIDTHS.length - 1)) * 100}%`,
                 } as CSSProperties
               }
+              onPointerDown={(event) => {
+                widthPointer.current = event.pointerId;
+                showBrushPreview();
+              }}
+              onBlur={hideBrushPreview}
               onChange={(event) => {
                 const width = BRUSH_WIDTHS[event.currentTarget.valueAsNumber];
                 activeBrush.current = { ...activeBrush.current, width };
                 setBrushWidth(width);
+                showBrushPreview();
               }}
             />
           </label>
+          {brushPreview &&
+            createPortal(
+              <div
+                aria-hidden="true"
+                className="brush-width-preview"
+                style={
+                  {
+                    "--preview-diameter":
+                      brushWidth *
+                        ((ref.current?.getBoundingClientRect().width || 600) /
+                          600) +
+                      "px",
+                    "--preview-ink": brushColor,
+                  } as CSSProperties
+                }
+              />,
+              document.body,
+            )}
           <div
             className="drawing-palette"
             id={paletteId}
@@ -1123,7 +1181,7 @@ export function SketchCanvas({
               disabled={zoom <= 1}
               onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
             >
-              －
+              −
             </button>
             <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
             <button
