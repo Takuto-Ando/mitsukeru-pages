@@ -1,3 +1,5 @@
+import { LiveAnimalOverlay } from "./components/LiveAnimalOverlay";
+import { CardLettering } from "./components/CardLettering";
 import { challengeProvider } from "./domain";
 import { recordStudy } from "./research/study";
 import { canAutoSelect, type Candidate } from "./recognition/labels";
@@ -354,10 +356,10 @@ export function CameraView({
             src={assetPath("figma/entry/camera-face.svg")}
           />
           <p className="pitsune-bubble">
-            <img
+            <CardLettering
               className="camera-prompt-art"
               src={assetPath("illustrations/pdf-design/camera-prompt.svg")}
-              alt="動物の写真を撮ろう！"
+              text="動物の写真を撮ろう！"
             />
           </p>
         </div>
@@ -429,25 +431,7 @@ export function CameraView({
               ))}
             </div>
           )}
-          {liveActive && live.boxes.length > 0 && (
-            <div className="live-animal-overlay" aria-label="ライブ検出の候補">
-              {live.boxes.map(({ label, left, top, right, bottom }, index) => (
-                <div
-                  key={index}
-                  className="live-animal-box"
-                  data-align-end={left > 0.62}
-                  style={{
-                    left: left * 100 + "%",
-                    top: top * 100 + "%",
-                    width: (right - left) * 100 + "%",
-                    height: (bottom - top) * 100 + "%",
-                  }}
-                >
-                  <span>{label}の候補</span>
-                </div>
-              ))}
-            </div>
-          )}
+          {liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
           <CameraZoom {...cameraZoom} />
           {status === "live" && <span className="sr-only">カメラで観察中</span>}
         </div>
@@ -480,6 +464,7 @@ export function CameraView({
             type="button"
             className="camera-side-button"
             aria-label="マイページ"
+            disabled={tutorial}
             onClick={(event) => onSettings?.(event.currentTarget)}
           >
             <img

@@ -1,3 +1,4 @@
+import { CardLettering } from "./CardLettering";
 import { NotebookTools } from "./NotebookTools";
 import { QuizPanel } from "./QuizPanel";
 import { ParentReport } from "./ParentReport";
@@ -132,9 +133,7 @@ export function DrawingCollection({
   const drawings =
     profileFilter === "all"
       ? allDrawings
-      : allDrawings.filter(
-          (d) => recordProfileId(d) === profileFilter,
-        );
+      : allDrawings.filter((d) => recordProfileId(d) === profileFilter);
   const galleryId = useId();
   const detailId = useId();
   const detail = useRef<HTMLDialogElement>(null);
@@ -370,8 +369,11 @@ export function DrawingCollection({
             onClick={() => setTab("photo")}
           >
             <GalleryMark mark="photo" />
-            <GalleryMark mark="photo-label" />
-            <span className="sr-only">写真</span>
+            <CardLettering
+              className="gallery-photo-name"
+              src={assetPath("figma/entry/gallery-photo-label.svg")}
+              text="写真"
+            />
           </button>
         </div>
         <div
@@ -420,7 +422,7 @@ export function DrawingCollection({
           </div>
           {!drawings.length && (
             <p className="gallery-sketch-empty">
-              スケッチを描いて「つぎへ」を押すと、ここで見返せるよ。
+              スケッチをマイギャラリーに保存すると、ここで見返せるよ。
             </p>
           )}
           {drawings.length > visibleCount && (
@@ -584,10 +586,18 @@ export function DrawingCollection({
           </div>
         </div>
       </div>
-      <button type="button" className="gallery-camera" onClick={onCamera}>
+      <button
+        type="button"
+        className="gallery-camera"
+        onClick={onCamera}
+        aria-label="写真を撮る"
+      >
         <GalleryMark mark="camera" />
-        <GalleryMark mark="camera-label" />
-        <span className="sr-only">写真を撮る</span>
+        <CardLettering
+          className="gallery-photo-action"
+          src={assetPath("figma/entry/gallery-camera-label.svg")}
+          text="写真を撮る"
+        />
       </button>
       {drawing && group && scene && (
         <dialog

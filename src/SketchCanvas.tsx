@@ -1,3 +1,4 @@
+import { CardLettering } from "./components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 import "./styles/design3-drawing.css";
@@ -693,10 +694,10 @@ export function SketchCanvas({
             />
             <h1 className="pitsune-bubble" aria-label={missionTitle}>
               {missionLettering ? (
-                <img
+                <CardLettering
                   className="drawing-lettering"
                   src={assetPath(missionLettering)}
-                  alt={missionTitle}
+                  text={missionTitle}
                 />
               ) : missionTitle ? (
                 <span>

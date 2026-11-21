@@ -1,6 +1,6 @@
+/** @jsxImportSource react */
 import { createContext, useContext, type ReactNode } from "react";
 import { furiganaSegments } from "./tokenize";
-import "../styles/furigana.css";
 
 // 子ども向けのふりがな表示。設定は App が持ち、Context 経由で各画面に届く。
 const FuriganaContext = createContext(true);
@@ -47,7 +47,7 @@ export function furiganaNodes(text: string): ReactNode[] {
     segment.reading ? (
       <ruby key={index}>
         {segment.text}
-        <rt>{segment.reading}</rt>
+        <rt aria-hidden="true" data-reading={segment.reading} />
       </ruby>
     ) : (
       segment.text
@@ -56,8 +56,16 @@ export function furiganaNodes(text: string): ReactNode[] {
 }
 
 /** ふりがな対象のテキストを表示するコンポーネント。OFF のときは素の文字列。 */
-export function Furi({ text }: { text: string }) {
+export function Furi({
+  text,
+  label = true,
+}: {
+  text: string;
+  label?: boolean;
+}) {
   const enabled = useFuriganaEnabled();
   if (!enabled || !text) return <>{text}</>;
-  return <>{furiganaNodes(text)}</>;
+  return (
+    <span aria-label={label ? text : undefined}>{furiganaNodes(text)}</span>
+  );
 }

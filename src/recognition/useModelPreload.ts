@@ -3,7 +3,7 @@ import { downloadLiveModel } from "./liveModel";
 import { downloadPhotoModel } from "./photoModel";
 import { speciesRecognizer } from "./species";
 
-export function useModelPreload() {
+export function useModelPreload({ photo = true } = {}) {
   useEffect(() => {
     let live: Promise<void | undefined> | undefined;
     let startedPhoto = false;
@@ -26,6 +26,7 @@ export function useModelPreload() {
       live ??= downloadLiveModel().catch(() => undefined);
       void live.then(() => {
         if (
+          photo &&
           !startedPhoto &&
           !limited &&
           !document.hidden &&
@@ -45,5 +46,5 @@ export function useModelPreload() {
       window.removeEventListener("online", prepare);
       document.removeEventListener("visibilitychange", prepare);
     };
-  }, []);
+  }, [photo]);
 }

@@ -404,3 +404,33 @@ test("拡張版の任意ツールを使っても研究への同意は変わら�
     }),
   ).not.toBeChecked();
 });
+
+test("読み仮名は既定で表示され、チュートリアルだけマイページを押せない", async ({
+  page,
+}) => {
+  await page.goto("figma/");
+  const ruby = page.locator(".design3-title-tagline ruby");
+  await expect(ruby.filter({ hasText: "指先" }).locator("rt")).toHaveAttribute(
+    "data-reading",
+    "ゆびさき",
+  );
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await expect(page.locator(".entry-caption-line")).toHaveCount(2);
+  await page.getByRole("button", { name: "こんにちは！", exact: true }).click();
+  await page.getByRole("button", { name: "やってみる！", exact: true }).click();
+  await page.getByRole("button", { name: "撮ってみる！", exact: true }).click();
+  const profile = page.getByRole("button", { name: "マイページ", exact: true });
+  await expect(profile).toBeDisabled();
+  await expect(profile).toHaveCSS("opacity", "0.5");
+  const zoom = page.getByRole("button", { name: "2×", exact: true });
+  const buttonBox = (await zoom.boundingBox())!;
+  const textBox = (await zoom.locator(".zoom-text").boundingBox())!;
+  expect(
+    Math.abs(buttonBox.x + buttonBox.width / 2 - textBox.x - textBox.width / 2),
+  ).toBeLessThan(0.6);
+  expect(
+    Math.abs(
+      buttonBox.y + buttonBox.height / 2 - textBox.y - textBox.height / 2,
+    ),
+  ).toBeLessThan(0.6);
+});

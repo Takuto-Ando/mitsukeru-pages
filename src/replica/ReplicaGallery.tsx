@@ -1,3 +1,4 @@
+import { CardLettering } from "../components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
 import { assetPath } from "../content/artwork";
 import { taskById } from "../content/tasks";
@@ -214,12 +215,20 @@ export function ReplicaGallery({
               role="tab"
               aria-controls={`${id}-${item}-panel`}
               aria-selected={tab === item}
+              aria-label={tabs[item]}
               tabIndex={tab === item ? 0 : -1}
               onClick={() => setTab(item)}
             >
               <Mark name={item} />
-              <Mark name={`${item}-label`} />
-              <span className="sr-only">{tabs[item]}</span>
+              {item === "photo" ? (
+                <CardLettering
+                  className="gallery-photo-name"
+                  src={assetPath("figma/entry/gallery-photo-label.svg")}
+                  text="写真"
+                />
+              ) : (
+                <Mark name="sketch-label" />
+              )}
             </button>
           ))}
         </div>
@@ -230,7 +239,15 @@ export function ReplicaGallery({
         >
           <div className="collection-grid">
             {entries.map((entry) => (
-              <article className="collection-card" key={entry.id}>
+              <article
+                className="collection-card"
+                data-photo-sparkle={
+                  tab === "photo" && entry.animalName === "キリン"
+                    ? true
+                    : undefined
+                }
+                key={entry.id}
+              >
                 <button
                   className="collection-open"
                   type="button"
@@ -261,10 +278,18 @@ export function ReplicaGallery({
           )}
         </div>
       </div>
-      <button type="button" className="gallery-camera" onClick={onCamera}>
+      <button
+        type="button"
+        className="gallery-camera"
+        onClick={onCamera}
+        aria-label="写真を撮る"
+      >
         <Mark name="camera" />
-        <Mark name="camera-label" />
-        <span className="sr-only">写真を撮る</span>
+        <CardLettering
+          className="gallery-photo-action"
+          src={assetPath("figma/entry/gallery-camera-label.svg")}
+          text="写真を撮る"
+        />
       </button>
       {activeEntry && (
         <dialog

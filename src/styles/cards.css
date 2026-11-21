@@ -1240,7 +1240,11 @@ details[open] > summary::after {
 /* Native modal preserves the drawing and restores keyboard focus when closed. */
 .settings-dialog {
   width: min(408px, calc(100% - 28px));
-  max-height: 86svh;
+  max-height: calc(
+    100dvh - max(12px, env(safe-area-inset-top)) -
+      max(12px, env(safe-area-inset-bottom))
+  );
+  overflow: hidden;
   padding: 0;
   border: 2px solid var(--color-teal-ink);
   border-radius: 8px;
@@ -1271,6 +1275,7 @@ details[open] > summary::after {
   min-width: 44px;
 }
 .settings-content {
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 12px 18px;

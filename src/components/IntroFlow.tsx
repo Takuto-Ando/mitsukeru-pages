@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { CardLettering, tutorialLines } from "./CardLettering";
 import { ChevronRight } from "lucide-react";
 import { Pitsune, type PitsunePose } from "./Pitsune";
 import "../styles/design3-entry.css";
@@ -69,13 +70,18 @@ function IntroPanel({
     >
       <p key={lettering} className="design3-intro-message">
         {lettering && typeof message === "string" ? (
-          <img alt={message} src={entryLettering(lettering, "message")} />
+          <CardLettering
+            text={message}
+            src={entryLettering(lettering, "message")}
+            lines={tutorialLines[lettering]}
+          />
         ) : (
           message
         )}
       </p>
       {artwork ? (
         <img
+          key={artwork}
           alt=""
           className="design3-intro-original"
           src={assetPath(
@@ -118,7 +124,10 @@ export function IntroFlow({
           page === pages.length - 1 ? onDone(true) : setPage(page + 1)
         }
       >
-        <img alt="" src={entryLettering(current.pose, "action")} />
+        <CardLettering
+          text={current.action}
+          src={entryLettering(current.pose, "action")}
+        />
       </button>
     </IntroPanel>
   );
@@ -180,9 +189,12 @@ export function TutorialEndScreen({
       message={
         surveyUrl ? (
           <>
-            チュートリアルはこれでおしまい！
-            <br />
-            Googleフォームで感想を聞かせてね。
+            <span className="entry-caption-line">
+              チュートリアルはこれでおしまい！
+            </span>
+            <span className="entry-caption-line">
+              Googleフォームで感想を聞かせてね。
+            </span>
           </>
         ) : (
           "チュートリアルはこれでおしまい！ いろんな動物を描きにいこう！"

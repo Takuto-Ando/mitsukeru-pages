@@ -1,3 +1,4 @@
+import { CardLettering } from "./CardLettering";
 import { BookOpen, Settings, Sparkles } from "lucide-react";
 import { groups } from "../content/groups";
 import { assetPath } from "../content/artwork";
@@ -62,8 +63,8 @@ export function HomeScreen({
       )}
       <div className="design3-title-heading">
         <p className="design3-title-tagline">
-          <img
-            alt="その指先が夢中をつくる。"
+          <CardLettering
+            text="その指先が夢中をつくる。"
             src={assetPath(
               `illustrations/pdf-design/entry-title-tagline${lettering}.svg`,
             )}

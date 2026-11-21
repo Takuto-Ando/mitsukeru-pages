@@ -4,7 +4,14 @@ import { offlinePlugin } from "./scripts/offline-plugin";
 import react from "@vitejs/plugin-react";
 export default defineConfig({
   base: process.env.VITE_BASE_PATH || "/",
-  plugins: [react(), offlinePlugin()],
+  plugins: [react({ jsxImportSource: "@zooketch/ruby" }), offlinePlugin()],
+  resolve: {
+    alias: {
+      "@zooketch/ruby": fileURLToPath(
+        new URL("./src/furigana/runtime", import.meta.url),
+      ),
+    },
+  },
   worker: { format: "es" },
   server: { host: "0.0.0.0", port: 5175, strictPort: true },
   preview: { host: "0.0.0.0", port: 4175, strictPort: true },

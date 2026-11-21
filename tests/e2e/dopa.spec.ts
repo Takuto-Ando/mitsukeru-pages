@@ -102,7 +102,7 @@ test("10筆で5 XP、合格で50 XP、新規保存で30 XPとレベルアップ"
 
   await page.getByRole("button", { name: /特徴について知ろう/ }).click();
   await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
+    .getByRole("button", { name: "マイギャラリーに保存", exact: true })
     .click();
   const levelup = page.locator(".dopa-overlay[data-kind=levelup]");
   await expect(levelup).toContainText("Lv.3 到達！");
@@ -191,7 +191,7 @@ test("ピツネの反応・短い紙吹雪・解説と観察ノートが機能�
   await page.getByRole("button", { name: /特徴について知ろう/ }).click();
   await expect(progress).toContainText("解説");
   await page
-    .getByRole("button", { name: "観察を保存する", exact: true })
+    .getByRole("button", { name: "マイギャラリーに保存", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: "保存したよ！", exact: true }),

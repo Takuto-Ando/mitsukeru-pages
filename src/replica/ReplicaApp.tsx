@@ -1,3 +1,4 @@
+import { useModelPreload } from "../recognition/useModelPreload";
 import { useEffect, useReducer, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "../components/HomeScreen";
@@ -28,6 +29,8 @@ import { imageDataURL, loadReplicaRecords, saveReplicaRecord } from "./storage";
 import "../styles/tokens.css";
 import "../styles/cards.css";
 import "../styles/design3.css";
+import "../styles/card-motion.css";
+import "../styles/furigana.css";
 import "./replica.css";
 
 type Screen =
@@ -63,6 +66,7 @@ function recordId() {
 }
 
 export function ReplicaApp() {
+  useModelPreload({ photo: false });
   const [screen, setScreen] = useState<Screen>("splash");
   const [feedback, setFeedback] = useState<Evaluation>();
   const [surveyUrl] = useState(() =>

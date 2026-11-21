@@ -10,6 +10,12 @@ ruby rt {
   color: inherit;
   opacity: 0.85;
   user-select: none;
+  position: relative;
+  inset-block-start: 0.25em;
+}
+
+ruby rt[data-reading]::before {
+  content: attr(data-reading);
 }
 
 /* ふりがなが付く行は、ルビの分だけ行間を少し広げて読みやすくする。 */
@@ -18,4 +24,95 @@ ruby rt {
 .design3-photo-fact,
 .design3-challenge h1 {
   line-height: 1.9;
+}
+
+/* The original outline keeps the card's dimensions while ruby is enabled. */
+.card-lettering.card-lettering {
+  display: inline-grid;
+  grid-template: 1fr / minmax(0, auto);
+  place-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.card-lettering > img,
+.card-lettering-text {
+  grid-area: 1 / 1;
+}
+
+.card-lettering > img {
+  visibility: hidden;
+  max-width: 100%;
+}
+
+.card-lettering-text {
+  display: block;
+  line-height: 1.2;
+  text-align: center;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.design3-title-tagline .card-lettering-text {
+  font-size: clamp(14px, 5cqw, 19px);
+  color: #6f5239;
+}
+
+.dopa-on .design3-title-tagline .card-lettering-text {
+  color: #4c234f;
+}
+.design3-intro-message .card-lettering-text {
+  line-height: 1.55;
+}
+.design3-intro-message .card-lettering > img {
+  width: 100%;
+}
+.design3-challenge h1 .card-lettering {
+  display: grid;
+}
+.design3-challenge-giraffe-title .card-lettering-text {
+  color: var(--d3-orange);
+  font-size: clamp(32px, 11vw, 53px);
+  -webkit-text-stroke: 0.13em #fff;
+  paint-order: stroke fill;
+}
+.design3-challenge-prompt .card-lettering-text {
+  color: var(--d3-brown);
+  font-size: clamp(23px, 8.4vw, 35px);
+  -webkit-text-stroke: 0.12em #fff;
+  paint-order: stroke fill;
+}
+.difficulty-label .card-lettering-text {
+  font-size: clamp(12px, 4.4vw, 19px);
+}
+.camera-prompt-art.card-lettering {
+  display: grid;
+}
+.camera-prompt-art .card-lettering-text {
+  white-space: nowrap;
+  font-size: clamp(12px, 4.2vw, 19px);
+}
+.design3-photo-fact .card-lettering-text {
+  line-height: 1.6;
+  text-align: start;
+}
+
+.gallery-photo-name,
+.gallery-photo-action {
+  display: inline-block;
+  flex: none;
+}
+
+.gallery-photo-name {
+  width: 31px;
+}
+
+.gallery-photo-action {
+  width: 62px;
+  color: #fff;
+}
+
+.gallery-photo-action .card-lettering-text {
+  white-space: nowrap;
+  font-size: 11px;
 }

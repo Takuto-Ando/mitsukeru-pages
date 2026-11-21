@@ -1,3 +1,4 @@
+import { CardLettering } from "../components/CardLettering";
 import { CornerDownLeft, Zap } from "lucide-react";
 import { Pitsune, PitsuneIcon } from "../components/Pitsune";
 import { assetPath } from "../content/artwork";
@@ -88,12 +89,12 @@ export function ResultScreen({
           />
           <h1 className="pitsune-bubble">
             {passed ? (
-              <img
+              <CardLettering
                 className="drawing-lettering"
                 src={assetPath(
                   "illustrations/pdf-design/drawing-prompt-success.svg",
                 )}
-                alt={message}
+                text={message}
               />
             ) : (
               message
@@ -134,12 +135,12 @@ export function ResultScreen({
               onClick={onRedraw}
             >
               <CornerDownLeft size={18} aria-hidden="true" />
-              <img
+              <CardLettering
                 className="drawing-lettering"
                 src={assetPath(
                   "illustrations/pdf-design/drawing-action-redraw.svg",
                 )}
-                alt="描きなおす"
+                text="描きなおす"
               />
             </button>
             <button
@@ -192,15 +193,18 @@ export function ResultScreen({
           ? "保存したよ！ マイギャラリーから、いつでも見返せるよ。"
           : "自分の絵をこの端末に残せます。観察ノートに撮影写真は入りません。"}
       </p>
-      {saved && reflectionDirty && onUpdateReflection && (
-        <button
-          className="text-button"
-          disabled={saving || !storageReady}
-          onClick={onUpdateReflection}
-        >
-          気づきを更新する
-        </button>
-      )}
+      {passed &&
+        strokes.length > 0 &&
+        (!saved || reflectionDirty) &&
+        onUpdateReflection && (
+          <button
+            className="text-button"
+            disabled={saving || !storageReady}
+            onClick={onUpdateReflection}
+          >
+            {saved ? "気づきを更新する" : "マイギャラリーに保存"}
+          </button>
+        )}
       {strokes.length > 0 && (
         <div className="png-actions">
           <button

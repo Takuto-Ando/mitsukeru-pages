@@ -1,3 +1,4 @@
+import { CardLettering, tutorialLines } from "../components/CardLettering";
 import { CircleHelp } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
@@ -55,13 +56,15 @@ export function ReplicaIntro({
       data-figma-art={pose}
       data-entry-lettering={pose}
     >
-      <p className="design3-intro-message">
-        <img
-          alt={message}
+      <p className="design3-intro-message" key={pose}>
+        <CardLettering
+          text={message}
+          lines={tutorialLines[pose]}
           src={assetPath(folder + "entry-" + pose + "-message.svg")}
         />
       </p>
       <img
+        key={pose}
         alt=""
         className="design3-intro-original"
         src={assetPath(
@@ -81,7 +84,10 @@ export function ReplicaIntro({
         aria-label={action}
         onClick={onNext}
       >
-        <img alt="" src={assetPath(folder + "entry-" + pose + "-action.svg")} />
+        <CardLettering
+          text={action}
+          src={assetPath(folder + "entry-" + pose + "-action.svg")}
+        />
       </button>
     </section>
   );
@@ -134,12 +140,12 @@ export function ReplicaDraw({
               disabled={showHint}
             >
               <CircleHelp size={18} aria-hidden />
-              <img
+              <CardLettering
                 className="drawing-lettering"
                 src={assetPath(
                   "illustrations/pdf-design/drawing-action-hint.svg",
                 )}
-                alt="ヒントを見る"
+                text="ヒントを見る"
               />
             </button>
             <button
@@ -205,12 +211,12 @@ export function ReplicaResult({
         />
         <h1 className="pitsune-bubble">
           {feedback.passed && feedback.method === "automatic" ? (
-            <img
+            <CardLettering
               className="drawing-lettering"
               src={assetPath(
                 "illustrations/pdf-design/drawing-prompt-success.svg",
               )}
-              alt="上手に描けたね！"
+              text="上手に描けたね！"
             />
           ) : (
             feedback.message
@@ -232,10 +238,10 @@ export function ReplicaResult({
               onClick={onRedraw}
               disabled={saving}
             >
-              <img
+              <CardLettering
                 className="drawing-lettering"
                 src={assetPath("replica-assets/result-redraw.svg")}
-                alt="描きなおす"
+                text="描きなおす"
               />
             </button>
             {feedback.passed && (
@@ -244,14 +250,14 @@ export function ReplicaResult({
                 onClick={onDone}
                 disabled={saving}
               >
-                <img
+                <CardLettering
                   className="drawing-lettering"
                   src={assetPath(
                     tutorial
                       ? "replica-assets/result-next.svg"
                       : "replica-assets/result-camera.svg",
                   )}
-                  alt={tutorial ? "つぎへ" : "写真を撮る"}
+                  text={tutorial ? "つぎへ" : "写真を撮る"}
                 />
               </button>
             )}
@@ -311,9 +317,9 @@ export function ReplicaPhotoReview({
     >
       <h1 id="replica-photo-heading">
         {photo && saved ? (
-          <img
+          <CardLettering
             src={assetPath("replica-assets/review-title.svg")}
-            alt={photoHeading}
+            text={photoHeading}
           />
         ) : (
           photoHeading
@@ -408,9 +414,9 @@ export function ReplicaPhotoReview({
         </div>
         <p className="design3-photo-fact">
           {group?.id === "giraffe" ? (
-            <img
+            <CardLettering
               src={assetPath("replica-assets/review-description.svg")}
-              alt={giraffeFact}
+              text={giraffeFact}
             />
           ) : (
             (group?.fact ?? "？？？？？")

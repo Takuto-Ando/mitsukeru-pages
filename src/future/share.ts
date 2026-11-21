@@ -1,9 +1,6 @@
 import { drawingScene } from "../collection/drawingScene";
 import { composeObservationImages } from "../notebook/images";
-import {
-  loadObservations,
-  updateObservationImages,
-} from "../notebook/storage";
+import { loadObservation, updateObservationImages } from "../notebook/storage";
 import type { ObservationRecord } from "../notebook/types";
 
 // お客さんの絵を研究用に自動送信する仕組み（Google Apps Script 経由で
@@ -60,6 +57,7 @@ function loadQueue(): Queue {
 function saveQueue(queue: Queue) {
   try {
     localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    return true;
   } catch {
     // 容量不足時は送信済み履歴だけ捨てる
     try {
@@ -67,8 +65,10 @@ function saveQueue(queue: Queue) {
         QUEUE_KEY,
         JSON.stringify({ sent: [], pending: queue.pending }),
       );
+      return true;
     } catch {
       // それでも無理なら諦める（絵本体は端末に残る）
+      return false;
     }
   }
 }
@@ -81,8 +81,7 @@ export function enqueueShare(recordId: string): void {
   const config = loadShareConfig();
   if (!config.consent || !config.endpoint) return;
   const queue = loadQueue();
-  if (queue.sent.includes(recordId) || queue.pending.includes(recordId))
-    return;
+  if (queue.sent.includes(recordId) || queue.pending.includes(recordId)) return;
   queue.pending.push(recordId);
   saveQueue(queue);
   void flushShareQueue();
@@ -96,20 +95,20 @@ async function blobToBase64(blob: Blob): Promise<string> {
   return btoa(binary);
 }
 
-export async function buildSharePayload(record: ObservationRecord) {
-  const config = loadShareConfig();
+export async function buildSharePayload(
+  record: ObservationRecord,
+  token = loadShareConfig().token,
+) {
   let ownPng = record.ownPng;
   if (!ownPng) {
     const scene = record.sceneSnapshot || drawingScene(record);
     const composed = await composeObservationImages(scene, record.strokes);
     ownPng = composed.ownPng;
-    await updateObservationImages(record.id, composed).catch(
-      () => undefined,
-    );
+    await updateObservationImages(record.id, composed).catch(() => undefined);
   }
   const strokesJson = JSON.stringify(record.strokes);
   return {
-    token: config.token,
+    token,
     id: record.id,
     createdAt: record.createdAt,
     animalName: record.animalName,
@@ -132,35 +131,41 @@ export async function flushShareQueue(): Promise<number> {
   flushing = true;
   let sentNow = 0;
   try {
-    const queue = loadQueue();
-    if (!queue.pending.length) return 0;
-    const records = await loadObservations();
-    const byId = new Map(records.map((r) => [r.id, r]));
-    for (const id of [...queue.pending]) {
-      const record = byId.get(id);
-      if (!record) {
-        queue.pending = queue.pending.filter((p) => p !== id);
-        continue;
+    for (;;) {
+      const active = loadShareConfig();
+      if (!active.consent || !active.endpoint || !navigator.onLine) break;
+      const id = loadQueue().pending[0];
+      if (!id) break;
+      const record = await loadObservation(id);
+      if (record) {
+        try {
+          const payload = await buildSharePayload(record, active.token);
+          const latest = loadShareConfig();
+          if (
+            !latest.consent ||
+            latest.endpoint !== active.endpoint ||
+            latest.token !== active.token
+          )
+            break;
+          // Apps Script allows the request but does not expose its result to the browser.
+          await fetch(active.endpoint, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+          sentNow++;
+        } catch {
+          break;
+        }
       }
-      try {
-        const payload = await buildSharePayload(record);
-        // GASはCORSヘッダーを返さないため no-cors で送る（応答は読めない）。
-        // サーバー側で記録IDの重複を弾くので、再送しても二重登録にならない。
-        await fetch(config.endpoint, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload),
-        });
-        queue.pending = queue.pending.filter((p) => p !== id);
-        queue.sent.push(id);
-        sentNow++;
-        saveQueue(queue);
-      } catch {
-        break; // 通信失敗時は残りをキューに残して次回に回す
-      }
+      // Read again so sketches saved during the network request stay in the queue.
+      const queue = loadQueue();
+      const pending = queue.pending.filter((item) => item !== id);
+      const sent =
+        record && !queue.sent.includes(id) ? [...queue.sent, id] : queue.sent;
+      if (!saveQueue({ pending, sent })) break;
     }
-    saveQueue(queue);
     return sentNow;
   } catch {
     return sentNow; // 保存領域に触れない環境では静かに諦める

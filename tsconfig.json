@@ -10,6 +10,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "jsxImportSource": "@zooketch/ruby",
+    "paths": { "@zooketch/ruby/*": ["./src/furigana/runtime/*"] },
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true
