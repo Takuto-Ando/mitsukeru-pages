@@ -1,4 +1,6 @@
 import { NotebookTools } from "./NotebookTools";
+import { QuizPanel } from "./QuizPanel";
+import { ParentReport } from "./ParentReport";
 import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
@@ -123,6 +125,7 @@ export function DrawingCollection({
   const [tab, setTab] = useState<"sketch" | "photo">("sketch");
   const [selected, setSelected] = useState<string>();
   const [sortMode, setSortMode] = useState<"new" | "animal">("new");
+  const [panel, setPanel] = useState<"quiz" | "report" | null>(null);
   const sortedDrawings = [...drawings].sort((a, b) =>
     sortMode === "new"
       ? b.createdAt.localeCompare(a.createdAt)
@@ -440,6 +443,26 @@ export function DrawingCollection({
               </ul>
             )}
           </div>
+          <div className="gallery-actions">
+            <button
+              type="button"
+              aria-pressed={panel === "quiz"}
+              onClick={() => setPanel(panel === "quiz" ? null : "quiz")}
+            >
+              クイズであそぶ
+            </button>
+            <button
+              type="button"
+              aria-pressed={panel === "report"}
+              onClick={() => setPanel(panel === "report" ? null : "report")}
+            >
+              おうちの人レポート
+            </button>
+          </div>
+          {panel === "quiz" && <QuizPanel onClose={() => setPanel(null)} />}
+          {panel === "report" && (
+            <ParentReport drawings={drawings} onClose={() => setPanel(null)} />
+          )}
           {drawings.length > 1 && (
             <div className="collection-sort" role="group" aria-label="並び替え">
               <button
