@@ -125,6 +125,14 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await expect
     .poll(async () => (await savedObservations(page))[0]?.photo)
     .toMatch(/^data:image\/jpeg/);
+  const savedHeading = page.getByRole("heading", {
+    name: "写真をアルバムに保存しました。",
+  });
+  await expect(savedHeading).toHaveCSS("font-family", /Zen Maru Gothic/);
+  await expect(savedHeading).toHaveCSS("font-weight", "700");
+  await expect(
+    savedHeading.locator('ruby[data-reading="ほぞん"]'),
+  ).toBeVisible();
   const jpeg = (await savedObservations(page))[0].photo!;
   const storedRatio = await page.evaluate(async (source) => {
     const image = new Image();

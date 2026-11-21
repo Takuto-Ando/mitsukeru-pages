@@ -103,6 +103,11 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   await expect(node("38-1056")).toBeVisible();
   await button("描いてみる！").click();
   await expect(node("52-5984")).toBeVisible();
+  await expect(
+    node("52-5984")
+      .getByRole("img", { name: "難易度 1 / 3" })
+      .locator(".card-lettering-text"),
+  ).toHaveCSS("color", "rgb(249, 168, 70)");
   await expect(button("描きはじめる")).toHaveCount(0);
   await page.waitForTimeout(3200);
   await expect(node("52-5984")).toBeVisible();
@@ -127,7 +132,14 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   await expect(node("38-1026")).toBeVisible();
   await button("ギャラリー").click();
   await expect(node("63-6390")).toBeVisible();
-  await expect(button("キリンのスケッチを見る")).toBeVisible();
+  await button("キリンのスケッチを見る").click();
+  const galleryDetail = page.getByRole("dialog");
+  await expect(
+    galleryDetail
+      .getByRole("img", { name: "難易度 1 / 3" })
+      .locator(".card-lettering-text"),
+  ).toHaveCSS("color", "rgb(249, 168, 70)");
+  await galleryDetail.getByRole("button", { name: "一覧に戻る" }).click();
   await page.getByRole("tab", { name: "写真", exact: true }).click();
   await expect(node("66-10991")).toBeVisible();
   await button("写真を撮る").click();

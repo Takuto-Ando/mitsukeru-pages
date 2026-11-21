@@ -12,7 +12,11 @@ export function CardLettering({
   lines?: readonly string[];
 }) {
   const annotated = useFuriganaEnabled() && /[\p{Script=Han}々]/u.test(text);
-  if (!annotated && !lines?.length) {
+  if (
+    import.meta.env.VITE_LEGACY_EDITIONS === "1" &&
+    !annotated &&
+    !lines?.length
+  ) {
     return <img src={src} alt={text} className={className} />;
   }
   return (

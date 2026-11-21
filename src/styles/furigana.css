@@ -17,10 +17,11 @@ ruby[data-reading]::after {
   font-weight: 500;
   letter-spacing: 0.02em;
   color: inherit;
+  -webkit-text-stroke-width: 0;
   opacity: 0.96;
   user-select: none;
   position: absolute;
-  inset-block-end: 88%;
+  inset-block-end: calc(100% + 1px);
   inset-inline-start: 50%;
   transform: translateX(-50%);
   line-height: 1;
@@ -36,7 +37,7 @@ ruby[data-reading]::after {
   line-height: 1.6;
 }
 
-/* The original outline keeps the card's dimensions while ruby is enabled. */
+/* The original artwork reserves the label dimensions in either ruby mode. */
 .card-lettering.card-lettering {
   display: inline-grid;
   grid-template: 1fr / minmax(0, auto);
@@ -71,7 +72,8 @@ button .card-lettering-text {
   display: block;
   line-height: 1.2;
   text-align: center;
-  font-weight: 800;
+  font-family: var(--font-body);
+  font-weight: 700;
   text-wrap: balance;
 }
 
@@ -84,10 +86,13 @@ button .card-lettering-text {
   color: #4c234f;
 }
 .design3-intro-message .card-lettering-text {
-  line-height: 1.55;
+  line-height: 1.85;
 }
 .design3-intro-message .card-lettering > img {
   width: 100%;
+}
+.design3-challenge h1 ruby[data-reading]::after {
+  color: var(--d3-brown);
 }
 .design3-challenge h1 .card-lettering {
   display: grid;

@@ -1062,15 +1062,10 @@ export function SketchCanvas({
             </button>
           </div>
           <label className="drawing-width">
-            <img
-              className="drawing-width-label"
-              src={assetPath("illustrations/pdf-design/drawing-tool-width.svg")}
-              width={48}
-              height={9}
-              alt="ペンの太さ"
-            />
+            <span className="drawing-width-label">ペンの太さ</span>
             <input
               type="range"
+              aria-label="ペンの太さ"
               min={0}
               max={BRUSH_WIDTHS.length - 1}
               step={1}

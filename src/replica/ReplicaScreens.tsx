@@ -164,12 +164,12 @@ export function ReplicaDraw({
                 height={17}
                 src={assetPath("figma/entry/sketch-confirm.svg")}
               />
-              <img
+              <CardLettering
                 className="drawing-lettering"
                 src={assetPath(
                   "illustrations/pdf-design/drawing-action-finish.svg",
                 )}
-                alt="できた！"
+                text="できた！"
               />
             </button>
           </>
@@ -338,16 +338,7 @@ export function ReplicaPhotoReview({
       }
       aria-labelledby="replica-photo-heading"
     >
-      <h1 id="replica-photo-heading">
-        {photo && saved ? (
-          <CardLettering
-            src={assetPath("replica-assets/review-title.svg")}
-            text={photoHeading}
-          />
-        ) : (
-          photoHeading
-        )}
-      </h1>
+      <h1 id="replica-photo-heading">{photoHeading}</h1>
       <article
         className="design3-photo-card"
         data-photo-shine={photo ? true : undefined}
@@ -371,16 +362,7 @@ export function ReplicaPhotoReview({
         )}
         <div className="design3-photo-meta">
           <div className="design3-photo-animal">
-            <h2>
-              {group?.id === "giraffe" ? (
-                <img
-                  src={assetPath("replica-assets/review-giraffe.svg")}
-                  alt={group.name}
-                />
-              ) : (
-                (group?.name ?? "？？？？？")
-              )}
-            </h2>
+            <h2>{group?.name ?? "？？？？？"}</h2>
             <button
               className="design3-photo-edit"
               ref={edit}
@@ -389,7 +371,7 @@ export function ReplicaPhotoReview({
               aria-expanded={editing}
               onClick={() => setEditing(!editing)}
             >
-              <img alt="" src={file("edit")} />
+              <span>修正</span>
             </button>
             {editing && (
               <ul

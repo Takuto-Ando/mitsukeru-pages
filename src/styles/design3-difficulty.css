@@ -13,6 +13,16 @@
   flex: 0 0 21.6%;
   width: 21.6%;
   height: auto;
+  color: var(--d3-orange, #f9a846);
+}
+
+.difficulty-label.card-lettering {
+  container-type: inline-size;
+}
+
+.difficulty-label.card-lettering .card-lettering-text {
+  font-size: min(19px, 28cqi);
+  white-space: nowrap;
 }
 
 .difficulty-icons {

@@ -89,9 +89,9 @@ export function HomeScreen({
             width={38}
             height={35}
           />
-          <img
+          <CardLettering
             className="design3-title-start-lettering"
-            alt=""
+            text="はじめから"
             src={assetPath("illustrations/pdf-design/entry-title-start.svg")}
           />
         </button>
@@ -103,9 +103,9 @@ export function HomeScreen({
             width={19.2164}
             height={19.2164}
           />
-          <img
+          <CardLettering
             className="design3-title-resume-lettering"
-            alt=""
+            text="つづきから"
             src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
           />
         </button>

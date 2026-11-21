@@ -22,20 +22,13 @@ export function CameraZoom({
           }
           onClick={() => void changeZoom(value)}
         >
-          {value === 2 ? (
-            <span aria-hidden="true" className="zoom-text">
-              2
-            </span>
-          ) : (
-            <span
-              aria-hidden="true"
-              className={
-                value === 0.5
-                  ? "zoom-mark zoom-mark--half"
-                  : "zoom-mark zoom-mark--one"
-              }
-            />
-          )}
+          <span
+            aria-hidden="true"
+            className="zoom-text"
+            data-wide={value === 0.5 || undefined}
+          >
+            {value}
+          </span>
         </button>
       ))}
     </div>

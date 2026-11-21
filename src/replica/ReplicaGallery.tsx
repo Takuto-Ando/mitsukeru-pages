@@ -4,7 +4,7 @@ import {
   zooAnimalSummary,
 } from "../content/zooAnimalSummaries";
 import type { Stroke } from "../types";
-import { CardLettering } from "../components/CardLettering";
+import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { assetPath } from "../content/artwork";
 import { taskById } from "../content/tasks";
@@ -203,10 +203,7 @@ export function ReplicaGallery({
         >
           <span aria-hidden="true">‹</span>
         </button>
-        <h1 id={id}>
-          <span className="sr-only">マイギャラリー</span>
-          <Mark name="title" />
-        </h1>
+        <h1 id={id}>マイギャラリー</h1>
       </header>
       <div className="gallery-sheet">
         <div
@@ -242,15 +239,11 @@ export function ReplicaGallery({
               onClick={() => setTab(item)}
             >
               <Mark name={item} />
-              {item === "photo" ? (
-                <CardLettering
-                  className="gallery-photo-name"
-                  src={assetPath("figma/entry/gallery-photo-label.svg")}
-                  text="写真"
-                />
-              ) : (
-                <Mark name="sketch-label" />
-              )}
+              <span
+                className={`replica-gallery-tab-label replica-gallery-tab-label--${item}`}
+              >
+                <Furi text={tabs[item]} label={false} />
+              </span>
             </button>
           ))}
         </div>
@@ -317,11 +310,7 @@ export function ReplicaGallery({
         aria-label="写真を撮る"
       >
         <Mark name="camera" />
-        <CardLettering
-          className="gallery-photo-action"
-          src={assetPath("figma/entry/gallery-camera-label.svg")}
-          text="写真を撮る"
-        />
+        <span className="replica-gallery-camera-label">写真を撮る</span>
       </button>
       {activeEntry && (
         <dialog

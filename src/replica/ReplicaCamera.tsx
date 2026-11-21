@@ -302,10 +302,10 @@ export function ReplicaCamera({
         />
         <p className="pitsune-bubble">
           {sample && sampleVisible ? (
-            <img
+            <CardLettering
               className="camera-prompt-art replica-found-art"
               src={assetPath("replica-assets/camera-found.svg")}
-              alt="キリンがいるよ！"
+              text="キリンがいるよ！"
             />
           ) : !legacy && recognized ? (
             <BubbleLine text={`${live.boxes[0]?.label ?? ""}かな？`} />
@@ -428,11 +428,7 @@ export function ReplicaCamera({
             className="camera-side-icon camera-gallery-icon"
             src={assetPath(art + "camera-gallery.svg")}
           />
-          <img
-            alt=""
-            className="camera-side-label"
-            src={assetPath(art + "camera-gallery-label.svg")}
-          />
+          <span className="camera-side-label">ギャラリー</span>
         </button>
         <CameraShutter
           disabled={
@@ -461,11 +457,7 @@ export function ReplicaCamera({
             className="camera-side-icon"
             src={assetPath(art + "camera-profile.svg")}
           />
-          <img
-            alt=""
-            className="camera-side-label"
-            src={assetPath(art + "camera-profile-label.svg")}
-          />
+          <span className="camera-side-label">マイページ</span>
         </button>
       </div>
       {legacy && !sample && message && (

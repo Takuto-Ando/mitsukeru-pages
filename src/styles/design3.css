@@ -627,26 +627,6 @@ body:has(.design3-shell) {
   width: 39.77px;
 }
 
-.zoom-mark {
-  display: block;
-  background: currentColor;
-  translate: var(--zoom-offset, 0px);
-}
-
-.zoom-mark--half {
-  width: 15.15px;
-  height: 7.78px;
-  mask: url("../../public/illustrations/pdf-design/camera-zoom-half-label.svg")
-    center / contain no-repeat;
-}
-
-.zoom-mark--one {
-  width: 17.54px;
-  height: 11.55px;
-  mask: url("../../public/illustrations/pdf-design/camera-zoom-one-label.svg")
-    center / contain no-repeat;
-}
-
 .design3-photo-review {
   box-sizing: border-box;
   max-width: 402px;
@@ -840,6 +820,10 @@ body:has(.design3-shell) {
   line-height: 1;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.design3-zoom .zoom-text[data-wide] {
+  font-size: 0.75em;
 }
 
 .design3-zoom button:disabled {

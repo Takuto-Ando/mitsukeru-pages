@@ -183,6 +183,13 @@
   display: grid;
   min-height: 23px;
   place-items: center;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+.replica-app .design3-photo-review h1 ruby::after {
+  font-size: max(10px, 0.56em);
+  letter-spacing: 0.07em;
 }
 
 .replica-app .design3-photo-review .captured-preview {
@@ -207,4 +214,16 @@
 .replica-app .design3-photo-fact {
   font-size: 10px;
   line-height: 1.6;
+}
+
+.replica-camera .camera-side-label {
+  color: var(--d3-brown);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.replica-app .design3-photo-edit > span {
+  color: #fff;
+  font-size: 11px;
 }

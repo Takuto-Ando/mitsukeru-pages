@@ -231,7 +231,10 @@ export function TutorialEndScreen({
           onClick={onDone}
           aria-label="ありがとう！"
         >
-          <img alt="" src={entryLettering("finish", "action")} />
+          <CardLettering
+            text="ありがとう！"
+            src={entryLettering("finish", "action")}
+          />
         </button>
       )}
     </IntroPanel>

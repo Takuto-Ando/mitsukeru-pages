@@ -91,6 +91,27 @@
   width: 28px;
 }
 
+.figma-shell .replica-gallery .gallery-header h1 {
+  font-size: clamp(18px, 5.6vw, 22px);
+  line-height: 22px;
+  transform: translateY(-2px);
+}
+
+.replica-gallery-tab-label {
+  flex: none;
+  line-height: 18px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.replica-gallery-tab-label--sketch {
+  width: 55px;
+}
+
+.replica-gallery-tab-label--photo {
+  width: 31px;
+}
+
 .gallery-tabs button:first-child {
   border-radius: 999px 0 0 999px;
 }
@@ -293,6 +314,14 @@
   width: 55px;
   height: 11px;
   color: #fff;
+}
+
+.replica-gallery-camera-label {
+  width: 62px;
+  color: #fff;
+  font-size: 11px;
+  line-height: 13.2px;
+  white-space: nowrap;
 }
 
 body:has(.gallery-detail[open]) {

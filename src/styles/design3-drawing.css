@@ -222,6 +222,14 @@
   font-weight: 700;
 }
 
+.drawing-width-label {
+  width: 48px;
+  color: #684b02;
+  font-size: 9.5px;
+  line-height: 9px;
+  white-space: nowrap;
+}
+
 .drawing-width input {
   appearance: none;
   width: 100%;
