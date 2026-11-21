@@ -19,6 +19,7 @@ export function HomeScreen({
   savedCount,
   studyTutorial = false,
   edition,
+  onScanQr,
 }: {
   onStart: () => void;
   onContinue: () => void;
@@ -27,6 +28,7 @@ export function HomeScreen({
   savedCount: number;
   studyTutorial?: boolean;
   edition?: "plus" | "dopa";
+  onScanQr?: () => void;
 }) {
   const dopaMode = edition === "dopa";
   const lettering = dopaMode ? "" : "-brown";
@@ -130,6 +132,9 @@ export function HomeScreen({
             <Settings aria-hidden="true" size={17} />
             設定
           </button>
+          {onScanQr && (
+            <button onClick={onScanQr}>QRで課題を開く</button>
+          )}
         </div>
       </div>
       {edition && (

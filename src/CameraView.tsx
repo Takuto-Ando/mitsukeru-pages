@@ -8,6 +8,7 @@ import { assetPath } from "./content/artwork";
 import { useEffect, useRef, useState } from "react";
 import { CameraOff } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
+import { PHOTO_FRAMES, drawPhotoFrame, frameSvg } from "./future/frames";
 
 type ZoomCapabilities = MediaTrackCapabilities & {
   zoom?: { min: number; max: number };
@@ -58,6 +59,7 @@ export function CameraView({
   }>();
   const manuallySelected = useRef(false);
   const [detected, setDetected] = useState("");
+  const [frameId, setFrameId] = useState<string>("");
   const [zoom, setZoom] = useState(1);
   const zoomRef = useRef(zoom);
   zoomRef.current = zoom;
@@ -215,6 +217,7 @@ export function CameraView({
       const context = canvas.getContext("2d");
       if (!context) throw new Error("canvas");
       context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
+      if (frameId) drawPhotoFrame(context, frameId, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       clearReview();
       setDetected("");
@@ -361,6 +364,42 @@ export function CameraView({
               className="design3-camera-guides"
               src={assetPath("figma/entry/camera-guides.svg")}
             />
+          )}
+          {status === "live" && frameId && (
+            <svg
+              className="photo-frame-overlay"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+              dangerouslySetInnerHTML={{ __html: frameSvg(frameId) }}
+            />
+          )}
+          {dopa && status === "live" && (
+            <div
+              className="photo-frame-picker"
+              role="group"
+              aria-label="変身フォトフレーム"
+            >
+              <button
+                type="button"
+                aria-pressed={frameId === ""}
+                className={frameId === "" ? "is-active" : ""}
+                onClick={() => setFrameId("")}
+              >
+                フレームなし
+              </button>
+              {PHOTO_FRAMES.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  aria-pressed={frameId === f.id}
+                  className={frameId === f.id ? "is-active" : ""}
+                  onClick={() => setFrameId(f.id)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           )}
           <div
             className="design3-zoom"

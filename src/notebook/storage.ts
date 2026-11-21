@@ -164,6 +164,22 @@ export async function restoreObservations(records: ObservationRecord[]) {
   return { added, skipped };
 }
 
+// Attach or replace the child's spoken note (audio Blob) on one record.
+export async function updateObservationVoice(id: string, voice: Blob) {
+  const db = await database();
+  const tx = db.transaction("observations", "readwrite");
+  const done = transactionDone(tx);
+  const request = tx.objectStore("observations").get(id);
+  request.onsuccess = () => {
+    if (!request.result) {
+      tx.abort();
+      return;
+    }
+    tx.objectStore("observations").put({ ...request.result, voiceNote: voice });
+  };
+  await done;
+}
+
 // Update only reflection fields; preserve images, strokes and existing IDs atomically.
 export async function updateObservationReflection(
   id: string,

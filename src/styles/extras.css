@@ -182,6 +182,241 @@
   color: #7a4a21;
 }
 
+/* 思い出マップ */
+.zoo-map {
+  position: relative;
+  height: 300px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 20% 80%, #bcd8a8 0 60px, transparent 61px),
+    radial-gradient(circle at 82% 18%, #a8c8e8 0 52px, transparent 53px),
+    linear-gradient(160deg, #eef4da, #dcebc4);
+  border: 2px solid #b9cfa0;
+  overflow: hidden;
+}
+
+.zoo-map-path {
+  position: absolute;
+  inset: 46% 6% auto;
+  height: 10px;
+  border-radius: 999px;
+  background: #e5d9b8;
+}
+
+.zoo-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fff;
+  border: 2px solid #c9c2ae;
+  color: #8a8272;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.zoo-pin small {
+  position: absolute;
+  top: 36px;
+  font-size: 9px;
+  white-space: nowrap;
+  color: #6f7a58;
+}
+
+.zoo-pin.is-hit {
+  background: #ffd968;
+  border-color: #d99a26;
+  color: #6b4a12;
+}
+
+/* ピツネのお部屋 */
+.room-wall {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.room-frame {
+  margin: 0;
+  padding: 6px;
+  background: #fff;
+  border: 3px solid #b08b57;
+  border-radius: 6px;
+}
+
+.room-frame svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #faf7ec;
+}
+
+.room-frame figcaption {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a4a21;
+}
+
+.room-pitsune {
+  text-align: center;
+  color: #7a4a21;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.room-pitsune-face {
+  width: 84px;
+}
+
+/* 声の発表・飼育員メモ・夜の姿 */
+.voice-note {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.voice-note audio {
+  max-width: 100%;
+}
+
+.keeper-memo {
+  background: #fdf6df;
+  border-left: 4px solid #f6a83c;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.night-note {
+  background: #26355e;
+  color: #e8ecff;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+/* コース・ライブカメラ・ミニ絵本 */
+.course-row {
+  margin-bottom: 10px;
+}
+
+.livecam-list {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.minibook-page {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+/* QRスキャナ */
+.qr-scanner {
+  position: fixed;
+  inset: 12px;
+  z-index: 60;
+  background: #fffdf6;
+  border-radius: 20px;
+  padding: 18px;
+  overflow: auto;
+  box-shadow: 0 18px 50px rgb(60 40 10 / 0.3);
+}
+
+.qr-video {
+  width: 100%;
+  border-radius: 14px;
+  background: #222;
+}
+
+/* 変身フォトフレーム */
+.photo-frame-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.photo-frame-picker {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 118px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  z-index: 5;
+}
+
+.photo-frame-picker button {
+  border-radius: 999px;
+  border: 2px solid #fff;
+  background: rgb(40 30 60 / 0.65);
+  color: #fff;
+  padding: 6px 12px;
+  font-weight: 700;
+}
+
+.photo-frame-picker button.is-active {
+  background: #ffd968;
+  color: #4c3410;
+}
+
+/* 自由研究ポスター */
+.poster-print {
+  border: 3px solid #277e78;
+  border-radius: 14px;
+  padding: 18px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.poster-print h2,
+.poster-print h3 {
+  margin: 0;
+  color: #1d5a55;
+}
+
+.poster-kicker {
+  letter-spacing: 0.3em;
+  color: #277e78;
+  font-weight: 800;
+  margin: 0;
+}
+
+.poster-date {
+  color: #6b6252;
+  margin: 0;
+}
+
+.poster-image {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid #d8d2c2;
+}
+
+@media print {
+  body.poster-open * {
+    visibility: hidden;
+  }
+}
+
+.task-link-list {
+  word-break: break-all;
+  font-size: 12px;
+  display: grid;
+  gap: 4px;
+  padding-left: 18px;
+}
+
 /* プロフィール絞り込み（ギャラリー） */
 .profile-filter {
   display: flex;

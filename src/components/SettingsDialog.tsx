@@ -6,6 +6,7 @@ import { StudyControls } from "./StudyControls";
 import { groups } from "../content/groups";
 import { tasks } from "../content/tasks";
 import { uncoveredWords } from "../furigana/coverage";
+import { taskUrl } from "../future/deeplink";
 import {
   addProfile,
   currentProfileId,
@@ -147,6 +148,24 @@ export function SettingsDialog({
             絞り込めます。
           </p>
         </div>
+        <details className="dictionary-check">
+          <summary>動物ごとの課題リンク（QRポスター用）</summary>
+          <p>
+            各リンクをQRコード化して展示の近くに貼ると、その動物の課題が
+            すぐ開けます。
+          </p>
+          <ul className="task-link-list">
+            {groups.map((g) => {
+              const t = tasks.find((task) => task.groupId === g.id);
+              if (!t) return null;
+              return (
+                <li key={g.id}>
+                  {g.name}：{taskUrl(t.id)}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
         <details className="dictionary-check">
           <summary>
             ふりがな辞書チェック（未登録 {missingWords.length} 件）

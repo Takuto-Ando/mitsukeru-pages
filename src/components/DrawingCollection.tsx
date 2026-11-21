@@ -5,7 +5,11 @@ import { FeatureCelebration } from "./FeatureCelebration";
 import { TongueCelebration } from "./TongueCelebration";
 import { GalleryExtras } from "./GalleryExtras";
 import { MissionCard } from "./MissionCard";
+import { MiniBook } from "./MiniBook";
+import { PosterPrint } from "./PosterPrint";
+import { VoiceNote } from "./VoiceNote";
 import { downloadTimelapse } from "../future/timelapse";
+import { knowledgeFor } from "../future/knowledge";
 import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
@@ -139,9 +143,11 @@ export function DrawingCollection({
   const [tab, setTab] = useState<"sketch" | "photo">("sketch");
   const [selected, setSelected] = useState<string>();
   const [sortMode, setSortMode] = useState<"new" | "animal">("new");
-  const [panel, setPanel] = useState<"quiz" | "report" | "mission" | null>(
-    null,
-  );
+  const [panel, setPanel] = useState<
+    "quiz" | "report" | "mission" | "book" | null
+  >(null);
+  const [nightMode, setNightMode] = useState(false);
+  const [posterOpen, setPosterOpen] = useState(false);
   const sortedDrawings = [...drawings].sort((a, b) =>
     sortMode === "new"
       ? b.createdAt.localeCompare(a.createdAt)
@@ -508,6 +514,13 @@ export function DrawingCollection({
             >
               ミッションカード
             </button>
+            <button
+              type="button"
+              aria-pressed={panel === "book"}
+              onClick={() => setPanel(panel === "book" ? null : "book")}
+            >
+              ミニ絵本
+            </button>
           </div>
           <GalleryExtras drawings={drawings} />
           {panel === "quiz" && <QuizPanel onClose={() => setPanel(null)} />}
@@ -516,6 +529,9 @@ export function DrawingCollection({
           )}
           {panel === "mission" && (
             <MissionCard drawings={drawings} onClose={() => setPanel(null)} />
+          )}
+          {panel === "book" && (
+            <MiniBook drawings={drawings} onClose={() => setPanel(null)} />
           )}
           {drawings.length > 1 && (
             <div className="collection-sort" role="group" aria-label="並び替え">
@@ -661,6 +677,52 @@ export function DrawingCollection({
               >
                 タイムラプス（アニメSVG）を保存
               </button>
+              <VoiceNote drawing={drawing} onSaved={onUpdate} />
+              {(() => {
+                const knowledge = knowledgeFor(drawing.groupId);
+                if (!knowledge) return null;
+                return (
+                  <>
+                    <p className="keeper-memo">
+                      飼育員さんメモ：{knowledge.keeper}
+                    </p>
+                    <button
+                      type="button"
+                      aria-pressed={nightMode}
+                      onClick={() => setNightMode((v) => !v)}
+                    >
+                      {nightMode ? "昼の姿にもどす" : "夜の姿を見る"}
+                    </button>
+                    {nightMode && (
+                      <p className="night-note">
+                        夜の {drawing.animalName}：{knowledge.night}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
+              <button
+                type="button"
+                aria-pressed={posterOpen}
+                onClick={() => setPosterOpen((v) => !v)}
+              >
+                自由研究ポスター
+              </button>
+              {posterOpen && (
+                <>
+                  <PosterPrint
+                    drawing={drawing}
+                    ownUrl={urls?.id === drawing.id ? urls.own : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="report-print"
+                    onClick={() => window.print()}
+                  >
+                    ポスターを印刷する
+                  </button>
+                </>
+              )}
               <p className="quiet-note">
                 観察日{" "}
                 <time dateTime={drawing.createdAt}>

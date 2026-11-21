@@ -12,6 +12,7 @@ import {
   type ReadingQuestion,
 } from "../future/quizLogic";
 import { playMotif, SOUND_QUIZ_IDS } from "../future/soundQuiz";
+import { KNOWLEDGE } from "../future/knowledge";
 import "../styles/future4.css";
 
 const PRAISE = [
@@ -84,7 +85,28 @@ const ANIMAL_CATEGORIES: { id: string; label: string; groupIds: string[] }[] = [
   },
 ];
 
-type Mode = "reading" | "animal" | "difference" | "sound";
+type FoodQuestion = { name: string; food: string; choices: string[] };
+
+function buildFoodQuestions(count: number): FoodQuestion[] {
+  const entries = groups
+    .map((g) => ({ name: g.name, food: KNOWLEDGE[g.id]?.food }))
+    .filter((e): e is { name: string; food: string } => !!e.food);
+  const shuffled = [...entries].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map((entry) => {
+    const others = entries
+      .filter((e) => e.food !== entry.food)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((e) => e.food);
+    return {
+      name: entry.name,
+      food: entry.food,
+      choices: [entry.food, ...others].sort(() => Math.random() - 0.5),
+    };
+  });
+}
+
+type Mode = "reading" | "animal" | "difference" | "sound" | "food" | "duo";
 
 const BEST_KEY = "zooketch-quiz-best-v1";
 
@@ -151,6 +173,17 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mode, round],
   );
+  const foodQuestions = useMemo<FoodQuestion[]>(
+    () => (mode === "food" ? buildFoodQuestions(5) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, round],
+  );
+  const duoQuestions = useMemo<AnimalQuestion[]>(
+    () => (mode === "duo" ? buildAnimalQuestions(animalItems(), 5) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, round],
+  );
+  const [duoRevealed, setDuoRevealed] = useState(false);
 
   const total =
     mode === "reading"
@@ -161,7 +194,11 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
           ? diffQuestions.length
           : mode === "sound"
             ? soundQuestions.length
-            : 0;
+            : mode === "food"
+              ? foodQuestions.length
+              : mode === "duo"
+                ? duoQuestions.length
+                : 0;
   const finished = mode !== null && index >= total && total > 0;
   const [best, setBest] = useState<Partial<Record<Mode, number>>>(loadBest);
   useEffect(() => {
@@ -177,7 +214,9 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
         ? animalQuestions[index]?.name
         : mode === "difference"
           ? diffQuestions[index]?.part
-          : soundQuestions[index]?.name;
+          : mode === "food"
+            ? foodQuestions[index]?.food
+            : soundQuestions[index]?.name;
   const choices =
     mode === "reading"
       ? (readingQuestions[index]?.choices ?? [])
@@ -185,7 +224,9 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
         ? (animalQuestions[index]?.choices ?? [])
         : mode === "difference"
           ? (diffQuestions[index]?.choices ?? [])
-          : (soundQuestions[index]?.choices ?? []);
+          : mode === "food"
+            ? (foodQuestions[index]?.choices ?? [])
+            : (soundQuestions[index]?.choices ?? []);
 
   const choose = (choice: string) => {
     if (picked) return;
@@ -200,6 +241,7 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
     setIndex(0);
     setPicked(null);
     setScore(0);
+    setDuoRevealed(false);
     setRound((r) => r + 1);
   };
 
@@ -264,6 +306,24 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
                 `（ベスト： ${best.sound}もんせいかい）`}
             </span>
           </button>
+          <button type="button" onClick={() => setMode("food")}>
+            えさやりクイズ
+            <span>
+              この動物は何を食べる？
+              {best.food !== undefined &&
+                `（ベスト： ${best.food}もんせいかい）`}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDuoRevealed(false);
+              setMode("duo");
+            }}
+          >
+            親子で出し合いクイズ
+            <span>出題者は答えを内緒にして、相手に当ててもらおう</span>
+          </button>
         </div>
       )}
 
@@ -272,7 +332,38 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
           <p className="quiz-progress">
             {index + 1} / {total} もんめ
           </p>
-          {mode === "reading" ? (
+          {mode === "duo" ? (
+            <>
+              <img
+                className="quiz-image"
+                src={assetPath(duoQuestions[index]?.image ?? "")}
+                alt="この動物はだあれ？"
+              />
+              <p className="quiz-question">
+                出題者：この動物は だあれ？（答えは内緒だよ）
+              </p>
+              {duoRevealed ? (
+                <div className="quiz-feedback" role="status">
+                  <p>こたえは「{duoQuestions[index]?.name}」でした！</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDuoRevealed(false);
+                      next();
+                    }}
+                  >
+                    {index + 1 >= total ? "おしまい" : "つぎのもんだい"}
+                  </button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setDuoRevealed(true)}>
+                  こたえを見る
+                </button>
+              )}
+            </>
+          ) : mode === "food" ? (
+            <p className="quiz-word">{foodQuestions[index]?.name}</p>
+          ) : mode === "reading" ? (
             <p className="quiz-word">{readingQuestions[index]?.word}</p>
           ) : mode === "animal" ? (
             <img
@@ -297,15 +388,20 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
               ▶ 音を聞く
             </button>
           )}
-          <p className="quiz-question">
-            {mode === "reading"
-              ? "この漢字の読み方は？"
-              : mode === "animal"
-                ? "この動物は だあれ？"
-                : mode === "difference"
-                  ? `${diffQuestions[index]?.animal} の絵、本物と違うのは どの部分？`
-                  : "この音のイメージは どの動物？（本物の鳴き声ではなく イメージの音だよ）"}
-          </p>
+          {mode !== "duo" && (
+            <p className="quiz-question">
+              {mode === "reading"
+                ? "この漢字の読み方は？"
+                : mode === "animal"
+                  ? "この動物は だあれ？"
+                  : mode === "difference"
+                    ? `${diffQuestions[index]?.animal} の絵、本物と違うのは どの部分？`
+                    : mode === "food"
+                      ? "この動物は 何を食べる？"
+                      : "この音のイメージは どの動物？（本物の鳴き声ではなく イメージの音だよ）"}
+            </p>
+          )}
+          {mode !== "duo" && (
           <div className="quiz-choices">
             {choices.map((choice) => {
               const state =
@@ -329,7 +425,8 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
               );
             })}
           </div>
-          {picked !== null && (
+          )}
+          {mode !== "duo" && picked !== null && (
             <div className="quiz-feedback" role="status">
               <p>
                 {picked === answer
@@ -344,7 +441,22 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
         </div>
       )}
 
-      {finished && (
+      {finished && mode === "duo" && (
+        <div className="quiz-result" role="status">
+          <p className="quiz-score">出し合いクイズ おつかれさま！</p>
+          <p>こんどは役を交代して遊んでみてね。</p>
+          <div className="quiz-result-actions">
+            <button type="button" onClick={restart}>
+              もういちど
+            </button>
+            <button type="button" onClick={onClose}>
+              ギャラリーにもどる
+            </button>
+          </div>
+        </div>
+      )}
+
+      {finished && mode !== "duo" && (
         <div className="quiz-result" role="status">
           <p className="quiz-score">
             {total}もん中 <strong>{score}もん</strong> せいかい！
