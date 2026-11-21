@@ -250,3 +250,38 @@
   background: #7fa845;
   border-radius: 999px;
 }
+
+.quiz-best {
+  font-weight: 700;
+  color: #4c6b1f;
+}
+
+.report-print {
+  margin-top: 12px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 2px solid #7a4a21;
+  background: #fff;
+  color: #7a4a21;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .report-panel,
+  .report-panel * {
+    visibility: visible;
+  }
+  .report-panel {
+    position: absolute;
+    inset: 0;
+    border: none;
+  }
+  .report-print,
+  .quiz-head button {
+    display: none;
+  }
+}

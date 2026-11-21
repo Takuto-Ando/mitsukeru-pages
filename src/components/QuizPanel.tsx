@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { groups } from "../content/groups";
 import { tasks } from "../content/tasks";
@@ -37,6 +37,30 @@ function animalItems(): { name: string; image: string }[] {
 
 type Mode = "reading" | "animal";
 
+const BEST_KEY = "zooketch-quiz-best-v1";
+
+function loadBest(): Partial<Record<Mode, number>> {
+  try {
+    return JSON.parse(localStorage.getItem(BEST_KEY) ?? "{}") as Partial<
+      Record<Mode, number>
+    >;
+  } catch {
+    return {};
+  }
+}
+
+function saveBest(mode: Mode, score: number) {
+  const best = loadBest();
+  if ((best[mode] ?? -1) < score) {
+    best[mode] = score;
+    try {
+      localStorage.setItem(BEST_KEY, JSON.stringify(best));
+    } catch {
+      // 保存できなくてもクイズは続行できる
+    }
+  }
+}
+
 export function QuizPanel({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<Mode | null>(null);
   const [index, setIndex] = useState(0);
@@ -62,6 +86,13 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
         ? animalQuestions.length
         : 0;
   const finished = mode !== null && index >= total && total > 0;
+  const [best, setBest] = useState<Partial<Record<Mode, number>>>(loadBest);
+  useEffect(() => {
+    if (finished && mode && (best[mode] ?? -1) < score) {
+      saveBest(mode, score);
+      setBest(loadBest());
+    }
+  }, [finished, mode, score, best]);
   const answer =
     mode === "reading"
       ? readingQuestions[index]?.reading
@@ -100,11 +131,19 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
         <div className="quiz-modes">
           <button type="button" onClick={() => setMode("reading")}>
             よみかたクイズ
-            <span>漢字の読み方をあてよう</span>
+            <span>
+              漢字の読み方をあてよう
+              {best.reading !== undefined &&
+                `（ベスト： ${best.reading}もんせいかい）`}
+            </span>
           </button>
           <button type="button" onClick={() => setMode("animal")}>
             どうぶつあてクイズ
-            <span>絵を見て動物をあてよう</span>
+            <span>
+              絵を見て動物をあてよう
+              {best.animal !== undefined &&
+                `（ベスト： ${best.animal}もんせいかい）`}
+            </span>
           </button>
         </div>
       )}
@@ -172,6 +211,13 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
             {total}もん中 <strong>{score}もん</strong> せいかい！
           </p>
           <p>{PRAISE[Math.min(score, PRAISE.length - 1)]}</p>
+          {mode && best[mode] !== undefined && (
+            <p className="quiz-best">
+              {best[mode] === score && score > 0
+                ? "ベストスコア こうしん！"
+                : `ベストスコア： ${best[mode]}もんせいかい`}
+            </p>
+          )}
           <div className="quiz-result-actions">
             <button type="button" onClick={restart}>
               もういちど

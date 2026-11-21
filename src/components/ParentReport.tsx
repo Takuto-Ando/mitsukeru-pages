@@ -114,6 +114,13 @@ export function ParentReport({
           <p className="quiet-note">
             このレポートは、この端末に保存された観察カードから自動で集計しています。
           </p>
+          <button
+            type="button"
+            className="report-print"
+            onClick={() => window.print()}
+          >
+            レポートを印刷する
+          </button>
         </>
       )}
     </section>

@@ -1,6 +1,8 @@
 import { NotebookTools } from "./NotebookTools";
 import { QuizPanel } from "./QuizPanel";
 import { ParentReport } from "./ParentReport";
+import { FeatureCelebration } from "./FeatureCelebration";
+import { TongueCelebration } from "./TongueCelebration";
 import { Furi } from "../furigana/Furigana";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronLeft } from "lucide-react";
@@ -577,6 +579,19 @@ export function DrawingCollection({
                 )
               }
             />
+            {(() => {
+              const detailTask = taskById[drawing.taskId || group.id];
+              if (!detailTask) return null;
+              return detailTask.id === "giraffe" ? (
+                <TongueCelebration strokes={drawing.strokes} scene={scene} />
+              ) : (
+                <FeatureCelebration
+                  strokes={drawing.strokes}
+                  scene={scene}
+                  taskId={detailTask.id}
+                />
+              );
+            })()}
             <div className="gallery-detail-tools">
               <h2 id={detailId}>
                 {drawing.animalName} <span>{drawing.taskName}</span>
