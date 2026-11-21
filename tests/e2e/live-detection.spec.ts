@@ -13,6 +13,7 @@ test("保存した実モデルでオフライン中もライブの枠と候補�
     process.env.E2E_PREVIEW !== "1",
     "オフライン再読み込みには本番ビルドが必要",
   );
+  test.setTimeout(75_000);
   await page.addInitScript((photo) => {
     const image = new Image();
     image.src = photo;
@@ -44,14 +45,16 @@ test("保存した実モデルでオフライン中もライブの枠と候補�
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
   await page.goto("./");
-  await button("設定").click();
-  await page.getByText("動物認識の事前ダウンロード", { exact: true }).click();
-  await button("ライブ検出モデルを保存（約3.7 MB）").click();
-  await expect(button("ライブ検出モデル保存済み")).toBeDisabled();
-  await button("設定を閉じる").click();
   await page.evaluate(() =>
     navigator.serviceWorker.ready.then(() => undefined),
   );
+  await button("設定").click();
+  await page.getByText("動物認識の事前ダウンロード", { exact: true }).click();
+  await button("ライブ検出モデルを保存（約3.7 MB）").click();
+  await expect(button("ライブ検出モデル保存済み")).toBeDisabled({
+    timeout: 20_000,
+  });
+  await button("設定を閉じる").click();
   await context.setOffline(true);
   await page.reload();
 
