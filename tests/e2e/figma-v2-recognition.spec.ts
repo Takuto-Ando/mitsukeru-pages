@@ -97,13 +97,9 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
     0,
   );
   await expect(camera.locator(".replica-camera-alternatives")).toHaveCount(0);
-  await expect(camera.locator(".design3-camera-guides")).toBeVisible({
-    timeout: 15_000,
-  });
-  await expect(camera.locator(".design3-camera-guides")).toHaveAttribute(
-    "src",
-    /figma\/entry\/camera-guides\.svg$/,
-  );
+  const guide = camera.locator(".replica-camera-tracking");
+  await expect(guide).toBeVisible({ timeout: 15_000 });
+  await expect(guide.locator("svg")).toHaveCount(4);
   await expect(camera.locator(".pitsune-bubble")).toHaveText(
     "キリンがいるよ！",
   );
@@ -155,7 +151,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
           terminate() {},
           postMessage(message: { type: string }) {
             const giraffe = sessionStorage.getItem("test:animal-moved")
-              ? { left: 0.26, top: 0.21, right: 0.71, bottom: 0.71 }
+              ? { left: 0.26, top: 0.21, right: 0.71, bottom: 0.52 }
               : { left: 0.12, top: 0.14, right: 0.47, bottom: 0.56 };
             const boxes = [{ label: "キリン", score: 0.8, ...giraffe }];
             if (sessionStorage.getItem("test:animal-moved")) {
@@ -203,16 +199,54 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   await page.evaluate(() =>
     window.dispatchEvent(new Event("test:camera-permission")),
   );
-  const guide = camera.locator(".design3-camera-guides");
+  const guide = camera.locator(".replica-camera-tracking");
   await expect(guide).toBeVisible();
   await expect(camera).toHaveAttribute("data-figma-node", "43-1745");
+  const corners = guide.locator("svg");
+  const cornerGeometry = () =>
+    corners.evaluateAll((elements) =>
+      elements.map((corner) => {
+        const rect = corner.getBoundingClientRect();
+        return {
+          width: rect.width,
+          height: rect.height,
+          viewBox: corner.getAttribute("viewBox"),
+          stroke: corner.querySelector("path")?.getAttribute("stroke-width"),
+        };
+      }),
+    );
+  const beforeCorners = await cornerGeometry();
+  expect(beforeCorners).toHaveLength(4);
+  for (const corner of beforeCorners) {
+    expect(corner.width).toBeGreaterThan(0);
+    expect(corner.width).toBe(corner.height);
+    expect(corner.stroke).toBe("8");
+  }
+  const cornerSpacing = async () => {
+    const [topLeft, topRight, bottomLeft] = await Promise.all(
+      [0, 1, 2].map((index) => corners.nth(index).boundingBox()),
+    );
+    return {
+      horizontal: topRight!.x - (topLeft!.x + topLeft!.width),
+      vertical: bottomLeft!.y - (topLeft!.y + topLeft!.height),
+    };
+  };
+  const beforeSpacing = await cornerSpacing();
   const before = (await guide.boundingBox())!;
   await page.evaluate(() => sessionStorage.setItem("test:animal-moved", "1"));
   await expect
     .poll(async () => (await guide.boundingBox())?.x)
     .toBeGreaterThan(before.x + 20);
   expect((await guide.boundingBox())?.y).toBeGreaterThan(before.y + 15);
-  expect((await guide.boundingBox())?.width).toBeGreaterThan(before.width + 20);
+  const after = (await guide.boundingBox())!;
+  expect(after.width).toBeGreaterThan(before.width + 20);
+  expect(after.height).toBeLessThan(before.height - 20);
+  expect(before.width).toBeLessThan(before.height);
+  expect(after.width).toBeGreaterThan(after.height);
+  expect(await cornerGeometry()).toEqual(beforeCorners);
+  const afterSpacing = await cornerSpacing();
+  expect(afterSpacing.horizontal).toBeGreaterThan(beforeSpacing.horizontal);
+  expect(afterSpacing.vertical).toBeLessThan(beforeSpacing.vertical);
   await expect(camera.locator(".pitsune-bubble")).toHaveText(
     "キリンがいるよ！",
   );

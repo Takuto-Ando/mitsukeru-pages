@@ -7,7 +7,7 @@ import {
   useLiveModelCached,
 } from "../recognition/useLiveDetection";
 import { CardLettering } from "../components/CardLettering";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
@@ -425,18 +425,33 @@ export function ReplicaCamera({
           />
         )}
         {bestMatch && (
-          <img
+          <div
             key={bestMatch.id}
-            alt=""
-            className="design3-camera-guides replica-camera-tracking"
-            src={assetPath("figma/entry/camera-guides.svg")}
-            style={{
-              left: `${bestMatch.left * 100}%`,
-              top: `${bestMatch.top * 100}%`,
-              width: `${(bestMatch.right - bestMatch.left) * 100}%`,
-              height: `${(bestMatch.bottom - bestMatch.top) * 100}%`,
-            }}
-          />
+            className="replica-camera-tracking"
+            aria-hidden="true"
+            style={
+              {
+                "--tracking-left": `${bestMatch.left * 100}%`,
+                "--tracking-top": `${bestMatch.top * 100}%`,
+                "--tracking-width": `${(bestMatch.right - bestMatch.left) * 100}%`,
+                "--tracking-height": `${(bestMatch.bottom - bestMatch.top) * 100}%`,
+              } as CSSProperties
+            }
+          >
+            {(
+              ["top-left", "top-right", "bottom-left", "bottom-right"] as const
+            ).map((corner) => (
+              <svg key={corner} data-corner={corner} viewBox="0 0 66 66">
+                <path
+                  d="M61 4H39C19.67 4 4 19.67 4 39V62"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth={8}
+                  strokeLinecap="round"
+                />
+              </svg>
+            ))}
+          </div>
         )}
         {legacy && liveActive && <LiveAnimalOverlay boxes={live.boxes} />}
         {legacy && ((!sample && !message) || photoModelDownloading) && (
