@@ -46,6 +46,7 @@ type Screen =
   | "gallery"
   | "free";
 
+const tutorialKey = "zooketch-replica-tutorial-v1";
 const introSteps = ["wave", "book", "camera"] as const;
 const choiceIds = ["giraffe", "hippo", "meerkat", "fennec", "elephant"];
 const choices = choiceIds.map((id) => groups.find((group) => group.id === id)!);
@@ -207,6 +208,11 @@ export function ReplicaApp() {
 
   function nextAfterResult() {
     if (tutorial) {
+      try {
+        localStorage.setItem(tutorialKey, "1");
+      } catch {
+        // The current tutorial can finish without persistent storage.
+      }
       setScreen("tutorial");
       setError("");
     } else {
@@ -289,13 +295,18 @@ export function ReplicaApp() {
               savedCount={records.length}
               studyTutorial={!!surveyUrl}
               onStart={() => {
+                try {
+                  if (!surveyUrl && localStorage.getItem(tutorialKey) === "1") {
+                    setTutorial(false);
+                    restartCamera();
+                    return;
+                  }
+                } catch {
+                  // The tutorial is available even with storage disabled.
+                }
                 setIntroPage(0);
                 setTutorial(true);
                 setScreen("intro");
-              }}
-              onContinue={() => {
-                setTutorial(false);
-                restartCamera();
               }}
               onCollection={() => setScreen("gallery")}
               onSettings={() => setScreen("free")}
@@ -304,6 +315,10 @@ export function ReplicaApp() {
           {screen === "intro" && (
             <ReplicaIntro
               pose={introSteps[introPage]}
+              onSkip={() => {
+                setTutorial(false);
+                restartCamera();
+              }}
               onNext={() =>
                 introPage < introSteps.length - 1
                   ? setIntroPage(introPage + 1)
@@ -336,7 +351,7 @@ export function ReplicaApp() {
                   onConfirm={() => setScreen(tutorial ? "cheer" : "loading")}
                 />
               </div>
-              {screen === "cheer" && <PhotoCelebration />}
+              {screen === "cheer" && <PhotoCelebration taskId={task.id} />}
             </>
           )}
           {screen === "easel" && (
@@ -351,6 +366,7 @@ export function ReplicaApp() {
               regionCount={task.scene.regions.length}
               onStart={startDrawing}
               tapAnywhere
+              autoAdvance={tutorial && task.id === "giraffe"}
             />
           )}
           {screen === "draw" && (

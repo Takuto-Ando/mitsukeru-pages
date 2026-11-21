@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { assetPath } from "../content/artwork";
+import { CameraShutter, CameraZoom } from "../components/CameraControls";
+import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
 
 export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
@@ -27,12 +29,15 @@ export function ReplicaCamera({
   const [sample, setSample] = useState(tutorial || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
   const [streamReady, setStreamReady] = useState(false);
-  const [zoom, setZoom] = useState(1);
+  const [cameraTrack, setCameraTrack] = useState<MediaStreamTrack>();
+  const cameraZoom = useCameraZoom(cameraTrack, sample);
   const [message, setMessage] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestNumber, retryCamera] = useState(0);
   const [visible, setVisible] = useState(() => !document.hidden);
   const video = useRef<HTMLVideoElement>(null);
+  const example = useRef<HTMLImageElement>(null);
+  const sampleVisible = sampleHasAnimal || cameraZoom.zoom === 0.5;
   const streamRef = useRef<MediaStream | undefined>(undefined);
   const menu = useRef<HTMLDialogElement>(null);
 
@@ -49,6 +54,7 @@ export function ReplicaCamera({
     function stopCamera() {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = undefined;
+      setCameraTrack(undefined);
       if (element) element.srcObject = null;
       setStreamReady(false);
     }
@@ -67,6 +73,7 @@ export function ReplicaCamera({
           return;
         }
         streamRef.current = stream;
+        setCameraTrack(stream.getVideoTracks?.()[0]);
         element.srcObject = stream;
         await element.play();
         if (active) setMessage("");
@@ -90,54 +97,36 @@ export function ReplicaCamera({
   function chooseMode(nextSample: boolean) {
     setSample(nextSample);
     setSampleHasAnimal(false);
-    setZoom(1);
     setMessage("");
     setMenuOpen(false);
   }
 
-  async function changeZoom(value: number) {
-    setZoom(value);
-    const track = streamRef.current?.getVideoTracks()[0];
-    const range = (
-      track?.getCapabilities?.() as
-        | (MediaTrackCapabilities & { zoom?: { min: number; max: number } })
-        | undefined
-    )?.zoom;
-    if (!track || !range || value < range.min || value > range.max) return;
-    const constraint: MediaTrackConstraintSet & { zoom: number } = {
-      zoom: value,
-    };
-    try {
-      await track.applyConstraints({ advanced: [constraint] });
-    } catch {
-      // Some desktop browsers expose a camera but reject lens changes.
-    }
-  }
-
   function takePhoto() {
     if (sample) {
-      if (!sampleHasAnimal) {
+      if (!sampleVisible) {
         setSampleHasAnimal(true);
         return;
       }
-      onCapture({ photo: samplePhoto(), sample: true });
+      const zoomed =
+        cameraZoom.digital > 1 && example.current
+          ? drawCameraFrame(example.current, 1000, cameraZoom.digital)?.canvas
+          : undefined;
+      onCapture({
+        photo: zoomed?.toDataURL("image/jpeg", 0.82) ?? samplePhoto(),
+        sample: true,
+      });
       return;
     }
 
     const frame = video.current;
     if (!frame?.videoWidth || !frame.videoHeight) return;
     try {
-      const photo = document.createElement("canvas");
-      const scale = Math.min(
-        1,
-        1000 / Math.max(frame.videoWidth, frame.videoHeight),
-      );
-      photo.width = Math.round(frame.videoWidth * scale);
-      photo.height = Math.round(frame.videoHeight * scale);
-      const context = photo.getContext("2d");
-      if (!context) return;
-      context.drawImage(frame, 0, 0, photo.width, photo.height);
-      onCapture({ photo: photo.toDataURL("image/jpeg", 0.82), sample: false });
+      const shot = drawCameraFrame(frame, 1000, cameraZoom.digital);
+      if (!shot) return;
+      onCapture({
+        photo: shot.canvas.toDataURL("image/jpeg", 0.82),
+        sample: false,
+      });
     } catch {
       setMessage("撮影できませんでした。もう一度試してね。");
     }
@@ -154,7 +143,7 @@ export function ReplicaCamera({
           src={assetPath("figma/entry/camera-face.svg")}
         />
         <p className="pitsune-bubble">
-          {sample && sampleHasAnimal ? (
+          {sample && sampleVisible ? (
             <img
               className="camera-prompt-art replica-found-art"
               src={assetPath("replica-assets/camera-found.svg")}
@@ -174,16 +163,18 @@ export function ReplicaCamera({
           <>
             <img
               className="replica-camera-sample"
-              data-framed={sampleHasAnimal || zoom === 0.5}
+              data-framed={sampleVisible}
+              ref={example}
+              style={{ transform: `scale(${cameraZoom.digital})` }}
               src={samplePhoto()}
               alt={
-                sampleHasAnimal
+                sampleVisible
                   ? "見本写真のキリン"
                   : "キリンの見本写真を拡大した背景"
               }
             />
             <span className="replica-sample-label">見本写真</span>
-            {sampleHasAnimal && (
+            {sampleVisible && (
               <img
                 alt=""
                 className="design3-camera-guides"
@@ -199,6 +190,7 @@ export function ReplicaCamera({
               autoPlay
               muted
               aria-label="動物を映すカメラ"
+              style={{ transform: `scale(${cameraZoom.digital})` }}
               onLoadedData={() =>
                 setStreamReady(Boolean(video.current?.videoWidth))
               }
@@ -217,26 +209,7 @@ export function ReplicaCamera({
             )}
           </>
         )}
-        <div className="design3-zoom" role="group" aria-label="カメラのズーム">
-          {[0.5, 1].map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-label={value + "×"}
-              aria-pressed={zoom === value}
-              onClick={() => void changeZoom(value)}
-            >
-              <span
-                aria-hidden
-                className={
-                  value === 0.5
-                    ? "zoom-mark zoom-mark--half"
-                    : "zoom-mark zoom-mark--one"
-                }
-              />
-            </button>
-          ))}
-        </div>
+        <CameraZoom {...cameraZoom} />
       </div>
       <div className="camera-controls">
         <button
@@ -257,15 +230,10 @@ export function ReplicaCamera({
             src={assetPath(art + "camera-gallery-label.svg")}
           />
         </button>
-        <button
-          className="shutter-button"
-          type="button"
-          aria-label="シャッター"
-          disabled={!sample && !streamReady}
+        <CameraShutter
+          disabled={(!sample && !streamReady) || cameraZoom.busy}
           onClick={takePhoto}
-        >
-          <img alt="" src={assetPath("figma/entry/shutter.svg")} />
-        </button>
+        />
         <button
           type="button"
           className="camera-side-button"

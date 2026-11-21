@@ -156,6 +156,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     "cheer" | "loading" | "challenge"
   >();
   const tutorialShown = useRef(false);
+  const [inTutorial, setInTutorial] = useState(false);
   const attemptedSurvey = useRef(false);
   const [surveyUrl] = useState(() =>
     tutorialSurveyUrl(
@@ -590,6 +591,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   }
   function restart(destination: Screen = "activity") {
     setScreen(destination);
+    setInTutorial(false);
     setPhotoPhase(undefined);
     setStorageError("");
     taskGeneration.current++;
@@ -776,10 +778,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
               if (dopa) unlockDopaAudio();
               restart("intro");
             }}
-            onContinue={() => {
-              if (dopa) unlockDopaAudio();
-              restart();
-            }}
             onCollection={openCollection}
             onSettings={openSettings}
             savedCount={collectionCount}
@@ -787,7 +785,12 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             onScanQr={qrScanSupported() ? () => setQrOpen(true) : undefined}
           />
         ) : screen === "intro" ? (
-          <IntroFlow onDone={() => setScreen("activity")} />
+          <IntroFlow
+            onDone={(completed) => {
+              setInTutorial(completed);
+              setScreen("activity");
+            }}
+          />
         ) : screen === "tutorial" ? (
           <TutorialEndScreen
             onDone={() => restart("home")}
@@ -803,6 +806,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             animal={group.name}
             part={task.part}
             regionCount={scene.regions.length}
+            autoAdvance={inTutorial && task.id === "giraffe"}
             onStart={() => {
               setPhotoPhase(undefined);
               next(1);
@@ -820,6 +824,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
               {step === 0 ? (
                 <CameraView
                   dopa={dopa}
+                  tutorial={inTutorial}
                   onCapture={dopa ? dopaShutter : undefined}
                   suspended={settingsOpen}
                   celebrating={photoPhase === "cheer"}

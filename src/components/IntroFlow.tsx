@@ -67,7 +67,7 @@ function IntroPanel({
       data-entry-lettering={lettering}
       role={loading ? "status" : undefined}
     >
-      <p className="design3-intro-message">
+      <p key={lettering} className="design3-intro-message">
         {lettering && typeof message === "string" ? (
           <img alt={message} src={entryLettering(lettering, "message")} />
         ) : (
@@ -92,7 +92,11 @@ function IntroPanel({
   );
 }
 
-export function IntroFlow({ onDone }: { onDone: () => void }) {
+export function IntroFlow({
+  onDone,
+}: {
+  onDone: (completed: boolean) => void;
+}) {
   const [page, setPage] = useState(0);
   const current = pages[page];
   return (
@@ -103,7 +107,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
       artwork={current.pose}
       lettering={current.pose}
     >
-      <button className="design3-intro-skip" onClick={onDone}>
+      <button className="design3-intro-skip" onClick={() => onDone(false)}>
         スキップ
       </button>
       <button
@@ -111,7 +115,7 @@ export function IntroFlow({ onDone }: { onDone: () => void }) {
         data-color={current.color}
         aria-label={current.action}
         onClick={() =>
-          page === pages.length - 1 ? onDone() : setPage(page + 1)
+          page === pages.length - 1 ? onDone(true) : setPage(page + 1)
         }
       >
         <img alt="" src={entryLettering(current.pose, "action")} />

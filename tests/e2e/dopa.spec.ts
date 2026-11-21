@@ -13,7 +13,8 @@ async function startGoat(page: Page) {
     });
   });
   await page.goto("dopa/");
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "スキップ", exact: true }).click();
   await expect(
     page.locator('.dopa-progress [aria-current="step"]'),
   ).toContainText("撮影");
@@ -269,7 +270,8 @@ test("撮影したときだけスタンプが出て写真確認を続けられ�
     } as unknown as typeof Worker;
   });
   await page.goto("dopa/");
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "スキップ", exact: true }).click();
   const shutter = page.getByRole("button", { name: "シャッター", exact: true });
   await shutter.click();
   await expect(

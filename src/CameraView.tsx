@@ -1,6 +1,5 @@
 import { challengeProvider } from "./domain";
 import { recordStudy } from "./research/study";
-import { groups } from "./content/groups";
 import { canAutoSelect, type Candidate } from "./recognition/labels";
 import { PhotoReview } from "./components/PhotoReview";
 import { PhotoCelebration } from "./components/ChallengeIntro";
@@ -10,23 +9,9 @@ import { CameraOff } from "lucide-react";
 import { speciesRecognizer } from "./recognition/species";
 import { PHOTO_FRAMES, drawPhotoFrame, frameSvg } from "./future/frames";
 
-type ZoomCapabilities = MediaTrackCapabilities & {
-  zoom?: { min: number; max: number };
-};
+import { CameraShutter, CameraZoom } from "./components/CameraControls";
+import { drawCameraFrame, useCameraZoom } from "./camera/zoom";
 
-async function applyZoom(track: MediaStreamTrack | undefined, zoom: number) {
-  try {
-    const capabilities: ZoomCapabilities | undefined =
-      track?.getCapabilities?.();
-    const range = capabilities?.zoom;
-    if (track && range && zoom >= range.min && zoom <= range.max) {
-      const setting: MediaTrackConstraintSet & { zoom: number } = { zoom };
-      await track.applyConstraints({ advanced: [setting] });
-    }
-  } catch {
-    // Some cameras expose a zoom range but reject external changes.
-  }
-}
 export function CameraView({
   dopa = false,
   onCapture,
@@ -34,12 +19,14 @@ export function CameraView({
   onCollection,
   onSettings,
   suspended = false,
+  tutorial = false,
   celebrating = false,
   onFreeDraw,
 }: {
   dopa?: boolean;
   onCapture?: () => void;
   suspended?: boolean;
+  tutorial?: boolean;
   celebrating?: boolean;
   onFreeDraw: () => void;
   onCollection?: () => void;
@@ -58,11 +45,10 @@ export function CameraView({
     method: "manual" | "automatic";
   }>();
   const manuallySelected = useRef(false);
-  const [detected, setDetected] = useState("");
+
   const [frameId, setFrameId] = useState<string>("");
-  const [zoom, setZoom] = useState(1);
-  const zoomRef = useRef(zoom);
-  zoomRef.current = zoom;
+  const [cameraTrack, setCameraTrack] = useState<MediaStreamTrack>();
+  const cameraZoom = useCameraZoom(cameraTrack);
   const [captured, setCaptured] = useState("");
   const [modelReady, setModelReady] = useState(speciesRecognizer.isReady());
   const [recognizing, setRecognizing] = useState(false);
@@ -92,6 +78,7 @@ export function CameraView({
       track.stop();
     });
     stream.current = null;
+    setCameraTrack(undefined);
     if (video.current) video.current.srcObject = null;
   }
   async function start() {
@@ -122,7 +109,7 @@ export function CameraView({
           );
         };
       });
-      void applyZoom(media.getVideoTracks?.()[0], zoomRef.current);
+      setCameraTrack(media.getVideoTracks?.()[0]);
       if (video.current) {
         video.current.srcObject = media;
         await video.current.play();
@@ -187,6 +174,7 @@ export function CameraView({
     setRecognizing(false);
     setCandidates([]);
     setCaptured("");
+
     setTakenAt(undefined);
     setSelection(undefined);
     manuallySelected.current = false;
@@ -207,21 +195,14 @@ export function CameraView({
   function capture() {
     if (!video.current?.videoWidth || status !== "live") return;
     try {
-      const canvas = document.createElement("canvas");
-      const scale = Math.min(
-        1,
-        1200 / Math.max(video.current.videoWidth, video.current.videoHeight),
-      );
-      canvas.width = Math.round(video.current.videoWidth * scale);
-      canvas.height = Math.round(video.current.videoHeight * scale);
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("canvas");
-      context.drawImage(video.current, 0, 0, canvas.width, canvas.height);
+      const frame = drawCameraFrame(video.current, 1200, cameraZoom.digital);
+      if (!frame) throw new Error("canvas");
+      const { canvas, context } = frame;
       if (frameId)
         drawPhotoFrame(context, frameId, canvas.width, canvas.height);
       const image = canvas.toDataURL("image/jpeg", 0.8);
       clearReview();
-      setDetected("");
+
       setCaptured(image);
       setTakenAt(new Date());
       stopCamera();
@@ -260,12 +241,6 @@ export function CameraView({
         ) {
           if (!manuallySelected.current) {
             setSelection({ choice: first, method: "automatic" });
-            setDetected(
-              first.speciesId === "sheep"
-                ? "ヒツジ"
-                : (groups.find((item) => item.id === first.groupId)?.name ??
-                    ""),
-            );
           }
           setMessage("");
           return;
@@ -315,17 +290,11 @@ export function CameraView({
             src={assetPath("figma/entry/camera-face.svg")}
           />
           <p className="pitsune-bubble">
-            {detected ? (
-              <>
-                <strong>{detected}</strong>がいるよ！
-              </>
-            ) : (
-              <img
-                className="camera-prompt-art"
-                src={assetPath("illustrations/pdf-design/camera-prompt.svg")}
-                alt="動物の写真を撮ろう！"
-              />
-            )}
+            <img
+              className="camera-prompt-art"
+              src={assetPath("illustrations/pdf-design/camera-prompt.svg")}
+              alt="動物の写真を撮ろう！"
+            />
           </p>
         </div>
         <div className="camera-frame">
@@ -336,6 +305,7 @@ export function CameraView({
             muted
             aria-label="動物を映すカメラ"
             className={status === "live" ? "" : "hidden-video"}
+            style={{ transform: `scale(${cameraZoom.digital})` }}
           />
           {status !== "live" && (
             <div className="camera-fallback">
@@ -358,13 +328,6 @@ export function CameraView({
                     : "手動で始められるよ"}
               </span>
             </div>
-          )}
-          {status === "live" && detected && (
-            <img
-              alt=""
-              className="design3-camera-guides"
-              src={assetPath("figma/entry/camera-guides.svg")}
-            />
           )}
           {status === "live" && frameId && (
             <svg
@@ -402,33 +365,7 @@ export function CameraView({
               ))}
             </div>
           )}
-          <div
-            className="design3-zoom"
-            role="group"
-            aria-label="カメラのズーム"
-          >
-            {[0.5, 1].map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-label={`${value}×`}
-                aria-pressed={zoom === value}
-                onClick={() => {
-                  setZoom(value);
-                  void applyZoom(stream.current?.getVideoTracks?.()[0], value);
-                }}
-              >
-                <span
-                  className={
-                    value === 0.5
-                      ? "zoom-mark zoom-mark--half"
-                      : "zoom-mark zoom-mark--one"
-                  }
-                  aria-hidden="true"
-                />
-              </button>
-            ))}
-          </div>
+          <CameraZoom {...cameraZoom} />
           {status === "live" && <span className="sr-only">カメラで観察中</span>}
         </div>
         <div className="camera-controls">
@@ -436,6 +373,7 @@ export function CameraView({
             type="button"
             className="camera-side-button"
             aria-label="ギャラリー"
+            disabled={tutorial}
             onClick={() => onCollection?.()}
           >
             <img
@@ -451,14 +389,10 @@ export function CameraView({
               )}
             />
           </button>
-          <button
-            className="shutter-button"
-            aria-label="シャッター"
-            disabled={status !== "live" || recognizing}
+          <CameraShutter
+            disabled={status !== "live" || recognizing || cameraZoom.busy}
             onClick={capture}
-          >
-            <img alt="" src={assetPath("figma/entry/shutter.svg")} />
-          </button>
+          />
           <button
             type="button"
             className="camera-side-button"
@@ -507,16 +441,11 @@ export function CameraView({
             photo={captured}
             takenAt={takenAt}
             selection={selection?.choice}
+            recognized={selection?.method === "automatic"}
             candidates={candidates}
             onChange={(choice) => {
               manuallySelected.current = true;
               setSelection({ choice, method: "manual" });
-              setDetected(
-                choice.speciesId === "sheep"
-                  ? "ヒツジ"
-                  : (groups.find((item) => item.id === choice.groupId)?.name ??
-                      ""),
-              );
             }}
             onRetake={retake}
             onConfirm={() => {
@@ -531,7 +460,7 @@ export function CameraView({
           )}
         </div>
       )}
-      {celebrating && <PhotoCelebration />}
+      {celebrating && <PhotoCelebration taskId={selectedTask?.id} />}
       <details className="recognition-settings" hidden={celebrating}>
         <summary>撮影の設定</summary>
         {status !== "review" ? (

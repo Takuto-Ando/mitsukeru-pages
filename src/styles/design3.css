@@ -389,36 +389,7 @@ body:has(.design3-shell) {
   height: auto;
 }
 
-.design3-celebration-mascot .lucide-star {
-  position: absolute;
-  width: 12%;
-  height: auto;
-}
 
-.design3-celebration-mascot .lucide-star:nth-child(2) {
-  left: -16%;
-  bottom: 23%;
-}
-.design3-celebration-mascot .lucide-star:nth-child(3) {
-  left: -8%;
-  bottom: 3%;
-}
-.design3-celebration-mascot .lucide-star:nth-child(4) {
-  left: 9%;
-  bottom: -10%;
-}
-.design3-celebration-mascot .lucide-star:nth-child(5) {
-  right: -16%;
-  bottom: 23%;
-}
-.design3-celebration-mascot .lucide-star:nth-child(6) {
-  right: -8%;
-  bottom: 3%;
-}
-.design3-celebration-mascot .lucide-star:nth-child(7) {
-  right: 9%;
-  bottom: -10%;
-}
 
 .design3-challenge {
   display: flex;
@@ -567,7 +538,7 @@ body:has(.design3-shell) {
   content: none;
 }
 
-.design3-camera .camera-controls .shutter-button img {
+.design3-camera .camera-controls .shutter-button .shutter-art {
   display: block;
   width: 77px;
   height: 77px;
@@ -637,7 +608,7 @@ body:has(.design3-shell) {
 .design3-zoom button::before {
   position: absolute;
   z-index: -1;
-  inset: 50% auto auto calc(50% + var(--zoom-offset));
+  inset: 50% auto auto calc(50% + var(--zoom-offset, 0px));
   width: 24.62px;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
@@ -657,7 +628,7 @@ body:has(.design3-shell) {
 .zoom-mark {
   display: block;
   background: currentColor;
-  translate: var(--zoom-offset);
+  translate: var(--zoom-offset, 0px);
 }
 
 .zoom-mark--half {
@@ -839,4 +810,140 @@ body:has(.design3-shell) {
   justify-content: center;
   gap: 8px;
   margin-block: 12px;
+}
+
+.design3-camera .camera-frame {
+  overflow: hidden;
+}
+
+.design3-camera .shutter-art {
+  color: var(--d3-orange, #f9a846);
+}
+
+.shutter-center {
+  fill: currentColor;
+}
+
+.shutter-button:active:not(:disabled) .shutter-center {
+  fill: #e27b27;
+}
+
+.design3-camera .camera-side-button[aria-label="ギャラリー"]:disabled {
+  opacity: 0.5;
+}
+
+.design3-zoom .zoom-text {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.design3-zoom button:disabled {
+  opacity: 0.45;
+}
+
+.photo-preview-wrap {
+  position: relative;
+}
+
+.photo-preview-wrap .photo-recognition-guide {
+  inset: 10% 9% auto;
+  width: 82%;
+  max-height: 77%;
+  object-position: center;
+}
+
+.photo-sparkle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 9px;
+  border-radius: 16px;
+  color: #815223;
+  background: #fff4d6;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.design3-celebration-mascot {
+  width: min(80vw, 310px);
+}
+
+.design3-celebration-mascot > img {
+  width: 100%;
+}
+
+.photo-animal-bubble {
+  position: absolute;
+  top: -12%;
+  right: 0;
+  width: 27%;
+  padding: 3px;
+  aspect-ratio: 1;
+  border: 3px solid #f9d78a;
+  border-radius: 49% 49% 49% 10%;
+  background: #fff8df;
+}
+
+.photo-animal-bubble img {
+  display: block;
+  width: 100%;
+}
+
+.design3-celebration-mascot .lucide-star {
+  position: absolute;
+  left: 44%;
+  top: 55%;
+  width: 10%;
+  height: auto;
+  transform: translate(var(--star-x), var(--star-y));
+}
+
+.design3-celebration-mascot .lucide-star:nth-child(2) { --star-x: -310%; --star-y: -75%; }
+.design3-celebration-mascot .lucide-star:nth-child(3) { --star-x: -407%; --star-y: 22%; }
+.design3-celebration-mascot .lucide-star:nth-child(4) { --star-x: -305%; --star-y: 133%; }
+.design3-celebration-mascot .lucide-star:nth-child(5) { --star-x: 305%; --star-y: -75%; }
+.design3-celebration-mascot .lucide-star:nth-child(6) { --star-x: 407%; --star-y: 22%; }
+.design3-celebration-mascot .lucide-star:nth-child(7) { --star-x: 305%; --star-y: 133%; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .camera-pitsune-face {
+    transform-origin: 50% 100%;
+    animation: pitsune-breathe 3.1s ease-in-out infinite;
+  }
+
+  .photo-sparkle {
+    animation: photo-sparkle-in 420ms ease-out both;
+  }
+
+  .design3-celebration-mascot {
+    animation: photo-celebration-in 460ms cubic-bezier(.2, .75, .25, 1.15) both;
+  }
+
+  .design3-celebration-mascot .lucide-star {
+    animation: photo-stars-spread 510ms 100ms ease-out both;
+  }
+}
+
+@keyframes pitsune-breathe {
+  0%, 100% { scale: 1; }
+  47% { scale: 1 0.972; }
+  72% { scale: 1 1.016; }
+}
+
+@keyframes photo-sparkle-in {
+  from { opacity: 0; transform: translateY(5px) scale(0.85); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes photo-celebration-in {
+  from { opacity: 0; transform: scale(0.35); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes photo-stars-spread {
+  from { opacity: 0; transform: translate(0, 0) scale(0.35); }
+  to { opacity: 1; transform: translate(var(--star-x), var(--star-y)); }
 }

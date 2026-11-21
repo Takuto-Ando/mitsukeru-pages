@@ -213,8 +213,7 @@ body:has(.dopa-app[data-screen="home"]) {
     .design3-continue,
     .design3-pill,
     .drawing-pill,
-    .primary,
-    .shutter-button
+    .primary
   ) {
   transition:
     transform 160ms var(--dopa-press),
@@ -231,8 +230,7 @@ body:has(.dopa-app[data-screen="home"]) {
     .design3-continue,
     .design3-pill,
     .drawing-pill,
-    .primary,
-    .shutter-button
+    .primary
   ):active:not(:disabled) {
   transform: translateY(3px) scale(0.98);
   box-shadow: 0 1px 0 #3d286d42;
@@ -252,7 +250,7 @@ body:has(.dopa-app[data-screen="home"]) {
   padding-top: 17px;
 }
 
-.dopa-app .design3-camera .shutter-button img {
+.dopa-app .design3-camera .shutter-button .shutter-art {
   border-radius: 50%;
   background: #fff9eb;
   box-shadow: 0 0 0 3px #6244a0;

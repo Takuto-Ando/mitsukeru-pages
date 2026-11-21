@@ -128,8 +128,20 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   ]) {
     await page.getByRole("button", { name, exact: true }).click();
   }
+  const tutorialGallery = page.getByRole("button", {
+    name: "ギャラリー",
+    exact: true,
+  });
+  await expect(tutorialGallery).toBeDisabled();
+  await expect(tutorialGallery).toHaveCSS("opacity", "0.5");
+  await expect(
+    page.locator(".camera-frame .design3-camera-guides"),
+  ).toHaveCount(0);
   const shutter = page.getByRole("button", { name: "シャッター", exact: true });
   await shutter.click();
+  await expect(
+    page.locator(".camera-frame .design3-camera-guides"),
+  ).toBeVisible();
   await shutter.click();
   await expect(
     page.getByRole("img", { name: "見本写真のキリン" }),
@@ -148,9 +160,13 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   await page
     .getByRole("button", { name: "ピツネに見せる", exact: true })
     .click();
+  await expect(page.locator(".photo-animal-bubble img")).toBeVisible();
+  await expect(
+    page.locator(".design3-celebration-mascot .lucide-star"),
+  ).toHaveCount(6);
   await page.getByRole("button", { name: "描いてみる！", exact: true }).click();
   await expectGiraffeChallenge(page);
-  await page.getByRole("button", { name: "描きはじめる", exact: true }).click();
+  await expect(page.getByTestId("canvas")).toBeVisible({ timeout: 6000 });
 
   await drawGiraffe(page, "line");
   await page.getByRole("button", { name: "できた！", exact: true }).click();
@@ -187,7 +203,7 @@ test("再現版の見本撮影・描画・アルバムが拡張版の観察ノ�
   ).toBeVisible();
 
   await page.reload();
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
   await page.getByRole("button", { name: "ギャラリー", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "キリンのスケッチを見る" }),
@@ -276,11 +292,29 @@ test("再現版の通常カメラで撮影・動物選択・写真を見返せ�
     };
   });
   await page.goto("figma/");
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "スキップ", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "0.5×", exact: true }),
+  ).toBeDisabled();
+  const zoom = page.getByRole("button", { name: "2×", exact: true });
+  await zoom.click();
+  await expect(zoom).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".replica-camera video")).toHaveCSS(
+    "transform",
+    "matrix(2, 0, 0, 2, 0, 0)",
+  );
   await page.getByRole("button", { name: "シャッター", exact: true }).click();
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真" }),
   ).toHaveAttribute("src", /^data:image\/jpeg/);
+  await expect
+    .poll(() =>
+      page
+        .locator(".captured-preview")
+        .evaluate((image: HTMLImageElement) => image.naturalWidth),
+    )
+    .toBe(320);
   await page.getByRole("button", { name: "修正", exact: true }).click();
   await page.getByRole("button", { name: "キリン", exact: true }).click();
   await page
@@ -315,7 +349,8 @@ test("拡張版でキリンを選ぶと描画の前に舌の課題と難易度�
     });
   });
   await page.goto("plus/");
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "スキップ", exact: true }).click();
   await page
     .getByRole("button", { name: "写真なしで始める", exact: true })
     .click();

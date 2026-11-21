@@ -49,7 +49,8 @@ test("全34課題のお手本から取った線が特徴判定を通る", async 
   expect(failures).toEqual([]);
 });
 async function startCamera(page: Page) {
-  await page.getByRole("button", { name: "つづきから", exact: true }).click();
+  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "スキップ", exact: true }).click();
 }
 async function openAnimalPicker(page: Page) {
   await page
@@ -291,7 +292,9 @@ for (const t of tasks.filter(
       }),
     ).toBeVisible();
     if (t.provisional) {
-      const heading = await page.locator(".mission-pitsune-row h1").boundingBox();
+      const heading = await page
+        .locator(".mission-pitsune-row h1")
+        .boundingBox();
       expect(heading?.height).toBeLessThan(100);
     }
     const href = await page
@@ -723,6 +726,8 @@ test("モデル事前準備・撮影から自動で描画へ（推論Workerは�
   await expect(
     page.getByRole("heading", { name: "ヤギ・ヒツジ", exact: true }),
   ).toBeVisible();
+  await expect(page.locator(".photo-recognition-guide")).toBeVisible();
+  await expect(page.locator(".photo-sparkle")).toHaveText("きらりん！");
   await beginChallenge(page);
   await expect(page.getByRole("button", { name: "できた！" })).toBeDisabled();
   await page.screenshot({
@@ -1669,6 +1674,12 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
   await expect(
     page.getByRole("heading", { name: "ズーケッチ", exact: true }),
   ).toBeVisible();
+  const continueButton = page.getByRole("button", {
+    name: "つづきから",
+    exact: true,
+  });
+  await expect(continueButton).toBeDisabled();
+  await expect(continueButton).toHaveCSS("opacity", "0.5");
   const qr = page.getByRole("button", { name: "QRで課題を開く", exact: true });
   await expect(page.getByRole("button")).toHaveCount(4 + (await qr.count()));
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);

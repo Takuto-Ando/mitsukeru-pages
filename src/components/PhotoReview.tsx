@@ -4,6 +4,7 @@ import { groups } from "../content/groups";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
+import { PhotoRecognitionGuide, PhotoSparkle } from "./ChallengeIntro";
 import { Furi } from "../furigana/Furigana";
 
 const speciesName = (choice: Pick<Candidate, "groupId" | "speciesId">) =>
@@ -29,6 +30,7 @@ const normalize = (text: string) =>
 export function PhotoReview({
   dopa = false,
   photo,
+  recognized = false,
   takenAt,
   selection,
   candidates,
@@ -38,6 +40,7 @@ export function PhotoReview({
 }: {
   dopa?: boolean;
   photo: string;
+  recognized?: boolean;
   takenAt?: Date;
   selection?: Pick<Candidate, "groupId" | "speciesId">;
   candidates: Candidate[];
@@ -77,11 +80,19 @@ export function PhotoReview({
           </span>
         )}
         {photo ? (
-          <img
-            className="captured-preview"
-            src={photo}
-            alt="撮影した動物の写真"
-          />
+          <div className="photo-preview-wrap">
+            <img
+              className="captured-preview"
+              src={photo}
+              alt="撮影した動物の写真"
+            />
+            {recognized && (
+              <>
+                <PhotoRecognitionGuide />
+                <PhotoSparkle />
+              </>
+            )}
+          </div>
         ) : (
           <div className="design3-photo-placeholder">
             <img

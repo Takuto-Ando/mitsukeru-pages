@@ -13,7 +13,6 @@ const todaysPick = groups[dayIndex % groups.length];
 
 export function HomeScreen({
   onStart,
-  onContinue,
   onCollection,
   onSettings,
   savedCount,
@@ -22,7 +21,6 @@ export function HomeScreen({
   onScanQr,
 }: {
   onStart: () => void;
-  onContinue: () => void;
   onCollection: () => void;
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
@@ -98,14 +96,16 @@ export function HomeScreen({
         </button>
         <button
           className="design3-continue"
-          onClick={onContinue}
+          disabled
           aria-label="つづきから"
+          aria-describedby="continue-google-note"
         >
           <img
             className="design3-title-resume-lettering"
             alt=""
             src={assetPath("illustrations/pdf-design/entry-title-resume.svg")}
           />
+          <small id="continue-google-note">Google連携（準備中）</small>
         </button>
         {dopaMode && <DopaBar />}
       </div>
@@ -132,9 +132,7 @@ export function HomeScreen({
             <Settings aria-hidden="true" size={17} />
             設定
           </button>
-          {onScanQr && (
-            <button onClick={onScanQr}>QRで課題を開く</button>
-          )}
+          {onScanQr && <button onClick={onScanQr}>QRで課題を開く</button>}
         </div>
       </div>
       {edition && (

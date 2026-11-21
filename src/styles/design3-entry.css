@@ -499,3 +499,52 @@
   margin-top: 0;
   text-decoration: none;
 }
+
+.design3-title-actions .design3-continue:disabled {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  opacity: 0.5;
+  cursor: default;
+}
+
+.design3-title-actions .design3-continue:disabled img {
+  opacity: 1;
+}
+
+.design3-continue small {
+  font-size: 0.73rem;
+  line-height: 1.2;
+  color: #55402c;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .design3-title-tail {
+    transform-origin: 57% 62%;
+    animation: title-tail-sway 4.4s ease-in-out infinite;
+  }
+
+  .design3-intro[data-figma-art] .design3-intro-message img {
+    animation: intro-lettering-in 620ms steps(10, end) both;
+  }
+
+  .design3-intro-original {
+    transform-origin: 50% 100%;
+    animation: pitsune-breathe 3.1s ease-in-out infinite;
+  }
+
+  .design3-intro[data-figma-art="easel"] .design3-intro-original {
+    animation: none;
+  }
+}
+
+@keyframes title-tail-sway {
+  0%, 100% { rotate: 0deg; }
+  35% { rotate: 4deg; }
+  68% { rotate: -3deg; }
+}
+
+@keyframes intro-lettering-in {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}

@@ -1,6 +1,10 @@
 import { CircleHelp } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import type { ComponentProps } from "react";
+import {
+  PhotoRecognitionGuide,
+  PhotoSparkle,
+} from "../components/ChallengeIntro";
 import { SketchComparison } from "../components/SketchComparison";
 import { assetPath } from "../content/artwork";
 import { designCardViewport } from "../drawing/viewport";
@@ -35,9 +39,11 @@ const backgrounds = {
 export function ReplicaIntro({
   pose,
   onNext,
+  onSkip,
 }: {
   pose: keyof typeof backgrounds;
   onNext: () => void;
+  onSkip?: () => void;
 }) {
   const [message, action, color] = backgrounds[pose];
   const folder = "illustrations/pdf-design/";
@@ -64,6 +70,11 @@ export function ReplicaIntro({
             : "figma/entry/" + pose + ".svg",
         )}
       />
+      {onSkip && (
+        <button className="design3-intro-skip" type="button" onClick={onSkip}>
+          スキップ
+        </button>
+      )}
       <button
         className="design3-intro-next"
         data-color={color}
@@ -310,11 +321,15 @@ export function ReplicaPhotoReview({
       </h1>
       <article className="design3-photo-card">
         {photo ? (
-          <img
-            className="captured-preview"
-            src={photo}
-            alt={sample ? "見本写真のキリン" : "撮影した動物の写真"}
-          />
+          <div className="photo-preview-wrap">
+            <img
+              className="captured-preview"
+              src={photo}
+              alt={sample ? "見本写真のキリン" : "撮影した動物の写真"}
+            />
+            {sample && group?.id === "giraffe" && <PhotoRecognitionGuide />}
+            {saved && <PhotoSparkle />}
+          </div>
         ) : (
           <div className="design3-photo-placeholder">
             <img
