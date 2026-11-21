@@ -41,6 +41,7 @@ import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
+import { currentProfileId } from "./future/profiles";
 import { drawingEvaluator } from "./domain";
 
 import {
@@ -357,6 +358,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
         strokes: visible,
         styles: stylesFor(visible),
         outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
+        profileId: currentProfileId(),
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });

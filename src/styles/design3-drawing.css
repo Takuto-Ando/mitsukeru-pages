@@ -858,3 +858,86 @@
 .design3-result .result-actions {
   margin-top: 27px;
 }
+
+/* ましましバッチC：スタンプ・ズーム・ぬりえ */
+.stamp-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.stamp-picker button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.stamp-picker button.is-active {
+  border-color: #f6a83c;
+  background: #fff3d9;
+}
+
+.stamp-tip {
+  font-size: 12px;
+  color: #97794f;
+}
+
+.zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #7a4a21;
+}
+
+.zoom-controls button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.zoom-controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.coloring-underlay {
+  filter: grayscale(1) contrast(1.2);
+  opacity: 0.45;
+}
+
+.coloring-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin: 8px 0;
+  font-weight: 700;
+  font-size: 13px;
+  color: #7a4a21;
+}
+
+.coloring-picker button {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.coloring-picker button.is-active {
+  border-color: #7fa845;
+  background: #eef6df;
+}

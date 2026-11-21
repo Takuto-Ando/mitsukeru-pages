@@ -5,10 +5,13 @@ import { tasks } from "../content/tasks";
 import { artwork, assetPath } from "../content/artwork";
 import {
   buildAnimalQuestions,
+  buildDifferenceQuestions,
   buildReadingQuestions,
   type AnimalQuestion,
+  type DifferenceQuestion,
   type ReadingQuestion,
 } from "../future/quizLogic";
+import { playMotif, SOUND_QUIZ_IDS } from "../future/soundQuiz";
 import "../styles/future4.css";
 
 const PRAISE = [
@@ -35,7 +38,53 @@ function animalItems(): { name: string; image: string }[] {
   return items;
 }
 
-type Mode = "reading" | "animal";
+function diffItems(): { animal: string; part: string; image: string }[] {
+  const items: { animal: string; part: string; image: string }[] = [];
+  for (const g of groups) {
+    const task = tasks.find((t) => t.groupId === g.id);
+    const image = task ? artwork[task.id]?.incomplete : undefined;
+    if (task && image)
+      items.push({ animal: g.name, part: task.part, image });
+  }
+  return items;
+}
+
+type SoundQuestion = { id: string; name: string; choices: string[] };
+
+function buildSoundQuestions(count: number): SoundQuestion[] {
+  const ids = [...SOUND_QUIZ_IDS];
+  for (let i = ids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+  }
+  return ids.slice(0, count).map((id) => {
+    const self = groups.find((g) => g.id === id)!;
+    const others = SOUND_QUIZ_IDS.filter((o) => o !== id)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2)
+      .map((o) => groups.find((g) => g.id === o)!.name);
+    const choices = [self.name, ...others].sort(() => Math.random() - 0.5);
+    return { id, name: self.name, choices };
+  });
+}
+
+const ANIMAL_CATEGORIES: { id: string; label: string; groupIds: string[] }[] = [
+  { id: "all", label: "すべて", groupIds: groups.map((g) => g.id) },
+  { id: "eye", label: "目", groupIds: ["lemur", "goat"] },
+  {
+    id: "face",
+    label: "顔",
+    groupIds: ["mandrill", "badger", "hippo", "meerkat"],
+  },
+  { id: "tail", label: "しっぽ", groupIds: ["capuchin", "fennec", "lemur"] },
+  {
+    id: "pattern",
+    label: "模様・背中",
+    groupIds: ["zebra", "deer", "tapir", "bear", "donkey"],
+  },
+];
+
+type Mode = "reading" | "animal" | "difference" | "sound";
 
 const BEST_KEY = "zooketch-quiz-best-v1";
 
@@ -63,6 +112,7 @@ function saveBest(mode: Mode, score: number) {
 
 export function QuizPanel({ onClose }: { onClose: () => void }) {
   const [mode, setMode] = useState<Mode | null>(null);
+  const [category, setCategory] = useState("all");
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [score, setScore] = useState(0);
@@ -74,7 +124,30 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
     [mode, round],
   );
   const animalQuestions = useMemo<AnimalQuestion[]>(
-    () => (mode === "animal" ? buildAnimalQuestions(animalItems(), 5) : []),
+    () => {
+      if (mode !== "animal") return [];
+      const cat =
+        ANIMAL_CATEGORIES.find((c) => c.id === category) ??
+        ANIMAL_CATEGORIES[0];
+      const all = animalItems();
+      const filtered = all.filter((item) =>
+        cat.groupIds.some(
+          (id) => groups.find((g) => g.id === id)?.name === item.name,
+        ),
+      );
+      return buildAnimalQuestions(filtered.length >= 3 ? filtered : all, 5);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, round],
+  );
+  const diffQuestions = useMemo<DifferenceQuestion[]>(
+    () =>
+      mode === "difference" ? buildDifferenceQuestions(diffItems(), 5) : [],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [mode, round],
+  );
+  const soundQuestions = useMemo<SoundQuestion[]>(
+    () => (mode === "sound" ? buildSoundQuestions(5) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [mode, round],
   );
@@ -84,7 +157,11 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
       ? readingQuestions.length
       : mode === "animal"
         ? animalQuestions.length
-        : 0;
+        : mode === "difference"
+          ? diffQuestions.length
+          : mode === "sound"
+            ? soundQuestions.length
+            : 0;
   const finished = mode !== null && index >= total && total > 0;
   const [best, setBest] = useState<Partial<Record<Mode, number>>>(loadBest);
   useEffect(() => {
@@ -96,11 +173,19 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
   const answer =
     mode === "reading"
       ? readingQuestions[index]?.reading
-      : animalQuestions[index]?.name;
+      : mode === "animal"
+        ? animalQuestions[index]?.name
+        : mode === "difference"
+          ? diffQuestions[index]?.part
+          : soundQuestions[index]?.name;
   const choices =
     mode === "reading"
       ? (readingQuestions[index]?.choices ?? [])
-      : (animalQuestions[index]?.choices ?? []);
+      : mode === "animal"
+        ? (animalQuestions[index]?.choices ?? [])
+        : mode === "difference"
+          ? (diffQuestions[index]?.choices ?? [])
+          : (soundQuestions[index]?.choices ?? []);
 
   const choose = (choice: string) => {
     if (picked) return;
@@ -137,12 +222,46 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
                 `（ベスト： ${best.reading}もんせいかい）`}
             </span>
           </button>
+          <div
+            className="quiz-category"
+            role="group"
+            aria-label="どうぶつあてクイズの部位"
+          >
+            {ANIMAL_CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={category === c.id}
+                className={category === c.id ? "is-active" : ""}
+                onClick={() => setCategory(c.id)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
           <button type="button" onClick={() => setMode("animal")}>
             どうぶつあてクイズ
             <span>
-              絵を見て動物をあてよう
+              絵を見て動物をあてよう（部位：
+              {ANIMAL_CATEGORIES.find((c) => c.id === category)?.label}）
               {best.animal !== undefined &&
                 `（ベスト： ${best.animal}もんせいかい）`}
+            </span>
+          </button>
+          <button type="button" onClick={() => setMode("difference")}>
+            まちがい探しクイズ
+            <span>
+              本物と違う部分をあてよう
+              {best.difference !== undefined &&
+                `（ベスト： ${best.difference}もんせいかい）`}
+            </span>
+          </button>
+          <button type="button" onClick={() => setMode("sound")}>
+            音のイメージクイズ
+            <span>
+              音のモチーフを聞いて動物をあてよう
+              {best.sound !== undefined &&
+                `（ベスト： ${best.sound}もんせいかい）`}
             </span>
           </button>
         </div>
@@ -155,17 +274,37 @@ export function QuizPanel({ onClose }: { onClose: () => void }) {
           </p>
           {mode === "reading" ? (
             <p className="quiz-word">{readingQuestions[index]?.word}</p>
-          ) : (
+          ) : mode === "animal" ? (
             <img
               className="quiz-image"
               src={assetPath(animalQuestions[index]?.image ?? "")}
               alt="この動物はだあれ？"
             />
+          ) : mode === "difference" ? (
+            <img
+              className="quiz-image"
+              src={assetPath(diffQuestions[index]?.image ?? "")}
+              alt="本物と違うところがある絵"
+            />
+          ) : (
+            <button
+              type="button"
+              className="sound-play"
+              onClick={() =>
+                soundQuestions[index] && playMotif(soundQuestions[index].id)
+              }
+            >
+              ▶ 音を聞く
+            </button>
           )}
           <p className="quiz-question">
             {mode === "reading"
               ? "この漢字の読み方は？"
-              : "この動物は だあれ？"}
+              : mode === "animal"
+                ? "この動物は だあれ？"
+                : mode === "difference"
+                  ? `${diffQuestions[index]?.animal} の絵、本物と違うのは どの部分？`
+                  : "この音のイメージは どの動物？（本物の鳴き声ではなく イメージの音だよ）"}
           </p>
           <div className="quiz-choices">
             {choices.map((choice) => {

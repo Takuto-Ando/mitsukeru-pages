@@ -2,6 +2,7 @@ import { artwork, assetPath } from "../content/artwork";
 import { drawingRegions, type Scene } from "../content/scenes";
 import type { Stroke } from "../types";
 import { getStrokeStyle } from "../drawing/styles";
+import { drawStamp } from "../drawing/stamps";
 
 async function embedded(path: string, height: number) {
   const response = await fetch(assetPath(path));
@@ -84,6 +85,17 @@ export async function composeObservationImages(
   for (const stroke of strokes) {
     if (!stroke.length) continue;
     const style = getStrokeStyle(stroke);
+    if (style?.stamp && stroke.length <= 2) {
+      drawStamp(
+        ownCtx,
+        style.stamp,
+        stroke[0].x,
+        stroke[0].y,
+        Math.max(24, style.width),
+        style.color,
+      );
+      continue;
+    }
     ownCtx.lineWidth = style?.width ?? 7;
     ownCtx.strokeStyle = style?.color ?? "#277e78";
     ownCtx.beginPath();
