@@ -1,0 +1,146 @@
+/* 描いた特徴のお祝いアニメーション（キリン以外）。CSS がタイミングを持ち、
+   コンポーネントは回転中心（--fx / --fy、シーン座標）だけを渡す。 */
+.feature-party {
+  margin-top: 14px;
+}
+
+.feature-party-stage {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+}
+
+.feature-party-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.feature-party-bar p {
+  margin: 0;
+  font-weight: 700;
+  color: #7a4a21;
+}
+
+.feature-party-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid #7fa845;
+  background: #fff;
+  color: #4c6b1f;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.feature-lines {
+  transform-origin: var(--fx) var(--fy);
+  animation-duration: 2.6s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: 2;
+  animation-fill-mode: both;
+}
+
+.feature-anim-sway {
+  animation-name: feature-sway;
+}
+.feature-anim-curl {
+  animation-name: feature-curl;
+}
+.feature-anim-blink {
+  animation-name: feature-blink;
+}
+.feature-anim-slide {
+  animation-name: feature-slide;
+}
+.feature-anim-wiggle {
+  animation-name: feature-wiggle;
+}
+.feature-anim-bounce {
+  animation-name: feature-bounce;
+}
+.feature-anim-bob {
+  animation-name: feature-bob;
+}
+.feature-anim-pulse {
+  animation-name: feature-pulse;
+}
+
+@keyframes feature-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(4.5deg); }
+  75% { transform: rotate(-4.5deg); }
+}
+
+@keyframes feature-curl {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(-16deg); }
+  70% { transform: rotate(-9deg); }
+}
+
+@keyframes feature-blink {
+  0%, 42%, 58%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.12); }
+}
+
+@keyframes feature-slide {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(9px); }
+  65% { transform: translateX(-9px); }
+}
+
+@keyframes feature-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(3deg); }
+  40% { transform: rotate(-3deg); }
+  60% { transform: rotate(2.4deg); }
+  80% { transform: rotate(-2.4deg); }
+}
+
+@keyframes feature-bounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+  45% { transform: translateY(0); }
+  60% { transform: translateY(-5px); }
+  75% { transform: translateY(0); }
+}
+
+@keyframes feature-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes feature-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+
+.feature-sparkle {
+  opacity: 0;
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: feature-sparkle-pop 1.1s ease-out both;
+}
+
+.feature-sparkle-2 {
+  animation-delay: 0.35s;
+}
+
+@keyframes feature-sparkle-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  35% { opacity: 1; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-lines,
+  .feature-sparkle {
+    animation: none;
+  }
+}
