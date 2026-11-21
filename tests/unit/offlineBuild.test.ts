@@ -24,7 +24,7 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
         file.endsWith(".html") ? "<html><head></head></html>" : "fixture",
       );
     }
-    const plugin = offlinePlugin() as any;
+    const plugin = offlinePlugin(true) as any;
     plugin.configResolved({
       command: "build",
       build: { outDir: dir },
@@ -72,6 +72,38 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       start_url: "/zooketch/dopa/",
       scope: "/zooketch/dopa/",
     });
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("製品は旧URLでも同じオフラインページとマニフェストを使う", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "zooketch-product-offline-"));
+  try {
+    await writeFile(
+      join(dir, "index.html"),
+      "<html><head></head><body>product</body></html>",
+    );
+    const plugin = offlinePlugin() as any;
+    plugin.configResolved({
+      command: "build",
+      build: { outDir: dir },
+      base: "/zooketch/",
+    });
+    await plugin.closeBundle();
+    const primary = await readFile(join(dir, "index.html"), "utf8");
+    for (const old of ["dopa", "figma", "plus", "replica"]) {
+      expect(await readFile(join(dir, old, "index.html"), "utf8")).toBe(
+        primary,
+      );
+      await expect(
+        readFile(join(dir, old, "manifest.webmanifest"), "utf8"),
+      ).rejects.toMatchObject({ code: "ENOENT" });
+    }
+    expect(
+      JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"))
+        .start_url,
+    ).toBe("/zooketch/");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

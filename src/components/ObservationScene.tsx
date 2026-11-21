@@ -19,16 +19,18 @@ export function SceneRegions({ scene }: { scene: Scene }) {
 export function SceneBase({
   scene,
   completed = false,
+  foreground = false,
 }: {
   scene: Scene;
   completed?: boolean;
+  foreground?: boolean;
 }) {
   const art = scene.artworkOverride || artwork[scene.id];
   const asset = completed
     ? art?.completedBase || art?.incomplete
     : art?.incomplete;
   return (
-    <g data-testid="animal-background">
+    <g data-testid={foreground ? undefined : "animal-background"}>
       {asset ? (
         <image
           href={assetPath(asset)}
@@ -53,14 +55,15 @@ export function SceneBase({
       ) : (
         <EyeOutline />
       )}
-      {(art?.maskInApp ||
-        !completed ||
-        scene.photo ||
-        (asset && !art?.completedBase)) && (
-        <g fill={art?.blankFill || "#fffef8"} data-testid="blank-regions">
-          <SceneRegions scene={scene} />
-        </g>
-      )}
+      {!foreground &&
+        (art?.maskInApp ||
+          !completed ||
+          scene.photo ||
+          (asset && !art?.completedBase)) && (
+          <g fill={art?.blankFill || "#fffef8"} data-testid="blank-regions">
+            <SceneRegions scene={scene} />
+          </g>
+        )}
     </g>
   );
 }

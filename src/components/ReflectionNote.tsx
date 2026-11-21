@@ -41,6 +41,7 @@ export function ReflectionNote({
   onChange: (value: { discovery: string; revisited: boolean }) => void;
 }) {
   const id = useId();
+  const noteLabel = "どんなことに気づいた？（書かなくても大丈夫）";
   const [listening, setListening] = useState(false);
   const recognition = useRef<SpeechRecognitionLike | null>(null);
   const voiceSupported =
@@ -83,9 +84,10 @@ export function ReflectionNote({
         />
         実物を見て確かめた
       </label>
-      <label htmlFor={id}>どんなことに気づいた？（書かなくても大丈夫）</label>
+      <label htmlFor={id}>{noteLabel}</label>
       <textarea
         id={id}
+        aria-label={noteLabel}
         rows={2}
         maxLength={200}
         value={value.discovery}

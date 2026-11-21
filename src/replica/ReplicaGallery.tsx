@@ -1,9 +1,11 @@
+import type { Stroke } from "../types";
 import { CardLettering } from "../components/CardLettering";
 import { useEffect, useId, useRef, useState } from "react";
 import { assetPath } from "../content/artwork";
 import { taskById } from "../content/tasks";
 import { designCardViewport } from "../drawing/viewport";
 import { DifficultyPill } from "../components/DifficultyPill";
+import { galleryPhotoLocation } from "./storage";
 import "../styles/design3-gallery.css";
 import "./replica-gallery.css";
 
@@ -12,6 +14,8 @@ export interface ReplicaRecord {
   createdAt: string;
   photo?: string;
   sketch?: string;
+  strokes?: Stroke[];
+  groupId?: string;
   taskId?: string;
   animalName?: string;
   description?: string;
@@ -114,17 +118,15 @@ function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
                 {new Date(entry.createdAt).toLocaleDateString("ja-JP")}
               </time>
             </p>
-            {entry.photoLocation && (
-              <p>
-                <img
-                  src={assetPath(
-                    "illustrations/pdf-design/camera-review-location.svg",
-                  )}
-                  alt=""
-                />
-                {entry.photoLocation}
-              </p>
-            )}
+            <p>
+              <img
+                src={assetPath(
+                  "illustrations/pdf-design/camera-review-location.svg",
+                )}
+                alt=""
+              />
+              {entry.photoLocation || galleryPhotoLocation}
+            </p>
           </div>
         </div>
         {(entry.photoDescription ?? entry.description) && (

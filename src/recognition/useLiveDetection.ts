@@ -33,6 +33,7 @@ export function useLiveDetection(
   video: RefObject<HTMLVideoElement | null>,
   active: boolean,
   zoom: number,
+  retry = 0,
 ) {
   const [result, setResult] = useState<{
     status: "idle" | "starting" | "running" | "error";
@@ -147,6 +148,6 @@ export function useLiveDetection(
       fail();
     }
     return stop;
-  }, [active, video, zoom]);
+  }, [active, retry, video, zoom]);
   return result;
 }

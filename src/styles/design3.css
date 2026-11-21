@@ -417,7 +417,9 @@ body:has(.design3-shell[data-screen="challenge"]) {
 
 .design3-challenge h1 strong {
   color: var(--d3-orange);
-  font-size: clamp(1.75rem, 11.5vw, 2.85rem);
+  font-size: min(11.5vw, 2.85rem, var(--challenge-title-size));
+  letter-spacing: -0.04em;
+  white-space: nowrap;
   -webkit-text-stroke: 0.17em #fff;
   paint-order: stroke fill;
 }
@@ -599,6 +601,10 @@ body:has(.design3-shell) {
 
 .design3-zoom button:first-child {
   --zoom-offset: 1.65px;
+}
+
+.design3-zoom button:last-child {
+  --zoom-offset: -1.65px;
 }
 
 .design3-zoom button::before {
@@ -829,6 +835,7 @@ body:has(.design3-shell) {
 }
 
 .design3-zoom .zoom-text {
+  translate: var(--zoom-offset, 0px);
   place-self: center;
   line-height: 1;
   font-weight: 700;
@@ -870,23 +877,6 @@ body:has(.design3-shell) {
 }
 
 .design3-celebration-mascot > img {
-  width: 100%;
-}
-
-.photo-animal-bubble {
-  position: absolute;
-  top: -12%;
-  right: 0;
-  width: 27%;
-  padding: 3px;
-  aspect-ratio: 1;
-  border: 3px solid #f9d78a;
-  border-radius: 49% 49% 49% 10%;
-  background: #fff8df;
-}
-
-.photo-animal-bubble img {
-  display: block;
   width: 100%;
 }
 

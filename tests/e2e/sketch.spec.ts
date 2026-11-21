@@ -1683,7 +1683,8 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
   await expect(continueButton).toBeDisabled();
   await expect(continueButton).toHaveCSS("opacity", "0.5");
   const qr = page.getByRole("button", { name: "QRで課題を開く", exact: true });
-  await expect(page.getByRole("button")).toHaveCount(4 + (await qr.count()));
+  await expect(qr).toHaveCount(0);
+  await expect(page.getByRole("button")).toHaveCount(4);
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
   await page.getByRole("button", { name: /^図鑑を見る/ }).click();
   await expect(
@@ -1692,7 +1693,7 @@ test("ホームの入口・カメラの遅延起動・図鑑と設定からの�
   expect(await page.evaluate(() => (window as any).__cameraRequests)).toBe(0);
   await page.getByRole("tab", { name: "写真", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "写真は保存されないよ" }),
+    page.getByRole("heading", { name: "写真は撮影画面のマイギャラリーへ" }),
   ).toBeVisible();
   await page.getByRole("tab", { name: "スケッチ", exact: true }).click();
   await page.getByRole("button", { name: "体験に戻る", exact: true }).click();
@@ -1896,18 +1897,14 @@ test("撮影後はカメラを停止し、識別保留時の写真確認・撮�
   ).toBeVisible();
   await draw(page);
   await compare(page);
-  const photoCard = page.waitForEvent("download");
-  await page
-    .getByRole("button", { name: "写真とスケッチをPNGで保存", exact: true })
-    .click();
-  const downloaded = await photoCard;
-  expect(downloaded.suggestedFilename()).toMatch(
-    /^zooketch-goat-.*-photo-card\.png$/,
+  await expect(
+    page.getByRole("button", { name: "写真とスケッチをPNGで保存", exact: true }),
+  ).toHaveCount(0);
+  const sketch = page.waitForEvent("download");
+  await page.getByRole("button", { name: "自分の絵をPNGで保存", exact: true }).click();
+  expect((await sketch).suggestedFilename()).toMatch(
+    /^zooketch-goat-.*-sketch\.png$/,
   );
-  const { readFile } = await import("node:fs/promises");
-  const bytes = await readFile((await downloaded.path())!);
-  expect(bytes.subarray(1, 4).toString()).toBe("PNG");
-  expect(bytes.readUInt32BE(16)).toBe(1000);
 });
 
 test("追加動物のヒント・描画・確認・PNG保存・図鑑復元", async ({ page }) => {

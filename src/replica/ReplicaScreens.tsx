@@ -116,6 +116,7 @@ export function ReplicaDraw({
         {...drawing}
         scene={task.scene}
         fixedPortrait
+        inkBehindArtwork
         showTarget={showHint}
         missionTitle={
           showHint
@@ -186,6 +187,7 @@ export function ReplicaResult({
   tutorial,
   saving,
   onRedraw,
+  canRedraw = true,
   onConfirm,
   onDone,
 }: {
@@ -196,6 +198,7 @@ export function ReplicaResult({
   tutorial: boolean;
   saving: boolean;
   onRedraw: () => void;
+  canRedraw?: boolean;
   onConfirm: () => void;
   onDone: () => void;
 }) {
@@ -228,7 +231,9 @@ export function ReplicaResult({
         scene={task.scene}
         answer={group.answer}
         completed={feedback.passed}
-        initialMode="answer"
+        initialMode="drawing"
+        animateDrawingFor={task.id}
+        showReplay={false}
         viewport={designCardViewport(task.scene)}
         cardFooter={<p className="result-fact">{fact}</p>}
         afterCard={
@@ -236,7 +241,7 @@ export function ReplicaResult({
             <button
               className="drawing-pill drawing-pill-green"
               onClick={onRedraw}
-              disabled={saving}
+              disabled={saving || !canRedraw}
             >
               <CardLettering
                 className="drawing-lettering"
@@ -283,21 +288,25 @@ export function ReplicaPhotoReview({
   photo,
   sample,
   createdAt,
+  photoLocation,
   saved,
   group,
   choices,
   onSelect,
   onRetake,
+  canRetake = true,
   onConfirm,
 }: {
   photo?: string;
   sample: boolean;
   createdAt?: string;
+  photoLocation?: string;
   saved: boolean;
   group?: ObservationGroup;
   choices: ObservationGroup[];
   onSelect: (id: string) => void;
   onRetake: () => void;
+  canRetake?: boolean;
   onConfirm: () => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -403,10 +412,10 @@ export function ReplicaPhotoReview({
                   {new Date(createdAt).toLocaleDateString("ja-JP")}
                 </time>
               </span>
-              {sample && (
+              {photoLocation && (
                 <span>
                   <img alt="" src={file("location")} />
-                  見本写真
+                  {photoLocation}
                 </span>
               )}
             </div>
@@ -427,11 +436,12 @@ export function ReplicaPhotoReview({
         <button
           className="design3-pill design3-pill--green"
           aria-label="撮りなおす"
+          disabled={!canRetake}
           onClick={onRetake}
         >
-          <img
+          <CardLettering
             className="photo-review-retake-mark"
-            alt=""
+            text="撮りなおす"
             src={file("retake")}
           />
         </button>
@@ -441,9 +451,9 @@ export function ReplicaPhotoReview({
           disabled={!group}
           onClick={onConfirm}
         >
-          <img
+          <CardLettering
             className="photo-review-confirm-mark"
-            alt=""
+            text="ピツネに見せる"
             src={file("confirm")}
           />
         </button>

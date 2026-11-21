@@ -238,7 +238,7 @@ export function PhotoReview({
           />
         </button>
       </div>
-      {photo && <p className="quiet-note">撮影写真は端末に保存しません。</p>}
+      {photo && <p className="quiet-note">写真はアプリの端末内ギャラリーで管理します。研究用に外部へ送信しません。</p>}
     </section>
   );
 }

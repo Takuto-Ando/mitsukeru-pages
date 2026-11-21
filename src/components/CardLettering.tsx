@@ -12,7 +12,9 @@ export function CardLettering({
   lines?: readonly string[];
 }) {
   const annotated = useFuriganaEnabled() && /[\p{Script=Han}々]/u.test(text);
-  if (!annotated) return <img src={src} alt={text} className={className} />;
+  if (!annotated && !lines?.length) {
+    return <img src={src} alt={text} className={className} />;
+  }
   return (
     <span className={["card-lettering", className].filter(Boolean).join(" ")}>
       <img src={src} alt="" aria-hidden="true" />

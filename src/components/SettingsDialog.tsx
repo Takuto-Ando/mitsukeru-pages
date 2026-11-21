@@ -1,29 +1,15 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Volume2, BookOpenText } from "lucide-react";
 import { RecognitionPreparation } from "./RecognitionPreparation";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
-import { groups } from "../content/groups";
-import { tasks } from "../content/tasks";
-import { uncoveredWords } from "../furigana/coverage";
-import { taskUrl } from "../future/deeplink";
 import {
   flushShareQueue,
   loadShareConfig,
   pendingShareCount,
   saveShareConfig,
 } from "../future/share";
-import {
-  addProfile,
-  currentProfileId,
-  loadProfiles,
-  setCurrentProfile,
-} from "../future/profiles";
-import "../styles/observation-tools.css";
-
-const ExtraObservationTools = lazy(() => import("./ExtraObservationTools"));
-
 export function SettingsDialog({
   open,
   onClose,
@@ -32,35 +18,23 @@ export function SettingsDialog({
   furigana,
   onFuriganaChange,
   returnFocus,
-  defaultObservationTaskId,
+  product = false,
 }: {
   returnFocus?: React.RefObject<HTMLElement | null>;
   open: boolean;
   onClose: () => void;
-  sound: boolean;
-  onSoundChange: () => void;
+  sound?: boolean;
+  onSoundChange?: () => void;
+  product?: boolean;
   furigana?: boolean;
   onFuriganaChange?: () => void;
-  defaultObservationTaskId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const wasOpen = useRef(false);
-  const [toolsLoaded, setToolsLoaded] = useState(false);
-  const [profiles, setProfiles] = useState(loadProfiles);
-  const [currentId, setCurrentId] = useState(currentProfileId);
-  const [newName, setNewName] = useState("");
   const [share, setShare] = useState(loadShareConfig);
   const [pending, setPending] = useState(pendingShareCount);
   const [shareNote, setShareNote] = useState("");
   const refreshPending = () => setPending(pendingShareCount());
-  const missingWords = useMemo(
-    () =>
-      uncoveredWords([
-        ...groups.flatMap((g) => [g.fact, g.question]),
-        ...tasks.flatMap((t) => [t.explanation.form, t.explanation.ecology]),
-      ]),
-    [],
-  );
   useEffect(() => {
     const element = dialog.current;
     if (open && !element?.open) {
@@ -91,15 +65,17 @@ export function SettingsDialog({
         </button>
       </div>
       <div className="settings-content">
-        <div className="sound-setting">
-          <span>
-            <Volume2 aria-hidden="true" size={19} />
-            効果音
-          </span>
-          <button aria-pressed={sound} onClick={onSoundChange}>
-            効果音 {sound ? "ON" : "OFF"}
-          </button>
-        </div>
+        {onSoundChange && (
+          <div className="sound-setting">
+            <span>
+              <Volume2 aria-hidden="true" size={19} />
+              効果音
+            </span>
+            <button aria-pressed={sound} onClick={onSoundChange}>
+              効果音 {sound ? "ON" : "OFF"}
+            </button>
+          </div>
+        )}
         {onFuriganaChange && (
           <div className="sound-setting">
             <span>
@@ -111,82 +87,7 @@ export function SettingsDialog({
             </button>
           </div>
         )}
-        <SpeechSettings />
-        <div className="profile-setting">
-          <p className="profile-setting-title">
-            きょうだいプロフィール（今の記録先）
-          </p>
-          <div className="profile-setting-list">
-            {profiles.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                aria-pressed={currentId === p.id}
-                className={currentId === p.id ? "is-active" : ""}
-                onClick={() => {
-                  setCurrentProfile(p.id);
-                  setCurrentId(p.id);
-                }}
-              >
-                {p.name}
-              </button>
-            ))}
-          </div>
-          <div className="profile-setting-add">
-            <input
-              type="text"
-              value={newName}
-              maxLength={10}
-              placeholder="新しい名前（例：あおい）"
-              aria-label="新しいプロフィールの名前"
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <button
-              type="button"
-              disabled={!newName.trim()}
-              onClick={() => {
-                addProfile(newName);
-                setProfiles(loadProfiles());
-                setCurrentId(currentProfileId());
-                setNewName("");
-              }}
-            >
-              追加する
-            </button>
-          </div>
-          <p className="profile-setting-note">
-            観察カードは選んだプロフィールで保存され、マイギャラリーで
-            絞り込めます。
-          </p>
-        </div>
-        <details className="dictionary-check">
-          <summary>動物ごとの課題リンク（QRポスター用）</summary>
-          <p>
-            各リンクをQRコード化して展示の近くに貼ると、その動物の課題が
-            すぐ開けます。
-          </p>
-          <ul className="task-link-list">
-            {groups.map((g) => {
-              const t = tasks.find((task) => task.groupId === g.id);
-              if (!t) return null;
-              return (
-                <li key={g.id}>
-                  <a href={taskUrl(t.id)}>{g.name}の課題を開く</a>
-                </li>
-              );
-            })}
-          </ul>
-        </details>
-        <details className="dictionary-check">
-          <summary>
-            ふりがな辞書チェック（未登録 {missingWords.length} 件）
-          </summary>
-          {missingWords.length === 0 ? (
-            <p>いまの文章はすべて辞書でカバーできています。</p>
-          ) : (
-            <p>{missingWords.join("、")}</p>
-          )}
-        </details>
+        {!product && <SpeechSettings />}
         <details className="dictionary-check">
           <summary>絵の自動送信（研究用）</summary>
           <div className="share-setting">
@@ -223,7 +124,8 @@ export function SettingsDialog({
             <label>
               トークン
               <input
-                type="text"
+                type="password"
+                autoComplete="off"
                 value={share.token}
                 onChange={(event) => {
                   const next = { ...share, token: event.target.value.trim() };
@@ -255,22 +157,13 @@ export function SettingsDialog({
             {shareNote && <p role="status">{shareNote}</p>}
           </div>
         </details>
-        <OfflineStatus />
-        {open && <RecognitionPreparation />}
-        <details
-          className="observation-tools-settings"
-          onToggle={(event) => {
-            if (event.currentTarget.open) setToolsLoaded(true);
-          }}
-        >
-          <summary>追加の観察ツール</summary>
-          {toolsLoaded && (
-            <Suspense fallback={<p role="status">ツールを読み込み中…</p>}>
-              <ExtraObservationTools defaultTaskId={defaultObservationTaskId} />
-            </Suspense>
-          )}
-        </details>
-        <StudyControls />
+        {!product && (
+          <>
+            <OfflineStatus />
+            {open && <RecognitionPreparation />}
+            <StudyControls />
+          </>
+        )}
       </div>
       <button className="settings-done" type="button" onClick={onClose}>
         体験に戻る

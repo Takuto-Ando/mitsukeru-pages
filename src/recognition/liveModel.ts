@@ -1,3 +1,5 @@
+import { withDownloadDeadline } from "./download";
+
 const version = "yolox-nano-coco-0.1.1rc0";
 const cacheName = "zooketch-detection-" + version;
 export const liveModelEvent = "zooketch:live-model-cached";
@@ -24,11 +26,11 @@ export function downloadLiveModel() {
     const cache = await caches.open(cacheName);
     const url = modelUrl();
     if (!(await cache.match(url))) {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(60_000),
+      const bytes = await withDownloadDeadline(60_000, async (signal) => {
+        const response = await fetch(url, { signal });
+        if (!response.ok) throw new Error("Detection model download failed");
+        return response.arrayBuffer();
       });
-      if (!response.ok) throw new Error("Detection model download failed");
-      const bytes = await response.arrayBuffer();
       if (bytes.byteLength !== 3_659_407)
         throw new Error("Unexpected detection model size");
       await cache.put(

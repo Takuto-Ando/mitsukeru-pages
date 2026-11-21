@@ -41,10 +41,7 @@ import { artwork, assetPath } from "./content/artwork";
 import { groups } from "./content/groups";
 import { tasksForGroup, taskById } from "./content/tasks";
 import { clipStrokes } from "./content/scenes";
-import { currentProfileId } from "./future/profiles";
-import { parseTaskHash } from "./future/deeplink";
 import { enqueueShare, flushShareQueue } from "./future/share";
-import { QrScanner, qrScanSupported } from "./components/QrScanner";
 import { drawingEvaluator } from "./domain";
 
 import {
@@ -139,32 +136,12 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const activeTask = useRef<string | undefined>(undefined);
   const [step, setStep] = useState(0);
   const [screen, setScreen] = useState<Screen>("splash");
-  const [qrOpen, setQrOpen] = useState(false);
-  const openLinkedTaskRef = useRef(openLinkedTask);
-  openLinkedTaskRef.current = openLinkedTask;
   // 同意済み端末の未送信分は、起動時と通信の復帰時に再試行する。
   useEffect(() => {
     const send = () => { void flushShareQueue(); };
     send();
     window.addEventListener("online", send);
     return () => window.removeEventListener("online", send);
-  }, []);
-  // QRコード／共有リンク（#task=...）から課題へ直行する
-  useEffect(() => {
-    const followHash = () => {
-      const id = parseTaskHash(window.location.hash);
-      if (!id || !Object.hasOwn(taskById, id)) return;
-      const url = window.location;
-      window.history.replaceState(
-        window.history.state,
-        "",
-        url.pathname + url.search,
-      );
-      openLinkedTaskRef.current(id);
-    };
-    followHash();
-    window.addEventListener("hashchange", followHash);
-    return () => window.removeEventListener("hashchange", followHash);
   }, []);
   const [photoPhase, setPhotoPhase] = useState<
     "cheer" | "loading" | "challenge"
@@ -288,7 +265,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
   const [storageReady, setStorageReady] = useState(false);
   const [storageError, setStorageError] = useState("");
   const [savedId, setSavedId] = useState<string>();
-  const [completedGroup, setCompletedGroup] = useState("");
   const [draftOffer, setDraftOffer] = useState<string>();
   const task = taskById[taskId],
     scene = task.scene;
@@ -394,7 +370,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
         strokes: visible,
         styles: stylesFor(visible),
         outcome: feedback.method === "automatic" ? "correct" : "self-confirmed",
-        profileId: currentProfileId(),
       });
       const images = await composeObservationImages(scene, visible);
       await addObservation({ ...record, ...images, ...reflection });
@@ -403,17 +378,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
       if (generation === taskGeneration.current) {
         setSavedId(record.id);
         setReflectionDirty(false);
-        void loadObservations()
-          .then((records) => {
-            if (
-              generation === taskGeneration.current &&
-              tasksForGroup(task.groupId).every((t) =>
-                records.some((record) => record.taskId === t.id),
-              )
-            )
-              setCompletedGroup(group.name);
-          })
-          .catch(() => undefined);
       }
       void refreshCollection().catch(() => undefined);
       recordStudy("observation_saved", {}, logContext);
@@ -486,32 +450,17 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     }
   }
   async function exportCurrentPng(
-    kind: "own" | "comparison" | "photo",
+    kind: "own" | "comparison",
     share = false,
   ) {
     const visible = clipStrokes(strokes, scene);
-    if (!visible.length || saving || (kind === "photo" && !photo)) return;
+    if (!visible.length || saving) return;
     setSaving(true);
     setStorageError("");
     try {
       const images = await composeObservationImages(scene, visible);
       const createdAt = new Date().toISOString();
       const date = createdAt.slice(0, 10);
-      if (kind === "photo") {
-        const [{ composePhotoCard }, capture] = await Promise.all([
-          import("./future/photoCard"),
-          fetch(photo),
-        ]);
-        const card = await composePhotoCard({
-          photo: await capture.blob(),
-          sketch: images.ownPng,
-          animalName: group.name,
-          featureName: task.part,
-          discovery: reflection.discovery,
-        });
-        await savePng(card, `zooketch-${taskId}-${date}-photo-card.png`);
-        return;
-      }
       const image = await composeCardPng(
         kind === "own" ? images.ownPng : images.comparisonPng,
         {
@@ -592,7 +541,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     setReflectionDirty(false);
     setFeedback(undefined);
     setSavedId(undefined);
-    setCompletedGroup("");
     setDraftOffer(undefined);
     setStudyContext(
       taskById[id].groupId,
@@ -624,17 +572,9 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
     setReflection({ discovery: "", revisited: false });
     setReflectionDirty(false);
     setSavedId(undefined);
-    setCompletedGroup("");
     setDraftOffer(undefined);
     setStudyContext();
     next(0);
-  }
-  function openLinkedTask(id: string) {
-    if (!Object.hasOwn(taskById, id)) return;
-    restart();
-    setSettingsOpen(false);
-    selectTask(id);
-    setPhotoPhase("challenge");
   }
   async function startSecondDrawing() {
     if (!feedback || saving) return;
@@ -769,10 +709,7 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                   try {
                     await deleteObservation(id);
                     await refreshCollection();
-                    if (savedId === id) {
-                      setSavedId(undefined);
-                      setCompletedGroup("");
-                    }
+                    if (savedId === id) setSavedId(undefined);
                     return true;
                   } catch {
                     setStorageError(
@@ -797,7 +734,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             onSettings={openSettings}
             savedCount={collectionCount}
             studyTutorial={!!surveyUrl}
-            onScanQr={qrScanSupported() ? () => setQrOpen(true) : undefined}
           />
         ) : screen === "intro" ? (
           <IntroFlow
@@ -964,16 +900,12 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                   saved={!!savedId}
                   reflectionDirty={reflectionDirty}
                   storageReady={storageReady}
-                  completedGroup={completedGroup}
                   onConfirm={confirm}
                   onRedraw={() => next(1)}
                   onNext={() => void finishObservation(true)}
                   onUpdateReflection={() => void finishObservation(false)}
                   onLearn={() => next(3)}
                   onExport={exportCurrentPng}
-                  onPhotoExport={
-                    photo ? () => void exportCurrentPng("photo") : undefined
-                  }
                   onShare={() => void exportCurrentPng("own", true)}
                   onSliderCommit={(from, to, via) =>
                     recordStudy("comparison_slider_moved", { from, to, via })
@@ -1070,15 +1002,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                       >
                         比較画像をPNGで保存
                       </button>
-                      {photo && (
-                        <button
-                          className="primary collection-save"
-                          disabled={saving}
-                          onClick={() => void exportCurrentPng("photo")}
-                        >
-                          写真とスケッチをPNGで保存
-                        </button>
-                      )}
                     </div>
                   )}
                   {studyTaskEnabled ? (
@@ -1165,20 +1088,8 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
             )}
           </>
         )}
-        {qrOpen && (
-          <QrScanner
-            onClose={() => setQrOpen(false)}
-            onFound={(id) => {
-              setQrOpen(false);
-              openLinkedTask(id);
-            }}
-          />
-        )}
         <SettingsDialog
           open={settingsOpen}
-          defaultObservationTaskId={
-            screen === "activity" && step > 0 ? taskId : undefined
-          }
           returnFocus={settingsTrigger}
           onClose={() => setSettingsOpen(false)}
           sound={dopa ? dopaSound : sound}

@@ -1,3 +1,5 @@
+import { withDownloadDeadline } from "./download";
+
 export const photoModel = {
   id: "Xenova/clip-vit-base-patch32",
   revision: "d15189d7028b43f1d3e65039190477f6af591c2a",
@@ -13,6 +15,7 @@ const files = [
 ];
 const cacheName = "transformers-cache";
 export const photoModelEvent = "zooketch:photo-model-cached";
+export const photoModelDownloadEvent = "zooketch:photo-model-download";
 
 export async function photoModelCached() {
   try {
@@ -26,6 +29,11 @@ export async function photoModelCached() {
 }
 
 let pending: Promise<void> | undefined;
+let fetching = false;
+
+export function photoModelDownloading() {
+  return fetching;
+}
 
 export function photoDownloadInProgress() {
   return pending;
@@ -37,20 +45,29 @@ export function downloadPhotoModel() {
     for (const file of files) {
       const url = root + file;
       if (await cache.match(url)) continue;
-      const response = await fetch(url, {
-        priority: "low",
-        signal: AbortSignal.timeout(120_000),
+      if (!fetching) {
+        fetching = true;
+        window.dispatchEvent(new Event(photoModelDownloadEvent));
+      }
+      await withDownloadDeadline(120_000, async (signal) => {
+        const response = await fetch(url, { priority: "low", signal });
+        if (!response.ok) throw new Error("Photo model download failed");
+        await cache.put(url, response);
       });
-      if (!response.ok) throw new Error("Photo model download failed");
-      await cache.put(url, response);
     }
     window.dispatchEvent(new Event(photoModelEvent));
   };
-  return (pending ??= (
+  if (pending) return pending;
+  pending = (
     navigator.locks
       ? navigator.locks.request("zooketch-photo-model-download", download)
       : download()
   ).finally(() => {
     pending = undefined;
-  }));
+    if (fetching) {
+      fetching = false;
+      window.dispatchEvent(new Event(photoModelDownloadEvent));
+    }
+  });
+  return pending;
 }

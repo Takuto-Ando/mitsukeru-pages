@@ -1,6 +1,8 @@
 import { drawingScene } from "../collection/drawingScene";
 import { composeObservationImages } from "../notebook/images";
 import { loadObservation, updateObservationImages } from "../notebook/storage";
+import { loadReplicaRecord } from "../replica/storage";
+import { taskById } from "../content/tasks";
 import type { ObservationRecord } from "../notebook/types";
 
 // お客さんの絵を研究用に自動送信する仕組み（Google Apps Script 経由で
@@ -8,6 +10,18 @@ import type { ObservationRecord } from "../notebook/types";
 // 端末からだけ、保存のたびにキューへ入り、オンライン時に送信される。
 const CONFIG_KEY = "zooketch-share-v1";
 const QUEUE_KEY = "zooketch-share-queue-v1";
+const localRelay =
+  import.meta.env.DEV && import.meta.env.VITE_LOCAL_SHARE_CONSENT === "1";
+
+function defaultConfig(): ShareConfig {
+  return {
+    consent: localRelay,
+    endpoint: localRelay
+      ? import.meta.env.BASE_URL + "__zooketch-test-share"
+      : "",
+    token: "",
+  };
+}
 
 export type ShareConfig = {
   consent: boolean;
@@ -20,13 +34,16 @@ export function loadShareConfig(): ShareConfig {
     const raw = JSON.parse(
       localStorage.getItem(CONFIG_KEY) ?? "null",
     ) as Partial<ShareConfig> | null;
+    const defaults = defaultConfig();
     return {
-      consent: raw?.consent === true,
-      endpoint: typeof raw?.endpoint === "string" ? raw.endpoint : "",
-      token: typeof raw?.token === "string" ? raw.token : "",
+      consent:
+        typeof raw?.consent === "boolean" ? raw.consent : defaults.consent,
+      endpoint:
+        typeof raw?.endpoint === "string" ? raw.endpoint : defaults.endpoint,
+      token: typeof raw?.token === "string" ? raw.token : defaults.token,
     };
   } catch {
-    return { consent: false, endpoint: "", token: "" };
+    return defaultConfig();
   }
 }
 
@@ -122,6 +139,34 @@ export async function buildSharePayload(
   };
 }
 
+async function prepareShare(id: string, token: string) {
+  const observation = await loadObservation(id);
+  if (observation) return buildSharePayload(observation, token);
+  const record = await loadReplicaRecord(id);
+  if (
+    !record?.sketch ||
+    !record.taskId ||
+    !record.groupId ||
+    !record.animalName
+  )
+    return;
+  const match = /^data:image\/png;base64,([a-z0-9+/=]+)$/i.exec(record.sketch);
+  if (!match) throw new Error("Invalid sketch PNG");
+  return {
+    token,
+    id,
+    createdAt: record.createdAt,
+    animalName: record.animalName,
+    taskName: taskById[record.taskId]?.part ?? record.taskId,
+    groupId: record.groupId,
+    pngBase64: match[1],
+    strokes:
+      JSON.stringify(record.strokes ?? []).length < 6_000_000
+        ? record.strokes
+        : undefined,
+  };
+}
+
 let flushing = false;
 
 export async function flushShareQueue(): Promise<number> {
@@ -136,10 +181,9 @@ export async function flushShareQueue(): Promise<number> {
       if (!active.consent || !active.endpoint || !navigator.onLine) break;
       const id = loadQueue().pending[0];
       if (!id) break;
-      const record = await loadObservation(id);
-      if (record) {
+      const payload = await prepareShare(id, active.token);
+      if (payload) {
         try {
-          const payload = await buildSharePayload(record, active.token);
           const latest = loadShareConfig();
           if (
             !latest.consent ||
@@ -148,12 +192,15 @@ export async function flushShareQueue(): Promise<number> {
           )
             break;
           // Apps Script allows the request but does not expose its result to the browser.
-          await fetch(active.endpoint, {
+          const relay =
+            localRelay && active.endpoint === defaultConfig().endpoint;
+          const response = await fetch(active.endpoint, {
             method: "POST",
-            mode: "no-cors",
+            mode: relay ? "same-origin" : "no-cors",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload),
           });
+          if (relay && !response.ok) break;
           sentNow++;
         } catch {
           break;
@@ -163,7 +210,7 @@ export async function flushShareQueue(): Promise<number> {
       const queue = loadQueue();
       const pending = queue.pending.filter((item) => item !== id);
       const sent =
-        record && !queue.sent.includes(id) ? [...queue.sent, id] : queue.sent;
+        payload && !queue.sent.includes(id) ? [...queue.sent, id] : queue.sent;
       if (!saveQueue({ pending, sent })) break;
     }
     return sentNow;
