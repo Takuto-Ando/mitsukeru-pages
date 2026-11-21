@@ -8,6 +8,12 @@ import { tasks } from "../content/tasks";
 import { uncoveredWords } from "../furigana/coverage";
 import { taskUrl } from "../future/deeplink";
 import {
+  flushShareQueue,
+  loadShareConfig,
+  pendingShareCount,
+  saveShareConfig,
+} from "../future/share";
+import {
   addProfile,
   currentProfileId,
   loadProfiles,
@@ -42,6 +48,10 @@ export function SettingsDialog({
   const [profiles, setProfiles] = useState(loadProfiles);
   const [currentId, setCurrentId] = useState(currentProfileId);
   const [newName, setNewName] = useState("");
+  const [share, setShare] = useState(loadShareConfig);
+  const [pending, setPending] = useState(pendingShareCount);
+  const [shareNote, setShareNote] = useState("");
+  const refreshPending = () => setPending(pendingShareCount());
   const missingWords = useMemo(
     () =>
       uncoveredWords([
@@ -176,6 +186,69 @@ export function SettingsDialog({
             <p>{missingWords.join("、")}</p>
           )}
         </details>
+        <div className="share-setting">
+          <h3>絵の自動送信（研究用）</h3>
+          <label className="share-consent">
+            <input
+              type="checkbox"
+              checked={share.consent}
+              onChange={(event) => {
+                const next = { ...share, consent: event.target.checked };
+                setShare(next);
+                saveShareConfig(next);
+                if (next.consent) void flushShareQueue().then(refreshPending);
+              }}
+            />
+            保存した絵を、研究のために自動で送ることに同意します（おうちの人と
+            確認してからONにしてください）
+          </label>
+          <label>
+            送信先URL（Apps Script）
+            <input
+              type="url"
+              value={share.endpoint}
+              placeholder="https://script.google.com/macros/s/…/exec"
+              onChange={(event) => {
+                const next = { ...share, endpoint: event.target.value.trim() };
+                setShare(next);
+                saveShareConfig(next);
+              }}
+            />
+          </label>
+          <label>
+            トークン
+            <input
+              type="text"
+              value={share.token}
+              onChange={(event) => {
+                const next = { ...share, token: event.target.value.trim() };
+                setShare(next);
+                saveShareConfig(next);
+              }}
+            />
+          </label>
+          <p className="profile-setting-note">
+            未送信 {pending} 件。
+            送られるのは完成した絵（PNG）と線のデータ、動物の名前、日時だけです。
+            写真や声は送られません。
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              void flushShareQueue().then((sent) => {
+                refreshPending();
+                setShareNote(
+                  sent > 0
+                    ? `${sent}件送りました。`
+                    : "送れる絵はありませんでした（未送信が無いか、通信できませんでした）。",
+                );
+              });
+            }}
+          >
+            いま送信を試す
+          </button>
+          {shareNote && <p role="status">{shareNote}</p>}
+        </div>
         <OfflineStatus />
         <details
           className="observation-tools-settings"

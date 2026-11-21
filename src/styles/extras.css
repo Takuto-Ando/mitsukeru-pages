@@ -497,6 +497,49 @@
   font-size: 13px;
 }
 
+.share-setting {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.share-setting h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.share-setting label {
+  display: grid;
+  gap: 4px;
+  font-weight: 700;
+}
+
+.share-setting label input[type="url"],
+.share-setting label input[type="text"] {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 2px solid #e5d9bd;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.share-setting .share-consent {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-weight: 400;
+}
+
+.share-setting > button {
+  justify-self: start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 2px solid #e5d9bd;
+  background: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
 .voice-input-button {
   margin-top: 8px;
   padding: 8px 14px;
