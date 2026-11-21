@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
 import { tasks, tasksForGroup } from "../../src/content/tasks";
 import { groups } from "../../src/content/groups";
 import { tutorialSurveyUrl } from "../../src/research/tutorialSurvey";
@@ -133,11 +133,13 @@ async function select(page: Page, id = "goat", entry = "./") {
   await page.goto(entry);
   await startCamera(page);
   await pickAnimal(page, groups.find((g) => g.id === task.groupId)!.name);
-  if (tasksForGroup(task.groupId).length > 1)
+  if (tasksForGroup(task.groupId).length > 1) {
+    await page.getByText("部位を選ぶ", { exact: true }).click();
     await page
       .getByRole("group", { name: "観察する部位" })
       .getByRole("button", { name: task.part, exact: true })
       .click();
+  }
 }
 async function draw(page: Page, id = "goat", vertical = false) {
   const c = page.getByTestId("canvas");

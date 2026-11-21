@@ -15,6 +15,7 @@ export interface SpeciesRecognizer {
   ): Promise<SpeciesResult>;
   prepare(progress?: (text: string) => void): Promise<SpeciesResult>;
   isReady(): boolean;
+  isBusy(): boolean;
   release(): void;
   unload(): void;
   cancel(): void;
@@ -35,6 +36,7 @@ function cancel() {
 export const speciesRecognizer: SpeciesRecognizer = {
   cancel,
   isReady: () => ready,
+  isBusy: () => !!finish,
   release: () => {
     if (finish) cancel();
   },

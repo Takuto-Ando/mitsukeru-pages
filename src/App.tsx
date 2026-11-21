@@ -96,11 +96,14 @@ import "./styles/cards.css";
 import "./styles/design3.css";
 import "./styles/dopa.css";
 import "./styles/dopagaki.css";
+import "./styles/viewport-fit.css";
+import { useModelPreload } from "./recognition/useModelPreload";
 
 const TUTORIAL_KEY = "zooketch-tutorial-complete-v1";
 type Screen = "splash" | "home" | "intro" | "activity" | "tutorial" | "free";
 
 export default function App({ dopa = false }: { dopa?: boolean }) {
+  useModelPreload();
   const [dopaSound, setDopaSound] = useState(loadDopaSound);
   const [dopaPraise, setDopaPraise] = useState<string>();
   const awardedDopaPass = useRef(false);
@@ -938,26 +941,6 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                         ),
                     }}
                   />
-                  {tasksForGroup(group.id).length > 1 && (
-                    <div
-                      className="task-switch"
-                      role="group"
-                      aria-label="観察する部位"
-                    >
-                      {tasksForGroup(group.id).map((t) => (
-                        <button
-                          key={t.id}
-                          aria-pressed={taskId === t.id}
-                          onClick={() => {
-                            selectTask(t.id);
-                            window.scrollTo(0, 0);
-                          }}
-                        >
-                          {t.part}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </>
               ) : step === 2 ? (
                 <ResultScreen
@@ -1137,6 +1120,27 @@ export default function App({ dopa = false }: { dopa?: boolean }) {
                 >
                   ホーム
                 </button>
+                {step === 1 && tasksForGroup(group.id).length > 1 && (
+                  <details className="task-switch-menu">
+                    <summary>部位を選ぶ</summary>
+                    <div className="task-switch" role="group" aria-label="観察する部位">
+                      {tasksForGroup(group.id).map((t) => (
+                        <button
+                          key={t.id}
+                          type="button"
+                          aria-pressed={taskId === t.id}
+                          onClick={(event) => {
+                            event.currentTarget.closest("details")?.removeAttribute("open");
+                            selectTask(t.id);
+                            window.scrollTo(0, 0);
+                          }}
+                        >
+                          {t.part}
+                        </button>
+                      ))}
+                    </div>
+                  </details>
+                )}
                 {step !== 0 && (
                   <>
                     <button disabled={saving} onClick={openCollection}>

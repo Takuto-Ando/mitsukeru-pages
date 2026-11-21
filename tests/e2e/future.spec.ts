@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { readFileSync } from "node:fs";
 import { transform, build } from "esbuild";
 // Inject only into a disposable test page. No public route or app flag is added.

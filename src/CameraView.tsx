@@ -6,7 +6,11 @@ import { PhotoCelebration } from "./components/ChallengeIntro";
 import { assetPath } from "./content/artwork";
 import { useEffect, useRef, useState } from "react";
 import { CameraOff } from "lucide-react";
-import { photoModelCached } from "./recognition/photoModel";
+import {
+  photoDownloadInProgress,
+  photoModelCached,
+  photoModelEvent,
+} from "./recognition/photoModel";
 import { downloadLiveModel } from "./recognition/liveModel";
 import {
   useLiveDetection,
@@ -93,8 +97,11 @@ export function CameraView({
     void photoModelCached().then((cached) => {
       if (mounted) setPhotoCached(cached);
     });
+    const ready = () => setPhotoCached(true);
+    window.addEventListener(photoModelEvent, ready);
     return () => {
       mounted = false;
+      window.removeEventListener(photoModelEvent, ready);
     };
   }, [suspended]);
 
@@ -277,11 +284,11 @@ export function CameraView({
     const request = generation.current;
     setRecognizing(true);
     setCandidates([]);
-    setMessage("初回モデルを読込中です。手動選択もできます。");
+    setMessage("動物の候補を探しています…");
     try {
-      const result = await speciesRecognizer.recognize(image, (text) => {
-        if (request === generation.current) setMessage(text);
-      });
+      await photoDownloadInProgress()?.catch(() => undefined);
+      if (request !== generation.current) return;
+      const result = await speciesRecognizer.recognize(image);
       if (request !== generation.current) return;
       if (result.status === "candidates") {
         setModelReady(true);
@@ -334,8 +341,11 @@ export function CameraView({
     : undefined;
 
   return (
-    <div className="camera-page design3-camera">
-      <section hidden={status === "review"}>
+    <div
+      className="camera-page design3-camera"
+      data-camera-view={status === "review" ? "review" : "capture"}
+    >
+      <section className="camera-viewfinder" hidden={status === "review"}>
         <h1 className="sr-only">動物を撮影しよう</h1>
         <div className="camera-pitsune">
           <img
@@ -498,7 +508,7 @@ export function CameraView({
             )}
           </p>
         )}
-        {status === "live" && (
+        {status === "live" && (liveCached || liveMessage) && (
           <div className="live-camera-control">
             <button
               type="button"
@@ -514,9 +524,6 @@ export function CameraView({
                   : "ライブ検出を準備（約3.7 MB）"}
             </button>
             {liveMessage && <p role="status">{liveMessage}</p>}
-            {liveActive && live.status === "starting" && (
-              <p role="status">ライブ検出を起動しています…</p>
-            )}
             {liveActive && live.status === "error" && (
               <p role="status">
                 ライブ検出を開けませんでした。モデルを再準備できます。
@@ -573,6 +580,15 @@ export function CameraView({
                 ? "識別モデル準備済み"
                 : "識別モデルを先にダウンロード"}
             </button>
+            {!liveCached && (
+              <button
+                className="text-button"
+                disabled={livePreparing}
+                onClick={() => void toggleLive()}
+              >
+                ライブ検出を準備（約3.7 MB）
+              </button>
+            )}
             <p className="quiet-note">
               初回は約150MB以上。Wi-Fiで先に準備できます。
             </p>
@@ -592,8 +608,11 @@ export function CameraView({
           <button
             className="text-button"
             onClick={() => {
+              generation.current++;
               speciesRecognizer.cancel();
+              setRecognizing(false);
               setModelReady(false);
+              setMessage("候補の検索を中止しました。手動でも選べます。");
             }}
           >
             {captured ? "検索をやめる" : "準備をやめる"}

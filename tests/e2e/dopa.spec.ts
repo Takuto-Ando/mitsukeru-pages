@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 import { taskById } from "../../src/content/tasks";
 
 async function startGoat(page: Page) {

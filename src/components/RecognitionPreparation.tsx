@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { downloadLiveModel } from "../recognition/liveModel";
 import { useLiveModelCached } from "../recognition/useLiveDetection";
-import { photoModelCached } from "../recognition/photoModel";
-import { speciesRecognizer } from "../recognition/species";
+import {
+  downloadPhotoModel,
+  photoModelCached,
+  photoModelEvent,
+} from "../recognition/photoModel";
 
 export function RecognitionPreparation() {
   const liveReady = useLiveModelCached();
@@ -14,8 +17,11 @@ export function RecognitionPreparation() {
     void photoModelCached().then((cached) => {
       if (mounted && cached) setPhotoReady(true);
     });
+    const ready = () => setPhotoReady(true);
+    window.addEventListener(photoModelEvent, ready);
     return () => {
       mounted = false;
+      window.removeEventListener(photoModelEvent, ready);
     };
   }, []);
 
@@ -35,24 +41,15 @@ export function RecognitionPreparation() {
   async function preparePhoto() {
     setPreparing("photo");
     setMessage("写真の種識別モデルを準備しています…");
-    const result = await speciesRecognizer.prepare(setMessage);
-    if (result.status === "ready") {
-      const cached = await photoModelCached();
-      setPhotoReady(cached);
-      setMessage(
-        cached
-          ? "写真の種識別モデルをこのブラウザに保存しました。"
-          : "モデルはこの画面で使えます。次回に備えた保存は確認できませんでした。",
-      );
-      if (cached) speciesRecognizer.unload();
-    } else {
-      setMessage(
-        result.status === "unavailable" || result.status === "unknown"
-          ? result.reason
-          : "写真の識別モデルを準備できませんでした。",
-      );
+    try {
+      await downloadPhotoModel();
+      setPhotoReady(true);
+      setMessage("写真の種識別モデルをこのブラウザに保存しました。");
+    } catch {
+      setMessage("保存できませんでした。通信と空き容量を確認してください。");
+    } finally {
+      setPreparing(undefined);
     }
-    setPreparing(undefined);
   }
 
   return (
@@ -77,11 +74,6 @@ export function RecognitionPreparation() {
             ? "写真の種識別モデル保存済み"
             : "写真の種識別モデルを保存（約150 MB以上）"}
         </button>
-        {preparing === "photo" && (
-          <button type="button" onClick={speciesRecognizer.cancel}>
-            準備をやめる
-          </button>
-        )}
       </div>
       <p role="status">{message}</p>
       <p className="quiet-note">

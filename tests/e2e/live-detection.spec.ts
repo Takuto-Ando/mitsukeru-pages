@@ -1,11 +1,13 @@
 import { readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
+
+test.use({ testLiveModel: true });
 
 const testPhoto =
   "data:image/png;base64," +
   readFileSync("public/replica-assets/giraffe-example.png").toString("base64");
 
-test("保存した実モデルでオフライン中もライブの枠と候補名を表示できる", async ({
+test("起動時に自動保存した実モデルでオフライン中もライブの枠と候補名を表示できる", async ({
   page,
   context,
 }) => {
@@ -50,7 +52,6 @@ test("保存した実モデルでオフライン中もライブの枠と候補�
   );
   await button("設定").click();
   await page.getByText("動物認識の事前ダウンロード", { exact: true }).click();
-  await button("ライブ検出モデルを保存（約3.7 MB）").click();
   await expect(button("ライブ検出モデル保存済み")).toBeDisabled({
     timeout: 20_000,
   });

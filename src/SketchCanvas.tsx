@@ -651,12 +651,37 @@ export function SketchCanvas({
       </button>
     </div>
   );
+  const layoutSwitch = missionTitle && (
+    <div className="sketch-layout-switch" role="group" aria-label="画面の向き">
+      <button
+        type="button"
+        aria-pressed={layout === "portrait"}
+        onClick={() => chooseLayout("portrait")}
+      >
+        たて
+      </button>
+      <button
+        type="button"
+        aria-pressed={layout === "landscape"}
+        onClick={() => chooseLayout("landscape")}
+      >
+        よこ
+      </button>
+    </div>
+  );
   return (
     <div
       className={"sketch-card" + (missionTitle ? " mission-sketch" : "")}
       data-layout={missionTitle ? layout : undefined}
       data-free={isFreeDrawing || undefined}
       data-card-crop={!!viewport || undefined}
+      style={
+        {
+          "--paper-ratio": viewport
+            ? `(${viewport.aspectRatio})`
+            : 600 / frameHeight,
+        } as CSSProperties
+      }
     >
       {missionTitle && (
         <div className="mission-heading">
@@ -1059,49 +1084,31 @@ export function SketchCanvas({
             <span className="stamp-tip">画用紙をタップすると置けるよ</span>
           </div>
         )}
-        <div className="zoom-controls" role="group" aria-label="拡大・縮小">
-          <button
-            type="button"
-            aria-label="縮小する"
-            disabled={zoom <= 1}
-            onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
-          >
-            －
-          </button>
-          <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
-          <button
-            type="button"
-            aria-label="拡大する"
-            disabled={zoom >= 2}
-            onClick={() => setZoom((z) => Math.min(2, z + 0.5))}
-          >
-            ＋
-          </button>
+        <div className="drawing-zoom-row">
+          <div className="zoom-controls" role="group" aria-label="拡大・縮小">
+            <button
+              type="button"
+              aria-label="縮小する"
+              disabled={zoom <= 1}
+              onClick={() => setZoom((z) => Math.max(1, z - 0.5))}
+            >
+              －
+            </button>
+            <span aria-label={`現在の倍率 ${zoom}倍`}>{zoom}倍</span>
+            <button
+              type="button"
+              aria-label="拡大する"
+              disabled={zoom >= 2}
+              onClick={() => setZoom((z) => Math.min(2, z + 0.5))}
+            >
+              ＋
+            </button>
+          </div>
+          {layout !== "landscape" && layoutSwitch}
         </div>
         {layout !== "landscape" && drawingAssists}
       </div>
-      {missionTitle && (
-        <div
-          className="sketch-layout-switch"
-          role="group"
-          aria-label="画面の向き"
-        >
-          <button
-            type="button"
-            aria-pressed={layout === "portrait"}
-            onClick={() => chooseLayout("portrait")}
-          >
-            たて
-          </button>
-          <button
-            type="button"
-            aria-pressed={layout === "landscape"}
-            onClick={() => chooseLayout("landscape")}
-          >
-            よこ
-          </button>
-        </div>
-      )}
+      {layout === "landscape" && layoutSwitch}
     </div>
   );
 }
