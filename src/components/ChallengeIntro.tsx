@@ -1,4 +1,4 @@
-import { ChevronRight, Sparkles, Star } from "lucide-react";
+import { ChevronRight, Sparkles } from "lucide-react";
 import { useEffect, useRef, type CSSProperties } from "react";
 import { CardLettering } from "./CardLettering";
 import { DifficultyPill } from "./DifficultyPill";
@@ -17,10 +17,18 @@ export function PhotoCelebration({
       <div className="design3-celebration-mascot">
         <img
           alt=""
-          src={assetPath("illustrations/pdf-design/pitsune-cheer.svg")}
+          src={assetPath("illustrations/pdf-design/pitsune-photo-cheer.svg")}
         />
-        {[0, 1, 2, 3, 4, 5].map((index) => (
-          <Star key={index} aria-hidden="true" fill="currentColor" />
+        {(["left", "right"] as const).map((side) => (
+          <img
+            key={side}
+            alt=""
+            className="photo-celebration-stars"
+            data-side={side}
+            src={assetPath(
+              `illustrations/pdf-design/pitsune-cheer-stars-${side}.svg`,
+            )}
+          />
         ))}
       </div>
       {onContinue && (

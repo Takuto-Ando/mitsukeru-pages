@@ -382,15 +382,6 @@ body:has(.design3-shell) {
   color: #ffd361;
 }
 
-.design3-celebration-mascot > svg:not(.lucide-star),
-.design3-celebration-mascot > span > svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-
-
 .design3-challenge {
   display: flex;
   flex-direction: column;
@@ -864,21 +855,21 @@ body:has(.design3-shell) {
   width: 100%;
 }
 
-.design3-celebration-mascot .lucide-star {
+.photo-celebration-stars {
   position: absolute;
-  left: 44%;
-  top: 55%;
-  width: 10%;
-  height: auto;
-  transform: translate(var(--star-x), var(--star-y));
+  inset: 0;
+  pointer-events: none;
 }
 
-.design3-celebration-mascot .lucide-star:nth-child(2) { --star-x: -310%; --star-y: -75%; }
-.design3-celebration-mascot .lucide-star:nth-child(3) { --star-x: -407%; --star-y: 22%; }
-.design3-celebration-mascot .lucide-star:nth-child(4) { --star-x: -305%; --star-y: 133%; }
-.design3-celebration-mascot .lucide-star:nth-child(5) { --star-x: 305%; --star-y: -75%; }
-.design3-celebration-mascot .lucide-star:nth-child(6) { --star-x: 407%; --star-y: 22%; }
-.design3-celebration-mascot .lucide-star:nth-child(7) { --star-x: 305%; --star-y: 133%; }
+.photo-celebration-stars[data-side="left"] {
+  --stars-start: 30%;
+  --stars-delay: 100ms;
+}
+
+.photo-celebration-stars[data-side="right"] {
+  --stars-start: -30%;
+  --stars-delay: 400ms;
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .camera-pitsune-face {
@@ -894,8 +885,8 @@ body:has(.design3-shell) {
     animation: photo-celebration-in 460ms cubic-bezier(.2, .75, .25, 1.15) both;
   }
 
-  .design3-celebration-mascot .lucide-star {
-    animation: photo-stars-spread 510ms 100ms ease-out both;
+  .photo-celebration-stars {
+    animation: photo-stars-spread 300ms var(--stars-delay) ease-out both;
   }
 }
 
@@ -916,8 +907,8 @@ body:has(.design3-shell) {
 }
 
 @keyframes photo-stars-spread {
-  from { opacity: 0; transform: translate(0, 0) scale(0.35); }
-  to { opacity: 1; transform: translate(var(--star-x), var(--star-y)); }
+  from { opacity: 0; transform: translateX(var(--stars-start)); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 .live-animal-overlay {

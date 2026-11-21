@@ -134,6 +134,21 @@ test("フローAは付録のノード順にタップで進み、描いた絵だ�
   await expect(button("撮りなおす")).toBeDisabled();
   await button("ピツネに見せる").click();
   await expect(node("52-5335")).toBeVisible();
+  const starGroups = page.locator(".photo-celebration-stars");
+  await expect(starGroups).toHaveCount(2);
+  await expect(
+    page.locator(".design3-celebration-mascot .lucide-star"),
+  ).toHaveCount(0);
+  for (const group of await starGroups.all()) {
+    const src = await group.evaluate((image: HTMLImageElement) => image.src);
+    const response = await page.request.get(src);
+    expect(response.ok()).toBe(true);
+    expect((await response.text()).match(/<path\b/g)).toHaveLength(3);
+  }
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(starGroups.first()).toHaveCSS("animation-delay", "0.1s");
+  await expect(starGroups.last()).toHaveCSS("animation-delay", "0.4s");
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.waitForTimeout(1400);
   await expect(node("52-5335")).toBeVisible();
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
