@@ -3,6 +3,7 @@ import { prepareCloudflareAssets } from "./cloudflare-assets";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { createHash } from "node:crypto";
+import { renderOfflineWorker } from "./offline-worker";
 // Build-time precache. No remote resources, photographs, notebook or research data.
 export function offlinePlugin(legacy = false): Plugin {
   let config: ResolvedConfig;
@@ -160,7 +161,6 @@ export function offlinePlugin(legacy = false): Plugin {
       files.sort();
       const hash = createHash("sha256");
       for (const f of files) hash.update(await readFile(join(dir, f)));
-      const version = hash.digest("hex").slice(0, 16);
       const prefix = `zooketch-shell-${base}-`;
       const assetUrl = (file: string) =>
         base +
@@ -175,57 +175,25 @@ export function offlinePlugin(legacy = false): Plugin {
           file,
         );
       const urls = files
-        .filter((file) => !inferenceOnDemand(file))
+        .filter((file) => !entryFiles.has(file) && !inferenceOnDemand(file))
         .map(assetUrl);
       const optionalUrls = files.filter(inferenceOnDemand).map(assetUrl);
+      const documents: Record<string, string> = {};
+      for (const file of entryFiles)
+        documents[file] = await readFile(join(dir, file), "utf8");
+      const render = (version: string) =>
+        renderOfflineWorker({
+          base,
+          prefix,
+          version,
+          urls,
+          optionalUrls,
+          documents,
+        });
+      hash.update(render(""));
       await writeFile(
         join(dir, "sw.js"),
-        `
-const PREFIX=${JSON.stringify(prefix)}, CACHE=PREFIX+${JSON.stringify(version)}, URLS=${JSON.stringify(urls)}, OPTIONAL=${JSON.stringify(optionalUrls)}, BASE=${JSON.stringify(base)};
-self.addEventListener('install', event => event.waitUntil((async()=>{
-  const cache = await caches.open(CACHE);
-  try { await cache.addAll(URLS); }
-  catch(error) { await caches.delete(CACHE); throw error; }
-})()));
-self.addEventListener('activate', event => event.waitUntil((async()=>{
-  for(const name of await caches.keys()) if(name.startsWith(PREFIX)&&name!==CACHE) await caches.delete(name);
-  await self.clients.claim();
-})()));
-self.addEventListener('message', event => {
-  if(event.data==='activate-update') self.skipWaiting();
-  if(event.data==='offline-status') event.waitUntil((async()=>{
-    const cache=await caches.open(CACHE);
-    const ready=(await Promise.all(URLS.map(url=>cache.match(url)))).every(Boolean);
-    event.ports[0]?.postMessage({ready,version:${JSON.stringify(version)}});
-  })());
-});
-self.addEventListener('fetch', event => {
-  const request=event.request, url=new URL(request.url);
-  if(request.method!=='GET'||url.origin!==self.location.origin||!url.pathname.startsWith(BASE))return;
-  if(request.mode==='navigate') {
-    event.respondWith(fetch(request).catch(async()=>{
-      const edition=url.pathname.slice(BASE.length).split('/')[0];
-      const entry=['figma','plus','replica','dopa'].includes(edition)?edition+'/index.html':'index.html';
-      const cached=await (await caches.open(CACHE)).match(BASE+entry);
-      if(!cached)return Response.error();
-      // Pages redirects /index.html to /. A cached redirected Response cannot
-      // satisfy a navigation whose redirect mode is manual (Safari/Chromium).
-      const headers=new Headers(cached.headers);
-      headers.delete('Content-Encoding'); headers.delete('Content-Length');
-      return new Response(cached.body,{status:200,headers});
-    }));
-  } else if(URLS.includes(url.pathname) || OPTIONAL.includes(url.pathname)) {
-    event.respondWith(caches.open(CACHE).then(async cache=>{
-      const cached=await cache.match(url.pathname);
-      if(cached)return cached;
-      const response=await fetch(request);
-      if(response.ok && OPTIONAL.includes(url.pathname))
-        await cache.put(url.pathname,response.clone()).catch(()=>{});
-      return response;
-    }));
-  }
-});
-`,
+        render(hash.digest("hex").slice(0, 16)),
       );
     },
   };

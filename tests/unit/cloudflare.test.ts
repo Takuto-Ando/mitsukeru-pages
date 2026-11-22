@@ -51,6 +51,26 @@ test("圧縮対象でない大容量ファイルを黙って公開しない", as
   }
 });
 
+test("YOLOXは同じバージョン付きURLで圧縮配信される", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "zooketch-cloudflare-"));
+  try {
+    const model = Buffer.alloc(4096, 5);
+    const path = "models/yolox-nano-coco-0.1.1rc0.onnx";
+    await mkdir(join(dir, "models"));
+    await writeFile(join(dir, path), model);
+    const [compressed] = await prepareCloudflareAssets(dir);
+    expect(compressed.storedBytes).toBeLessThan(model.length);
+    expect(gunzipSync(await readFile(join(dir, path + ".gz")))).toEqual(model);
+    const entry = JSON.parse(await readFile(join(dir, "_routes.json"), "utf8"));
+    expect(entry.include).toContain("/" + path);
+    expect(await readFile(join(dir, "_worker.js"), "utf8")).toContain(
+      `"/${path}":{"path":"/${path}.gz","type":"application/octet-stream"}`,
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 const shareEndpoint = "https://script.google.com/macros/s/test/exec";
 const fakeToken = "worker-only";
 const workerConfig = {

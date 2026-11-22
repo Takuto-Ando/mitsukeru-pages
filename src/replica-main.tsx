@@ -1,5 +1,4 @@
 import ReactDOM from "react-dom/client";
-import { MotionConfig } from "motion/react";
 import { ReplicaApp } from "./replica/ReplicaApp";
 import { loadLicensedTypography } from "./typography";
 import { pauseHiddenAnimations } from "./replica/visibility";
@@ -10,9 +9,7 @@ loadLicensedTypography(import.meta.env.VITE_ADOBE_FONTS_KIT_ID);
 pauseHiddenAnimations();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <MotionConfig reducedMotion="user">
-    <ReplicaApp legacy={import.meta.env.VITE_LEGACY_EDITIONS === "1"} />
-  </MotionConfig>,
+  <ReplicaApp legacy={import.meta.env.VITE_LEGACY_EDITIONS === "1"} />,
 );
 
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

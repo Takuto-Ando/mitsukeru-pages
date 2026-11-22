@@ -82,6 +82,10 @@ test("Figma再現版をオフラインで開いても機能拡張版に切り替
   await page.goto("figma/");
   const start = page.getByRole("button", { name: "はじめから", exact: true });
   await expect(start).toBeVisible();
+  await page.evaluate(() =>
+    navigator.serviceWorker.ready.then(() => undefined),
+  );
+  await page.reload();
   await expect
     .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller), {
       timeout: 20_000,

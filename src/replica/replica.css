@@ -9,6 +9,21 @@
   min-height: 100dvh;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .replica-screen {
+    animation: replica-screen-enter 300ms ease-out both;
+  }
+}
+
+@keyframes replica-screen-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .replica-app .design3-title-meta,
 .replica-app .drawing-assists,
 .replica-app .sketch-layout-switch,

@@ -40,6 +40,8 @@ async function useMockCamera(page: Page, waitForPermission = false) {
         configurable: true,
         value: {
           getUserMedia: async () => {
+            if (sessionStorage.getItem("test:camera-denied"))
+              throw new DOMException("Permission denied", "NotAllowedError");
             await permission;
             await image.decode();
             return { getTracks: () => [track], getVideoTracks: () => [track] };
@@ -63,6 +65,84 @@ async function useMockCamera(page: Page, waitForPermission = false) {
     { photo: sample, waitForPermission },
   );
 }
+
+test("カメラと撮影・写真の保存は失敗しても同じ画面から再試行できる", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
+    sessionStorage.setItem("test:camera-denied", "1");
+    let failCapture = true;
+    const capture = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.toDataURL = function (...args) {
+      if (failCapture && args[0] === "image/jpeg") {
+        failCapture = false;
+        throw new DOMException(
+          "Capture temporarily failed",
+          "InvalidStateError",
+        );
+      }
+      return capture.apply(this, args);
+    };
+    let failSave = true;
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = function (...args) {
+      if (failSave && this.name === "gallery") {
+        failSave = false;
+        throw new DOMException("No storage space", "QuotaExceededError");
+      }
+      return put.apply(this, args);
+    };
+  });
+  await page.goto("./");
+  await button(page, "はじめから").click();
+  await expect(page.getByText(/カメラを開けませんでした/)).toBeVisible();
+  await page.evaluate(() => sessionStorage.removeItem("test:camera-denied"));
+  await button(page, "カメラをもう一度開く").click();
+  await expect(page.getByText(/カメラを開けませんでした/)).toHaveCount(0);
+  const shutter = button(page, "シャッター");
+  await expect(shutter).toBeEnabled();
+  await shutter.click();
+  await expect(
+    page.getByText("撮影できませんでした。もう一度試してね。"),
+  ).toBeVisible();
+  await shutter.click();
+  await expect(page.getByRole("alert")).toHaveText(
+    "写真を保存できませんでした。続けて描くことはできます。",
+  );
+  await button(page, "もう一度試す").click();
+  await expect(
+    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+  ).toBeVisible();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("チュートリアルの見本写真からもカメラへの再試行で実写に復帰できる", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.addInitScript(() =>
+    sessionStorage.setItem("test:camera-denied", "1"),
+  );
+  await page.goto("./");
+  for (const step of [
+    "はじめから",
+    "こんにちは！",
+    "やってみる！",
+    "撮ってみる！",
+  ])
+    await button(page, step).click();
+  const retry = button(page, "カメラをもう一度開く");
+  await expect(retry).toBeVisible();
+  await page.evaluate(() => sessionStorage.removeItem("test:camera-denied"));
+  await retry.click();
+  await expect(page.getByLabel("動物を映すカメラ")).toBeVisible();
+  await button(page, "シャッター").click();
+  await expect(
+    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+  ).toBeVisible();
+});
 
 test("ライブ認識を再試行し、白い枠とセリフを表示して撮影時の動物名を引き継ぐ", async ({
   page,
@@ -137,6 +217,31 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
     0,
   );
   expect(photoModelRequests).toBe(0);
+});
+
+test("ライブ認識の自動再試行が尽きてもシャッターと手動再試行が使える", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
+  });
+  let downloads = 0;
+  await page.route("**/models/yolox*.onnx", (route) => {
+    downloads++;
+    return downloads <= 3 ? route.abort() : route.continue();
+  });
+  await page.goto("./");
+  await button(page, "はじめから").click();
+  await expect(button(page, "シャッター")).toBeEnabled();
+  const retry = button(page, "ライブ検出を再準備");
+  await expect(retry).toBeVisible({ timeout: 12_000 });
+  expect(downloads).toBeGreaterThanOrEqual(3);
+  await retry.click();
+  await expect(page.locator(".replica-camera-tracking")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(retry).toHaveCount(0);
 });
 
 test("前の版で修了した端末も新しいチュートリアルで撮影でき、白い枠が動物を追う", async ({

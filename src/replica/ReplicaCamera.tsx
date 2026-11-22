@@ -7,7 +7,13 @@ import {
   useLiveModelCached,
 } from "../recognition/useLiveDetection";
 import { CardLettering } from "../components/CardLettering";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
@@ -89,6 +95,7 @@ export function ReplicaCamera({
   });
   const [livePreparing, setLivePreparing] = useState(false);
   const [liveFailed, setLiveFailed] = useState(false);
+  const [offerLiveRetry, setOfferLiveRetry] = useState(false);
   const [liveRetry, setLiveRetry] = useState(0);
   const liveActive =
     !sample &&
@@ -154,6 +161,7 @@ export function ReplicaCamera({
       try {
         if ((await liveModelCached()) || !active) return;
         setLiveFailed(false);
+        setOfferLiveRetry(false);
         setLivePreparing(true);
         await downloadLiveModel();
       } catch {
@@ -162,6 +170,7 @@ export function ReplicaCamera({
           // Brief interruptions retry automatically without adding camera controls.
           if (!legacy && attempt < 2)
             timer = window.setTimeout(prepare, ++attempt * 1200);
+          else if (!legacy) setOfferLiveRetry(true);
         }
       } finally {
         pending = false;
@@ -212,21 +221,26 @@ export function ReplicaCamera({
     };
   }, []);
 
+  const retryUnavailableCamera = useCallback(() => {
+    if (document.hidden || !lastFailure.current) return;
+    lastFailure.current = undefined;
+    if (fallbackSample.current) {
+      fallbackSample.current = false;
+      setSample(false);
+      setSampleHasAnimal(false);
+      setSampleReady(false);
+      setSampleUnavailable(false);
+    }
+    setMessage("");
+    retryCamera((number) => number + 1);
+  }, []);
+
   useEffect(() => {
     if (menuOpen || suspended) return;
     let active = true;
     let permission: PermissionStatus | undefined;
     function retry() {
-      if (!active || document.hidden || !lastFailure.current) return;
-      lastFailure.current = undefined;
-      if (fallbackSample.current) {
-        fallbackSample.current = false;
-        setSample(false);
-        setSampleHasAnimal(false);
-        setSampleReady(false);
-        setSampleUnavailable(false);
-      }
-      retryCamera((number) => number + 1);
+      if (active) retryUnavailableCamera();
     }
     const permissionChanged = () => {
       if (permission?.state === "granted") retry();
@@ -257,7 +271,7 @@ export function ReplicaCamera({
       permission?.removeEventListener?.("change", permissionChanged);
       window.removeEventListener("focus", focused);
     };
-  }, [menuOpen, suspended]);
+  }, [menuOpen, retryUnavailableCamera, suspended]);
 
   useEffect(() => {
     if (sample || menuOpen || suspended || !visible) return;
@@ -328,7 +342,13 @@ export function ReplicaCamera({
       } catch (error) {
         if (!active) return;
         stopCamera();
-        cameraFailed(cameraFailure(error), "カメラを開けませんでした。");
+        const reason = cameraFailure(error);
+        cameraFailed(
+          reason,
+          reason === "unavailable" || reason === "insecure"
+            ? "この端末ではカメラを開けません。"
+            : "カメラを開けませんでした。",
+        );
       }
     }
     document.addEventListener("visibilitychange", visibilityChanged);
@@ -364,6 +384,7 @@ export function ReplicaCamera({
   function toggleLive() {
     if (liveError || (liveEnabled && !liveCached)) {
       setLiveFailed(false);
+      setOfferLiveRetry(false);
       setLiveRetry((attempt) => attempt + 1);
     } else {
       setLiveEnabled(!liveEnabled);
@@ -421,6 +442,8 @@ export function ReplicaCamera({
         });
       } else if (legacy && sample) {
         submitCapture({ photo: samplePhoto(), sample: true });
+      } else {
+        setMessage("撮影できませんでした。もう一度試してね。");
       }
     } catch {
       setMessage("撮影できませんでした。もう一度試してね。");
@@ -589,6 +612,42 @@ export function ReplicaCamera({
             画像認識モデルをダウンロード中…
           </p>
         )}
+        {!legacy && (streamReady || sample) && message && (
+          <p className="replica-camera-model-status" role="status">
+            {message}
+          </p>
+        )}
+        {!legacy &&
+          (cameraUnavailable || fallbackSample.current) &&
+          message &&
+          lastFailure.current !== "insecure" && (
+            <div className="live-camera-control">
+              <button
+                type="button"
+                className="text-button"
+                onClick={retryUnavailableCamera}
+              >
+                カメラをもう一度開く
+              </button>
+            </div>
+          )}
+        {!legacy &&
+          !sample &&
+          streamReady &&
+          !livePreparing &&
+          !message &&
+          (offerLiveRetry ||
+            (live.status === "error" && retriedWorker.current)) && (
+            <div className="live-camera-control">
+              <button
+                type="button"
+                className="text-button"
+                onClick={toggleLive}
+              >
+                ライブ検出を再準備
+              </button>
+            </div>
+          )}
         <CameraZoom {...cameraZoom} />
       </div>
       <div className="camera-controls">
@@ -636,15 +695,9 @@ export function ReplicaCamera({
           <span className="camera-side-label">マイページ</span>
         </button>
       </div>
-      {legacy && !sample && message && (
+      {legacy && !sample && cameraUnavailable && message && (
         <div className="replica-camera-alternatives">
-          <button
-            className="text-button"
-            onClick={() => {
-              setMessage("");
-              retryCamera((number) => number + 1);
-            }}
-          >
+          <button className="text-button" onClick={retryUnavailableCamera}>
             カメラをもう一度開く
           </button>
           <button className="text-button" onClick={() => chooseMode(true)}>

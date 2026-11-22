@@ -37,16 +37,24 @@ test("各OSでネストされた素材を有効なURLとしてオフライン保
       "illustrations/whole/goat.svg",
       "fonts/gothic.woff2",
       "icons/icon-192.png",
-      "dopa/index.html",
-      "replica/index.html",
       "replica/manifest.webmanifest",
-      "figma/index.html",
       "figma/manifest.webmanifest",
       "dopa/manifest.webmanifest",
-      "plus/index.html",
       "replica-assets/sample.png",
     ])
       expect(worker).toContain(JSON.stringify("/zooketch/" + path));
+    for (const path of [
+      "index.html",
+      "dopa/index.html",
+      "replica/index.html",
+      "figma/index.html",
+      "plus/index.html",
+    ]) {
+      const html = await readFile(join(dir, path), "utf8");
+      expect(worker).toContain(
+        JSON.stringify(path) + ":" + JSON.stringify(html),
+      );
+    }
     expect(worker).not.toContain("assets\\\\app.js");
     expect(
       JSON.parse(await readFile(join(dir, "manifest.webmanifest"), "utf8"))

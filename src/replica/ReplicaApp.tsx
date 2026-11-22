@@ -16,7 +16,6 @@ import {
   useState,
   type SetStateAction,
 } from "react";
-import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "../components/HomeScreen";
 import {
   IntroLoadingScreen,
@@ -181,13 +180,13 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   );
   const [showHint, setShowHint] = useState(false);
   const [error, setError] = useState("");
+  const [photoWriteFailed, setPhotoWriteFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const mounted = useRef(true);
   const savingRef = useRef(false);
   const savedDrawing = useRef<Stroke[] | undefined>(undefined);
   const writingPhoto = useRef<Promise<void>>(Promise.resolve());
   const activeCapture = useRef<string | undefined>(undefined);
-  const reduce = useReducedMotion();
   const selectedGroup = groups.find((choice) => choice.id === groupId);
   const chosen =
     selectedGroup && record?.groupId === selectedGroup.id && record.animalName
@@ -282,6 +281,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     setFramedExample(false);
     setRecord(undefined);
     setPhotoSaved(false);
+    setPhotoWriteFailed(false);
     setGroupId("");
     setError("");
     setScreen("camera");
@@ -290,6 +290,31 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   function retakePhoto() {
     restartCamera();
     setFramedExample(!!record?.samplePhoto);
+  }
+
+  function persistCapturedPhoto(next: ReplicaRecord) {
+    const photo = next.photo;
+    if (!photo) return;
+    setPhotoWriteFailed(false);
+    setError("");
+    writingPhoto.current = writingPhoto.current
+      .then(async () => {
+        let source = photo;
+        if (next.samplePhoto && !photo.startsWith("data:")) {
+          const response = await fetch(photo);
+          if (!response.ok) throw new Error("見本写真を読み込めませんでした。");
+          source = await imageDataURL(await response.blob());
+        }
+        const saved = { ...next, photo: source };
+        await saveReplicaRecord(saved);
+        renderGalleryRecord(saved);
+      })
+      .catch(() => {
+        if (mounted.current && activeCapture.current === next.id) {
+          setPhotoWriteFailed(true);
+          setError("写真を保存できませんでした。続けて描くことはできます。");
+        }
+      });
   }
 
   function takePhoto({ photo, sample, animal }: CameraCapture) {
@@ -311,28 +336,13 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     };
     activeCapture.current = next.id;
     setPhotoSaved(false);
+    setPhotoWriteFailed(false);
     setRecord(next);
     setGroupId(captured?.groupId ?? "");
     setError("");
     setScreen("review");
-    if (!photo) {
-      writingPhoto.current = Promise.resolve();
-      return;
-    }
-    writingPhoto.current = (async () => {
-      let source = photo;
-      if (sample) {
-        const response = await fetch(photo);
-        if (!response.ok) throw new Error("見本写真を読み込めませんでした。");
-        source = await imageDataURL(await response.blob());
-      }
-      const saved = { ...next, photo: source };
-      await saveReplicaRecord(saved);
-      renderGalleryRecord(saved);
-    })().catch(() => {
-      if (mounted.current && activeCapture.current === next.id)
-        setError("写真を保存できませんでした。続けて描くことはできます。");
-    });
+    writingPhoto.current = Promise.resolve();
+    persistCapturedPhoto(next);
   }
 
   function selectCapturedAnimal(id: string) {
@@ -471,9 +481,17 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
       >
         <main>
           {error && (
-            <p className="design3-alert replica-storage-error" role="alert">
-              {error}
-            </p>
+            <div className="design3-alert replica-storage-error">
+              <p role="alert">{error}</p>
+              {screen === "review" && photoWriteFailed && record?.photo && (
+                <button
+                  type="button"
+                  onClick={() => persistCapturedPhoto(record)}
+                >
+                  もう一度試す
+                </button>
+              )}
+            </div>
           )}
           {screen === "gallery" && galleryLoadFailed && (
             <div className="design3-alert replica-storage-error">
@@ -487,12 +505,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
             </div>
           )}
           <Suspense fallback={null}>
-            <motion.div
+            <div
               key={screen === "intro" ? `intro-${introPage}` : screen}
               className="replica-screen"
-              initial={reduce ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: reduce ? 0 : 0.3, ease: [0, 0, 0.58, 1] }}
             >
               {screen === "splash" && (
                 <SplashScreen onDone={() => setScreen("title")} />
@@ -718,7 +733,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
               {screen === "free" && (
                 <FreeDrawScreen fixedPortrait onDone={restartCamera} />
               )}
-            </motion.div>
+            </div>
           </Suspense>
         </main>
         {!legacy && settingsTrigger.current && (

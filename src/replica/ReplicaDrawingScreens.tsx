@@ -7,7 +7,7 @@ import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering } from "../components/CardLettering";
 import { Camera, CircleHelp, CornerDownLeft } from "lucide-react";
-import type { ComponentProps } from "react";
+import { useRef, type ComponentProps } from "react";
 import { SketchComparison } from "../components/SketchComparison";
 import { assetPath } from "../content/artwork";
 import { designCardViewport } from "../drawing/viewport";
@@ -38,6 +38,7 @@ export function ReplicaDraw({
   unrestrictedDrawing?: boolean;
 }) {
   const prompt = sketchPresentationFor(task.scene)?.prompt;
+  const activeStroke = useRef(false);
   return (
     <section className="design3-draw">
       <SketchCanvas
@@ -49,6 +50,9 @@ export function ReplicaDraw({
         unrestrictedDrawing={unrestrictedDrawing}
         fixedPortrait
         inkBehindArtwork
+        onDrawingActivity={(active) => {
+          activeStroke.current = active;
+        }}
         showTarget={showHint}
         missionTitle={
           showHint
@@ -82,7 +86,9 @@ export function ReplicaDraw({
             </button>
             <button
               className="drawing-pill draw-complete"
-              onClick={onDone}
+              onClick={() => {
+                if (!activeStroke.current) onDone();
+              }}
               disabled={!drawing.strokes.length}
             >
               <img

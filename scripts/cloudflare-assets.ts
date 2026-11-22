@@ -2,7 +2,7 @@ import { readdir, readFile, writeFile, unlink } from "node:fs/promises";
 import { join, relative } from "node:path";
 import { gzipSync, gunzipSync } from "node:zlib";
 
-// HTTP compression only: browsers receive exactly the original WASM bytes.
+// HTTP compression only: browsers receive exactly the original model/runtime bytes.
 // Keep every runtime fallback, model and recognition threshold unchanged.
 export async function prepareCloudflareAssets(
   dir: string,
@@ -16,7 +16,7 @@ export async function prepareCloudflareAssets(
     "/plus/\n  Cache-Control: no-cache\n",
     "/dopa/\n  Cache-Control: no-cache\n",
   ];
-  const aliases: Record<string, string> = {};
+  const aliases: Record<string, { path: string; type: string }> = {};
   const compressed: {
     path: string;
     originalBytes: number;
@@ -34,23 +34,27 @@ export async function prepareCloudflareAssets(
         throw Error("Cloudflare公開データに通常ファイル以外が含まれています");
       count++;
       const bytes = await readFile(file);
-      if (bytes.length <= limit) continue;
       const name = relative(dir, file).split("\\").join("/");
-      if (!name.endsWith(".wasm"))
+      // Pages automatically compresses application/wasm, but serves .onnx
+      // uncompressed. This model URL includes the upstream release version.
+      const model = /^models\/yolox-[\w.-]+\.onnx$/.test(name);
+      if (!model && bytes.length <= limit) continue;
+      if (!model && !name.endsWith(".wasm"))
         throw Error(`Cloudflareのファイル制限を超えています: ${name}`);
+      const type = model ? "application/octet-stream" : "application/wasm";
       const gzip = gzipSync(bytes, { level: 9 });
       if (gzip.length > limit)
         throw Error(`圧縮後もCloudflareのファイル制限を超えています: ${name}`);
       if (!gunzipSync(gzip).equals(bytes))
-        throw Error("WASM圧縮の検証に失敗しました");
+        throw Error("圧縮の検証に失敗しました");
       // Keep a .gz extension so the asset server does not gzip the stored
       // gzip stream a second time. Preserve the runtime URL with a 200 rewrite.
       await writeFile(file + ".gz", gzip);
       await unlink(file);
-      aliases[`/${name}`] = `/${name}.gz`;
+      aliases[`/${name}`] = { path: `/${name}.gz`, type };
       for (const url of [name, name + ".gz"])
         headers.push(
-          `/${url}\n  Content-Type: application/wasm\n  Content-Encoding: gzip\n  Cache-Control: public, max-age=31536000, immutable, no-transform\n`,
+          `/${url}\n  Content-Type: ${type}\n  Content-Encoding: gzip\n  Cache-Control: public, max-age=31536000, immutable, no-transform\n`,
         );
       compressed.push({
         path: name,
@@ -81,14 +85,14 @@ export async function prepareCloudflareAssets(
 const aliases = ${JSON.stringify(aliases)};
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url), assetPath = aliases[url.pathname];
+    const url = new URL(request.url), assetEntry = aliases[url.pathname];
     if (url.pathname === sharePath) return relayShare(request, env);
-    if (!assetPath) return env.ASSETS.fetch(request);
-    url.pathname = assetPath;
+    if (!assetEntry) return env.ASSETS.fetch(request);
+    url.pathname = assetEntry.path;
     const asset = await env.ASSETS.fetch(new Request(url, request));
     if (!asset.ok) return asset;
     const headers = new Headers(asset.headers);
-    headers.set("Content-Type", "application/wasm");
+    headers.set("Content-Type", assetEntry.type);
     headers.set("Content-Encoding", "gzip");
     headers.set("Cache-Control", "public, max-age=31536000, immutable, no-transform");
     headers.delete("Content-Length");

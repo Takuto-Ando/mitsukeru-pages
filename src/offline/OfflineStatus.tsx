@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 export function OfflineStatus() {
   const [message, setMessage] = useState("オフライン準備を確認中…");
-  const [waiting, setWaiting] = useState<ServiceWorker>();
   useEffect(() => {
     if (!import.meta.env.PROD) {
       setMessage("オフライン準備は公開版で利用できます。");
@@ -16,12 +15,12 @@ export function OfflineStatus() {
       return;
     }
     let alive = true;
-    const cleanups = new Set<() => void>();
+    let registration: ServiceWorkerRegistration | undefined;
     let closeStatus: (() => void) | undefined;
     const check = () => {
       if (!alive) return;
       closeStatus?.();
-      const worker = navigator.serviceWorker.controller;
+      const worker = navigator.serviceWorker.controller ?? registration?.active;
       if (!worker) return;
       const channel = new MessageChannel();
       const close = () => {
@@ -61,20 +60,7 @@ export function OfflineStatus() {
       })
       .then((reg) => {
         if (!alive) return;
-        if (reg.waiting) setWaiting(reg.waiting);
-        const update = () => {
-          const installing = reg.installing;
-          const changed = () => {
-            if (alive && installing?.state === "installed" && reg.waiting)
-              setWaiting(reg.waiting);
-          };
-          installing?.addEventListener("statechange", changed);
-          cleanups.add(() =>
-            installing?.removeEventListener("statechange", changed),
-          );
-        };
-        reg.addEventListener("updatefound", update);
-        cleanups.add(() => reg.removeEventListener("updatefound", update));
+        registration = reg;
         check();
         void navigator.serviceWorker.ready.then(check);
       })
@@ -88,7 +74,6 @@ export function OfflineStatus() {
     return () => {
       alive = false;
       closeStatus?.();
-      cleanups.forEach((cleanup) => cleanup());
       navigator.serviceWorker.removeEventListener("controllerchange", check);
     };
   }, []);
@@ -99,20 +84,6 @@ export function OfflineStatus() {
       <p className="quiet-note">
         初回はオンラインで準備してください。端末の空き容量やブラウザの操作で保存素材が消えることがあります。AIモデルと読み上げ音声は別の準備が必要です。
       </p>
-      {waiting && (
-        <button
-          onClick={() => {
-            navigator.serviceWorker.addEventListener(
-              "controllerchange",
-              () => location.reload(),
-              { once: true },
-            );
-            waiting.postMessage("activate-update");
-          }}
-        >
-          最新版を開く（描画中の内容は消えます）
-        </button>
-      )}
     </details>
   );
 }

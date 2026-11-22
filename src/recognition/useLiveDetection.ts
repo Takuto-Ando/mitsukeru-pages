@@ -30,6 +30,10 @@ export function useLiveModelCached() {
 }
 
 const IDLE_AFTER_MS = 25_000;
+// A cold worker fetches the ONNX WASM binary (about 14 MiB on a host
+// without compression). At 1.6 Mbps the transfer alone takes ~75 seconds.
+// Keep the shorter deadline for inference after the runtime is ready.
+const WORKER_PREPARATION_MS = 120_000;
 
 function limitedHardware() {
   const { hardwareConcurrency, deviceMemory, connection } =
@@ -211,7 +215,7 @@ export function useLiveDetection(
           } else fail();
         };
         worker.postMessage({ type: "prepare" });
-        watchdog = window.setTimeout(fail, 20_000);
+        watchdog = window.setTimeout(fail, WORKER_PREPARATION_MS);
       } catch {
         fail();
       }

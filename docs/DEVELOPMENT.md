@@ -62,7 +62,7 @@ npm run test:e2e
 
 LinuxでブラウザのOS依存ライブラリが足りない場合は `npx playwright install --with-deps chromium webkit` を使います。GitHub Actionsは開発ブランチのpush時にWindows / Linuxで依存導入・単体テスト・ビルドを行います。公開処理は含みません。
 
-実機Safariでカメラを使うにはHTTPSが必要です。Macの `http://192.168...` を開くだけではカメラが使えない場合があります。検証済みの公開URLかHTTPSの開発接続を使用してください。
+実機Safariでカメラを使うにはHTTPSが必要です。Macの `http://192.168...` を開くだけではカメラが使えない場合があります。検証済みの公開URLかHTTPSの開発接続を使用してください。 公開前後のスマートフォン確認は [実機チェックリスト](DEVICE_CHECKLIST.md) に沿って行います。
 
 公開すると決めた場合だけ、変更をレビューしてmainへ取り込みます。Cloudflareへの公開は [CLOUDFLARE_PAGES.md](CLOUDFLARE_PAGES.md) を参照してください。
 

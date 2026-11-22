@@ -23,7 +23,8 @@ async function openDrawing(page: Page) {
   await button(page, "スケッチの準備を確認してつぎへ").click();
   await button(page, "課題を確認してつぎへ").click();
   const canvas = page.getByTestId("canvas");
-  await expect(canvas).toBeVisible();
+  // The first sketch screen waits for its separate production bundle.
+  await expect(canvas).toBeVisible({ timeout: 15_000 });
   const bounds = (await canvas.boundingBox())!;
   const region = taskById.giraffe.scene.regions[0];
   for (let index = 0; index <= 20; index++) {
@@ -39,7 +40,7 @@ async function openDrawing(page: Page) {
   await page.mouse.up();
 }
 
-async function storedSketches(page: Page) {
+async function storedSketchRows(page: Page) {
   return page.evaluate(async () => {
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const open = indexedDB.open("zooketch-figma-replica");
@@ -47,21 +48,32 @@ async function storedSketches(page: Page) {
       open.onerror = () => reject(open.error);
     });
     try {
-      return await new Promise<string[]>((resolve, reject) => {
-        const request = database
-          .transaction("gallery")
-          .objectStore("gallery")
-          .getAll();
-        request.onsuccess = () =>
-          resolve(
-            request.result.filter((row) => row.sketch).map((row) => row.id),
-          );
-        request.onerror = () => reject(request.error);
-      });
+      return await new Promise<{ id: string; strokeCount: number }[]>(
+        (resolve, reject) => {
+          const request = database
+            .transaction("gallery")
+            .objectStore("gallery")
+            .getAll();
+          request.onsuccess = () =>
+            resolve(
+              request.result
+                .filter((row) => row.sketch)
+                .map((row) => ({
+                  id: row.id,
+                  strokeCount: row.strokes?.length ?? 0,
+                })),
+            );
+          request.onerror = () => reject(request.error);
+        },
+      );
     } finally {
       database.close();
     }
   });
+}
+
+async function storedSketches(page: Page) {
+  return (await storedSketchRows(page)).map((row) => row.id);
 }
 
 test.beforeEach(async ({ page }) => {
@@ -75,6 +87,39 @@ test.beforeEach(async ({ page }) => {
       },
     });
   });
+});
+
+test("描画中の完了操作で最後の線が失われず、連打してもスケッチは1件だけ保存される", async ({
+  page,
+}) => {
+  await openDrawing(page);
+  const done = button(page, "できた！");
+  const canvas = page.getByTestId("canvas");
+  const bounds = (await canvas.boundingBox())!;
+  await page.mouse.move(
+    bounds.x + bounds.width * 0.8,
+    bounds.y + bounds.height * 0.5,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    bounds.x + bounds.width * 0.85,
+    bounds.y + bounds.height * 0.56,
+  );
+  // Keyboard activation must not interrupt a stroke held by a pointer.
+  await done.press("Enter");
+  await expect(canvas).toBeVisible();
+  await page.mouse.up();
+  await expect(done).toBeEnabled();
+  await done.evaluate((element: HTMLButtonElement) => {
+    element.click();
+    element.click();
+  });
+  await expect(button(page, "写真を撮る")).toBeEnabled();
+  await expect
+    .poll(async () =>
+      (await storedSketchRows(page)).map(({ strokeCount }) => strokeCount),
+    )
+    .toEqual([2]);
 });
 
 test("保存時の容量不足を表示し、空きができたら描いた絵を再試行して保存できる", async ({

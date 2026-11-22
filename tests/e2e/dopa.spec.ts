@@ -211,6 +211,10 @@ test("ドパガキ版をオフラインで再読み込みしても演出の版�
   await expect(
     page.getByRole("button", { name: "はじめから", exact: true }),
   ).toBeVisible();
+  await page.evaluate(() =>
+    navigator.serviceWorker.ready.then(() => undefined),
+  );
+  await page.reload();
   await expect
     .poll(() => page.evaluate(() => !!navigator.serviceWorker.controller), {
       timeout: 20_000,
