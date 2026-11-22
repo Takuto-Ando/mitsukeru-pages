@@ -4,6 +4,8 @@ import { RecognitionPreparation } from "./RecognitionPreparation";
 import { OfflineStatus } from "../offline/OfflineStatus";
 import { SpeechSettings, stopSpeech } from "../speech/Speech";
 import { StudyControls } from "./StudyControls";
+import { ObservationPreferenceControls } from "./ObservationPreferences";
+import type { ObservationPreferences } from "../replica/preferences";
 import {
   automaticStudyShare,
   flushShareQueue,
@@ -20,6 +22,9 @@ export function SettingsDialog({
   onFuriganaChange,
   returnFocus,
   product = false,
+  preferences,
+  onPreferencesChange,
+  onTutorial,
 }: {
   returnFocus?: React.RefObject<HTMLElement | null>;
   open: boolean;
@@ -27,6 +32,9 @@ export function SettingsDialog({
   product?: boolean;
   furigana?: boolean;
   onFuriganaChange?: () => void;
+  preferences?: ObservationPreferences;
+  onPreferencesChange?: (next: ObservationPreferences) => void;
+  onTutorial?: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const wasOpen = useRef(false);
@@ -65,7 +73,39 @@ export function SettingsDialog({
         </button>
       </div>
       <div className="settings-content">
-        {onFuriganaChange && (
+        {open && preferences && onPreferencesChange && (
+          <>
+            <ObservationPreferenceControls
+              preferences={preferences}
+              onChange={onPreferencesChange}
+            />
+            <div className="observation-my-page-actions">
+              <button
+                type="button"
+                className="observation-setting-button"
+                aria-pressed={preferences.deviceSaveEnabled}
+                onClick={() =>
+                  onPreferencesChange({
+                    ...preferences,
+                    deviceSaveEnabled: !preferences.deviceSaveEnabled,
+                  })
+                }
+              >
+                端末に保存 {preferences.deviceSaveEnabled ? "ON" : "OFF"}
+              </button>
+              {onTutorial && (
+                <button
+                  type="button"
+                  className="observation-setting-button"
+                  onClick={onTutorial}
+                >
+                  チュートリアルを見る
+                </button>
+              )}
+            </div>
+          </>
+        )}
+        {!preferences && onFuriganaChange && (
           <div className="sound-setting">
             <span>
               <BookOpenText aria-hidden="true" size={19} />

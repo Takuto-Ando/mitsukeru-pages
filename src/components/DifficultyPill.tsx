@@ -1,9 +1,16 @@
 import { CardLettering } from "./CardLettering";
 import { assetPath } from "../content/artwork";
+import { difficultyForTask } from "../content/taskDifficulty";
 import "../styles/design3-difficulty.css";
 
-export function DifficultyPill({ regionCount }: { regionCount: number }) {
-  const difficulty = Math.min(3, regionCount);
+export function DifficultyPill({
+  regionCount,
+  taskId,
+}: {
+  regionCount: number;
+  taskId?: string;
+}) {
+  const difficulty = difficultyForTask(taskId, regionCount);
   return (
     <span
       className="difficulty-pill"

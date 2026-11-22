@@ -37,7 +37,7 @@ test("最初はタイトルのモジュールだけを読み込み、撮影の�
   });
   try {
     await page.goto("./");
-    const start = page.getByRole("button", { name: "はじめから", exact: true });
+    const start = page.getByRole("button", { name: "つづきから", exact: true });
     await expect(start).toBeVisible();
     expect(requests.filter((request) => deferred.test(request))).toEqual([]);
 

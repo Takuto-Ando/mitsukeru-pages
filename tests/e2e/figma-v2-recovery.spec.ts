@@ -25,7 +25,7 @@ async function openCamera(page: Page) {
     });
   });
   await page.goto("./");
-  await page.getByRole("button", { name: "はじめから" }).click();
+  await page.getByRole("button", { name: "つづきから" }).click();
 }
 
 test("タイトルで全画像を読み込まず、一時的なギャラリー読込失敗は再試行できる", async ({

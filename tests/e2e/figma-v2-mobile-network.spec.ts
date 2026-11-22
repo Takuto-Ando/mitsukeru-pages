@@ -111,7 +111,7 @@ for (const device of ["iPhone SE", "Galaxy S9+"] as const) {
       await useStillCamera(page);
       await page.goto("./");
       await expectNoHorizontalOverflow(page);
-      await action(page, "はじめから").tap();
+      await action(page, "つづきから").tap();
       await expect(page.locator(".replica-camera-tracking")).toBeVisible({
         timeout: 30_000,
       });
@@ -215,7 +215,7 @@ test.describe("3G相当", () => {
     const titleMs = Math.round(performance.now() - launch);
     expect(modelRequests).toHaveLength(0);
     const cameraOpened = performance.now();
-    await action(page, "はじめから").tap();
+    await action(page, "つづきから").tap();
     await expect(action(page, "シャッター")).toBeEnabled({ timeout: 15_000 });
     await expect
       .poll(() => modelRequests.length, {

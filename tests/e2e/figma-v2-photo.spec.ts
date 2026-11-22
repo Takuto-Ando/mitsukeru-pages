@@ -107,7 +107,7 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await page.setViewportSize({ width: 320, height: 740 });
   await useTestCamera(page, true);
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await button(page, "シャッター").click();
   await expect(
     page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
@@ -165,7 +165,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   });
   const gallery = button(page, "ギャラリー");
   const openCamera = async () => {
-    const start = button(page, "はじめから");
+    const start = button(page, "つづきから");
     await expect(start.or(gallery).first()).toBeVisible();
     if (await start.isVisible()) await start.click();
   };
@@ -380,6 +380,7 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
   await page.goto("./");
   for (const name of [
     "はじめから",
+    "チュートリアルを始める",
     "こんにちは！",
     "やってみる！",
     "撮ってみる！",
@@ -423,7 +424,7 @@ test("カメラ権限が得られなくても下部の追加ボタンを使わ�
     });
   });
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect(page.getByText(/シャッターで動物を選べます/)).toBeVisible();
   await expect(page.locator(".replica-camera-alternatives")).toHaveCount(0);
   await button(page, "シャッター").click();

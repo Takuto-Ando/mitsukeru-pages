@@ -1,9 +1,5 @@
 import { useModelPreload } from "../recognition/useModelPreload";
-import {
-  FuriganaProvider,
-  loadFurigana,
-  saveFurigana,
-} from "../furigana/Furigana";
+import { FuriganaProvider } from "../furigana/Furigana";
 import { flushShareQueue, replicaShareDestination } from "../future/share";
 import {
   lazy,
@@ -28,7 +24,7 @@ import {
   SketchCelebration,
 } from "../components/ChallengeIntro";
 import { groups } from "../content/groups";
-import { taskById, tasksForGroup } from "../content/tasks";
+import { taskById } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { stylesFor } from "../drawing/styles";
@@ -53,6 +49,12 @@ import "../styles/card-motion.css";
 import "../styles/furigana.css";
 import "./replica.css";
 import { ScreenErrorBoundary } from "../recovery/ScreenErrorBoundary";
+import {
+  loadObservationPreferences,
+  observationTaskFor,
+  saveObservationPreferences,
+  type ObservationPreferences,
+} from "./preferences";
 
 const ReplicaCamera = lazy(() =>
   import("./ReplicaCamera").then(({ ReplicaCamera }) => ({
@@ -83,6 +85,12 @@ const SettingsDialog = lazy(() =>
   import("../components/SettingsDialog").then(({ SettingsDialog }) => ({
     default: SettingsDialog,
   })),
+);
+
+const StartPreferencesDialog = lazy(() =>
+  import("../components/ObservationPreferences").then(
+    ({ StartPreferencesDialog }) => ({ default: StartPreferencesDialog }),
+  ),
 );
 
 type Screen =
@@ -140,7 +148,19 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
-  const [furigana, setFurigana] = useState(loadFurigana);
+  const [preferences, setPreferences] = useState(loadObservationPreferences);
+  const [startPreferencesOpen, setStartPreferencesOpen] = useState(false);
+  const startTrigger = useRef<HTMLButtonElement>(null);
+
+  function updatePreferences(next: ObservationPreferences) {
+    setPreferences(next);
+    saveObservationPreferences(next);
+  }
+
+  function cancelStartPreferences() {
+    setStartPreferencesOpen(false);
+    startTrigger.current?.focus({ preventScroll: true });
+  }
   const [feedback, setFeedback] = useState<Evaluation>();
   const [sketchCelebrating, setSketchCelebrating] = useState(false);
   const [surveyUrl] = useState(() =>
@@ -201,7 +221,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const group = chosen ?? choices[0];
   const task =
     (record?.taskId && taskById[record.taskId]) ||
-    tasksForGroup(group.id)[0] ||
+    observationTaskFor(group.id, legacy ? undefined : preferences.difficulty) ||
     taskById.giraffe;
 
   useEffect(() => {
@@ -292,7 +312,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
       );
   }
 
-  function restartCamera() {
+  function resetCapture() {
     activeCapture.current = undefined;
     savedDrawing.current = undefined;
     setFramedExample(false);
@@ -301,7 +321,26 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     setPhotoWriteFailed(false);
     setGroupId("");
     setError("");
+  }
+
+  function restartCamera() {
+    resetCapture();
     setScreen("camera");
+  }
+
+  function beginTutorial() {
+    resetCapture();
+    setSettingsOpen(false);
+    setStartPreferencesOpen(false);
+    setIntroPage(0);
+    setTutorial(true);
+    setScreen("intro");
+  }
+
+  function continueToCamera() {
+    setStartPreferencesOpen(false);
+    setTutorial(false);
+    restartCamera();
   }
 
   function retakePhoto() {
@@ -335,7 +374,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   }
 
   function takePhoto({ photo, sample, animal }: CameraCapture) {
-    const captured = sample ? { groupId: "giraffe", name: "キリン" } : animal;
+    const captured = sample
+      ? { groupId: "giraffe", name: "キリン", taskId: "giraffe" }
+      : animal;
     const next: ReplicaRecord = {
       id: recordId(),
       createdAt: new Date().toISOString(),
@@ -343,7 +384,11 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
       photoLocation: photo ? galleryPhotoLocation : undefined,
       groupId: captured?.groupId,
       taskId: captured
-        ? (captured.taskId ?? tasksForGroup(captured.groupId)[0]?.id)
+        ? observationTaskFor(
+            captured.groupId,
+            legacy ? undefined : preferences.difficulty,
+            captured.taskId,
+          )?.id
         : undefined,
       samplePhoto: sample,
       animalName: captured?.name,
@@ -369,7 +414,10 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     if (!record) return;
     const details = {
       groupId: id,
-      taskId: tasksForGroup(id)[0]?.id,
+      taskId: observationTaskFor(
+        id,
+        legacy ? undefined : preferences.difficulty,
+      )?.id,
       animalName: selected.name,
       photoDescription: zooAnimalSummary(id),
     };
@@ -491,7 +539,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     tutorial: "43-1269",
   };
   return (
-    <FuriganaProvider enabled={furigana}>
+    <FuriganaProvider enabled={preferences.furigana}>
       <div
         className="figma-shell design3-shell replica-app"
         data-screen={screen}
@@ -535,22 +583,25 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                 <HomeScreen
                   savedCount={records.length}
                   studyTutorial={legacy && !!surveyUrl}
-                  onStart={() => {
+                  onContinue={legacy ? undefined : continueToCamera}
+                  onStart={(trigger) => {
+                    if (!legacy) {
+                      startTrigger.current = trigger;
+                      setStartPreferencesOpen(true);
+                      return;
+                    }
                     try {
                       if (
                         !surveyUrl &&
                         localStorage.getItem(tutorialKey) === "1"
                       ) {
-                        setTutorial(false);
-                        restartCamera();
+                        continueToCamera();
                         return;
                       }
                     } catch {
                       // The tutorial is available even with storage disabled.
                     }
-                    setIntroPage(0);
-                    setTutorial(true);
-                    setScreen("intro");
+                    beginTutorial();
                   }}
                   onCollection={() => setScreen("gallery")}
                   onSettings={() => setScreen("free")}
@@ -751,6 +802,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                 <ReplicaGallery
                   records={records}
                   legacy={legacy}
+                  deviceSaveEnabled={preferences.deviceSaveEnabled}
                   onBack={restartCamera}
                   onCamera={restartCamera}
                   onSettings={
@@ -769,17 +821,27 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
             </div>
           </Suspense>
         </main>
+        {!legacy && startPreferencesOpen && (
+          <Suspense fallback={null}>
+            <StartPreferencesDialog
+              preferences={preferences}
+              onCancel={cancelStartPreferences}
+              onStart={(next) => {
+                updatePreferences(next);
+                beginTutorial();
+              }}
+            />
+          </Suspense>
+        )}
         {!legacy && settingsTrigger.current && (
           <Suspense fallback={null}>
             <SettingsDialog
               product
               open={settingsOpen}
               onClose={() => setSettingsOpen(false)}
-              furigana={furigana}
-              onFuriganaChange={() => {
-                setFurigana(!furigana);
-                saveFurigana(!furigana);
-              }}
+              preferences={preferences}
+              onPreferencesChange={updatePreferences}
+              onTutorial={beginTutorial}
               returnFocus={settingsTrigger}
             />
           </Suspense>

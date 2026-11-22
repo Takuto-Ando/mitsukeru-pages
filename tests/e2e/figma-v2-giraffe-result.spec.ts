@@ -19,7 +19,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
   await page.goto("./");
-  await button("はじめから").click();
+  await button("つづきから").click();
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
@@ -160,6 +160,13 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   }
   await page.mouse.up();
   await button("できた！").click();
+  await expect(page.locator('[data-purpose="sketch"]')).toHaveCSS(
+    "background-color",
+    "rgba(190, 133, 50, 0.82)",
+  );
+  await expect(
+    page.getByRole("heading", { name: "なんでこんな形なのかな？" }),
+  ).toBeVisible();
 
   const effect = page.getByTestId("giraffe-leaf-bite");
   const firstLeaf = effect.locator(".giraffe-result-leaf").nth(0);

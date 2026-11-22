@@ -96,7 +96,7 @@ test("カメラと撮影・写真の保存は失敗しても同じ画面から�
     };
   });
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect(page.getByText(/カメラを開けませんでした/)).toBeVisible();
   await page.evaluate(() => sessionStorage.removeItem("test:camera-denied"));
   await button(page, "カメラをもう一度開く").click();
@@ -128,6 +128,7 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
   await page.goto("./");
   for (const step of [
     "はじめから",
+    "チュートリアルを始める",
     "こんにちは！",
     "やってみる！",
     "撮ってみる！",
@@ -171,7 +172,7 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   // A normal Pages session has no cross-origin isolation; real YOLOX still
   // starts and predicts in this Worker with one WASM thread.
   expect(await page.evaluate(() => crossOriginIsolated)).toBe(false);
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   const camera = page.locator(".replica-camera");
   await expect(camera).toHaveAttribute("data-figma-node", "38-1026");
   const shutter = button(page, "シャッター");
@@ -232,7 +233,7 @@ test("ライブ認識の自動再試行が尽きてもシャッターと手動�
     return downloads <= 3 ? route.abort() : route.continue();
   });
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect(button(page, "シャッター")).toBeEnabled();
   const retry = button(page, "ライブ検出を再準備");
   await expect(retry).toBeVisible({ timeout: 12_000 });
@@ -297,6 +298,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   );
   await page.goto("./");
   await button(page, "はじめから").click();
+  await button(page, "チュートリアルを始める").click();
   await button(page, "こんにちは！").click();
   await button(page, "やってみる！").click();
   await button(page, "撮ってみる！").click();
@@ -416,6 +418,7 @@ test("チュートリアルではライブ認識だけを事前準備し、撮�
   try {
     await page.goto("./");
     await button(page, "はじめから").click();
+    await button(page, "チュートリアルを始める").click();
     await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "こんにちは！").click();
     await button(page, "やってみる！").click();
@@ -508,7 +511,7 @@ test("低負荷端末では検出間隔を広げ、ズームでWorkerを作り�
   await emit("test:hidden");
   await expect(mascot).toHaveCSS("animation-play-state", "running");
 
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect
     .poll(async () => (await report()).frames.length)
     .toBeGreaterThanOrEqual(2);

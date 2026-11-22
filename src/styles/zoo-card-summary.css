@@ -6,5 +6,6 @@
 .zoo-card-summary-line {
   display: block;
   font-size: clamp(11px, 4.85cqi, 14px);
+  font-weight: 700;
   line-height: 1.65;
 }

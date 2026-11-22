@@ -39,7 +39,7 @@ const BLANK_SCENE: Scene = {
 };
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
-const OBSERVATION_BRUSH_WIDTHS = [11, 16, 22, 30];
+const OBSERVATION_BRUSH_WIDTHS = [8, 12, 17, 23];
 const BRUSH_COLORS = [
   "#6b5c7a",
   "#977baf",

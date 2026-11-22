@@ -4,6 +4,7 @@ import { CardLettering } from "./CardLettering";
 import { DifficultyPill } from "./DifficultyPill";
 import { Furi } from "../furigana/Furigana";
 import { assetPath } from "../content/artwork";
+import { challengeTitle } from "../content/challengeTitle";
 
 export function PhotoCelebration({
   onContinue,
@@ -106,7 +107,7 @@ export function ChallengeIntro({
   tapLabel?: string;
   autoAdvance?: boolean;
 }) {
-  const title = taskId === "giraffe" ? "キリンの舌" : `${animal}の${part}`;
+  const title = challengeTitle(taskId, animal, part);
 
   const titleSize = {
     "--challenge-title-size": `calc(min(82vw, 328px) / ${Array.from(title).length})`,
@@ -151,7 +152,7 @@ export function ChallengeIntro({
           src={assetPath("illustrations/pdf-design/challenge-prompt.svg")}
         />
       </h1>
-      <DifficultyPill regionCount={regionCount} />
+      <DifficultyPill regionCount={regionCount} taskId={taskId} />
       {tapAnywhere ? (
         <button
           className="design3-challenge-tap"

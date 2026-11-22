@@ -108,7 +108,10 @@ try {
   const wait = (name) => button(name).waitFor({ timeout: 20_000 });
   const screen = (name) => page.locator(`.replica-app[data-screen="${name}"]`);
   await page.goto(base.href, { waitUntil: "domcontentloaded" });
-  await button("はじめから").tap({ timeout: 20_000 });
+  const resume = button("つづきから");
+  await resume.waitFor({ timeout: 20_000 });
+  const usesLogin = (await resume.getAttribute("aria-haspopup")) === "dialog";
+  await (usesLogin ? button("はじめから") : resume).tap({ timeout: 20_000 });
   let cycles = 0;
   const monitor = async (label) => {
     await cdp.send("HeapProfiler.collectGarbage");

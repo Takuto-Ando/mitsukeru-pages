@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 
 async function openDrawing(page: Page, animal: string) {
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await button(page, "シャッター").click();
   await button(page, "修正").click();
   await button(page, animal).click();
@@ -78,7 +78,7 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   expect(penColorsFor("goat")[0]).not.toBe("#6b5c7a");
 
   const slider = page.getByRole("slider", { name: "ペンの太さ", exact: true });
-  await expect(slider).toHaveAttribute("aria-valuetext", "11");
+  await expect(slider).toHaveAttribute("aria-valuetext", "8");
   const preview = page.locator(".brush-width-preview");
   const track = (await slider.boundingBox())!;
   await expect(preview).toBeHidden();
@@ -103,9 +103,9 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   await expect(preview).toBeVisible();
   await expect(preview).toBeHidden();
   await slider.press("End");
-  await expect(slider).toHaveAttribute("aria-valuetext", "30");
+  await expect(slider).toHaveAttribute("aria-valuetext", "23");
   await slider.press("Home");
-  await expect(slider).toHaveAttribute("aria-valuetext", "11");
+  await expect(slider).toHaveAttribute("aria-valuetext", "8");
 });
 
 test("撮影・描画のセリフを強調し、京都市動物園と修正のルビを文字幅に収める", async ({
@@ -133,7 +133,7 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
       return stream;
     };
   });
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   const accent = page.locator(".pitsune-bubble .pitsune-text-highlight");
   await expect(accent).toHaveText("動物の写真");
   await expect(accent).toHaveCSS("color", "rgb(249, 168, 70)");
@@ -170,6 +170,9 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
 
   await button(page, "修正").click();
   await button(page, "キリン").click();
+  await expect(
+    page.locator(".design3-photo-fact .zoo-card-summary-line").first(),
+  ).toHaveCSS("font-weight", "700");
   await button(page, "ピツネに見せる").click();
   const titleRuby = page.locator(".design3-challenge h1 ruby").first();
   await expect(titleRuby).toBeVisible();

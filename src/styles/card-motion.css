@@ -7,14 +7,13 @@
 .replica-app[data-variant="product"] .design3-challenge::before {
   position: absolute;
   z-index: -1;
-  inset: -24px;
+  inset: -50%;
   content: "";
   pointer-events: none;
   opacity: 0.2;
-  background-image:
-    radial-gradient(circle at 8px 10px, #fff 2.6px, transparent 3.2px),
-    radial-gradient(circle at 27px 28px, #fff 4px, transparent 4.7px);
-  background-size: 48px 48px;
+  rotate: 45deg;
+  background-image: radial-gradient(circle, #fff 6px, transparent 6.7px);
+  background-size: 34px 34px;
 }
 
 .entry-caption-line {

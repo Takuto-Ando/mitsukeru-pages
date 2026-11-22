@@ -71,7 +71,7 @@ async function mockCamera(page: Page, error: string) {
 
 async function openCamera(page: Page) {
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect(
     page.getByRole("heading", { name: "動物を撮影しよう" }),
   ).toBeAttached();

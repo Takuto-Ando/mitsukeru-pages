@@ -2,6 +2,7 @@ import {
   penColorsFor,
   sketchPresentationFor,
 } from "../content/sketchPresentation";
+import { challengeTitle } from "../content/challengeTitle";
 import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { SketchResultCardFooter } from "../components/SketchResultCardFooter";
@@ -145,8 +146,7 @@ export function ReplicaResult({
   onDone: () => void;
 }) {
   const fact = zooAnimalSummary(group.id, task.id);
-  const title =
-    task.id === "giraffe" ? "キリンの舌" : `${group.name}の${task.part}`;
+  const title = challengeTitle(task.id, group.name, task.part);
 
   return (
     <section className="design3-result">
@@ -157,7 +157,9 @@ export function ReplicaResult({
           src={assetPath("figma/entry/sketch-face.svg")}
         />
         <h1 className="pitsune-bubble">
-          {feedback.passed && feedback.method === "automatic" ? (
+          {feedback.passed && !showComparisonModes ? (
+            <BubbleLine text="なんでこんな形なのかな？" />
+          ) : feedback.passed && feedback.method === "automatic" ? (
             <CardLettering
               className="drawing-lettering"
               src={assetPath(
@@ -186,6 +188,7 @@ export function ReplicaResult({
           unrestrictedDrawing ? (
             <SketchResultCardFooter
               title={title}
+              taskId={task.id}
               regionCount={task.scene.regions.length}
               summary={fact}
             />

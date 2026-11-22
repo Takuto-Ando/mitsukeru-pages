@@ -53,7 +53,7 @@ async function savedGallery(page: Page) {
             sketch: image,
             groupId: "giraffe",
             taskId: "giraffe",
-            animalName: "キリン",
+            animalName: i === 13 ? "アミメキリン" : "キリン",
             strokes: [
               [
                 { x: 335, y: 299 },
@@ -71,15 +71,21 @@ async function savedGallery(page: Page) {
       database.close();
     }
   });
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await button(page, "ギャラリー").click();
-  await expect(button(page, "キリンのスケッチを見る")).toHaveCount(14);
+  await expect(
+    page.getByRole("button", { name: /キリンのスケッチを見る/ }),
+  ).toHaveCount(14);
 }
 
 test("ギャラリーのタブとマイページを固定し、写真とスケッチの枠を揃える", async ({
   page,
 }) => {
   await savedGallery(page);
+  await expect(page.locator(".replica-gallery .gallery-header")).toHaveCSS(
+    "height",
+    "84px",
+  );
   const tabs = page.getByRole("tablist");
   const tabTop = (await tabs.boundingBox())!.y;
   const panel = page.getByRole("tabpanel");
@@ -107,18 +113,36 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
 
   await button(page, "マイページ").click();
   await expect(page.getByRole("dialog", { name: "マイページ" })).toBeVisible();
+  await button(page, "端末に保存 ON").click();
+  await expect(button(page, "端末に保存 OFF")).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
   await button(page, "設定を閉じる").click();
   await expect(button(page, "マイページ")).toBeFocused();
+  await button(page, "アミメキリンの写真を見る").click();
+  await expect(
+    page.getByRole("dialog", { name: "アミメキリンの写真" }),
+  ).toBeVisible();
+  await expect(button(page, "保存")).toHaveCount(0);
+  await page.keyboard.press("Escape");
   await button(page, "体験に戻る").click();
   await expect(button(page, "シャッター")).toBeVisible();
 });
 
-test("同じ記録の写真カードとスケッチに切り替え、線の動きを再生してカードを保存する", async ({
+test("同じ記録の写真とスケッチを1回の操作で共有し、非対応環境では保存できる", async ({
   page,
 }) => {
   await savedGallery(page);
-  await button(page, "キリンのスケッチを見る").first().click();
-  const sketch = page.getByRole("dialog", { name: "キリンのスケッチ" });
+  await button(page, "アミメキリンのスケッチを見る").click();
+  const sketch = page.getByRole("dialog", { name: "アミメキリンのスケッチ" });
+  await expect(
+    sketch.getByRole("heading", { name: "キリンの舌", exact: true }),
+  ).toBeVisible();
+  await expect(sketch.locator(".zoo-card-summary-line").first()).toHaveCSS(
+    "font-weight",
+    "700",
+  );
   const line = sketch.getByTestId("user-lines").locator('[stroke="#115599"]');
   expect(await line.count()).toBeGreaterThan(0);
   const priorMotion = await sketch
@@ -132,42 +156,15 @@ test("同じ記録の写真カードとスケッチに切り替え、線の動�
     false,
   );
   const sketchSize = (await sketch.locator(".comparison-stage").boundingBox())!;
-
-  await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
-  const photo = page.getByRole("dialog", { name: "キリンの写真" });
-  const photoSize = (await photo
-    .locator(".replica-gallery-photo-preview")
-    .boundingBox())!;
-  expect(photoSize.width).toBeCloseTo(sketchSize.width, 0);
-  expect(photoSize.height).toBeCloseTo(sketchSize.height, 0);
-  const share = photo.getByRole("button", { name: "共有", exact: true });
-  await share.click();
-  const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    photo.getByRole("button", { name: "カードを保存", exact: true }).click(),
-  ]);
-  expect(download.suggestedFilename().normalize("NFC")).toBe(
-    "ズーケッチ-キリン-写真.png",
-  );
+  const save = (detail: typeof sketch) =>
+    detail.getByRole("button", { name: "保存", exact: true });
   await page.evaluate(() => {
     Object.defineProperty(navigator, "canShare", {
       configurable: true,
-      value: () => false,
-    });
-  });
-  await share.click();
-  const [original] = await Promise.all([
-    page.waitForEvent("download"),
-    photo
-      .getByRole("button", { name: "写真を端末に保存", exact: true })
-      .click(),
-  ]);
-  expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, "canShare", {
       value: (data: ShareData) => data.files?.length === 1,
     });
     Object.defineProperty(navigator, "share", {
+      configurable: true,
       value: async (data: ShareData) => {
         const file = data.files?.[0];
         document.documentElement.dataset.galleryNativeShare = [
@@ -178,14 +175,36 @@ test("同じ記録の写真カードとスケッチに切り替え、線の動�
       },
     });
   });
-  await share.click();
-  await photo
-    .getByRole("button", { name: "写真を端末に保存", exact: true })
-    .click();
+  await save(sketch).click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-gallery-native-share",
+    /^ズーケッチ-アミメキリン-スケッチ\.png\|image\/png\|(true|unavailable)$/,
+  );
+
+  await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
+  const photo = page.getByRole("dialog", { name: "アミメキリンの写真" });
+  await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
+    "font-weight",
+    "700",
+  );
+  const photoSize = (await photo
+    .locator(".replica-gallery-photo-preview")
+    .boundingBox())!;
+  expect(photoSize.width).toBeCloseTo(sketchSize.width, 0);
+  expect(photoSize.height).toBeCloseTo(sketchSize.height, 0);
+  await save(photo).click();
   await expect(page.locator("html")).toHaveAttribute(
     "data-gallery-native-share",
     /^zooketch-photo-2026-11-20\.png\|image\/png\|(true|unavailable)$/,
   );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "canShare", { value: () => false });
+  });
+  const [original] = await Promise.all([
+    page.waitForEvent("download"),
+    save(photo).click(),
+  ]);
+  expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
   await photo
     .getByRole("button", { name: "スケッチを見る", exact: true })
     .click();

@@ -15,7 +15,7 @@ const button = (page: Page, name: string) =>
 
 async function openDrawing(page: Page) {
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await button(page, "シャッター").click();
   await button(page, "修正").click();
   await button(page, "キリン").click();
@@ -302,7 +302,7 @@ test("旧版のギャラリーと未送信キューを更新してもスケッ�
     return route.fulfill({ status: 204 });
   });
   await page.goto("./");
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await button(page, "ギャラリー").click();
   await expect(button(page, "キリンのスケッチを見る")).toBeVisible();
   expect(await storedSketches(page)).toEqual(["v1-sketch"]);
@@ -334,7 +334,7 @@ test("IndexedDBにアクセスできない間も撮影画面を開けてギャ�
   });
   await page.goto("./");
   await page.evaluate(() => sessionStorage.setItem("test:idb-denied", "1"));
-  await button(page, "はじめから").click();
+  await button(page, "つづきから").click();
   await expect(button(page, "シャッター")).toBeVisible();
   await button(page, "ギャラリー").click();
   await expect(page.getByText("ギャラリーを開けませんでした。")).toBeVisible();

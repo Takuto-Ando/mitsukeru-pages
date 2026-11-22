@@ -15,7 +15,7 @@ test("描画中は二本目の指で消しゴムが飛ばない", async ({ page 
   await page.goto("./");
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
-  await button("はじめから").click();
+  await button("つづきから").click();
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();

@@ -89,7 +89,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   ).toHaveCount(0);
   await expect(
     button("つづきから").locator('img[src$="/figma/entry/google-g.svg"]'),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: /ドパガキ版|機能拡張版/ }),
   ).toHaveCount(0);
@@ -103,6 +103,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
     ),
   ).toBe('"ゆびさき"');
   await button("はじめから").click();
+  await button("チュートリアルを始める").click();
   await expect(button("スキップ")).toHaveCount(0);
   for (const [index, [id, choice]] of [
     ["29-683", "こんにちは！"],
@@ -171,7 +172,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(page.getByRole("group", { name: "拡大・縮小" })).toHaveCount(0);
   await expect(
     page.getByRole("slider", { name: "ペンの太さ" }),
-  ).toHaveAttribute("aria-valuetext", "11");
+  ).toHaveAttribute("aria-valuetext", "8");
   await drawGiraffeTongue(page);
   const sending = page.waitForRequest((request) => request.url() === endpoint);
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -236,7 +237,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
   const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
-  await button("はじめから").click();
+  await button("つづきから").click();
   await expect(node("38-1026")).toBeVisible();
   await button("シャッター").click();
   await expect(node("66-7655")).toBeVisible();
@@ -253,7 +254,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   const slider = page.getByRole("slider", { name: "ペンの太さ" });
   await slider.press("ArrowRight");
   const preview = page.locator(".brush-width-preview");
-  await expect(slider).toHaveAttribute("aria-valuetext", "16");
+  await expect(slider).toHaveAttribute("aria-valuetext", "12");
   await expect(preview).toBeVisible();
   const previewBox = (await preview.boundingBox())!;
   const viewport = page.viewportSize()!;
@@ -280,7 +281,9 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   await button("できた！").click();
   await expect(page.locator('[data-purpose="sketch"]')).toBeVisible();
   await expect(node("66-10524")).toBeVisible();
-  await expect(page.getByText("スケッチができたね！")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "なんでこんな形なのかな？" }),
+  ).toBeVisible();
   await expect(page.getByText("実物でも、こんな形に見えた？")).toHaveCount(0);
   await expect(button("つぎへ")).toHaveCount(0);
   await button("写真を撮る").click();
@@ -303,7 +306,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
       page.getByRole("link", { name: /ドパガキ版|機能拡張版/ }),
     ).toHaveCount(0);
   }
-  await page.getByRole("button", { name: "はじめから", exact: true }).click();
+  await page.getByRole("button", { name: "つづきから", exact: true }).click();
   const profile = page.getByRole("button", { name: "マイページ", exact: true });
   await profile.click();
   const settings = page.getByRole("dialog", { name: "マイページ" });
@@ -355,6 +358,7 @@ test("スケッチ準備と課題タイトルをタップすると描画へ進�
   const shell = page.locator(".replica-app");
   await page.goto("./");
   await button("はじめから").click();
+  await button("チュートリアルを始める").click();
   await button("こんにちは！").click();
   await button("やってみる！").click();
   await button("撮ってみる！").click();
@@ -371,7 +375,7 @@ test("スケッチ準備と課題タイトルをタップすると描画へ進�
     localStorage.setItem("zooketch-replica-tutorial-v2", "1"),
   );
   await page.reload();
-  await button("はじめから").click();
+  await button("つづきから").click();
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();

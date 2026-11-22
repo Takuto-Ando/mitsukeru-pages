@@ -17,7 +17,7 @@ test("課題の背景だけが動き、同じ吹き出しのふりがなは高�
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
   await page.goto("./");
-  await button("はじめから").click();
+  await button("つづきから").click();
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
@@ -33,12 +33,14 @@ test("課題の背景だけが動き、同じ吹き出しのふりがなは高�
         animation: style.animationName,
         opacity: style.opacity,
         pointer: style.pointerEvents,
+        rotation: style.rotate,
       };
     });
   expect(await pattern()).toEqual({
     animation: "sketch-pattern-drift",
     opacity: "0.2",
     pointer: "none",
+    rotation: "45deg",
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect((await pattern()).animation).toBe("none");

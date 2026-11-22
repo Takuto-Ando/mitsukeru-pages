@@ -16,6 +16,7 @@ const todaysPick = groups[dayIndex % groups.length];
 
 export function HomeScreen({
   onStart,
+  onContinue,
   onCollection,
   onSettings,
   savedCount,
@@ -23,7 +24,8 @@ export function HomeScreen({
   edition,
   onScanQr,
 }: {
-  onStart: () => void;
+  onStart: (trigger: HTMLButtonElement) => void;
+  onContinue?: () => void;
   onCollection: () => void;
   onSettings: (trigger: HTMLButtonElement) => void;
   savedCount: number;
@@ -87,7 +89,7 @@ export function HomeScreen({
       <div className="design3-title-actions">
         <button
           className="design3-start"
-          onClick={onStart}
+          onClick={(event) => onStart(event.currentTarget)}
           aria-label="はじめから"
         >
           <img
@@ -107,16 +109,18 @@ export function HomeScreen({
           type="button"
           className="design3-continue"
           aria-label="つづきから"
-          aria-haspopup="dialog"
-          onClick={() => loginDemo.current?.showModal()}
+          aria-haspopup={onContinue ? undefined : "dialog"}
+          onClick={onContinue ?? (() => loginDemo.current?.showModal())}
         >
-          <img
-            className="design3-title-resume-mark"
-            alt=""
-            src={googleLogo}
-            width={19.2164}
-            height={19.2164}
-          />
+          {!onContinue && (
+            <img
+              className="design3-title-resume-mark"
+              alt=""
+              src={googleLogo}
+              width={19.2164}
+              height={19.2164}
+            />
+          )}
           <CardLettering
             className="design3-title-resume-lettering"
             text="つづきから"
@@ -151,39 +155,41 @@ export function HomeScreen({
           {onScanQr && <button onClick={onScanQr}>QRで課題を開く</button>}
         </div>
       </div>
-      <dialog
-        ref={loginDemo}
-        className="login-demo"
-        aria-labelledby={loginHeading}
-        onClose={() => {
-          setDemoFinished(false);
-          resumeButton.current?.focus({ preventScroll: true });
-        }}
-      >
-        <div className="login-demo-heading">
-          <img src={googleLogo} width={24} height={24} alt="" />
-          <h2 id={loginHeading}>Googleログインのデモ</h2>
-        </div>
-        {demoFinished ? (
-          <p role="status">デモが完了しました。</p>
-        ) : (
-          <p>サンプルで、ズーケッチへのログインを体験できます。</p>
-        )}
-        <div className="login-demo-actions">
-          {!demoFinished && (
-            <button
-              type="button"
-              className="login-demo-start"
-              onClick={() => setDemoFinished(true)}
-            >
-              サンプルでつづける
-            </button>
+      {!onContinue && (
+        <dialog
+          ref={loginDemo}
+          className="login-demo"
+          aria-labelledby={loginHeading}
+          onClose={() => {
+            setDemoFinished(false);
+            resumeButton.current?.focus({ preventScroll: true });
+          }}
+        >
+          <div className="login-demo-heading">
+            <img src={googleLogo} width={24} height={24} alt="" />
+            <h2 id={loginHeading}>Googleログインのデモ</h2>
+          </div>
+          {demoFinished ? (
+            <p role="status">デモが完了しました。</p>
+          ) : (
+            <p>サンプルで、ズーケッチへのログインを体験できます。</p>
           )}
-          <button type="button" onClick={() => loginDemo.current?.close()}>
-            {demoFinished ? "タイトルに戻る" : "閉じる"}
-          </button>
-        </div>
-      </dialog>
+          <div className="login-demo-actions">
+            {!demoFinished && (
+              <button
+                type="button"
+                className="login-demo-start"
+                onClick={() => setDemoFinished(true)}
+              >
+                サンプルでつづける
+              </button>
+            )}
+            <button type="button" onClick={() => loginDemo.current?.close()}>
+              {demoFinished ? "タイトルに戻る" : "閉じる"}
+            </button>
+          </div>
+        </dialog>
+      )}
       {edition && (
         <nav className="design3-title-editions" aria-label="版の切り替え">
           <a href={assetPath("figma/")}>Figma再現版を開く</a>
