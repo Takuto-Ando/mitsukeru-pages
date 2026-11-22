@@ -39,6 +39,7 @@ const BLANK_SCENE: Scene = {
 };
 
 const BRUSH_WIDTHS = [2.5, 4, 7, 11];
+const OBSERVATION_BRUSH_WIDTHS = [11, 16, 22, 30];
 const BRUSH_COLORS = [
   "#6b5c7a",
   "#977baf",
@@ -71,7 +72,7 @@ export function SketchCanvas({
   fixedPortrait = false,
   inkBehindArtwork = false,
   unrestrictedDrawing = false,
-  hideZoomAndEraserTip = false,
+  observationTools = false,
   dopa = false,
   actions,
   drawingDecoration,
@@ -96,7 +97,7 @@ export function SketchCanvas({
   fixedPortrait?: boolean;
   inkBehindArtwork?: boolean;
   unrestrictedDrawing?: boolean;
-  hideZoomAndEraserTip?: boolean;
+  observationTools?: boolean;
   dopa?: boolean;
   actions?: ReactNode;
   drawingDecoration?: ReactNode;
@@ -112,6 +113,9 @@ export function SketchCanvas({
   onChange: (next: Stroke[], action: DrawingAction) => void;
 }) {
   const frameHeight = scene.frameHeight || 400;
+  const brushWidths = observationTools
+    ? OBSERVATION_BRUSH_WIDTHS
+    : BRUSH_WIDTHS;
   // The giraffe artwork itself masks the ink wherever its pixels are opaque.
   const useFullForeground = scene.id === "giraffe";
   const drawForeground =
@@ -129,7 +133,9 @@ export function SketchCanvas({
     current = useRef<Stroke>([]);
   const [drawing, setDrawing] = useState(false),
     [erase, setErase] = useState(false),
-    [brushWidth, setBrushWidth] = useState(7);
+    [brushWidth, setBrushWidth] = useState(
+      () => brushWidths[observationTools ? 0 : 2],
+    );
   const [selectedPen, setSelectedPen] = useState<0 | 1>(0);
   const defaultPen =
     initialPenColors?.[0] ?? (missionTitle ? BRUSH_COLORS[0] : "#277e78");
@@ -1015,7 +1021,7 @@ export function SketchCanvas({
         )}
       </div>
       <div className="drawing-tools-stack">
-        {layout === "landscape" && drawingAssists}
+        {!observationTools && layout === "landscape" && drawingAssists}
         <div
           className="tools drawing-tools"
           aria-label="描画ツール"
@@ -1102,13 +1108,13 @@ export function SketchCanvas({
               type="range"
               aria-label="ペンの太さ"
               min={0}
-              max={BRUSH_WIDTHS.length - 1}
+              max={brushWidths.length - 1}
               step={1}
               aria-valuetext={String(brushWidth)}
-              value={BRUSH_WIDTHS.indexOf(brushWidth)}
+              value={brushWidths.indexOf(brushWidth)}
               style={
                 {
-                  "--brush-range": `${(BRUSH_WIDTHS.indexOf(brushWidth) / (BRUSH_WIDTHS.length - 1)) * 100}%`,
+                  "--brush-range": `${(brushWidths.indexOf(brushWidth) / (brushWidths.length - 1)) * 100}%`,
                 } as CSSProperties
               }
               onPointerDown={(event) => {
@@ -1117,7 +1123,7 @@ export function SketchCanvas({
               }}
               onBlur={hideBrushPreview}
               onChange={(event) => {
-                const width = BRUSH_WIDTHS[event.currentTarget.valueAsNumber];
+                const width = brushWidths[event.currentTarget.valueAsNumber];
                 activeBrush.current = { ...activeBrush.current, width };
                 setBrushWidth(width);
                 showBrushPreview();
@@ -1173,12 +1179,12 @@ export function SketchCanvas({
           </div>
         </div>
         {actions && <div className="drawing-actions">{actions}</div>}
-        {erase && !hideZoomAndEraserTip && (
+        {erase && !observationTools && (
           <p className="eraser-tip">
             なぞった部分だけ消えるよ。ふとさで消しゴムの大きさも変わるよ。
           </p>
         )}
-        {fillMode && (
+        {fillMode && !observationTools && (
           <p className="eraser-tip">
             線で囲んだ中をタップすると、選んだ色でぬれるよ。
           </p>
@@ -1203,10 +1209,9 @@ export function SketchCanvas({
             <span className="stamp-tip">画用紙をタップすると置けるよ</span>
           </div>
         )}
-        {(!hideZoomAndEraserTip ||
-          (layout !== "landscape" && layoutSwitch)) && (
+        {(!observationTools || (layout !== "landscape" && layoutSwitch)) && (
           <div className="drawing-zoom-row">
-            {!hideZoomAndEraserTip && (
+            {!observationTools && (
               <div
                 className="zoom-controls"
                 role="group"
@@ -1234,7 +1239,7 @@ export function SketchCanvas({
             {layout !== "landscape" && layoutSwitch}
           </div>
         )}
-        {layout !== "landscape" && drawingAssists}
+        {!observationTools && layout !== "landscape" && drawingAssists}
       </div>
       {layout === "landscape" && layoutSwitch}
     </div>

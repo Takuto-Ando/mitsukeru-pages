@@ -35,6 +35,9 @@ ruby[data-reading]::after {
 /* Keep the annotation clear of the preceding line without changing line boxes. */
 .replica-app[data-variant="product"] ruby[data-reading]::after {
   inset-block-end: calc(100% - 1px);
+  font-size: var(--ruby-size, 0.52em);
+  transform: translateX(-50%)
+    scaleX(min(var(--ruby-aspect, 1), calc(var(--ruby-fit, 1) / 0.58)));
 }
 
 /* The photo detail reserves room below these rows inside its fixed card. */
@@ -44,7 +47,8 @@ ruby[data-reading]::after {
 
 .replica-app[data-variant="product"]
   .replica-gallery-photo-fact
-  .zoo-card-summary-line + .zoo-card-summary-line {
+  .zoo-card-summary-line
+  + .zoo-card-summary-line {
   translate: 0 2px;
 }
 
@@ -165,7 +169,9 @@ button .card-lettering-text {
 }
 
 /* Text dimensions from the Figma prototype, at its 402px reference width. */
-.replica-app[data-variant="product"] .design3-title-tagline .card-lettering-text {
+.replica-app[data-variant="product"]
+  .design3-title-tagline
+  .card-lettering-text {
   font-size: clamp(14px, 4.74cqw, 19.05px);
   letter-spacing: 0.1em;
   white-space: nowrap;
@@ -178,7 +184,9 @@ button .card-lettering-text {
   transform: translateX(2%);
 }
 
-.replica-app[data-variant="product"] .design3-challenge-prompt .card-lettering-text {
+.replica-app[data-variant="product"]
+  .design3-challenge-prompt
+  .card-lettering-text {
   position: absolute;
   display: grid;
   inset: 0;

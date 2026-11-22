@@ -11,9 +11,35 @@ export function PhotoCelebration({
   taskId?: string;
   onContinue?: () => void;
 }) {
+  return <Celebration message="ステキな写真だね！" onContinue={onContinue} />;
+}
+
+export function SketchCelebration({ onContinue }: { onContinue: () => void }) {
   return (
-    <section className="design3-photo-celebration" role="status">
-      <p>ステキな写真だね！</p>
+    <Celebration
+      message="上手に描けたね！"
+      purpose="sketch"
+      onContinue={onContinue}
+    />
+  );
+}
+
+function Celebration({
+  message,
+  purpose,
+  onContinue,
+}: {
+  message: string;
+  purpose?: "sketch";
+  onContinue?: () => void;
+}) {
+  return (
+    <section
+      className="design3-photo-celebration"
+      data-purpose={purpose}
+      role="status"
+    >
+      <p>{purpose === "sketch" ? <Furi text={message} /> : message}</p>
       <div className="design3-celebration-mascot">
         <img
           alt=""
@@ -35,7 +61,7 @@ export function PhotoCelebration({
         <button
           type="button"
           className="photo-celebration-tap"
-          aria-label="つぎへ"
+          aria-label={purpose === "sketch" ? "スケッチの結果を見る" : "つぎへ"}
           onClick={onContinue}
         />
       )}

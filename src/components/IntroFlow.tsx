@@ -3,6 +3,7 @@ import { CardLettering, tutorialLines } from "./CardLettering";
 import { ChevronRight } from "lucide-react";
 import { Pitsune, type PitsunePose } from "./Pitsune";
 import "../styles/design3-entry.css";
+import "../styles/design3-tutorial.css";
 import { assetPath } from "../content/artwork";
 
 // Fixed lettering uses the supplied PDF's vector outlines. The text remains
@@ -36,6 +37,26 @@ const pages = [
 
 type EntryLettering = (typeof pages)[number]["pose"] | "loading" | "finish";
 
+const tutorialSteps = [1, 2, 3, 4, 5] as const;
+
+export function TutorialProgress({ step }: { step: number }) {
+  return (
+    <div
+      className="design3-tutorial-progress"
+      role="img"
+      aria-label={`チュートリアル ${step} / ${tutorialSteps.length}`}
+    >
+      {tutorialSteps.map((position) => (
+        <span
+          key={position}
+          aria-current={position === step ? "step" : undefined}
+          data-reached={position <= step || undefined}
+        />
+      ))}
+    </div>
+  );
+}
+
 function entryLettering(screen: EntryLettering, kind: "message" | "action") {
   return assetPath(
     "illustrations/pdf-design/entry-" + screen + "-" + kind + ".svg",
@@ -50,6 +71,7 @@ function IntroPanel({
   loading = false,
   artwork,
   lettering,
+  progress,
 }: {
   label: string;
   message: ReactNode;
@@ -58,6 +80,7 @@ function IntroPanel({
   loading?: boolean;
   artwork?: "wave" | "book" | "camera" | "loading" | "easel";
   lettering?: EntryLettering;
+  progress?: number;
 }) {
   return (
     <section
@@ -66,6 +89,7 @@ function IntroPanel({
       data-pose={pose}
       data-figma-art={artwork}
       data-entry-lettering={lettering}
+      data-tutorial-step={progress}
       role={loading ? "status" : undefined}
     >
       <p key={lettering} className="design3-intro-message">
@@ -105,6 +129,7 @@ function IntroPanel({
       ) : (
         <Pitsune pose={pose} className="design3-intro-pitsune" />
       )}
+      {progress && <TutorialProgress step={progress} />}
       {children}
     </section>
   );
@@ -202,9 +227,11 @@ export function IntroLoadingScreen({
 export function TutorialEndScreen({
   onDone,
   surveyUrl,
+  showProgress = false,
 }: {
   onDone: () => void;
   surveyUrl?: string;
+  showProgress?: boolean;
 }) {
   return (
     <IntroPanel
@@ -226,6 +253,7 @@ export function TutorialEndScreen({
       pose="wave"
       artwork="wave"
       lettering={surveyUrl ? undefined : "finish"}
+      progress={showProgress ? 5 : undefined}
     >
       {surveyUrl ? (
         <div className="design3-survey-actions">

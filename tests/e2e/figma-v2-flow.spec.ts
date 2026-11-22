@@ -104,12 +104,17 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   ).toBe('"ゆびさき"');
   await button("はじめから").click();
   await expect(button("スキップ")).toHaveCount(0);
-  for (const [id, choice] of [
+  for (const [index, [id, choice]] of [
     ["29-683", "こんにちは！"],
     ["36-778", "やってみる！"],
     ["38-898", "撮ってみる！"],
-  ]) {
+  ].entries()) {
     await expect(node(id)).toBeVisible();
+    const progress = page.getByRole("img", {
+      name: `チュートリアル ${index + 1} / 5`,
+    });
+    await expect(progress.locator("span")).toHaveCount(5);
+    await expect(progress.locator("[data-reached]")).toHaveCount(index + 1);
     await expect(button(choice).locator(".intro-action-icon")).toBeVisible();
     await button(choice).click();
   }
@@ -131,26 +136,19 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
     "true",
   );
   await expect(page.getByText("きらりん", { exact: true })).toHaveCount(0);
-  await expect(button("撮りなおす")).toBeDisabled();
+  await expect(button("撮りなおす")).toBeEnabled();
+  await button("撮りなおす").click();
+  await expect(node("43-1745")).toBeVisible();
+  await button("シャッター").click();
+  await expect(node("43-1815")).toBeVisible();
   await button("ピツネに見せる").click();
-  await expect(node("52-5335")).toBeVisible();
-  const starGroups = page.locator(".photo-celebration-stars");
-  await expect(starGroups).toHaveCount(2);
-  await expect(
-    page.locator(".design3-celebration-mascot .lucide-star"),
-  ).toHaveCount(0);
-  for (const group of await starGroups.all()) {
-    const src = await group.evaluate((image: HTMLImageElement) => image.src);
-    const response = await page.request.get(src);
-    expect(response.ok()).toBe(true);
-    expect((await response.text()).match(/<path\b/g)).toHaveLength(3);
-  }
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(starGroups.first()).toHaveCSS("animation-delay", "0.1s");
-  await expect(starGroups.last()).toHaveCSS("animation-delay", "0.4s");
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(node("52-5335")).toHaveCount(0);
+  await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
   await expect(node("38-1056")).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "チュートリアル 4 / 5" }),
+  ).toBeVisible();
   await expect(
     button("描いてみる！").locator(".intro-action-icon"),
   ).toBeVisible();
@@ -170,10 +168,24 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   const canvas = page.getByTestId("canvas");
   await expect(node("43-1966")).toBeVisible();
   await expect(canvas).toBeVisible();
+  await expect(page.getByRole("group", { name: "拡大・縮小" })).toHaveCount(0);
+  await expect(
+    page.getByRole("slider", { name: "ペンの太さ" }),
+  ).toHaveAttribute("aria-valuetext", "11");
   await drawGiraffeTongue(page);
   const sending = page.waitForRequest((request) => request.url() === endpoint);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await button("できた！").click();
+  const celebration = page.locator('[data-purpose="sketch"]');
+  await expect(celebration).toBeVisible();
+  await expect(canvas).toBeVisible();
+  const starGroups = celebration.locator(".photo-celebration-stars");
+  await expect(starGroups).toHaveCount(2);
+  await expect(starGroups.first()).toHaveCSS("animation-delay", "0.1s");
+  await expect(starGroups.last()).toHaveCSS("animation-delay", "0.4s");
+  await button("スケッチの結果を見る").click();
   await expect(node("66-8363")).toBeVisible();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(button("描きなおす")).toBeDisabled();
   await expect(button("もう一度見る")).toHaveCount(0);
   const payload = (await sending).postDataJSON();
@@ -183,6 +195,9 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   if (production) expect(payload).not.toHaveProperty("token");
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "チュートリアル 5 / 5" }),
+  ).toBeVisible();
   await expect(
     button("ありがとう！").locator(".intro-action-icon"),
   ).toBeVisible();
@@ -238,7 +253,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   const slider = page.getByRole("slider", { name: "ペンの太さ" });
   await slider.press("ArrowRight");
   const preview = page.locator(".brush-width-preview");
-  await expect(slider).toHaveAttribute("aria-valuetext", "11");
+  await expect(slider).toHaveAttribute("aria-valuetext", "16");
   await expect(preview).toBeVisible();
   const previewBox = (await preview.boundingBox())!;
   const viewport = page.viewportSize()!;
@@ -263,6 +278,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   await page.mouse.move(x + 12, y, { steps: 4 });
   await page.mouse.up();
   await button("できた！").click();
+  await expect(page.locator('[data-purpose="sketch"]')).toBeVisible();
   await expect(node("66-10524")).toBeVisible();
   await expect(page.getByText("スケッチができたね！")).toBeVisible();
   await expect(page.getByText("実物でも、こんな形に見えた？")).toHaveCount(0);
@@ -290,7 +306,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   await page.getByRole("button", { name: "はじめから", exact: true }).click();
   const profile = page.getByRole("button", { name: "マイページ", exact: true });
   await profile.click();
-  const settings = page.getByRole("dialog", { name: "設定" });
+  const settings = page.getByRole("dialog", { name: "マイページ" });
   const settingsAction = settings.getByRole("button", { name: "体験に戻る" });
   await expectLicensedTypeface(page, ".settings-dialog h2");
   const layoutBefore = await settingsAction.boundingBox();
@@ -322,7 +338,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
   }
 });
 
-test("撮影成功・スケッチ準備・課題タイトルをタップすると各画面をスキップできる", async ({
+test("スケッチ準備と課題タイトルをタップすると描画へ進める", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -345,10 +361,6 @@ test("撮影成功・スケッチ準備・課題タイトルをタップする�
   await button("シャッター").click();
   await button("シャッター").click();
   await button("ピツネに見せる").click();
-  await expect(shell).toHaveAttribute("data-screen", "cheer");
-  await page
-    .locator(".photo-celebration-tap")
-    .click({ position: { x: 100, y: 100 } });
   await expect(shell).toHaveAttribute("data-screen", "easel");
   await button("描いてみる！").click();
   await expect(shell).toHaveAttribute("data-screen", "challenge");

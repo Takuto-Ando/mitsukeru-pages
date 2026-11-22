@@ -4,7 +4,7 @@
     .easel-tail {
       transform-box: fill-box;
       transform-origin: 15% 66%;
-      animation: tail-sway 3.4s ease-in-out infinite;
+      animation: tail-sway 2.35s ease-in-out infinite;
     }
     @keyframes tail-sway {
       0%, 100% { transform: rotate(0); }

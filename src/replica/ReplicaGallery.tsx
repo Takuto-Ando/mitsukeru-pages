@@ -3,14 +3,21 @@ import {
   zooAnimalIdByName,
   zooAnimalSummary,
 } from "../content/zooAnimalSummaries";
-import type { Stroke } from "../types";
+import type { Stroke, StrokeStyle } from "../types";
 import { Furi } from "../furigana/Furigana";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { ChevronLeft, Share } from "lucide-react";
 import { assetPath } from "../content/artwork";
 import { taskById } from "../content/tasks";
+import { groups } from "../content/groups";
+import { penColorsFor } from "../content/sketchPresentation";
+import { applyStyles } from "../drawing/styles";
 import { designCardViewport } from "../drawing/viewport";
 import { DifficultyPill } from "../components/DifficultyPill";
+import { SketchComparison } from "../components/SketchComparison";
+import { SketchResultCardFooter } from "../components/SketchResultCardFooter";
 import { galleryPhotoLocation } from "./storage";
+import { saveCapturedPhoto } from "./saveCapturedPhoto";
 import "../styles/design3-gallery.css";
 import "./replica-gallery.css";
 
@@ -20,6 +27,7 @@ export interface ReplicaRecord {
   photo?: string;
   sketch?: string;
   strokes?: Stroke[];
+  strokeStyles?: (StrokeStyle | null)[];
   groupId?: string;
   taskId?: string;
   animalName?: string;
@@ -75,33 +83,126 @@ function Sketch({ entry }: { entry: ReplicaRecord }) {
   );
 }
 
-function EntryCard({ entry, tab }: { entry: ReplicaRecord; tab: GalleryTab }) {
+function entrySummary(entry: ReplicaRecord, tab: GalleryTab) {
   const task = entry.taskId ? taskById[entry.taskId] : undefined;
-  const summary = zooAnimalSummary(
+  return zooAnimalSummary(
     entry.groupId ??
       task?.groupId ??
       zooAnimalIdByName(entry.animalName) ??
       (entry.samplePhoto ? "giraffe" : undefined),
     tab === "sketch" ? task?.id : undefined,
   );
+}
+
+function SketchReplay({
+  entry,
+  summary,
+  legacy,
+}: {
+  entry: ReplicaRecord;
+  summary?: string;
+  legacy: boolean;
+}) {
+  const [play, setPlay] = useState(0);
+  const task = entry.taskId ? taskById[entry.taskId] : undefined;
+  const group = groups.find(({ id }) => id === task?.groupId);
+  const strokes = useMemo(() => {
+    if (!entry.strokes || !task) return;
+    const copied = entry.strokes.map((stroke) => [...stroke]);
+    const color = penColorsFor(task.groupId)[0];
+    applyStyles(
+      copied,
+      entry.strokeStyles ?? copied.map(() => ({ color, width: 7 })),
+    );
+    return copied;
+  }, [entry.strokes, entry.strokeStyles, task]);
+  const footer = legacy ? (
+    summary && (
+      <div className="gallery-detail-fact">
+        <ZooCardSummary text={summary} />
+      </div>
+    )
+  ) : (
+    <SketchResultCardFooter
+      title={`${entry.animalName ?? group?.name ?? "動物"}の${task?.part ?? "スケッチ"}`}
+      regionCount={task?.scene.regions.length ?? 1}
+      summary={summary}
+    />
+  );
+  if (!task || !group || !strokes?.length) {
+    return (
+      <article
+        className={`sketch-comparison-card${legacy ? "" : " sketch-result-card"}`}
+      >
+        {legacy ? (
+          <Sketch entry={entry} />
+        ) : (
+          <div className="comparison-stage">
+            <Sketch entry={entry} />
+          </div>
+        )}
+        {footer}
+      </article>
+    );
+  }
+  const viewport = designCardViewport(task.scene);
+  return (
+    <SketchComparison
+      key={play}
+      strokes={strokes}
+      scene={task.scene}
+      answer={group.answer}
+      completed
+      initialMode="drawing"
+      animateDrawingFor={task.id}
+      showReplay={false}
+      showModes={false}
+      unrestrictedDrawing
+      compactCard={!legacy}
+      viewport={viewport}
+      cardFooter={footer}
+      stageOverlay={
+        <button
+          type="button"
+          className="gallery-replay-trigger"
+          aria-label="スケッチの動きをもう一度見る"
+          onClick={() => setPlay((current) => current + 1)}
+        />
+      }
+    />
+  );
+}
+
+function EntryCard({
+  entry,
+  tab,
+  legacy,
+}: {
+  entry: ReplicaRecord;
+  tab: GalleryTab;
+  legacy: boolean;
+}) {
+  const summary =
+    entrySummary(entry, tab) ??
+    (tab === "sketch" ? entry.description : entry.photoDescription);
   if (tab === "sketch") {
     const regionCount = entry.taskId
       ? (taskById[entry.taskId]?.scene.regions.length ?? 1)
       : 1;
     return (
       <>
-        <div className="gallery-detail-actions">
-          <DifficultyPill regionCount={regionCount} />
-        </div>
+        {legacy && (
+          <div className="gallery-detail-actions">
+            <DifficultyPill regionCount={regionCount} />
+          </div>
+        )}
         <div className="gallery-detail-scroll" tabIndex={-1}>
-          <article className="sketch-comparison-card">
-            <Sketch entry={entry} />
-            {summary && (
-              <div className="gallery-detail-fact">
-                <ZooCardSummary text={summary} />
-              </div>
-            )}
-          </article>
+          <SketchReplay
+            key={entry.id}
+            entry={entry}
+            summary={summary}
+            legacy={legacy}
+          />
         </div>
       </>
     );
@@ -159,11 +260,13 @@ export function ReplicaGallery({
   legacy = false,
   onBack,
   onCamera,
+  onSettings,
 }: {
   records: ReplicaRecord[];
   legacy?: boolean;
   onBack: () => void;
   onCamera: () => void;
+  onSettings?: (trigger: HTMLButtonElement) => void;
 }) {
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -171,12 +274,23 @@ export function ReplicaGallery({
   const photoTab = useRef<HTMLButtonElement>(null);
   const [tab, setTab] = useState<GalleryTab>("sketch");
   const [selected, setSelected] = useState<string>();
+  const [sharing, setSharing] = useState(false);
+  const [shareMenu, setShareMenu] = useState(false);
+  const [shareError, setShareError] = useState(false);
+  const sharingCard = useRef(false);
+  const selectedButton = useRef<HTMLButtonElement | null>(null);
   const entries = records
     .filter((entry) => (legacy ? !!entry[tab] : !!entry.sketch))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const activeEntry = entries.find(
     (entry) => entry.id === selected && !!entry[tab],
   );
+  const oppositeTab = tab === "sketch" ? "photo" : "sketch";
+  const switchLabel = `${tabs[oppositeTab]}を見る`;
+  const originalPhoto =
+    tab === "photo" && !activeEntry?.samplePhoto
+      ? activeEntry?.photo
+      : undefined;
 
   useEffect(() => {
     const modal = dialog.current;
@@ -191,6 +305,50 @@ export function ReplicaGallery({
   function closeDetail() {
     dialog.current?.close();
     setSelected(undefined);
+    setShareMenu(false);
+    setShareError(false);
+    const trigger = selectedButton.current;
+    if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+    else
+      (tab === "sketch" ? sketchTab : photoTab).current?.focus({
+        preventScroll: true,
+      });
+  }
+
+  async function saveFromGallery(action: () => Promise<boolean>) {
+    if (sharingCard.current) return;
+    const sourceDialog = dialog.current;
+    sharingCard.current = true;
+    setSharing(true);
+    setShareMenu(false);
+    setShareError(false);
+    try {
+      await action();
+    } catch {
+      if (dialog.current === sourceDialog) setShareError(true);
+    } finally {
+      sharingCard.current = false;
+      setSharing(false);
+    }
+  }
+
+  function shareCard(entry: ReplicaRecord, kind: GalleryTab) {
+    const src = entry[kind];
+    if (!src) return;
+    void saveFromGallery(async () => {
+      const { composeCardPng, savePng } = await import("../notebook/images");
+      const response = await fetch(src);
+      if (!response.ok) throw new Error("画像を読み込めませんでした。");
+      const name = entry.animalName ?? "動物";
+      const part = entry.taskId ? taskById[entry.taskId]?.part : undefined;
+      const card = await composeCardPng(await response.blob(), {
+        animalName: name,
+        taskName: kind === "sketch" && part ? part : tabs[kind],
+        createdAt: entry.createdAt,
+        explanation: { form: entrySummary(entry, kind) ?? "" },
+      });
+      return savePng(card, `ズーケッチ-${name}-${tabs[kind]}.png`);
+    });
   }
 
   return (
@@ -207,9 +365,25 @@ export function ReplicaGallery({
           onClick={onBack}
           aria-label="体験に戻る"
         >
-          <span aria-hidden="true">‹</span>
+          <ChevronLeft aria-hidden="true" size={29} />
         </button>
         <h1 id={id}>マイギャラリー</h1>
+        {onSettings && (
+          <button
+            type="button"
+            className="replica-gallery-settings"
+            aria-label="マイページ"
+            onClick={(event) => onSettings(event.currentTarget)}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                maskImage: `url("${assetPath("illustrations/pdf-design/camera-profile.svg")}")`,
+                WebkitMaskImage: `url("${assetPath("illustrations/pdf-design/camera-profile.svg")}")`,
+              }}
+            />
+          </button>
+        )}
       </header>
       <div className="gallery-sheet">
         <div
@@ -254,11 +428,12 @@ export function ReplicaGallery({
           ))}
         </div>
         <div
+          className="replica-gallery-panel"
           id={`${id}-${tab}-panel`}
           role="tabpanel"
           aria-labelledby={`${id}-${tab}-tab`}
         >
-          <div className="collection-grid">
+          <div className="collection-grid" key={tab}>
             {entries.map((entry) =>
               entry[tab] ? (
                 <article
@@ -274,7 +449,11 @@ export function ReplicaGallery({
                   <button
                     className="collection-open"
                     type="button"
-                    onClick={() => setSelected(entry.id)}
+                    onClick={(event) => {
+                      selectedButton.current = event.currentTarget;
+                      setShareError(false);
+                      setSelected(entry.id);
+                    }}
                     aria-label={`${entry.animalName ?? "動物"}の${tabs[tab]}を見る`}
                   >
                     {tab === "sketch" ? (
@@ -339,7 +518,58 @@ export function ReplicaGallery({
           >
             <Mark name="close" />
           </button>
-          <EntryCard entry={activeEntry} tab={tab} />
+          {!legacy && (
+            <div className="gallery-card-controls">
+              <button
+                type="button"
+                aria-label={switchLabel}
+                disabled={sharing || !activeEntry[oppositeTab]}
+                onClick={() => {
+                  setShareMenu(false);
+                  setShareError(false);
+                  setTab(oppositeTab);
+                }}
+              >
+                {switchLabel}
+              </button>
+              <button
+                type="button"
+                disabled={sharing}
+                aria-label="共有"
+                aria-expanded={originalPhoto ? shareMenu : undefined}
+                onClick={() => {
+                  if (originalPhoto) setShareMenu((open) => !open);
+                  else shareCard(activeEntry, tab);
+                }}
+              >
+                <Share aria-hidden="true" size={19} />
+              </button>
+              {shareMenu && originalPhoto && (
+                <div className="gallery-share-options" aria-label="画像の保存">
+                  <button
+                    type="button"
+                    aria-label="カードを保存"
+                    onClick={() => shareCard(activeEntry, tab)}
+                  >
+                    カードを保存
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="写真を端末に保存"
+                    onClick={() =>
+                      void saveFromGallery(() =>
+                        saveCapturedPhoto(originalPhoto, activeEntry.createdAt),
+                      )
+                    }
+                  >
+                    写真を端末に保存
+                  </button>
+                </div>
+              )}
+              {shareError && <p role="alert">カードを保存できませんでした。</p>}
+            </div>
+          )}
+          <EntryCard entry={activeEntry} tab={tab} legacy={legacy} />
         </dialog>
       )}
     </section>

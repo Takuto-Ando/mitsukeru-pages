@@ -1,0 +1,53 @@
+.design3-intro[data-tutorial-step] {
+  --entry-mascot-end: min(
+    calc(547px + 0.43 * var(--entry-height-delta)),
+    calc(100dvh - 114px)
+  );
+  isolation: isolate;
+  overflow-x: clip;
+  background: #fffaf0;
+}
+
+.design3-intro[data-tutorial-step]::before {
+  position: absolute;
+  z-index: -1;
+  inset: calc(var(--entry-meadow) - 9px) -25% 0;
+  border-radius: 50% 50% 0 0 / min(31.2cqw, 125px) min(31.2cqw, 125px) 0 0;
+  background: #dfe6c3;
+  content: "";
+  pointer-events: none;
+}
+
+.design3-tutorial-progress {
+  position: absolute;
+  inset-block-start: max(
+    calc(env(safe-area-inset-top) + 10px),
+    calc(33dvh - 165px)
+  );
+  inset-inline-start: 50%;
+  display: flex;
+  gap: 7.5px;
+  translate: -50%;
+}
+
+.design3-tutorial-progress > span {
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  background: #d9d9d9;
+}
+
+.design3-tutorial-progress > [data-reached] {
+  background: #fbc880;
+}
+
+.replica-app[data-variant="product"]
+  .design3-photo-celebration[data-purpose="sketch"] {
+  align-content: start;
+  padding-block-start: 30.5dvh;
+  background: rgb(188 149 47 / 82%);
+}
+
+.design3-photo-celebration[data-purpose="sketch"] .photo-celebration-stars {
+  filter: brightness(0) invert(1) sepia(0.12);
+}

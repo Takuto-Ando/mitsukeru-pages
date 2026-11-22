@@ -1,0 +1,87 @@
+.replica-app .sketch-comparison-card.sketch-result-card {
+  box-sizing: border-box;
+  width: min(100%, 342px);
+  min-height: min(126vw, 507px);
+  margin-inline: auto;
+  padding: 18px 16px 16px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #f9a846;
+  box-shadow: var(--d3-shadow);
+}
+
+.replica-app .sketch-result-card > .comparison-stage {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  aspect-ratio: 310 / 346;
+  border: 0;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: none;
+}
+
+.replica-app
+  .sketch-result-card
+  > .comparison-stage
+  > :is(.comparison-overlay, .replica-sketch-image) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.sketch-result-card-footer {
+  padding: 14px 5px 0;
+  color: #fffaf0;
+}
+
+.sketch-result-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sketch-result-card-heading h2 {
+  min-width: 0;
+  margin: 0;
+  color: inherit;
+  font-size: clamp(16px, 5.72vw, 23px);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.sketch-result-card-heading .difficulty-pill {
+  box-sizing: border-box;
+  flex: 0 0 95px;
+  width: 95px;
+  min-height: 26px;
+  padding: 4px 8px;
+  gap: 6px;
+  background: #fffaf0;
+}
+
+.sketch-result-card-heading .difficulty-label {
+  flex: 0 0 28px;
+  width: 28px;
+}
+
+.sketch-result-card-heading .difficulty-icons {
+  flex: 1;
+}
+
+.sketch-result-card-copy {
+  margin: 10px 0 0;
+}
+
+.sketch-result-card-copy .zoo-card-summary-line {
+  font-size: clamp(10px, 4.35cqi, 14px);
+  line-height: 1.9;
+}
+
+.replica-app .design3-result:has(.sketch-result-card) .result-pitsune {
+  margin-bottom: -1px;
+}

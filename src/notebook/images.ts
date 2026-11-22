@@ -1,3 +1,5 @@
+import { downloadBlob } from "./download";
+export { downloadBlob } from "./download";
 import { artwork, assetPath } from "../content/artwork";
 import { drawingRegions, type Scene } from "../content/scenes";
 import type { Stroke } from "../types";
@@ -278,15 +280,4 @@ export async function saveFile(blob: Blob, name: string) {
   }
   downloadBlob(blob, name);
   return true;
-}
-
-export function downloadBlob(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob),
-    link = document.createElement("a");
-  link.href = url;
-  link.download = name;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

@@ -22,11 +22,16 @@ import {
   SplashScreen,
   TutorialEndScreen,
 } from "../components/IntroFlow";
-import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
+import {
+  ChallengeIntro,
+  PhotoCelebration,
+  SketchCelebration,
+} from "../components/ChallengeIntro";
 import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
+import { stylesFor } from "../drawing/styles";
 import { drawingEvaluator } from "../domain";
 import { tutorialSurveyUrl } from "../research/tutorialSurvey";
 import type { Evaluation, Stroke } from "../types";
@@ -137,6 +142,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [furigana, setFurigana] = useState(loadFurigana);
   const [feedback, setFeedback] = useState<Evaluation>();
+  const [sketchCelebrating, setSketchCelebrating] = useState(false);
   const [surveyUrl] = useState(() =>
     tutorialSurveyUrl(
       window.location.search,
@@ -266,6 +272,17 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     return () => window.clearTimeout(timer);
   }, [advanceScreen, legacy, screen, tutorial]);
 
+  const showResult = useCallback(() => {
+    setSketchCelebrating(false);
+    setScreen("result");
+  }, [setScreen]);
+
+  useEffect(() => {
+    if (screen !== "draw" || !sketchCelebrating) return;
+    const timer = window.setTimeout(showResult, 1800);
+    return () => window.clearTimeout(timer);
+  }, [screen, sketchCelebrating, showResult]);
+
   function renderGalleryRecord(entry: ReplicaRecord) {
     if (!mounted.current) return;
     if (entry.photo && entry.id === activeCapture.current) setPhotoSaved(true);
@@ -376,6 +393,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   function startDrawing() {
     dispatchDrawing({ type: "reset" });
     setFeedback(undefined);
+    setSketchCelebrating(false);
     setShowHint(false);
     setScreen("draw");
   }
@@ -427,6 +445,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
         photo,
         sketch,
         strokes: legacy ? undefined : drawing.present,
+        strokeStyles: legacy ? undefined : stylesFor(drawing.present),
         groupId: group.id,
         taskId: task.id,
         animalName: group.name,
@@ -540,6 +559,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
               {screen === "intro" && (
                 <ReplicaIntro
                   pose={introSteps[introPage].pose}
+                  progress={legacy ? undefined : introPage + 1}
                   onSkip={
                     legacy
                       ? () => {
@@ -597,27 +617,19 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                       onRetake={retakePhoto}
                       onConfirm={() =>
                         setScreen(
-                          tutorial ? "cheer" : legacy ? "loading" : "easel",
+                          legacy ? (tutorial ? "cheer" : "loading") : "easel",
                         )
                       }
-                      canRetake={legacy || !tutorial}
                     />
                   </div>
-                  {screen === "cheer" && (
-                    <PhotoCelebration
-                      onContinue={
-                        legacy
-                          ? undefined
-                          : () => advanceScreen("cheer", "easel")
-                      }
-                    />
-                  )}
+                  {screen === "cheer" && <PhotoCelebration />}
                 </>
               )}
               {screen === "easel" &&
                 (tutorial || legacy ? (
                   <ReplicaIntro
                     pose="easel"
+                    progress={legacy ? undefined : 4}
                     onNext={() => setScreen("challenge")}
                   />
                 ) : (
@@ -639,46 +651,58 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                 />
               )}
               {screen === "draw" && (
-                <ReplicaDraw
-                  task={task}
-                  hideZoomAndEraserTip={!legacy && !tutorial}
-                  unrestrictedDrawing={!legacy}
-                  strokes={drawing.present}
-                  canUndo={drawing.past.length > 0}
-                  canRedo={drawing.future.length > 0}
-                  onUndo={() => dispatchDrawing({ type: "undo" })}
-                  onRedo={() => dispatchDrawing({ type: "redo" })}
-                  onChange={(strokes) =>
-                    dispatchDrawing({ type: "commit", strokes })
-                  }
-                  showHint={showHint}
-                  onHint={() => setShowHint(true)}
-                  onDone={() => {
-                    const evaluation = drawingEvaluator.evaluate(
-                      task,
-                      drawing.present,
-                    );
-                    if (
-                      !legacy &&
-                      (!drawing.present.length || evaluation.status === "retry")
-                    ) {
-                      setShowHint(true);
-                      return;
-                    }
-                    setFeedback(
-                      !legacy && !evaluation.passed
-                        ? {
-                            ...evaluation,
-                            passed: true,
-                            method: "completed",
-                            message: "スケッチができたね！",
-                          }
-                        : evaluation,
-                    );
-                    setScreen("result");
-                    if (!legacy) void finishDrawing(false);
-                  }}
-                />
+                <>
+                  <div inert={sketchCelebrating ? true : undefined}>
+                    <ReplicaDraw
+                      task={task}
+                      observationTools={!legacy}
+                      unrestrictedDrawing={!legacy}
+                      strokes={drawing.present}
+                      canUndo={drawing.past.length > 0}
+                      canRedo={drawing.future.length > 0}
+                      onUndo={() => dispatchDrawing({ type: "undo" })}
+                      onRedo={() => dispatchDrawing({ type: "redo" })}
+                      onChange={(strokes) =>
+                        dispatchDrawing({ type: "commit", strokes })
+                      }
+                      showHint={showHint}
+                      onHint={() => setShowHint(true)}
+                      onDone={() => {
+                        const evaluation = drawingEvaluator.evaluate(
+                          task,
+                          drawing.present,
+                        );
+                        if (
+                          !legacy &&
+                          (!drawing.present.length ||
+                            evaluation.status === "retry")
+                        ) {
+                          setShowHint(true);
+                          return;
+                        }
+                        setFeedback(
+                          !legacy && !evaluation.passed
+                            ? {
+                                ...evaluation,
+                                passed: true,
+                                method: "completed",
+                                message: "スケッチができたね！",
+                              }
+                            : evaluation,
+                        );
+                        if (legacy) {
+                          showResult();
+                        } else {
+                          setSketchCelebrating(true);
+                          void finishDrawing(false);
+                        }
+                      }}
+                    />
+                  </div>
+                  {sketchCelebrating && (
+                    <SketchCelebration onContinue={showResult} />
+                  )}
+                </>
               )}
               {screen === "result" && feedback && (
                 <>
@@ -716,6 +740,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
               {screen === "tutorial" && (
                 <TutorialEndScreen
                   surveyUrl={surveyUrl}
+                  showProgress={!legacy}
                   onDone={() => {
                     setTutorial(false);
                     restartCamera();
@@ -728,6 +753,14 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                   legacy={legacy}
                   onBack={restartCamera}
                   onCamera={restartCamera}
+                  onSettings={
+                    legacy
+                      ? undefined
+                      : (trigger) => {
+                          settingsTrigger.current = trigger;
+                          setSettingsOpen(true);
+                        }
+                  }
                 />
               )}
               {screen === "free" && (

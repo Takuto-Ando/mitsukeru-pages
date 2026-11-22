@@ -52,6 +52,8 @@ export function SketchComparison({
   initialMode = "slider",
   cardFooter,
   afterCard,
+  compactCard = false,
+  stageOverlay,
   viewport,
   animateDrawingFor,
   showReplay = true,
@@ -66,6 +68,8 @@ export function SketchComparison({
   initialMode?: Mode;
   cardFooter?: ReactNode;
   afterCard?: ReactNode;
+  compactCard?: boolean;
+  stageOverlay?: ReactNode;
   viewport?: SceneViewport;
   animateDrawingFor?: string;
   showReplay?: boolean;
@@ -161,7 +165,13 @@ export function SketchComparison({
   };
   return (
     <div className="sketch-comparison completion-panel">
-      <div className="sketch-comparison-card">
+      <div
+        className={
+          compactCard
+            ? "sketch-comparison-card sketch-result-card"
+            : "sketch-comparison-card"
+        }
+      >
         <div className="comparison-stage">
           <motion.svg
             className="comparison-overlay"
@@ -173,8 +183,14 @@ export function SketchComparison({
             }
             transition={{ duration: reduce ? 0 : 0.32, ease: "easeOut" }}
             viewBox={`${viewX} ${viewY} ${viewWidth} ${viewHeight}`}
-            style={{ aspectRatio: viewport?.aspectRatio ?? `600 / ${height}` }}
-            preserveAspectRatio="none"
+            style={
+              compactCard
+                ? undefined
+                : { aspectRatio: viewport?.aspectRatio ?? `600 / ${height}` }
+            }
+            preserveAspectRatio={
+              compactCard && !viewport ? "xMidYMid meet" : "none"
+            }
             role="img"
             aria-label={scene.label + "の描画とお手本"}
             data-mode={mode}
@@ -362,6 +378,7 @@ export function SketchComparison({
               </span>
             </div>
           )}
+          {stageOverlay}
         </div>
         {cardFooter}
       </div>

@@ -129,7 +129,18 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
     parseFloat(getComputedStyle(node).fontSize),
   );
 
-  await chooseAnimal(page, "シロテテナガザル");
+  await button(page, "修正").click();
+  const picker = page.locator(".replica-photo-picker");
+  const pickerBox = (await picker.boundingBox())!;
+  expect(pickerBox.width).toBeGreaterThan(240);
+  expect(pickerBox.x).toBeGreaterThan(0);
+  expect(pickerBox.x + pickerBox.width).toBeLessThan(320);
+  const search = page.getByRole("searchbox", { name: "動物の名前で探す" });
+  await search.fill("しろてて");
+  await expect(picker.getByRole("button")).toHaveCount(1);
+  await button(page, "シロテテナガザル").click();
+  await expect(picker).toHaveCount(0);
+  await expect(button(page, "修正")).toBeFocused();
   await expect(name).toHaveText("シロテテナガザル");
   const after = await Promise.all([calendar.boundingBox(), date.boundingBox()]);
   expect(after).toEqual(before);
@@ -190,13 +201,14 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
       : /^"?Zen Maru Gothic"?[, ]/,
   );
   await expect(savedHeading).toHaveCSS("font-weight", "700");
+  await expect(savedHeading.locator("svg")).toBeVisible();
   await expect(
     savedHeading.locator('ruby[data-reading="ほぞん"]'),
   ).toBeVisible();
   const editButton = button(page, "修正");
   await expect(editButton.locator(".photo-review-edit-icon")).toBeVisible();
   const editBounds = (await editButton.boundingBox())!;
-  expect(editBounds.width).toBeCloseTo(49, 0);
+  expect(editBounds.width).toBeCloseTo(60, 0);
   expect(editBounds.height).toBeCloseTo(44, 0);
   await expect(
     button(page, "撮りなおす").locator(":scope > svg"),
@@ -353,7 +365,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   });
   const detailImage = detail.getByRole("img", { name: "撮影した写真" });
   await expect(detailImage).toBeVisible();
-  await expect(detailImage).toHaveCSS("aspect-ratio", "4 / 5");
+  await expect(detailImage).toHaveCSS("aspect-ratio", "310 / 346");
   await expect(detail.getByRole("heading", { name: "キリン" })).toBeVisible();
   await expect(detail.locator("time")).toHaveAttribute("datetime", /^\d{4}-/);
   await expect(detail.getByText("京都市動物園", { exact: true })).toBeVisible();
@@ -382,7 +394,7 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
   await expect(
     page.getByRole("img", { name: "撮影した動物の写真", exact: true }),
   ).toBeVisible();
-  await expect(button(page, "撮りなおす")).toBeDisabled();
+  await expect(button(page, "撮りなおす")).toBeEnabled();
   await expect(button(page, "修正")).toBeEnabled();
   await expect(button(page, "ピツネに見せる")).toBeDisabled();
   await expect(page.locator(".replica-recognition-status")).toHaveCount(0);

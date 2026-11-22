@@ -4,6 +4,7 @@ import {
 } from "../content/sketchPresentation";
 import { BubbleLine } from "../components/BubbleLine";
 import { ZooCardSummary } from "../components/ZooCardSummary";
+import { SketchResultCardFooter } from "../components/SketchResultCardFooter";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { CardLettering } from "../components/CardLettering";
 import { Camera, CircleHelp, CornerDownLeft } from "lucide-react";
@@ -26,7 +27,7 @@ export function ReplicaDraw({
   showHint,
   onHint,
   onDone,
-  hideZoomAndEraserTip,
+  observationTools,
   unrestrictedDrawing,
   ...drawing
 }: DrawingProps & {
@@ -34,7 +35,7 @@ export function ReplicaDraw({
   showHint: boolean;
   onHint: () => void;
   onDone: () => void;
-  hideZoomAndEraserTip?: boolean;
+  observationTools?: boolean;
   unrestrictedDrawing?: boolean;
 }) {
   const prompt = sketchPresentationFor(task.scene)?.prompt;
@@ -46,7 +47,7 @@ export function ReplicaDraw({
         {...drawing}
         scene={task.scene}
         initialPenColors={penColorsFor(task.groupId)}
-        hideZoomAndEraserTip={hideZoomAndEraserTip}
+        observationTools={observationTools}
         unrestrictedDrawing={unrestrictedDrawing}
         fixedPortrait
         inkBehindArtwork
@@ -144,6 +145,8 @@ export function ReplicaResult({
   onDone: () => void;
 }) {
   const fact = zooAnimalSummary(group.id, task.id);
+  const title =
+    task.id === "giraffe" ? "キリンの舌" : `${group.name}の${task.part}`;
 
   return (
     <section className="design3-result">
@@ -178,8 +181,17 @@ export function ReplicaResult({
         showModes={showComparisonModes}
         unrestrictedDrawing={unrestrictedDrawing}
         viewport={designCardViewport(task.scene)}
+        compactCard={unrestrictedDrawing}
         cardFooter={
-          fact && <ZooCardSummary className="result-fact" text={fact} />
+          unrestrictedDrawing ? (
+            <SketchResultCardFooter
+              title={title}
+              regionCount={task.scene.regions.length}
+              summary={fact}
+            />
+          ) : (
+            fact && <ZooCardSummary className="result-fact" text={fact} />
+          )
         }
         afterCard={
           <div className="drawing-actions result-actions">

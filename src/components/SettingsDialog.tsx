@@ -59,7 +59,7 @@ export function SettingsDialog({
       onClose={onClose}
     >
       <div className="settings-heading">
-        <h2 id="settings-title">設定</h2>
+        <h2 id="settings-title">{product ? "マイページ" : "設定"}</h2>
         <button type="button" onClick={onClose} aria-label="設定を閉じる">
           <X aria-hidden="true" size={22} />
         </button>

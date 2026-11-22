@@ -6,6 +6,7 @@ import type { Candidate } from "../recognition/labels";
 import { assetPath } from "../content/artwork";
 import { PhotoRecognitionGuide, PhotoSparkle } from "./ChallengeIntro";
 import { Furi } from "../furigana/Furigana";
+import { normalizeAnimalSearch } from "../content/animalNameSearch";
 
 const speciesName = (choice: Pick<Candidate, "groupId" | "speciesId">) =>
   kyotoSpeciesById.get(choice.speciesId ?? choice.groupId)?.name ??
@@ -19,14 +20,6 @@ const pickerChoices = [
   })),
   { groupId: "goat", speciesId: "sheep", name: "ヒツジ" },
 ];
-const normalize = (text: string) =>
-  text
-    .normalize("NFKC")
-    .replace(/[ァ-ヶ]/g, (character) =>
-      String.fromCharCode(character.charCodeAt(0) - 0x60),
-    )
-    .trim();
-
 export function PhotoReview({
   dopa = false,
   photo,
@@ -53,11 +46,11 @@ export function PhotoReview({
   const editButton = useRef<HTMLButtonElement>(null);
   const group = groups.find((item) => item.id === selection?.groupId);
   const name = selection?.speciesId ? speciesName(selection) : group?.name;
-  const search = normalize(query);
+  const search = normalizeAnimalSearch(query);
   const choices = pickerChoices.filter(
     (choice) =>
-      normalize(choice.name).includes(search) ||
-      normalize(speciesName(choice) ?? "").includes(search),
+      normalizeAnimalSearch(choice.name).includes(search) ||
+      normalizeAnimalSearch(speciesName(choice) ?? "").includes(search),
   );
   function select(choice: Pick<Candidate, "groupId" | "speciesId">) {
     onChange(choice);
@@ -238,7 +231,11 @@ export function PhotoReview({
           />
         </button>
       </div>
-      {photo && <p className="quiet-note">写真はアプリの端末内ギャラリーで管理します。研究用に外部へ送信しません。</p>}
+      {photo && (
+        <p className="quiet-note">
+          写真はアプリの端末内ギャラリーで管理します。研究用に外部へ送信しません。
+        </p>
+      )}
     </section>
   );
 }

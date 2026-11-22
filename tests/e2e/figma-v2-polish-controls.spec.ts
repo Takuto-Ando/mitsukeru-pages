@@ -78,6 +78,7 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   expect(penColorsFor("goat")[0]).not.toBe("#6b5c7a");
 
   const slider = page.getByRole("slider", { name: "ペンの太さ", exact: true });
+  await expect(slider).toHaveAttribute("aria-valuetext", "11");
   const preview = page.locator(".brush-width-preview");
   const track = (await slider.boundingBox())!;
   await expect(preview).toBeHidden();
@@ -101,6 +102,10 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   await slider.press("ArrowLeft");
   await expect(preview).toBeVisible();
   await expect(preview).toBeHidden();
+  await slider.press("End");
+  await expect(slider).toHaveAttribute("aria-valuetext", "30");
+  await slider.press("Home");
+  await expect(slider).toHaveAttribute("aria-valuetext", "11");
 });
 
 test("撮影・描画のセリフを強調し、京都市動物園と修正のルビを文字幅に収める", async ({
@@ -149,9 +154,10 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
       context.font = [style.fontWeight, style.fontSize, style.fontFamily].join(
         " ",
       );
-      const aspect = Number(
-        style.getPropertyValue("--ruby-aspect").trim() || 1,
-      );
+      const aspect =
+        style.transform === "none"
+          ? 1
+          : new DOMMatrixReadOnly(style.transform).a;
       return {
         reading:
           context.measureText(ruby.getAttribute("data-reading")!).width *

@@ -117,15 +117,15 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await setCanvasVisibility("hidden");
   const visibleWithoutInk = await bodyPixels();
   await setCanvasVisibility("");
-  // Minor RGB rounding can change when WebKit composites the canvas; the
-  // purple stroke would change the blue channel by more than 50 here.
+  // WebKit can composite this crop slightly differently with the wider pen.
+  // A visible purple stroke would change the blue channel by more than 50.
   expect(
     Math.max(
       ...visibleWithInk.map((value, i) =>
         Math.abs(value - visibleWithoutInk[i]),
       ),
     ),
-  ).toBeLessThanOrEqual(7);
+  ).toBeLessThanOrEqual(18);
   await button("ひとつ戻す").click();
 
   await page.mouse.move(...position(480, 140));
@@ -165,6 +165,20 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   const firstLeaf = effect.locator(".giraffe-result-leaf").nth(0);
   const secondLeaf = effect.locator(".giraffe-result-leaf").nth(1);
   await expect(effect).toBeVisible();
+  const resultCard = page.locator(".design3-result .sketch-result-card");
+  await expect(
+    resultCard.getByRole("heading", { name: "キリンの舌", exact: true }),
+  ).toBeVisible();
+  await expect(
+    resultCard.getByRole("img", { name: "難易度 1 / 3" }),
+  ).toBeVisible();
+  const stage = resultCard.locator(".comparison-stage");
+  await expect(stage).toHaveCSS("aspect-ratio", "310 / 346");
+  const cardBounds = (await resultCard.boundingBox())!;
+  const stageBounds = (await stage.boundingBox())!;
+  expect(cardBounds.width).toBeCloseTo(342, 0);
+  expect(stageBounds.width).toBeCloseTo(310, 0);
+  expect(stageBounds.height).toBeCloseTo(346, 0);
   await expect(
     page.getByTestId("untargeted-lines").locator("polyline"),
   ).toBeVisible();
