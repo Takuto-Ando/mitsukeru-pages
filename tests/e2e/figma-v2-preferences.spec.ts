@@ -19,9 +19,18 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   const screen = page.locator(".replica-app");
   await page.goto("./");
   await button("はじめから").click();
-  const start = page.getByRole("dialog", { name: "年齢を教えてください" });
+  const start = page.getByRole("dialog", {
+    name: "あなたの年齢を教えてください。",
+  });
   await expect(start).toBeVisible();
-  await expect(button("やさしい")).toHaveAttribute("aria-pressed", "true");
+  const ageHeading = start.getByRole("heading");
+  await expect(ageHeading).toHaveCSS("font-weight", "700");
+  await expect(button("難易度 やさしい")).toBeVisible();
+  const panel = start.locator(".observation-start-panel");
+  const panelY = (await panel.boundingBox())!.y;
+  expect(
+    (await start.getByRole("button", { name: "閉じる" }).boundingBox())!.y,
+  ).toBeLessThan(panelY);
   await button("年齢を選ぶ").click();
   const ages = start.getByRole("group", { name: "年齢", exact: true });
   await expect(ages).toBeVisible();
@@ -35,19 +44,24 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   await button("10歳").click();
   await ages.getByRole("button", { name: "11歳", exact: true }).click();
   await expect(button("ふりがな OFF")).toBeVisible();
-  await expect(button("ふつう")).toHaveAttribute("aria-pressed", "true");
+  await expect(button("難易度 ふつう")).toBeVisible();
   await button("11歳").click();
   await ages.getByRole("button", { name: "18歳", exact: true }).click();
-  await expect(button("むずかしい")).toHaveAttribute("aria-pressed", "true");
+  await expect(button("難易度 むずかしい")).toBeVisible();
   await button("ふりがな OFF").click();
+  await button("難易度 むずかしい").click();
   await button("ふつう").click();
-  await button("チュートリアルを始める").click();
+  expect((await panel.boundingBox())!.y).toBe(panelY);
+  await button("決定！").click();
   await expect(screen).toHaveAttribute("data-screen", "intro");
 
   await page.reload();
   await button("つづきから").click();
   await button("マイページ").click();
   const profile = page.getByRole("dialog", { name: "マイページ" });
+  await expect(
+    profile.locator(".observation-preferences .lucide-book-open-text"),
+  ).toHaveCount(0);
   await expect(
     profile.getByRole("button", { name: "18歳", exact: true }),
   ).toBeVisible();

@@ -11,6 +11,6 @@ test("つづきからはログインも年齢入力も挟まず撮影を開く",
   await resume.click();
   await expect(page.getByRole("button", { name: "シャッター" })).toBeVisible();
   await expect(
-    page.getByRole("dialog", { name: "年齢を教えてください" }),
+    page.getByRole("dialog", { name: "あなたの年齢を教えてください。" }),
   ).toHaveCount(0);
 });

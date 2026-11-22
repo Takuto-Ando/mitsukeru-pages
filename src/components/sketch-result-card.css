@@ -46,12 +46,18 @@
 }
 
 .sketch-result-card-heading h2 {
+  flex: 1 1 0;
   min-width: 0;
   margin: 0;
   color: inherit;
   font-size: clamp(16px, 5.72vw, 23px);
   line-height: 1.45;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+}
+
+.sketch-result-card-heading h2 > span {
+  display: inline-block;
+  transform-origin: left center;
 }
 
 .sketch-result-card-heading .difficulty-pill {

@@ -128,7 +128,7 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
   await page.goto("./");
   for (const step of [
     "はじめから",
-    "チュートリアルを始める",
+    "決定！",
     "こんにちは！",
     "やってみる！",
     "撮ってみる！",
@@ -298,7 +298,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   );
   await page.goto("./");
   await button(page, "はじめから").click();
-  await button(page, "チュートリアルを始める").click();
+  await button(page, "決定！").click();
   await button(page, "こんにちは！").click();
   await button(page, "やってみる！").click();
   await button(page, "撮ってみる！").click();
@@ -418,7 +418,7 @@ test("チュートリアルではライブ認識だけを事前準備し、撮�
   try {
     await page.goto("./");
     await button(page, "はじめから").click();
-    await button(page, "チュートリアルを始める").click();
+    await button(page, "決定！").click();
     await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "こんにちは！").click();
     await button(page, "やってみる！").click();

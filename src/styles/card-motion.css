@@ -1,19 +1,31 @@
-.replica-app[data-variant="product"] .design3-challenge {
-  position: relative;
+body:has(.replica-app[data-variant="product"][data-screen="challenge"]) {
   isolation: isolate;
-  overflow: hidden;
 }
 
-.replica-app[data-variant="product"] .design3-challenge::before {
-  position: absolute;
+.figma-shell.replica-app[data-variant="product"][data-screen="challenge"],
+.replica-app[data-variant="product"] .design3-challenge {
+  background: transparent;
+}
+
+.replica-app[data-variant="product"] .design3-challenge {
+  position: relative;
+}
+
+body:has(
+    .replica-app[data-variant="product"][data-screen="challenge"]
+  )::before {
+  position: fixed;
   z-index: -1;
-  inset: -50%;
+  inset: -64px;
   content: "";
   pointer-events: none;
   opacity: 0.2;
-  rotate: 45deg;
-  background-image: radial-gradient(circle, #fff 6px, transparent 6.7px);
-  background-size: 34px 34px;
+  --challenge-dot: radial-gradient(circle, #fff 6px, transparent 6.7px);
+  background-image: var(--challenge-dot), var(--challenge-dot);
+  background-position:
+    0 0,
+    40px 40px;
+  background-size: 80px 80px;
 }
 
 .entry-caption-line {
@@ -161,7 +173,9 @@
     animation-duration: 490ms, 350ms;
   }
 
-  .replica-app[data-variant="product"] .design3-challenge::before {
+  body:has(
+      .replica-app[data-variant="product"][data-screen="challenge"]
+    )::before {
     animation: sketch-pattern-drift 5.6s ease-in-out infinite alternate;
   }
 }

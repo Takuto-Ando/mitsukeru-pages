@@ -27,20 +27,24 @@ test("課題の背景だけが動き、同じ吹き出しのふりがなは高�
   const challenge = page.locator(".design3-challenge");
   await expect(challenge).toBeVisible();
   const pattern = () =>
-    challenge.evaluate((element) => {
+    page.locator("body").evaluate((element) => {
       const style = getComputedStyle(element, "::before");
       return {
         animation: style.animationName,
         opacity: style.opacity,
         pointer: style.pointerEvents,
-        rotation: style.rotate,
+        position: style.position,
+        size: [...new Set(style.backgroundSize.split(", "))],
+        offset: style.backgroundPosition,
       };
     });
   expect(await pattern()).toEqual({
     animation: "sketch-pattern-drift",
     opacity: "0.2",
     pointer: "none",
-    rotation: "45deg",
+    position: "fixed",
+    size: ["80px 80px"],
+    offset: "0px 0px, 40px 40px",
   });
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect((await pattern()).animation).toBe("none");

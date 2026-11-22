@@ -126,7 +126,6 @@ export function ReplicaResult({
   tutorial,
   saving,
   onRedraw,
-  canRedraw = true,
   showComparisonModes = true,
   unrestrictedDrawing,
   onConfirm,
@@ -139,7 +138,6 @@ export function ReplicaResult({
   tutorial: boolean;
   saving: boolean;
   onRedraw: () => void;
-  canRedraw?: boolean;
   showComparisonModes?: boolean;
   unrestrictedDrawing?: boolean;
   onConfirm: () => void;
@@ -201,7 +199,7 @@ export function ReplicaResult({
             <button
               className="drawing-pill drawing-pill-green"
               onClick={onRedraw}
-              disabled={saving || !canRedraw}
+              disabled={saving}
             >
               <CornerDownLeft aria-hidden="true" width={21} height={20} />
               <span>描きなおす</span>

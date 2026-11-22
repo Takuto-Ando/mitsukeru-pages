@@ -103,7 +103,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
     ),
   ).toBe('"ゆびさき"');
   await button("はじめから").click();
-  await button("チュートリアルを始める").click();
+  await button("決定！").click();
   await expect(button("スキップ")).toHaveCount(0);
   for (const [index, [id, choice]] of [
     ["29-683", "こんにちは！"],
@@ -187,7 +187,14 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await button("スケッチの結果を見る").click();
   await expect(node("66-8363")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await expect(button("描きなおす")).toBeDisabled();
+  await expect(button("描きなおす")).toBeEnabled();
+  await button("描きなおす").click();
+  await expect(node("43-1966")).toBeVisible();
+  await expect(canvas).toBeVisible();
+  await expect(button("できた！")).toBeEnabled();
+  await button("できた！").click();
+  await button("スケッチの結果を見る").click();
+  await expect(node("66-8363")).toBeVisible();
   await expect(button("もう一度見る")).toHaveCount(0);
   const payload = (await sending).postDataJSON();
   expect(payload.pngBase64).toMatch(/^iVBOR/);
@@ -358,7 +365,7 @@ test("スケッチ準備と課題タイトルをタップすると描画へ進�
   const shell = page.locator(".replica-app");
   await page.goto("./");
   await button("はじめから").click();
-  await button("チュートリアルを始める").click();
+  await button("決定！").click();
   await button("こんにちは！").click();
   await button("やってみる！").click();
   await button("撮ってみる！").click();

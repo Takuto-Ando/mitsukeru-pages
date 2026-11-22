@@ -1,17 +1,68 @@
 .observation-start-dialog {
+  --age-paper: #fbf7ed;
+  --age-ink: #795d42;
+  --age-green: #93aa55;
+  --age-orange: #eeab56;
+  width: min(90%, 364px);
+  max-width: none;
+  margin: auto;
+  overflow: visible;
+  padding: 0;
   border: 0;
-  border-radius: 20px;
-  background: var(--d3-cream, #fffaf0);
-  color: var(--d3-brown, #664c36);
+  background: transparent;
+  color: var(--age-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
 }
 
-.observation-start-dialog .settings-heading {
-  border-color: rgb(103 78 53 / 16%);
+.observation-start-dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
 }
 
-.observation-start-dialog .settings-heading h2 {
+.observation-start-close {
+  position: absolute;
+  inset: -52px auto auto 1px;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: #fff;
+}
+
+.observation-start-panel {
+  display: flex;
+  box-sizing: border-box;
+  min-height: min(485px, 78dvh);
+  max-height: calc(
+    100dvh - 2 *
+      max(58px, env(safe-area-inset-top), env(safe-area-inset-bottom))
+  );
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(24px, 7.5dvh, 62px) 10px clamp(24px, 5dvh, 42px);
+  border-radius: 34px;
+  background: var(--age-paper);
+  text-align: center;
+}
+
+.observation-start-panel h2 {
   margin: 0;
-  font-size: clamp(17px, 5vw, 21px);
+  font-size: clamp(16px, 5.06vw, 21px);
+  font-weight: inherit;
+  line-height: 1.49;
+  white-space: nowrap;
+}
+
+.observation-start-panel h2:focus {
+  outline: none;
+}
+
+.observation-start-panel > p {
+  margin: 9px 0 0;
+  font-size: clamp(11px, 3.2vw, 13px);
+  line-height: 1.4;
 }
 
 .observation-preferences {
@@ -87,12 +138,132 @@
   width: 100%;
 }
 
-.observation-start-dialog .observation-primary {
+.observation-start-controls {
+  position: relative;
+  width: 168px;
+  gap: 12px;
+  margin-block: clamp(18px, 3.5dvh, 29px) clamp(26px, 6.4dvh, 56px);
+}
+
+.observation-start-controls .observation-age-row {
+  justify-content: center;
+  gap: 16px;
+  margin-block-end: 18px;
+}
+
+.observation-start-controls .observation-age-row > button {
+  display: grid;
+  width: 108px;
+  height: 76px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--age-ink);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 15%);
+  font-size: 40px;
+}
+
+.observation-start-controls .observation-age-row > span {
+  align-self: end;
+  font-size: 30px;
+  line-height: 1.25;
+}
+
+.observation-age-empty {
+  display: flex;
+  gap: 16px;
+  translate: 0 9px;
+}
+
+.observation-age-empty::before,
+.observation-age-empty::after {
+  width: 20px;
+  height: 6px;
+  border-radius: 4px;
+  background: currentColor;
+  content: "";
+}
+
+.observation-start-controls
+  .observation-preference-row:not(.observation-age-row) {
+  gap: 8px;
+  font-size: 14px;
+}
+
+.observation-start-controls
+  .observation-preference-row:not(.observation-age-row)
+  > button {
+  position: relative;
+  display: grid;
+  width: 93px;
+  min-height: 28px;
+  place-items: center;
+  padding: 0 4px;
+  border: 0;
+  background: var(--age-green);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.observation-start-controls
+  .observation-preference-row:not(.observation-age-row)
+  > button::before {
+  position: absolute;
+  inset: -6px 0;
+  content: "";
+}
+
+.observation-start-controls .observation-age-list,
+.observation-start-controls fieldset {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 0;
+  padding: 6px;
+  border: 1px solid rgb(103 78 53 / 24%);
+  border-radius: 12px;
+  background: var(--age-paper);
+  box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
+}
+
+.observation-start-controls .observation-age-list {
+  inset-block-start: 80px;
+}
+
+.observation-start-controls fieldset {
+  inset: 100% -42px auto;
+}
+
+.observation-start-controls fieldset legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.observation-start-panel .observation-primary {
+  display: flex;
+  width: min(100%, 189px);
+  min-height: 51px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-block-start: auto;
+  padding: 4px 12px 4px 26px;
   border: 0;
   border-radius: 24px;
-  background: var(--d3-orange, #f9a846);
-  color: #44301f;
-  font-weight: 700;
+  background: var(--age-orange);
+  color: var(--age-paper);
+  box-shadow: 0 2px 4px rgb(86 54 24 / 18%);
+  font-size: 19px;
+  font-weight: inherit;
+}
+
+.observation-start-panel button {
+  font-weight: inherit;
 }
 
 .observation-my-page-actions {

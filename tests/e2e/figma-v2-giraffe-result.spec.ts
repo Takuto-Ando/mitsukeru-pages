@@ -3,6 +3,73 @@ import { taskById } from "../../src/content/tasks";
 
 test.use({ reducedMotion: "no-preference" });
 
+test("長いスケッチ見出しも位置を保ち、難易度と並んで一行に収まる", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("Permission denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  const button = (name: string) =>
+    page.getByRole("button", { name, exact: true });
+  const animal = "ニシアフリカコガタワニ";
+  const task = taskById["kyoto-o-tetraspis"];
+  await page.goto("./");
+  await button("つづきから").click();
+  await button("シャッター").click();
+  await button("修正").click();
+  await button(animal).click();
+  await button("ピツネに見せる").click();
+  const canvas = page.getByTestId("canvas");
+  await expect(canvas).toBeVisible({ timeout: 10_000 });
+  await canvas.click({ position: { x: 20, y: 20 } });
+  await button("できた！").click();
+  await button("スケッチの結果を見る").click();
+
+  const card = page.locator(".design3-result .sketch-result-card");
+  const title = card.getByRole("heading", {
+    name: `${animal}の${task.part}`,
+    exact: true,
+  });
+  const measuredTitle = title.locator(":scope > span");
+  const checkFit = () =>
+    measuredTitle.evaluate((text) => {
+      const heading = text.parentElement!;
+      const difficulty = heading.nextElementSibling!.getBoundingClientRect();
+      const bounds = text.getBoundingClientRect();
+      const box = heading.getBoundingClientRect();
+      return {
+        fits: bounds.right <= box.right + 0.25 && box.right < difficulty.left,
+        anchored: Math.abs(bounds.left - box.left) < 0.25,
+        singleLine: getComputedStyle(heading).whiteSpace === "nowrap",
+      };
+    });
+  await expect
+    .poll(checkFit)
+    .toEqual({ fits: true, anchored: true, singleLine: true });
+  await expect(measuredTitle).not.toHaveCSS("transform", "none");
+  await expect(measuredTitle).not.toHaveCSS("letter-spacing", "normal");
+  expect(
+    await measuredTitle.evaluate(
+      (text) =>
+        parseFloat(getComputedStyle(text).fontSize) <
+        parseFloat(getComputedStyle(text.parentElement!).fontSize),
+    ),
+  ).toBe(true);
+
+  await page.setViewportSize({ width: 430, height: 850 });
+  await expect
+    .poll(checkFit)
+    .toEqual({ fits: true, anchored: true, singleLine: true });
+});
+
 test("通常スケッチはズームと消しゴムの説明を省き、キリンは描いた舌を伸ばして葉を2枚取る", async ({
   page,
 }) => {
@@ -173,9 +240,12 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   const secondLeaf = effect.locator(".giraffe-result-leaf").nth(1);
   await expect(effect).toBeVisible();
   const resultCard = page.locator(".design3-result .sketch-result-card");
-  await expect(
-    resultCard.getByRole("heading", { name: "キリンの舌", exact: true }),
-  ).toBeVisible();
+  const title = resultCard.getByRole("heading", {
+    name: "キリンの舌",
+    exact: true,
+  });
+  await expect(title).toBeVisible();
+  await expect(title.locator(":scope > span")).toHaveCSS("transform", "none");
   await expect(
     resultCard.getByRole("img", { name: "難易度 1 / 3" }),
   ).toBeVisible();

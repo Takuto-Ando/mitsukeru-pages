@@ -82,9 +82,15 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
   page,
 }) => {
   await savedGallery(page);
-  await expect(page.locator(".replica-gallery .gallery-header")).toHaveCSS(
-    "height",
-    "84px",
+  const header = page.locator(".replica-gallery .gallery-header");
+  await expect(header).toHaveCSS("height", "84px");
+  const headerBounds = (await header.boundingBox())!;
+  const heading = (await header.getByRole("heading").boundingBox())!;
+  const settings = header.getByRole("button", { name: "マイページ" });
+  await expect(settings.locator("span")).toHaveCSS("height", "29px");
+  expect(heading.y + heading.height / 2).toBeCloseTo(
+    headerBounds.y + headerBounds.height / 2,
+    0,
   );
   const tabs = page.getByRole("tablist");
   const tabTop = (await tabs.boundingBox())!.y;
@@ -158,6 +164,35 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   const sketchSize = (await sketch.locator(".comparison-stage").boundingBox())!;
   const save = (detail: typeof sketch) =>
     detail.getByRole("button", { name: "保存", exact: true });
+  async function checkDetailControls(
+    detail: typeof sketch,
+    cardSelector: string,
+    switchWidth: number,
+    closeInset: number,
+  ) {
+    const card = (await detail.locator(cardSelector).boundingBox())!;
+    const switchLabel = detail.locator(".gallery-card-switch-label");
+    const label = (await switchLabel.boundingBox())!;
+    const close = detail.getByRole("button", { name: "一覧に戻る" });
+    const closeGlyph = (await close.locator(".gallery-mark").boundingBox())!;
+    expect(label.width).toBeCloseTo(switchWidth, 0);
+    expect(label.height).toBeCloseTo(30, 0);
+    expect(card.y - label.y - label.height).toBeCloseTo(17, 0);
+    expect(card.x + card.width - label.x - label.width).toBeCloseTo(47, 0);
+    expect(closeGlyph.x - card.x).toBeCloseTo(closeInset, 0);
+    expect(closeGlyph.width).toBeCloseTo(34, 0);
+    await expect(save(detail).locator("svg")).toHaveCSS("width", "28px");
+    for (const control of [
+      close,
+      save(detail),
+      detail.locator(".gallery-card-switch"),
+    ]) {
+      const bounds = (await control.boundingBox())!;
+      expect(bounds.width).toBeGreaterThanOrEqual(44);
+      expect(bounds.height).toBeGreaterThanOrEqual(44);
+    }
+  }
+  await checkDetailControls(sketch, ".sketch-result-card", 112, 0);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "canShare", {
       configurable: true,
@@ -183,6 +218,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
 
   await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
   const photo = page.getByRole("dialog", { name: "アミメキリンの写真" });
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 130, 12);
   await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
     "700",
@@ -205,8 +241,11 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     save(photo).click(),
   ]);
   expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
+  await page.setViewportSize({ width: 320, height: 568 });
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 130, 12);
   await photo
     .getByRole("button", { name: "スケッチを見る", exact: true })
     .click();
   await expect(sketch.getByTestId("giraffe-leaf-bite")).toBeAttached();
+  await checkDetailControls(sketch, ".sketch-result-card", 112, 0);
 });

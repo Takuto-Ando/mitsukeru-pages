@@ -19,11 +19,8 @@
   opacity: 1;
 }
 
-.replica-app[data-variant="product"]
-  .replica-gallery
-  .gallery-header
-  .replica-gallery-settings {
-  transform: translateX(-9px);
+.replica-app[data-variant="product"] .replica-gallery .gallery-header h1 {
+  transform: none;
 }
 
 .replica-gallery-settings span {
@@ -33,6 +30,11 @@
   mask-position: center;
   mask-repeat: no-repeat;
   mask-size: contain;
+}
+
+.replica-app[data-variant="product"] .replica-gallery-settings span {
+  width: 29px;
+  height: 29px;
 }
 
 .replica-app[data-variant="product"] .replica-gallery .gallery-sheet {
@@ -245,8 +247,7 @@
   min-height: 44px;
   justify-content: flex-end;
   align-items: center;
-  gap: 0;
-  padding-inline: 52px 4px;
+  padding-inline-start: 56px;
   color: #fff;
 }
 
@@ -262,14 +263,24 @@
   color: inherit;
 }
 
+.gallery-card-controls .gallery-card-save {
+  width: 47px;
+}
+
+.gallery-card-save > svg {
+  width: 28px;
+  height: 28px;
+  transform: translateX(-4px);
+}
+
 .gallery-card-controls button:disabled {
   opacity: 0.45;
 }
 
 .gallery-card-switch-label {
   display: flex;
-  min-width: 110px;
-  min-height: 28px;
+  min-width: 112px;
+  min-height: 30px;
   align-items: center;
   justify-content: center;
   gap: 4px;
@@ -284,12 +295,12 @@
 }
 
 .gallery-card-switch-label .gallery-mark {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .replica-gallery-detail--photo .gallery-card-switch-label {
-  min-width: 129px;
+  min-width: 130px;
   background: var(--d3-orange);
   color: var(--d3-cream);
 }
@@ -317,18 +328,21 @@
 .replica-app[data-variant="product"]
   .replica-gallery-detail
   .gallery-detail-scroll {
-  padding-top: clamp(28px, 6.3dvh, 55px);
+  padding-top: 10px;
+}
+
+.replica-app[data-variant="product"]
+  .replica-gallery-detail
+  .replica-gallery-close {
+  left: 0;
+  justify-items: start;
 }
 
 .replica-app[data-variant="product"]
   .replica-gallery-detail--photo
   .replica-gallery-close {
   top: 0;
-  left: 10px;
-}
-
-.replica-app[data-variant="product"] .replica-gallery-photo-scroll {
-  padding-top: clamp(28px, 6.3dvh, 55px);
+  left: 12px;
 }
 
 .replica-app[data-variant="product"] .replica-gallery-photo-card {

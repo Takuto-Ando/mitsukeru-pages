@@ -765,7 +765,6 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                     tutorial={tutorial}
                     saving={saving}
                     onRedraw={() => setScreen("draw")}
-                    canRedraw={legacy || !tutorial}
                     unrestrictedDrawing={!legacy}
                     showComparisonModes={legacy}
                     onConfirm={() =>

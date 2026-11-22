@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import { DifficultyPill } from "./DifficultyPill";
 import { ZooCardSummary } from "./ZooCardSummary";
 import "./sketch-result-card.css";
@@ -13,10 +14,53 @@ export function SketchResultCardFooter({
   regionCount: number;
   summary?: string;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const titleRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const heading = headingRef.current;
+    const text = titleRef.current;
+    if (!heading || !text) return;
+
+    const fitTitle = () => {
+      text.style.letterSpacing = "";
+      text.style.transform = "";
+      text.style.fontSize = "";
+
+      const available = heading.getBoundingClientRect().width;
+      if (!available || text.getBoundingClientRect().width <= available) return;
+
+      // Preserve the original font size as long as tracking and width can fit.
+      text.style.letterSpacing = "-0.045em";
+      const required = text.getBoundingClientRect().width;
+      if (required <= available) return;
+
+      const scale = Math.max(0.82, available / required);
+      text.style.transform = `scaleX(${scale})`;
+      if (required * scale > available)
+        text.style.fontSize = `${(available - 0.5) / (required * scale)}em`;
+    };
+
+    fitTitle();
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fitTitle);
+    });
+    observer.observe(heading);
+    observer.observe(text);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [title]);
+
   return (
     <div className="sketch-result-card-footer">
       <div className="sketch-result-card-heading">
-        <h2>{title}</h2>
+        <h2 ref={headingRef}>
+          <span ref={titleRef}>{title}</span>
+        </h2>
         <DifficultyPill taskId={taskId} regionCount={regionCount} />
       </div>
       {summary && (

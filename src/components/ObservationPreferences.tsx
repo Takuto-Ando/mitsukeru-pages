@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from "react";
-import { BookOpenText, ChevronDown, X } from "lucide-react";
+import { ChevronDown, ChevronRight, X } from "lucide-react";
 import { FuriganaProvider } from "../furigana/Furigana";
 import {
   maximumAge,
@@ -19,14 +19,24 @@ const ages = Array.from({ length: maximumAge + 1 }, (_, age) => age);
 export function ObservationPreferenceControls({
   preferences,
   onChange,
+  startDesign = false,
 }: {
   preferences: ObservationPreferences;
   onChange: (next: ObservationPreferences) => void;
+  startDesign?: boolean;
 }) {
   const agesId = useId();
+  const difficultiesId = useId();
   const ageTrigger = useRef<HTMLButtonElement>(null);
   const selectedAge = useRef<HTMLButtonElement>(null);
-  const [showAges, setShowAges] = useState(false);
+  const difficultyTrigger = useRef<HTMLButtonElement>(null);
+  const [picker, setPicker] = useState<"age" | "difficulty">();
+  const showAges = picker === "age";
+  const showDifficulties = picker === "difficulty";
+  const difficulty = preferences.difficulty ?? 1;
+  const difficultyLabel = levels[difficulty - 1].label;
+  const ageLabel =
+    preferences.age === undefined ? "年齢を選ぶ" : `${preferences.age}歳`;
   useEffect(() => {
     if (!showAges || !selectedAge.current) return;
     selectedAge.current.scrollIntoView({ block: "nearest" });
@@ -34,21 +44,25 @@ export function ObservationPreferenceControls({
   }, [showAges]);
 
   return (
-    <div className="observation-preferences">
-      <div className="observation-preference-row">
-        <span>年齢</span>
+    <div
+      className={`observation-preferences${startDesign ? " observation-start-controls" : ""}`}
+    >
+      <div className="observation-preference-row observation-age-row">
+        {!startDesign && <span>年齢</span>}
         <button
           ref={ageTrigger}
           type="button"
+          aria-label={ageLabel}
           aria-expanded={showAges}
           aria-controls={showAges ? agesId : undefined}
-          onClick={() => setShowAges(!showAges)}
+          onClick={() => setPicker(showAges ? undefined : "age")}
         >
-          {preferences.age === undefined
-            ? "年齢を選ぶ"
-            : `${preferences.age}歳`}
-          <ChevronDown aria-hidden="true" size={16} />
+          {startDesign
+            ? (preferences.age ?? <span className="observation-age-empty" />)
+            : ageLabel}
+          {!startDesign && <ChevronDown aria-hidden="true" size={16} />}
         </button>
+        {startDesign && <span aria-hidden="true">歳</span>}
       </div>
       {showAges && (
         <div
@@ -65,7 +79,7 @@ export function ObservationPreferenceControls({
               aria-pressed={preferences.age === age}
               onClick={() => {
                 onChange(preferencesForAge(preferences, age));
-                setShowAges(false);
+                setPicker(undefined);
                 ageTrigger.current?.focus({ preventScroll: true });
               }}
             >
@@ -75,35 +89,57 @@ export function ObservationPreferenceControls({
         </div>
       )}
       <div className="observation-preference-row">
-        <span>
-          <BookOpenText aria-hidden="true" size={19} />
-          ふりがな
-        </span>
+        <span>ふりがな</span>
         <button
           type="button"
+          aria-label={`ふりがな ${preferences.furigana ? "ON" : "OFF"}`}
           aria-pressed={preferences.furigana}
           onClick={() =>
             onChange({ ...preferences, furigana: !preferences.furigana })
           }
         >
-          ふりがな {preferences.furigana ? "ON" : "OFF"}
+          {!startDesign && "ふりがな "}
+          {preferences.furigana ? "ON" : "OFF"}
         </button>
       </div>
-      <fieldset>
-        <legend>難易度</legend>
-        <div className="observation-difficulty-options">
-          {levels.map(({ value, label }) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={(preferences.difficulty ?? 1) === value}
-              onClick={() => onChange({ ...preferences, difficulty: value })}
-            >
-              {label}
-            </button>
-          ))}
+      {startDesign && (
+        <div className="observation-preference-row">
+          <span>難易度</span>
+          <button
+            ref={difficultyTrigger}
+            type="button"
+            aria-label={`難易度 ${difficultyLabel}`}
+            aria-expanded={showDifficulties}
+            aria-controls={showDifficulties ? difficultiesId : undefined}
+            onClick={() =>
+              setPicker(showDifficulties ? undefined : "difficulty")
+            }
+          >
+            {difficultyLabel}
+          </button>
         </div>
-      </fieldset>
+      )}
+      {(!startDesign || showDifficulties) && (
+        <fieldset id={startDesign ? difficultiesId : undefined}>
+          <legend>難易度</legend>
+          <div className="observation-difficulty-options">
+            {levels.map(({ value, label }) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={difficulty === value}
+                onClick={() => {
+                  onChange({ ...preferences, difficulty: value });
+                  setPicker(undefined);
+                  difficultyTrigger.current?.focus({ preventScroll: true });
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }
@@ -119,9 +155,14 @@ export function StartPreferencesDialog({
 }) {
   const [draft, setDraft] = useState(preferences);
   const dialog = useRef<HTMLDialogElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const title = useId();
   useEffect(() => {
-    if (dialog.current && !dialog.current.open) dialog.current.showModal();
+    const modal = dialog.current;
+    if (modal && !modal.open) {
+      modal.showModal();
+      heading.current?.focus({ preventScroll: true });
+    }
   }, []);
 
   function cancel() {
@@ -134,31 +175,39 @@ export function StartPreferencesDialog({
       <dialog
         ref={dialog}
         aria-labelledby={title}
-        className="settings-dialog observation-start-dialog"
+        className="observation-start-dialog"
         onCancel={(event) => {
           event.preventDefault();
           cancel();
         }}
       >
-        <div className="settings-heading">
-          <h2 id={title}>年齢を教えてください</h2>
-          <button type="button" aria-label="閉じる" onClick={cancel}>
-            <X aria-hidden="true" size={22} />
-          </button>
-        </div>
-        <div className="settings-content">
+        <button
+          type="button"
+          className="observation-start-close"
+          aria-label="閉じる"
+          onClick={cancel}
+        >
+          <X aria-hidden="true" size={42} strokeWidth={2} />
+        </button>
+        <div className="observation-start-panel">
+          <h2 id={title} ref={heading} tabIndex={-1}>
+            あなたの年齢を教えてください。
+          </h2>
+          <p>※難易度がカスタマイズされます。</p>
           <ObservationPreferenceControls
             preferences={draft}
             onChange={setDraft}
+            startDesign
           />
+          <button
+            type="button"
+            className="observation-primary"
+            onClick={() => onStart(draft)}
+          >
+            決定！
+            <ChevronRight aria-hidden="true" size={20} strokeWidth={2.6} />
+          </button>
         </div>
-        <button
-          type="button"
-          className="settings-done observation-primary"
-          onClick={() => onStart(draft)}
-        >
-          チュートリアルを始める
-        </button>
       </dialog>
     </FuriganaProvider>
   );
