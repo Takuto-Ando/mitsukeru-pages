@@ -12,6 +12,11 @@ import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
 import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
+import {
+  cameraFailure,
+  openPreferredCamera,
+  type CameraFailure,
+} from "../camera/media";
 import "./camera-tracking.css";
 
 export const samplePhoto = () =>
@@ -69,6 +74,9 @@ export function ReplicaCamera({
   const [menuOpen, setMenuOpen] = useState(false);
   const [requestNumber, retryCamera] = useState(0);
   const [visible, setVisible] = useState(() => !document.hidden);
+  const lastFailure = useRef<CameraFailure | undefined>(undefined);
+  const fallbackSample = useRef(false);
+  const captureStarted = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
   const liveCached = useLiveModelCached();
   const [liveEnabled, setLiveEnabled] = useState(() => {
@@ -126,6 +134,7 @@ export function ReplicaCamera({
       ? "43-1494"
       : "38-1026";
   const streamRef = useRef<MediaStream | undefined>(undefined);
+  const stopCaptureStream = useRef<(() => void) | undefined>(undefined);
   const menu = useRef<HTMLDialogElement>(null);
   const bestMatchId = bestMatch?.id;
 
@@ -192,63 +201,145 @@ export function ReplicaCamera({
 
   useEffect(() => {
     const update = () => setVisible(!document.hidden);
+    const hide = () => setVisible(false);
     document.addEventListener("visibilitychange", update);
-    return () => document.removeEventListener("visibilitychange", update);
+    window.addEventListener("pagehide", hide);
+    window.addEventListener("pageshow", update);
+    return () => {
+      document.removeEventListener("visibilitychange", update);
+      window.removeEventListener("pagehide", hide);
+      window.removeEventListener("pageshow", update);
+    };
   }, []);
+
+  useEffect(() => {
+    if (menuOpen || suspended) return;
+    let active = true;
+    let permission: PermissionStatus | undefined;
+    function retry() {
+      if (!active || document.hidden || !lastFailure.current) return;
+      lastFailure.current = undefined;
+      if (fallbackSample.current) {
+        fallbackSample.current = false;
+        setSample(false);
+        setSampleHasAnimal(false);
+        setSampleReady(false);
+        setSampleUnavailable(false);
+      }
+      retryCamera((number) => number + 1);
+    }
+    const permissionChanged = () => {
+      if (permission?.state === "granted") retry();
+    };
+    const focused = () => {
+      const reason = lastFailure.current;
+      if (
+        reason === "busy" ||
+        reason === "unavailable" ||
+        (reason === "permission" && permission?.state !== "denied")
+      )
+        retry();
+    };
+    window.addEventListener("focus", focused);
+    void navigator.permissions
+      ?.query({ name: "camera" as PermissionName })
+      .then((status) => {
+        if (!active) return;
+        permission = status;
+        status.addEventListener?.("change", permissionChanged);
+      })
+      .catch(() => {
+        // Some Safari versions do not expose camera through Permissions.
+        // Focus and visibility recovery still work in that case.
+      });
+    return () => {
+      active = false;
+      permission?.removeEventListener?.("change", permissionChanged);
+      window.removeEventListener("focus", focused);
+    };
+  }, [menuOpen, suspended]);
 
   useEffect(() => {
     if (sample || menuOpen || suspended || !visible) return;
     let active = true;
     const element = video.current;
+    let track: MediaStreamTrack | undefined;
     function stopCamera() {
+      track?.removeEventListener?.("ended", interrupted);
+      track = undefined;
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = undefined;
       setCameraTrack(undefined);
       if (element) element.srcObject = null;
       setStreamReady(false);
     }
-    function cameraFailed(message: string) {
+    function cameraFailed(reason: CameraFailure, nextMessage: string) {
+      lastFailure.current = reason;
       if (tutorial && !legacy) {
+        fallbackSample.current = true;
         setSample(true);
       } else {
         setCameraUnavailable(true);
       }
-      setMessage(message);
+      setMessage(nextMessage);
+    }
+    function interrupted() {
+      if (!active) return;
+      stopCamera();
+      cameraFailed("busy", "カメラを開けませんでした。");
+    }
+    function hidePage() {
+      active = false;
+      stopCamera();
+    }
+    function visibilityChanged() {
+      if (document.hidden) hidePage();
     }
 
     async function startCamera() {
       setCameraUnavailable(false);
-      if (!navigator.mediaDevices?.getUserMedia) {
-        cameraFailed("この端末ではカメラを開けません。");
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        cameraFailed(
+          window.isSecureContext ? "unavailable" : "insecure",
+          "この端末ではカメラを開けません。",
+        );
         return;
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-          audio: false,
-        });
+        const stream = await openPreferredCamera(
+          navigator.mediaDevices,
+          () => active && !document.hidden,
+        );
         if (!active || document.hidden || !element) {
           stream.getTracks().forEach((track) => track.stop());
           return;
         }
         streamRef.current = stream;
-        setCameraTrack(stream.getVideoTracks?.()[0]);
+        track = stream.getVideoTracks?.()[0];
+        track?.addEventListener?.("ended", interrupted, { once: true });
+        setCameraTrack(track);
         element.srcObject = stream;
         await element.play();
-        if (active) {
+        if (active && streamRef.current === stream) {
+          lastFailure.current = undefined;
           setStreamReady(Boolean(element.videoWidth));
           setMessage("");
         }
-      } catch {
+      } catch (error) {
         if (!active) return;
         stopCamera();
-        cameraFailed("カメラを開けませんでした。");
+        cameraFailed(cameraFailure(error), "カメラを開けませんでした。");
       }
     }
+    document.addEventListener("visibilitychange", visibilityChanged);
+    window.addEventListener("pagehide", hidePage);
+    stopCaptureStream.current = hidePage;
     void startCamera();
     return () => {
-      active = false;
-      stopCamera();
+      document.removeEventListener("visibilitychange", visibilityChanged);
+      window.removeEventListener("pagehide", hidePage);
+      stopCaptureStream.current = undefined;
+      hidePage();
     };
   }, [legacy, menuOpen, requestNumber, sample, suspended, tutorial, visible]);
 
@@ -257,6 +348,8 @@ export function ReplicaCamera({
   }, [menuOpen]);
 
   function chooseMode(nextSample: boolean) {
+    fallbackSample.current = false;
+    lastFailure.current = undefined;
     if (nextSample !== sample) {
       setSampleReady(false);
       setSampleUnavailable(false);
@@ -282,23 +375,36 @@ export function ReplicaCamera({
     }
   }
 
+  function submitCapture(capture: CameraCapture) {
+    if (captureStarted.current) return;
+    captureStarted.current = true;
+    try {
+      onCapture(capture);
+      stopCaptureStream.current?.();
+    } catch (error) {
+      captureStarted.current = false;
+      throw error;
+    }
+  }
+
   function takePhoto() {
+    if (captureStarted.current) return;
     if (sample && !sampleVisible) {
       setSampleHasAnimal(true);
       return;
     }
     if (!legacy && cameraUnavailable) {
-      onCapture({ sample: false });
+      submitCapture({ sample: false });
       return;
     }
 
     if (!legacy && sample && sampleUnavailable) {
-      onCapture({ sample: true });
+      submitCapture({ sample: true });
       return;
     }
 
     if (legacy && sample && cameraZoom.digital === 1) {
-      onCapture({ photo: samplePhoto(), sample: true });
+      submitCapture({ photo: samplePhoto(), sample: true });
       return;
     }
 
@@ -308,13 +414,13 @@ export function ReplicaCamera({
       const shot =
         frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
       if (shot) {
-        onCapture({
+        submitCapture({
           photo: shot.canvas.toDataURL("image/jpeg", 0.82),
           sample,
           animal,
         });
       } else if (legacy && sample) {
-        onCapture({ photo: samplePhoto(), sample: true });
+        submitCapture({ photo: samplePhoto(), sample: true });
       }
     } catch {
       setMessage("撮影できませんでした。もう一度試してね。");
@@ -546,7 +652,7 @@ export function ReplicaCamera({
           </button>
           <button
             className="text-button"
-            onClick={() => onCapture({ sample: false })}
+            onClick={() => submitCapture({ sample: false })}
           >
             写真なしで動物を選ぶ
           </button>

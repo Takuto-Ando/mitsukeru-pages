@@ -1,0 +1,220 @@
+import {
+  penColorsFor,
+  sketchPresentationFor,
+} from "../content/sketchPresentation";
+import { BubbleLine } from "../components/BubbleLine";
+import { ZooCardSummary } from "../components/ZooCardSummary";
+import { zooAnimalSummary } from "../content/zooAnimalSummaries";
+import { CardLettering } from "../components/CardLettering";
+import { Camera, CircleHelp, CornerDownLeft } from "lucide-react";
+import type { ComponentProps } from "react";
+import { SketchComparison } from "../components/SketchComparison";
+import { assetPath } from "../content/artwork";
+import { designCardViewport } from "../drawing/viewport";
+import { SketchCanvas } from "../SketchCanvas";
+import type { ObservationGroup } from "../content/groups";
+import type { ObservationTask } from "../content/tasks";
+import type { Evaluation, Stroke } from "../types";
+
+type DrawingProps = Pick<
+  ComponentProps<typeof SketchCanvas>,
+  "strokes" | "canUndo" | "canRedo" | "onUndo" | "onRedo" | "onChange"
+>;
+
+export function ReplicaDraw({
+  task,
+  showHint,
+  onHint,
+  onDone,
+  hideZoomAndEraserTip,
+  unrestrictedDrawing,
+  ...drawing
+}: DrawingProps & {
+  task: ObservationTask;
+  showHint: boolean;
+  onHint: () => void;
+  onDone: () => void;
+  hideZoomAndEraserTip?: boolean;
+  unrestrictedDrawing?: boolean;
+}) {
+  const prompt = sketchPresentationFor(task.scene)?.prompt;
+  return (
+    <section className="design3-draw">
+      <SketchCanvas
+        key={task.id}
+        {...drawing}
+        scene={task.scene}
+        initialPenColors={penColorsFor(task.groupId)}
+        hideZoomAndEraserTip={hideZoomAndEraserTip}
+        unrestrictedDrawing={unrestrictedDrawing}
+        fixedPortrait
+        inkBehindArtwork
+        showTarget={showHint}
+        missionTitle={
+          showHint
+            ? "もうすこし観察してみて！"
+            : (prompt?.text ?? task.part + "をよく観察してみて！")
+        }
+        missionHighlights={
+          !showHint && task.id === "giraffe" ? ["舌"] : undefined
+        }
+        missionLettering={
+          showHint
+            ? "illustrations/pdf-design/drawing-prompt-hint.svg"
+            : prompt?.lettering
+        }
+        actions={
+          <>
+            <button
+              className="drawing-pill drawing-pill-green sketch-hint-button"
+              onClick={onHint}
+              aria-pressed={showHint}
+              disabled={showHint}
+            >
+              <CircleHelp size={18} aria-hidden />
+              <CardLettering
+                className="drawing-lettering"
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-action-hint.svg",
+                )}
+                text="ヒントを見る"
+              />
+            </button>
+            <button
+              className="drawing-pill draw-complete"
+              onClick={onDone}
+              disabled={!drawing.strokes.length}
+            >
+              <img
+                className="drawing-pitsune-icon"
+                alt=""
+                width={19}
+                height={17}
+                src={assetPath("figma/entry/sketch-confirm.svg")}
+              />
+              <CardLettering
+                className="drawing-lettering"
+                src={assetPath(
+                  "illustrations/pdf-design/drawing-action-finish.svg",
+                )}
+                text="できた！"
+              />
+            </button>
+          </>
+        }
+      />
+      {showHint && task.id !== "giraffe" && (
+        <p className="replica-task-hint">{task.hint}</p>
+      )}
+    </section>
+  );
+}
+
+export function ReplicaResult({
+  task,
+  group,
+  strokes,
+  feedback,
+  tutorial,
+  saving,
+  onRedraw,
+  canRedraw = true,
+  showComparisonModes = true,
+  unrestrictedDrawing,
+  onConfirm,
+  onDone,
+}: {
+  task: ObservationTask;
+  group: ObservationGroup;
+  strokes: Stroke[];
+  feedback: Evaluation;
+  tutorial: boolean;
+  saving: boolean;
+  onRedraw: () => void;
+  canRedraw?: boolean;
+  showComparisonModes?: boolean;
+  unrestrictedDrawing?: boolean;
+  onConfirm: () => void;
+  onDone: () => void;
+}) {
+  const fact = zooAnimalSummary(group.id, task.id);
+
+  return (
+    <section className="design3-result">
+      <div className="result-pitsune">
+        <img
+          alt=""
+          className="result-pitsune-face"
+          src={assetPath("figma/entry/sketch-face.svg")}
+        />
+        <h1 className="pitsune-bubble">
+          {feedback.passed && feedback.method === "automatic" ? (
+            <CardLettering
+              className="drawing-lettering"
+              src={assetPath(
+                "illustrations/pdf-design/drawing-prompt-success.svg",
+              )}
+              text="上手に描けたね！"
+            />
+          ) : (
+            <BubbleLine text={feedback.message} />
+          )}
+        </h1>
+      </div>
+      <SketchComparison
+        strokes={strokes}
+        scene={task.scene}
+        answer={group.answer}
+        completed={feedback.passed}
+        initialMode="drawing"
+        animateDrawingFor={task.id}
+        showReplay={false}
+        showModes={showComparisonModes}
+        unrestrictedDrawing={unrestrictedDrawing}
+        viewport={designCardViewport(task.scene)}
+        cardFooter={
+          fact && <ZooCardSummary className="result-fact" text={fact} />
+        }
+        afterCard={
+          <div className="drawing-actions result-actions">
+            <button
+              className="drawing-pill drawing-pill-green"
+              onClick={onRedraw}
+              disabled={saving || !canRedraw}
+            >
+              <CornerDownLeft aria-hidden="true" width={21} height={20} />
+              <span>描きなおす</span>
+            </button>
+            {feedback.passed && (
+              <button
+                className="drawing-pill"
+                onClick={onDone}
+                disabled={saving}
+              >
+                {tutorial ? (
+                  <img
+                    alt=""
+                    src={assetPath("figma/entry/confirm.svg")}
+                    width={18.5146}
+                    height={17}
+                  />
+                ) : (
+                  <Camera aria-hidden="true" size={22} />
+                )}
+                <span>{tutorial ? "つぎへ" : "写真を撮る"}</span>
+              </button>
+            )}
+          </div>
+        }
+      />
+      {!feedback.passed && (
+        <div className="self-check">
+          {feedback.suggestion && <p>{feedback.suggestion}</p>}
+          <button className="primary" onClick={onConfirm}>
+            見くらべて、確かめた！
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}

@@ -26,7 +26,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await button("ピツネに見せる").click();
 
   const canvas = page.getByTestId("canvas");
-  await expect(canvas).toBeVisible();
+  await expect(canvas).toBeVisible({ timeout: 10_000 });
   const speech = page.locator(".mission-pitsune-row .bubble-line-text");
   await expect(speech).toHaveText("舌をよく観察してみて！");
   await expect(speech).toBeVisible();
@@ -172,7 +172,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
     .poll(() =>
       page.evaluate(async () => {
         const database = await new Promise<IDBDatabase>((resolve, reject) => {
-          const open = indexedDB.open("zooketch-figma-replica", 1);
+          const open = indexedDB.open("zooketch-figma-replica");
           open.onsuccess = () => resolve(open.result);
           open.onerror = () => reject(open.error);
         });

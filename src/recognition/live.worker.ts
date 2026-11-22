@@ -31,15 +31,21 @@ self.onmessage = async ({ data }: MessageEvent<DetectionRequest>) => {
       channels[index + 2 * planeSize] = pixels[source];
     }
     const input = new Tensor("float32", channels, [1, 3, inputSize, inputSize]);
-    const output = await session.run({ images: input });
-    const boxes = decodeLiveBoxes(
-      output.output.data as Float32Array,
-      data.width,
-      data.height,
-    );
-    output.output.dispose();
-    input.dispose();
-    postMessage({ type: "boxes", boxes });
+    try {
+      const output = await session.run({ images: input });
+      try {
+        const boxes = decodeLiveBoxes(
+          output.output.data as Float32Array,
+          data.width,
+          data.height,
+        );
+        postMessage({ type: "boxes", boxes });
+      } finally {
+        for (const tensor of Object.values(output)) tensor.dispose();
+      }
+    } finally {
+      input.dispose();
+    }
   } catch {
     postMessage({ type: "error" });
   }

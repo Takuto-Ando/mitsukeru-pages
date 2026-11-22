@@ -9,6 +9,7 @@ import {
   flushShareQueue,
   loadShareConfig,
   managedProductionShare,
+  countPendingShares,
   pendingShareCount,
   saveShareConfig,
 } from "../future/share";
@@ -32,13 +33,14 @@ export function SettingsDialog({
   const [share, setShare] = useState(loadShareConfig);
   const [pending, setPending] = useState(pendingShareCount);
   const [shareNote, setShareNote] = useState("");
-  const refreshPending = () => setPending(pendingShareCount());
+  const refreshPending = () => void countPendingShares().then(setPending);
   useEffect(() => {
     const element = dialog.current;
     if (open && !element?.open) {
       wasOpen.current = true;
       stopSpeech();
       element?.showModal();
+      refreshPending();
     } else if (!open && wasOpen.current) {
       wasOpen.current = false;
       if (element?.open) element.close();

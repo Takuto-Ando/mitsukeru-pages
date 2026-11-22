@@ -4,9 +4,18 @@ import {
   loadFurigana,
   saveFurigana,
 } from "../furigana/Furigana";
-import { SettingsDialog } from "../components/SettingsDialog";
-import { enqueueShare, flushShareQueue } from "../future/share";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { flushShareQueue, replicaShareDestination } from "../future/share";
+import {
+  lazy,
+  startTransition,
+  Suspense,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { HomeScreen } from "../components/HomeScreen";
 import {
@@ -15,23 +24,16 @@ import {
   TutorialEndScreen,
 } from "../components/IntroFlow";
 import { ChallengeIntro, PhotoCelebration } from "../components/ChallengeIntro";
-import { FreeDrawScreen } from "../screens/DrawScreen";
 import { groups } from "../content/groups";
 import { taskById, tasksForGroup } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
-import { composeObservationImages } from "../notebook/images";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
 import { drawingEvaluator } from "../domain";
 import { tutorialSurveyUrl } from "../research/tutorialSurvey";
 import type { Evaluation, Stroke } from "../types";
-import { ReplicaCamera, type CameraCapture } from "./ReplicaCamera";
-import { ReplicaGallery, type ReplicaRecord } from "./ReplicaGallery";
-import {
-  ReplicaDraw,
-  ReplicaIntro,
-  ReplicaPhotoReview,
-  ReplicaResult,
-} from "./ReplicaScreens";
+import type { CameraCapture } from "./ReplicaCamera";
+import type { ReplicaRecord } from "./ReplicaGallery";
+import { ReplicaIntro, ReplicaPhotoReview } from "./ReplicaScreens";
 import {
   galleryPhotoLocation,
   identifyReplicaPhoto,
@@ -46,6 +48,38 @@ import "../styles/design3.css";
 import "../styles/card-motion.css";
 import "../styles/furigana.css";
 import "./replica.css";
+import { ScreenErrorBoundary } from "../recovery/ScreenErrorBoundary";
+
+const ReplicaCamera = lazy(() =>
+  import("./ReplicaCamera").then(({ ReplicaCamera }) => ({
+    default: ReplicaCamera,
+  })),
+);
+const ReplicaGallery = lazy(() =>
+  import("./ReplicaGallery").then(({ ReplicaGallery }) => ({
+    default: ReplicaGallery,
+  })),
+);
+const ReplicaDraw = lazy(() =>
+  import("./ReplicaDrawingScreens").then(({ ReplicaDraw }) => ({
+    default: ReplicaDraw,
+  })),
+);
+const ReplicaResult = lazy(() =>
+  import("./ReplicaDrawingScreens").then(({ ReplicaResult }) => ({
+    default: ReplicaResult,
+  })),
+);
+const FreeDrawScreen = lazy(() =>
+  import("../screens/DrawScreen").then(({ FreeDrawScreen }) => ({
+    default: FreeDrawScreen,
+  })),
+);
+const SettingsDialog = lazy(() =>
+  import("../components/SettingsDialog").then(({ SettingsDialog }) => ({
+    default: SettingsDialog,
+  })),
+);
 
 type Screen =
   | "splash"
@@ -83,11 +117,23 @@ function recordId() {
 }
 
 export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
+  return (
+    <ScreenErrorBoundary>
+      <ReplicaAppContent legacy={legacy} />
+    </ScreenErrorBoundary>
+  );
+}
+
+function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   // The revised tutorial should also appear once for devices using the old flow.
   const tutorialKey = legacy
     ? "zooketch-replica-tutorial-v1"
     : "zooketch-replica-tutorial-v2";
-  const [screen, setScreen] = useState<Screen>(legacy ? "splash" : "title");
+  const [screen, updateScreen] = useState<Screen>(legacy ? "splash" : "title");
+  // Keep the current view painted while a newly opened screen downloads.
+  const setScreen = useCallback((next: SetStateAction<Screen>) => {
+    startTransition(() => updateScreen(next));
+  }, []);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [furigana, setFurigana] = useState(loadFurigana);
@@ -122,6 +168,12 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
   const [groupId, setGroupId] = useState("");
   const [record, setRecord] = useState<ReplicaRecord>();
   const [records, setRecords] = useState<ReplicaRecord[]>([]);
+  const [photoSaved, setPhotoSaved] = useState(false);
+  const [galleryLoadAttempt, setGalleryLoadAttempt] = useState(0);
+  const [galleryLoadFailed, setGalleryLoadFailed] = useState(false);
+  const keepGalleryRecords = legacy || screen === "gallery";
+  const galleryOpen = useRef(keepGalleryRecords);
+  galleryOpen.current = keepGalleryRecords;
   const [drawing, dispatchDrawing] = useReducer(
     drawingHistory,
     undefined,
@@ -159,9 +211,22 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
 
   useEffect(() => {
     mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!keepGalleryRecords) {
+      setRecords((current) => (current.length ? [] : current));
+      setGalleryLoadFailed(false);
+      return;
+    }
+    let active = true;
     loadReplicaRecords().then(
       (saved) => {
-        if (!mounted.current) return;
+        if (!active) return;
+        setGalleryLoadFailed(false);
         setRecords((current) =>
           newestFirst(
             Array.from(
@@ -172,16 +237,21 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
           ),
         );
       },
-      () => undefined,
+      () => {
+        if (active) setGalleryLoadFailed(true);
+      },
     );
     return () => {
-      mounted.current = false;
+      active = false;
     };
-  }, []);
+  }, [galleryLoadAttempt, keepGalleryRecords]);
 
-  const advanceScreen = useCallback((current: Screen, next: Screen) => {
-    setScreen((active) => (active === current ? next : active));
-  }, []);
+  const advanceScreen = useCallback(
+    (current: Screen, next: Screen) => {
+      setScreen((active) => (active === current ? next : active));
+    },
+    [setScreen],
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -198,7 +268,9 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
   }, [advanceScreen, legacy, screen, tutorial]);
 
   function renderGalleryRecord(entry: ReplicaRecord) {
-    if (mounted.current)
+    if (!mounted.current) return;
+    if (entry.photo && entry.id === activeCapture.current) setPhotoSaved(true);
+    if (galleryOpen.current)
       setRecords((current) =>
         newestFirst([entry, ...current.filter((item) => item.id !== entry.id)]),
       );
@@ -209,6 +281,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     savedDrawing.current = undefined;
     setFramedExample(false);
     setRecord(undefined);
+    setPhotoSaved(false);
     setGroupId("");
     setError("");
     setScreen("camera");
@@ -237,6 +310,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
         : undefined,
     };
     activeCapture.current = next.id;
+    setPhotoSaved(false);
     setRecord(next);
     setGroupId(captured?.groupId ?? "");
     setError("");
@@ -321,6 +395,7 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
     setError("");
     try {
       await writingPhoto.current;
+      const { composeObservationImages } = await import("../notebook/images");
       const { ownPng } = await composeObservationImages(
         task.scene,
         drawing.present,
@@ -348,8 +423,11 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
         description: zooAnimalSummary(group.id),
         photoDescription: zooAnimalSummary(group.id),
       };
-      await saveReplicaRecord(next);
-      if (!legacy) enqueueShare(next.id);
+      await saveReplicaRecord(
+        next,
+        legacy ? undefined : replicaShareDestination(),
+      );
+      if (!legacy) void flushShareQueue();
       if (!mounted.current) return;
       savedDrawing.current = drawing.present;
       renderGalleryRecord(next);
@@ -397,249 +475,266 @@ export function ReplicaApp({ legacy = false }: { legacy?: boolean }) {
               {error}
             </p>
           )}
-          <motion.div
-            key={screen === "intro" ? `intro-${introPage}` : screen}
-            className="replica-screen"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: reduce ? 0 : 0.3, ease: [0, 0, 0.58, 1] }}
-          >
-            {screen === "splash" && (
-              <SplashScreen onDone={() => setScreen("title")} />
-            )}
-            {screen === "title" && (
-              <HomeScreen
-                savedCount={records.length}
-                studyTutorial={legacy && !!surveyUrl}
-                onStart={() => {
-                  try {
-                    if (
-                      !surveyUrl &&
-                      localStorage.getItem(tutorialKey) === "1"
-                    ) {
-                      setTutorial(false);
-                      restartCamera();
-                      return;
-                    }
-                  } catch {
-                    // The tutorial is available even with storage disabled.
-                  }
-                  setIntroPage(0);
-                  setTutorial(true);
-                  setScreen("intro");
-                }}
-                onCollection={() => setScreen("gallery")}
-                onSettings={() => setScreen("free")}
-              />
-            )}
-            {screen === "intro" && (
-              <ReplicaIntro
-                pose={introSteps[introPage].pose}
-                onSkip={
-                  legacy
-                    ? () => {
+          {screen === "gallery" && galleryLoadFailed && (
+            <div className="design3-alert replica-storage-error">
+              <p role="alert">ギャラリーを開けませんでした。</p>
+              <button
+                type="button"
+                onClick={() => setGalleryLoadAttempt((attempt) => attempt + 1)}
+              >
+                もう一度試す
+              </button>
+            </div>
+          )}
+          <Suspense fallback={null}>
+            <motion.div
+              key={screen === "intro" ? `intro-${introPage}` : screen}
+              className="replica-screen"
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: reduce ? 0 : 0.3, ease: [0, 0, 0.58, 1] }}
+            >
+              {screen === "splash" && (
+                <SplashScreen onDone={() => setScreen("title")} />
+              )}
+              {screen === "title" && (
+                <HomeScreen
+                  savedCount={records.length}
+                  studyTutorial={legacy && !!surveyUrl}
+                  onStart={() => {
+                    try {
+                      if (
+                        !surveyUrl &&
+                        localStorage.getItem(tutorialKey) === "1"
+                      ) {
                         setTutorial(false);
                         restartCamera();
+                        return;
                       }
-                    : undefined
-                }
-                onNext={() =>
-                  introPage < introSteps.length - 1
-                    ? setIntroPage(introPage + 1)
-                    : restartCamera()
-                }
-              />
-            )}
-            {camera && (
-              <ReplicaCamera
-                legacy={legacy}
-                tutorial={tutorial}
-                framedExample={framedExample}
-                onCapture={takePhoto}
-                onFreeDraw={() => setScreen("free")}
-                onHome={() => setScreen("title")}
-                onGallery={() => setScreen("gallery")}
-                suspended={settingsOpen}
-                onSettings={
-                  legacy
-                    ? undefined
-                    : (trigger) => {
-                        settingsTrigger.current = trigger;
-                        setSettingsOpen(true);
-                      }
-                }
-              />
-            )}
-            {review && (
-              <>
-                <div inert={screen === "cheer" ? true : undefined}>
-                  <ReplicaPhotoReview
-                    photo={record?.photo}
-                    sample={!!record?.samplePhoto}
-                    createdAt={record?.photo ? record.createdAt : undefined}
-                    photoLocation={record?.photoLocation}
-                    saved={records.some((item) => item.id === record?.id)}
-                    group={chosen}
-                    choices={legacy ? choices : groups}
-                    figmaFlow={
-                      !legacy && screen === "review"
-                        ? tutorial
-                          ? "tutorial"
-                          : "regular"
-                        : undefined
+                    } catch {
+                      // The tutorial is available even with storage disabled.
                     }
-                    onSelect={selectCapturedAnimal}
-                    onRetake={retakePhoto}
-                    onConfirm={() =>
-                      setScreen(
-                        tutorial ? "cheer" : legacy ? "loading" : "easel",
-                      )
-                    }
-                    canRetake={legacy || !tutorial}
-                  />
-                </div>
-                {screen === "cheer" && (
-                  <PhotoCelebration
-                    onContinue={
-                      legacy ? undefined : () => advanceScreen("cheer", "easel")
-                    }
-                  />
-                )}
-              </>
-            )}
-            {screen === "easel" &&
-              (tutorial || legacy ? (
+                    setIntroPage(0);
+                    setTutorial(true);
+                    setScreen("intro");
+                  }}
+                  onCollection={() => setScreen("gallery")}
+                  onSettings={() => setScreen("free")}
+                />
+              )}
+              {screen === "intro" && (
                 <ReplicaIntro
-                  pose="easel"
-                  onNext={() => setScreen("challenge")}
-                />
-              ) : (
-                <IntroLoadingScreen
-                  onContinue={() => advanceScreen("easel", "challenge")}
-                />
-              ))}
-            {screen === "loading" && <IntroLoadingScreen />}
-            {screen === "challenge" && (
-              <ChallengeIntro
-                taskId={task.id}
-                animal={group.name}
-                part={task.part}
-                regionCount={task.scene.regions.length}
-                onStart={startDrawing}
-                tapAnywhere
-                tapLabel={legacy ? undefined : "課題を確認してつぎへ"}
-                autoAdvance={!legacy || (tutorial && task.id === "giraffe")}
-              />
-            )}
-            {screen === "draw" && (
-              <ReplicaDraw
-                task={task}
-                hideZoomAndEraserTip={!legacy && !tutorial}
-                unrestrictedDrawing={!legacy}
-                strokes={drawing.present}
-                canUndo={drawing.past.length > 0}
-                canRedo={drawing.future.length > 0}
-                onUndo={() => dispatchDrawing({ type: "undo" })}
-                onRedo={() => dispatchDrawing({ type: "redo" })}
-                onChange={(strokes) =>
-                  dispatchDrawing({ type: "commit", strokes })
-                }
-                showHint={showHint}
-                onHint={() => setShowHint(true)}
-                onDone={() => {
-                  const evaluation = drawingEvaluator.evaluate(
-                    task,
-                    drawing.present,
-                  );
-                  if (
-                    !legacy &&
-                    (!drawing.present.length || evaluation.status === "retry")
-                  ) {
-                    setShowHint(true);
-                    return;
-                  }
-                  setFeedback(
-                    !legacy && !evaluation.passed
-                      ? {
-                          ...evaluation,
-                          passed: true,
-                          method: "completed",
-                          message: "スケッチができたね！",
+                  pose={introSteps[introPage].pose}
+                  onSkip={
+                    legacy
+                      ? () => {
+                          setTutorial(false);
+                          restartCamera();
                         }
-                      : evaluation,
-                  );
-                  setScreen("result");
-                  if (!legacy) void finishDrawing(false);
-                }}
-              />
-            )}
-            {screen === "result" && feedback && (
-              <>
-                <ReplicaResult
-                  task={task}
-                  group={group}
-                  strokes={drawing.present}
-                  feedback={feedback}
-                  tutorial={tutorial}
-                  saving={saving}
-                  onRedraw={() => setScreen("draw")}
-                  canRedraw={legacy || !tutorial}
-                  unrestrictedDrawing={!legacy}
-                  showComparisonModes={legacy}
-                  onConfirm={() =>
-                    setFeedback({
-                      passed: true,
-                      status: "correct",
-                      method: "self-confirmed",
-                      message: "見くらべて、確かめたね。",
-                    })
+                      : undefined
                   }
-                  onDone={() => void finishDrawing()}
+                  onNext={() =>
+                    introPage < introSteps.length - 1
+                      ? setIntroPage(introPage + 1)
+                      : restartCamera()
+                  }
                 />
-                {error && (
-                  <button
-                    className="text-button replica-skip-save"
-                    onClick={nextAfterResult}
-                  >
-                    保存せずに進む
-                  </button>
-                )}
-              </>
-            )}
-            {screen === "tutorial" && (
-              <TutorialEndScreen
-                surveyUrl={surveyUrl}
-                onDone={() => {
-                  setTutorial(false);
-                  restartCamera();
-                }}
-              />
-            )}
-            {screen === "gallery" && (
-              <ReplicaGallery
-                records={records}
-                legacy={legacy}
-                onBack={restartCamera}
-                onCamera={restartCamera}
-              />
-            )}
-            {screen === "free" && (
-              <FreeDrawScreen fixedPortrait onDone={restartCamera} />
-            )}
-          </motion.div>
+              )}
+              {camera && (
+                <ReplicaCamera
+                  legacy={legacy}
+                  tutorial={tutorial}
+                  framedExample={framedExample}
+                  onCapture={takePhoto}
+                  onFreeDraw={() => setScreen("free")}
+                  onHome={() => setScreen("title")}
+                  onGallery={() => setScreen("gallery")}
+                  suspended={settingsOpen}
+                  onSettings={
+                    legacy
+                      ? undefined
+                      : (trigger) => {
+                          settingsTrigger.current = trigger;
+                          setSettingsOpen(true);
+                        }
+                  }
+                />
+              )}
+              {review && (
+                <>
+                  <div inert={screen === "cheer" ? true : undefined}>
+                    <ReplicaPhotoReview
+                      photo={record?.photo}
+                      sample={!!record?.samplePhoto}
+                      createdAt={record?.photo ? record.createdAt : undefined}
+                      photoLocation={record?.photoLocation}
+                      saved={photoSaved}
+                      group={chosen}
+                      choices={legacy ? choices : groups}
+                      figmaFlow={
+                        !legacy && screen === "review"
+                          ? tutorial
+                            ? "tutorial"
+                            : "regular"
+                          : undefined
+                      }
+                      onSelect={selectCapturedAnimal}
+                      onRetake={retakePhoto}
+                      onConfirm={() =>
+                        setScreen(
+                          tutorial ? "cheer" : legacy ? "loading" : "easel",
+                        )
+                      }
+                      canRetake={legacy || !tutorial}
+                    />
+                  </div>
+                  {screen === "cheer" && (
+                    <PhotoCelebration
+                      onContinue={
+                        legacy
+                          ? undefined
+                          : () => advanceScreen("cheer", "easel")
+                      }
+                    />
+                  )}
+                </>
+              )}
+              {screen === "easel" &&
+                (tutorial || legacy ? (
+                  <ReplicaIntro
+                    pose="easel"
+                    onNext={() => setScreen("challenge")}
+                  />
+                ) : (
+                  <IntroLoadingScreen
+                    onContinue={() => advanceScreen("easel", "challenge")}
+                  />
+                ))}
+              {screen === "loading" && <IntroLoadingScreen />}
+              {screen === "challenge" && (
+                <ChallengeIntro
+                  taskId={task.id}
+                  animal={group.name}
+                  part={task.part}
+                  regionCount={task.scene.regions.length}
+                  onStart={startDrawing}
+                  tapAnywhere
+                  tapLabel={legacy ? undefined : "課題を確認してつぎへ"}
+                  autoAdvance={!legacy || (tutorial && task.id === "giraffe")}
+                />
+              )}
+              {screen === "draw" && (
+                <ReplicaDraw
+                  task={task}
+                  hideZoomAndEraserTip={!legacy && !tutorial}
+                  unrestrictedDrawing={!legacy}
+                  strokes={drawing.present}
+                  canUndo={drawing.past.length > 0}
+                  canRedo={drawing.future.length > 0}
+                  onUndo={() => dispatchDrawing({ type: "undo" })}
+                  onRedo={() => dispatchDrawing({ type: "redo" })}
+                  onChange={(strokes) =>
+                    dispatchDrawing({ type: "commit", strokes })
+                  }
+                  showHint={showHint}
+                  onHint={() => setShowHint(true)}
+                  onDone={() => {
+                    const evaluation = drawingEvaluator.evaluate(
+                      task,
+                      drawing.present,
+                    );
+                    if (
+                      !legacy &&
+                      (!drawing.present.length || evaluation.status === "retry")
+                    ) {
+                      setShowHint(true);
+                      return;
+                    }
+                    setFeedback(
+                      !legacy && !evaluation.passed
+                        ? {
+                            ...evaluation,
+                            passed: true,
+                            method: "completed",
+                            message: "スケッチができたね！",
+                          }
+                        : evaluation,
+                    );
+                    setScreen("result");
+                    if (!legacy) void finishDrawing(false);
+                  }}
+                />
+              )}
+              {screen === "result" && feedback && (
+                <>
+                  <ReplicaResult
+                    task={task}
+                    group={group}
+                    strokes={drawing.present}
+                    feedback={feedback}
+                    tutorial={tutorial}
+                    saving={saving}
+                    onRedraw={() => setScreen("draw")}
+                    canRedraw={legacy || !tutorial}
+                    unrestrictedDrawing={!legacy}
+                    showComparisonModes={legacy}
+                    onConfirm={() =>
+                      setFeedback({
+                        passed: true,
+                        status: "correct",
+                        method: "self-confirmed",
+                        message: "見くらべて、確かめたね。",
+                      })
+                    }
+                    onDone={() => void finishDrawing()}
+                  />
+                  {error && (
+                    <button
+                      className="text-button replica-skip-save"
+                      onClick={nextAfterResult}
+                    >
+                      保存せずに進む
+                    </button>
+                  )}
+                </>
+              )}
+              {screen === "tutorial" && (
+                <TutorialEndScreen
+                  surveyUrl={surveyUrl}
+                  onDone={() => {
+                    setTutorial(false);
+                    restartCamera();
+                  }}
+                />
+              )}
+              {screen === "gallery" && (
+                <ReplicaGallery
+                  records={records}
+                  legacy={legacy}
+                  onBack={restartCamera}
+                  onCamera={restartCamera}
+                />
+              )}
+              {screen === "free" && (
+                <FreeDrawScreen fixedPortrait onDone={restartCamera} />
+              )}
+            </motion.div>
+          </Suspense>
         </main>
-        {!legacy && (
-          <SettingsDialog
-            product
-            open={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-            furigana={furigana}
-            onFuriganaChange={() => {
-              setFurigana(!furigana);
-              saveFurigana(!furigana);
-            }}
-            returnFocus={settingsTrigger}
-          />
+        {!legacy && settingsTrigger.current && (
+          <Suspense fallback={null}>
+            <SettingsDialog
+              product
+              open={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              furigana={furigana}
+              onFuriganaChange={() => {
+                setFurigana(!furigana);
+                saveFurigana(!furigana);
+              }}
+              returnFocus={settingsTrigger}
+            />
+          </Suspense>
         )}
       </div>
     </FuriganaProvider>

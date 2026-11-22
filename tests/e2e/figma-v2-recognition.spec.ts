@@ -88,6 +88,9 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   });
 
   await page.goto("./");
+  // A normal Pages session has no cross-origin isolation; real YOLOX still
+  // starts and predicts in this Worker with one WASM thread.
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(false);
   await button(page, "はじめから").click();
   const camera = page.locator(".replica-camera");
   await expect(camera).toHaveAttribute("data-figma-node", "38-1026");
@@ -319,4 +322,115 @@ test("チュートリアルではライブ認識だけを事前準備し、撮�
   } finally {
     releaseRequest();
   }
+});
+
+test("低負荷端末では検出間隔を広げ、ズームでWorkerを作り直さず、裏画面では停止する", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
+    Object.defineProperty(navigator, "hardwareConcurrency", { value: 2 });
+    let hidden = false;
+    let elapsed = 0;
+    Object.defineProperty(document, "hidden", { get: () => hidden });
+    const actualNow = performance.now.bind(performance);
+    Object.defineProperty(performance, "now", {
+      value: () => actualNow() + elapsed,
+    });
+    const report = { starts: 0, stops: 0, frames: [] as number[] };
+    Object.assign(window, { testLiveReport: report });
+    window.addEventListener("test:hidden", () => {
+      hidden = !hidden;
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    window.addEventListener("test:idle", () => {
+      elapsed += 30_000;
+    });
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name !== "zooketch-live-detection")
+          return Reflect.construct(target, args);
+        report.starts++;
+        return {
+          onmessage: undefined,
+          terminate() {
+            report.stops++;
+          },
+          postMessage(message: { type: string }) {
+            if (message.type === "frame") report.frames.push(actualNow());
+            const worker = this as {
+              onmessage?: (event: { data: object }) => void;
+            };
+            queueMicrotask(() =>
+              worker.onmessage?.({
+                data:
+                  message.type === "prepare"
+                    ? { type: "ready" }
+                    : { type: "boxes", boxes: [] },
+              }),
+            );
+          },
+        };
+      },
+    });
+  });
+  await page.route("**/models/yolox*.onnx", (route) =>
+    route.fulfill({ body: Buffer.alloc(3_659_407) }),
+  );
+  const report = () =>
+    page.evaluate(
+      () =>
+        (
+          window as Window & {
+            testLiveReport?: {
+              starts: number;
+              stops: number;
+              frames: number[];
+            };
+          }
+        ).testLiveReport!,
+    );
+  const emit = (name: string) =>
+    page.evaluate((type) => window.dispatchEvent(new Event(type)), name);
+
+  await page.goto("./");
+  const mascot = page.locator(".design3-title-tail");
+  await expect(mascot).toHaveCSS("animation-play-state", "running");
+  await emit("test:hidden");
+  await expect(mascot).toHaveCSS("animation-play-state", "paused");
+  await emit("test:hidden");
+  await expect(mascot).toHaveCSS("animation-play-state", "running");
+
+  await button(page, "はじめから").click();
+  await expect
+    .poll(async () => (await report()).frames.length)
+    .toBeGreaterThanOrEqual(2);
+  const active = await report();
+  expect(active.frames[1] - active.frames[0]).toBeGreaterThanOrEqual(680);
+  await button(page, "2×").click();
+  await expect
+    .poll(async () => (await report()).frames.length)
+    .toBeGreaterThan(active.frames.length);
+  expect((await report()).starts).toBe(1);
+
+  await emit("test:idle");
+  const framesAtIdle = (await report()).frames.length;
+  await expect
+    .poll(async () => (await report()).frames.length, { timeout: 6000 })
+    .toBeGreaterThan(framesAtIdle + 1);
+  const idle = (await report()).frames;
+  expect(idle.at(-1)! - idle.at(-2)!).toBeGreaterThanOrEqual(1450);
+
+  await emit("test:hidden");
+  await expect.poll(async () => (await report()).stops).toBe(1);
+  const framesWhenHidden = (await report()).frames.length;
+  await page.waitForTimeout(850);
+  expect((await report()).frames.length).toBe(framesWhenHidden);
+  await emit("test:hidden");
+  await expect.poll(async () => (await report()).starts).toBe(2);
+  await expect
+    .poll(async () => (await report()).frames.length)
+    .toBeGreaterThan(framesWhenHidden);
 });

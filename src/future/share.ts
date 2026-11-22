@@ -1,7 +1,12 @@
 import { drawingScene } from "../collection/drawingScene";
-import { composeObservationImages } from "../notebook/images";
 import { loadObservation, updateObservationImages } from "../notebook/storage";
-import { loadReplicaRecord } from "../replica/storage";
+import {
+  claimReplicaShare,
+  finishReplicaShare,
+  loadPendingReplicaShares,
+  loadReplicaRecord,
+  migrateReplicaShareQueue,
+} from "../replica/storage";
 import { taskById } from "../content/tasks";
 import type { ObservationRecord } from "../notebook/types";
 
@@ -79,14 +84,20 @@ export function saveShareConfig(config: ShareConfig) {
 
 type Queue = { sent: string[]; pending: string[] };
 
+function isQueueId(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
+}
+
 function loadQueue(): Queue {
   try {
     const raw = JSON.parse(
       localStorage.getItem(QUEUE_KEY) ?? "null",
     ) as Partial<Queue> | null;
     return {
-      sent: Array.isArray(raw?.sent) ? raw.sent.slice(-500) : [],
-      pending: Array.isArray(raw?.pending) ? raw.pending : [],
+      sent: Array.isArray(raw?.sent)
+        ? raw.sent.slice(-500).filter(isQueueId)
+        : [],
+      pending: Array.isArray(raw?.pending) ? raw.pending.filter(isQueueId) : [],
     };
   } catch {
     return { sent: [], pending: [] };
@@ -116,6 +127,19 @@ export function pendingShareCount(): number {
   return loadQueue().pending.length;
 }
 
+export async function countPendingShares(): Promise<number> {
+  const oldQueue = loadQueue();
+  const pending = await loadPendingReplicaShares(QUEUE_KEY).catch(() => []);
+  return new Set([...oldQueue.pending, ...pending.map(({ id }) => id)]).size;
+}
+
+/** Pass this into the sketch save so sending can resume after a reload. */
+export function replicaShareDestination(): string | undefined {
+  const { consent, endpoint } = loadShareConfig();
+  return consent && endpoint ? QUEUE_KEY : undefined;
+}
+
+// The legacy notebook still uses its original separate pending list.
 export function enqueueShare(recordId: string): void {
   const config = loadShareConfig();
   if (!config.consent || !config.endpoint) return;
@@ -140,6 +164,7 @@ export async function buildSharePayload(
 ) {
   let ownPng = record.ownPng;
   if (!ownPng) {
+    const { composeObservationImages } = await import("../notebook/images");
     const scene = record.sceneSnapshot || drawingScene(record);
     const composed = await composeObservationImages(scene, record.strokes);
     ownPng = composed.ownPng;
@@ -163,9 +188,13 @@ export async function buildSharePayload(
 
 async function prepareShare(id: string, token: string) {
   if (!managedProductionShare) {
-    const observation = await loadObservation(id);
+    const observation = await loadObservation(id).catch(() => undefined);
     if (observation) return buildSharePayload(observation, token);
   }
+  return prepareReplicaShare(id, token);
+}
+
+async function prepareReplicaShare(id: string, token: string) {
   const record = await loadReplicaRecord(id);
   if (
     !record?.sketch ||
@@ -192,61 +221,163 @@ async function prepareShare(id: string, token: string) {
 }
 
 let flushing = false;
+let flushAgain = false;
+let retryTimer: number | undefined;
+let retryDeadline = Infinity;
+
+function retryShareAt(time: number) {
+  if (typeof window === "undefined" || time >= retryDeadline) return;
+  clearTimeout(retryTimer);
+  retryDeadline = time;
+  retryTimer = window.setTimeout(
+    () => {
+      retryDeadline = Infinity;
+      retryTimer = undefined;
+      void flushShareQueue();
+    },
+    Math.max(100, time - Date.now()),
+  );
+}
+
+async function deliverShare(
+  payload: NonNullable<Awaited<ReturnType<typeof prepareShare>>>,
+  active: ShareConfig,
+): Promise<boolean> {
+  const latest = loadShareConfig();
+  if (
+    !latest.consent ||
+    latest.endpoint !== active.endpoint ||
+    latest.token !== active.token ||
+    !navigator.onLine
+  )
+    return false;
+
+  // Managed relays acknowledge a confirmed Apps Script delivery with 204.
+  const relay =
+    (automaticStudyShare || managedProductionShare) &&
+    active.endpoint === defaultConfig().endpoint;
+  const abort = new AbortController();
+  // Bound the request even when a captive portal or stalled relay never replies.
+  const timeout = setTimeout(() => abort.abort(), 20_000);
+  try {
+    const response = await fetch(active.endpoint, {
+      method: "POST",
+      mode: relay
+        ? new URL(active.endpoint, location.href).origin === location.origin
+          ? "same-origin"
+          : "cors"
+        : "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+      signal: abort.signal,
+    });
+    return relay
+      ? response.status === 204
+      : response.type === "opaque" || response.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function flushReplicaShares(): Promise<number> {
+  const queued = await loadPendingReplicaShares(QUEUE_KEY).catch(() => []);
+  let sentNow = 0;
+  for (const item of queued) {
+    const active = loadShareConfig();
+    if (!active.consent || !active.endpoint || !navigator.onLine) break;
+    const now = Date.now();
+    const nextSend = Math.max(item.retryAt, item.leaseUntil ?? 0);
+    if (nextSend > now) {
+      retryShareAt(nextSend);
+      continue;
+    }
+    const claim = await claimReplicaShare(item.id, now).catch(() => undefined);
+    if (!claim) {
+      retryShareAt(now + 2_000);
+      continue;
+    }
+    const payload = await prepareReplicaShare(item.id, active.token).catch(
+      () => undefined,
+    );
+    const delivered = payload ? await deliverShare(payload, active) : false;
+    if (delivered) sentNow++;
+    const current = await finishReplicaShare(
+      claim,
+      delivered,
+      Date.now(),
+    ).catch(() => undefined);
+    if (current?.state !== "sent")
+      retryShareAt(current?.retryAt ?? claim.leaseUntil!);
+    if (payload && !delivered) {
+      // Resume the rest of the queue after any active transport failure.
+      break;
+    }
+  }
+  return sentNow;
+}
+
+async function migratePreviousReplicaQueue() {
+  const { pending } = loadQueue();
+  const adopted = new Set(
+    await migrateReplicaShareQueue(QUEUE_KEY, pending).catch(() => []),
+  );
+  if (adopted.size) {
+    const queue = loadQueue();
+    saveQueue({
+      sent: queue.sent,
+      pending: queue.pending.filter((id) => !adopted.has(id)),
+    });
+  }
+  return adopted;
+}
+
+async function flushPreviousQueue(
+  adopted: ReadonlySet<string>,
+): Promise<number> {
+  let sentNow = 0;
+  for (const id of loadQueue().pending) {
+    if (adopted.has(id)) continue;
+    const active = loadShareConfig();
+    if (!active.consent || !active.endpoint || !navigator.onLine) break;
+    const payload = await prepareShare(id, active.token).catch(() => undefined);
+    if (!payload) continue;
+    if (!(await deliverShare(payload, active))) {
+      retryShareAt(Date.now() + 5_000);
+      break;
+    }
+    sentNow++;
+    // Re-read after sending so a sketch saved during the request stays queued.
+    const queue = loadQueue();
+    const pending = queue.pending.filter((item) => item !== id);
+    const sent = queue.sent.includes(id) ? queue.sent : [...queue.sent, id];
+    if (!saveQueue({ pending, sent })) break;
+  }
+  return sentNow;
+}
 
 export async function flushShareQueue(): Promise<number> {
   const config = loadShareConfig();
-  if (!config.consent || !config.endpoint || flushing) return 0;
-  if (typeof navigator !== "undefined" && !navigator.onLine) return 0;
+  if (!config.consent || !config.endpoint) return 0;
+  if (typeof navigator === "undefined" || !navigator.onLine) return 0;
+  if (flushing) {
+    flushAgain = true;
+    return 0;
+  }
   flushing = true;
-  let sentNow = 0;
+  clearTimeout(retryTimer);
+  retryTimer = undefined;
+  retryDeadline = Infinity;
   try {
-    for (;;) {
-      const active = loadShareConfig();
-      if (!active.consent || !active.endpoint || !navigator.onLine) break;
-      const id = loadQueue().pending[0];
-      if (!id) break;
-      const payload = await prepareShare(id, active.token);
-      if (payload) {
-        try {
-          const latest = loadShareConfig();
-          if (
-            !latest.consent ||
-            latest.endpoint !== active.endpoint ||
-            latest.token !== active.token
-          )
-            break;
-          // Managed relays acknowledge a confirmed Apps Script delivery with 204.
-          const relay =
-            (automaticStudyShare || managedProductionShare) &&
-            active.endpoint === defaultConfig().endpoint;
-          const response = await fetch(active.endpoint, {
-            method: "POST",
-            mode: relay
-              ? new URL(active.endpoint, location.href).origin ===
-                location.origin
-                ? "same-origin"
-                : "cors"
-              : "no-cors",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload),
-          });
-          if (relay && response.status !== 204) break;
-          sentNow++;
-        } catch {
-          break;
-        }
-      }
-      // Read again so sketches saved during the network request stay in the queue.
-      const queue = loadQueue();
-      const pending = queue.pending.filter((item) => item !== id);
-      const sent =
-        payload && !queue.sent.includes(id) ? [...queue.sent, id] : queue.sent;
-      if (!saveQueue({ pending, sent })) break;
-    }
-    return sentNow;
-  } catch {
-    return sentNow; // 保存領域に触れない環境では静かに諦める
+    const adopted = await migratePreviousReplicaQueue();
+    const durable = await flushReplicaShares();
+    return durable + (await flushPreviousQueue(adopted));
   } finally {
     flushing = false;
+    if (flushAgain) {
+      flushAgain = false;
+      queueMicrotask(() => void flushShareQueue());
+    }
   }
 }

@@ -23,10 +23,18 @@ export interface SpeciesRecognizer {
 let ready = false;
 let worker: Worker | undefined,
   finish: ((r: SpeciesResult) => void) | undefined;
-function cancel() {
+const stopInBackground = () => {
+  if (document.hidden) cancel();
+};
+function stopWorker() {
   worker?.terminate();
   worker = undefined;
   ready = false;
+  document.removeEventListener("visibilitychange", stopInBackground);
+  window.removeEventListener("pagehide", cancel);
+}
+function cancel() {
+  stopWorker();
   finish?.({
     status: "unavailable",
     reason: "候補の検索を中止しました。手動でも選べます。",
@@ -42,9 +50,7 @@ export const speciesRecognizer: SpeciesRecognizer = {
   },
   unload: () => {
     if (finish) return;
-    worker?.terminate();
-    worker = undefined;
-    ready = false;
+    stopWorker();
   },
   prepare: (progress) => run(undefined, progress),
   recognize: (photo, progress) => run(photo, progress),
@@ -62,6 +68,11 @@ async function run(
     };
   if (finish)
     return { status: "unavailable", reason: "別の写真を確認中です。" };
+  if (document.hidden)
+    return {
+      status: "unavailable",
+      reason: "候補の検索を中止しました。手動でも選べます。",
+    };
   return new Promise<SpeciesResult>((resolve) => {
     const timer = setTimeout(cancel, 180000);
     finish = (r) => {
@@ -70,9 +81,13 @@ async function run(
       resolve(r);
     };
     try {
-      worker ??= new Worker(new URL("./species.worker.ts", import.meta.url), {
-        type: "module",
-      });
+      if (!worker) {
+        worker = new Worker(new URL("./species.worker.ts", import.meta.url), {
+          type: "module",
+        });
+        document.addEventListener("visibilitychange", stopInBackground);
+        window.addEventListener("pagehide", cancel);
+      }
       worker.onmessage = (e) => {
         if (e.data.type === "progress") progress?.(e.data.text);
         else if (e.data.type === "result") {
@@ -81,9 +96,7 @@ async function run(
         }
       };
       worker.onerror = () => {
-        worker?.terminate();
-        worker = undefined;
-        ready = false;
+        stopWorker();
         finish?.({
           status: "unavailable",
           reason: "簡易AIが停止しました。手動で選んでください。",

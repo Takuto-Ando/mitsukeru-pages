@@ -927,6 +927,12 @@ export function SketchCanvas({
                 }
               }}
               onPointerMove={(event) => {
+                if (
+                  !event.isPrimary ||
+                  (active.current !== null &&
+                    active.current !== event.pointerId)
+                )
+                  return;
                 if (erase) moveEraserRing(event);
                 else if (event.pointerType !== "touch" && !fillMode)
                   moveBrushRing(event);
@@ -952,7 +958,8 @@ export function SketchCanvas({
               onLostPointerCapture={(event) => {
                 if (active.current === event.pointerId) finish();
               }}
-              onPointerLeave={() => {
+              onPointerLeave={(event) => {
+                if (!event.isPrimary) return;
                 if (active.current === null) hideEraserRing();
                 hideBrushRing();
               }}

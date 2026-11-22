@@ -1,0 +1,5 @@
+:root[data-zooketch-hidden] .design3-shell *,
+:root[data-zooketch-hidden] .design3-shell *::before,
+:root[data-zooketch-hidden] .design3-shell *::after {
+  animation-play-state: paused !important;
+}

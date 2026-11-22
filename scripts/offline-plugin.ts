@@ -162,17 +162,26 @@ export function offlinePlugin(legacy = false): Plugin {
       for (const f of files) hash.update(await readFile(join(dir, f)));
       const version = hash.digest("hex").slice(0, 16);
       const prefix = `zooketch-shell-${base}-`;
-      const urls = files.map(
-        (f) =>
-          base +
-          (process.env.DEPLOY_TARGET === "cloudflare" && f.endsWith(".wasm.gz")
-            ? f.slice(0, -3)
-            : f),
-      );
+      const assetUrl = (file: string) =>
+        base +
+        (process.env.DEPLOY_TARGET === "cloudflare" && file.endsWith(".wasm.gz")
+          ? file.slice(0, -3)
+          : file);
+      // The standard experience only starts YOLOX. The CLIP-specific worker
+      // and its optional runtime must not consume bandwidth on first launch.
+      const inferenceOnDemand = (file: string) =>
+        !legacy &&
+        /^assets\/(species\.worker-|ort-wasm-simd-threaded\.asyncify-)/.test(
+          file,
+        );
+      const urls = files
+        .filter((file) => !inferenceOnDemand(file))
+        .map(assetUrl);
+      const optionalUrls = files.filter(inferenceOnDemand).map(assetUrl);
       await writeFile(
         join(dir, "sw.js"),
         `
-const PREFIX=${JSON.stringify(prefix)}, CACHE=PREFIX+${JSON.stringify(version)}, URLS=${JSON.stringify(urls)}, BASE=${JSON.stringify(base)};
+const PREFIX=${JSON.stringify(prefix)}, CACHE=PREFIX+${JSON.stringify(version)}, URLS=${JSON.stringify(urls)}, OPTIONAL=${JSON.stringify(optionalUrls)}, BASE=${JSON.stringify(base)};
 self.addEventListener('install', event => event.waitUntil((async()=>{
   const cache = await caches.open(CACHE);
   try { await cache.addAll(URLS); }
@@ -205,8 +214,15 @@ self.addEventListener('fetch', event => {
       headers.delete('Content-Encoding'); headers.delete('Content-Length');
       return new Response(cached.body,{status:200,headers});
     }));
-  } else if(URLS.includes(url.pathname)) {
-    event.respondWith(caches.open(CACHE).then(async c=>(await c.match(url.pathname))||fetch(request)));
+  } else if(URLS.includes(url.pathname) || OPTIONAL.includes(url.pathname)) {
+    event.respondWith(caches.open(CACHE).then(async cache=>{
+      const cached=await cache.match(url.pathname);
+      if(cached)return cached;
+      const response=await fetch(request);
+      if(response.ok && OPTIONAL.includes(url.pathname))
+        await cache.put(url.pathname,response.clone()).catch(()=>{});
+      return response;
+    }));
   }
 });
 `,
