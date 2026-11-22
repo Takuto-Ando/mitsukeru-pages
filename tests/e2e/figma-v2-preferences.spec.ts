@@ -25,8 +25,16 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   await expect(start).toBeVisible();
   const ageHeading = start.getByRole("heading");
   await expect(ageHeading).toHaveCSS("font-weight", "700");
-  await expect(button("難易度 やさしい")).toBeVisible();
+  await expect(button("難易度 かんたん")).toBeVisible();
   const panel = start.locator(".observation-start-panel");
+  await page.setViewportSize({ width: 402, height: 874 });
+  const defaultDifficulty = (await button("難易度 かんたん").boundingBox())!;
+  const submit = (await button("決定！").boundingBox())!;
+  expect(submit.y - defaultDifficulty.y - defaultDifficulty.height).toBeCloseTo(
+    43,
+    0,
+  );
+  await page.setViewportSize({ width: 320, height: 568 });
   const panelY = (await panel.boundingBox())!.y;
   expect(
     (await start.getByRole("button", { name: "閉じる" }).boundingBox())!.y,
@@ -34,6 +42,9 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   await button("年齢を選ぶ").click();
   const ages = start.getByRole("group", { name: "年齢", exact: true });
   await expect(ages).toBeVisible();
+  await expect(
+    ages.getByRole("button", { name: "10歳", exact: true }),
+  ).toHaveCSS("border-top-width", "0px");
   expect(
     await ages.evaluate(
       (element) => element.scrollHeight > element.clientHeight,
@@ -41,6 +52,7 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   ).toBe(true);
   await ages.getByRole("button", { name: "10歳", exact: true }).click();
   await expect(button("ふりがな ON")).toHaveAttribute("aria-pressed", "true");
+  await expect(button("難易度 かんたん")).toBeVisible();
   await button("10歳").click();
   await ages.getByRole("button", { name: "11歳", exact: true }).click();
   await expect(button("ふりがな OFF")).toBeVisible();
@@ -50,7 +62,8 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   await expect(button("難易度 むずかしい")).toBeVisible();
   await button("ふりがな OFF").click();
   await button("難易度 むずかしい").click();
-  await button("ふつう").click();
+  await button("難易度 かんたん").click();
+  await expect(button("難易度 ふつう")).toBeVisible();
   expect((await panel.boundingBox())!.y).toBe(panelY);
   await button("決定！").click();
   await expect(screen).toHaveAttribute("data-screen", "intro");
@@ -66,13 +79,14 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
     profile.getByRole("button", { name: "18歳", exact: true }),
   ).toBeVisible();
   await expect(button("ふりがな ON")).toBeVisible();
-  await expect(button("ふつう")).toHaveAttribute("aria-pressed", "true");
+  await expect(button("難易度 ふつう")).toBeVisible();
   await button("端末に保存 ON").click();
   await expect(button("端末に保存 OFF")).toHaveAttribute(
     "aria-pressed",
     "false",
   );
-  await button("むずかしい").click();
+  await button("難易度 ふつう").click();
+  await expect(button("難易度 むずかしい")).toBeVisible();
   await button("チュートリアルを見る").click();
   await expect(screen).toHaveAttribute("data-screen", "intro");
 

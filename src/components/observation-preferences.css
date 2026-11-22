@@ -32,7 +32,6 @@
 .observation-start-panel {
   display: flex;
   box-sizing: border-box;
-  min-height: min(485px, 78dvh);
   max-height: calc(
     100dvh - 2 *
       max(58px, env(safe-area-inset-top), env(safe-area-inset-bottom))
@@ -41,7 +40,7 @@
   align-items: center;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: clamp(24px, 7.5dvh, 62px) 10px clamp(24px, 5dvh, 42px);
+  padding: clamp(24px, 7.8dvh, 68px) 10px clamp(26px, 5.65dvh, 49px);
   border-radius: 34px;
   background: var(--age-paper);
   text-align: center;
@@ -97,32 +96,16 @@
 }
 
 .observation-preferences button[aria-pressed="true"],
+.observation-preferences .observation-difficulty-button,
 .settings-content .observation-setting-button[aria-pressed="true"] {
   border-color: transparent;
   background: var(--d3-green, #86a843);
   color: #fff;
 }
 
-.observation-preferences fieldset {
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-.observation-preferences legend {
-  margin-bottom: 6px;
-  padding: 0;
-}
-
-.observation-difficulty-options {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-}
-
-.observation-difficulty-options button {
-  padding-inline: 2px;
+.observation-preferences .observation-difficulty-button {
+  min-width: 93px;
+  justify-content: center;
 }
 
 .observation-age-list {
@@ -130,19 +113,25 @@
   max-height: min(40dvh, 184px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  gap: 4px;
   padding: 3px;
 }
 
-.observation-age-list button {
+.observation-preferences .observation-age-list button {
   width: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.observation-preferences .observation-age-list button[aria-pressed="true"] {
+  background: var(--d3-green, #86a843);
 }
 
 .observation-start-controls {
   position: relative;
   width: 168px;
+  flex-shrink: 0;
   gap: 12px;
-  margin-block: clamp(18px, 3.5dvh, 29px) clamp(26px, 6.4dvh, 56px);
+  margin-block: clamp(18px, 3.5dvh, 29px) clamp(24px, 6.48dvh, 43px);
 }
 
 .observation-start-controls .observation-age-row {
@@ -215,32 +204,16 @@
   content: "";
 }
 
-.observation-start-controls .observation-age-list,
-.observation-start-controls fieldset {
+.observation-start-controls .observation-age-list {
   position: absolute;
   z-index: 1;
+  inset-block-start: 80px;
   inset-inline: 0;
   padding: 6px;
   border: 1px solid rgb(103 78 53 / 24%);
   border-radius: 12px;
   background: var(--age-paper);
   box-shadow: 0 3px 10px rgb(0 0 0 / 12%);
-}
-
-.observation-start-controls .observation-age-list {
-  inset-block-start: 80px;
-}
-
-.observation-start-controls fieldset {
-  inset: 100% -42px auto;
-}
-
-.observation-start-controls fieldset legend {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 
 .observation-start-panel .observation-primary {
@@ -251,7 +224,6 @@
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin-block-start: auto;
   padding: 4px 12px 4px 26px;
   border: 0;
   border-radius: 24px;

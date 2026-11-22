@@ -9,11 +9,12 @@ import {
 } from "../replica/preferences";
 import "./observation-preferences.css";
 
-const levels: { value: Difficulty; label: string }[] = [
-  { value: 1, label: "やさしい" },
-  { value: 2, label: "ふつう" },
-  { value: 3, label: "むずかしい" },
-];
+const difficultyLabels: Record<Difficulty, string> = {
+  1: "かんたん",
+  2: "ふつう",
+  3: "むずかしい",
+};
+const nextDifficulty: Record<Difficulty, Difficulty> = { 1: 2, 2: 3, 3: 1 };
 const ages = Array.from({ length: maximumAge + 1 }, (_, age) => age);
 
 export function ObservationPreferenceControls({
@@ -26,15 +27,11 @@ export function ObservationPreferenceControls({
   startDesign?: boolean;
 }) {
   const agesId = useId();
-  const difficultiesId = useId();
   const ageTrigger = useRef<HTMLButtonElement>(null);
   const selectedAge = useRef<HTMLButtonElement>(null);
-  const difficultyTrigger = useRef<HTMLButtonElement>(null);
-  const [picker, setPicker] = useState<"age" | "difficulty">();
-  const showAges = picker === "age";
-  const showDifficulties = picker === "difficulty";
+  const [showAges, setShowAges] = useState(false);
   const difficulty = preferences.difficulty ?? 1;
-  const difficultyLabel = levels[difficulty - 1].label;
+  const difficultyLabel = difficultyLabels[difficulty];
   const ageLabel =
     preferences.age === undefined ? "年齢を選ぶ" : `${preferences.age}歳`;
   useEffect(() => {
@@ -55,7 +52,7 @@ export function ObservationPreferenceControls({
           aria-label={ageLabel}
           aria-expanded={showAges}
           aria-controls={showAges ? agesId : undefined}
-          onClick={() => setPicker(showAges ? undefined : "age")}
+          onClick={() => setShowAges((open) => !open)}
         >
           {startDesign
             ? (preferences.age ?? <span className="observation-age-empty" />)
@@ -79,7 +76,7 @@ export function ObservationPreferenceControls({
               aria-pressed={preferences.age === age}
               onClick={() => {
                 onChange(preferencesForAge(preferences, age));
-                setPicker(undefined);
+                setShowAges(false);
                 ageTrigger.current?.focus({ preventScroll: true });
               }}
             >
@@ -102,44 +99,19 @@ export function ObservationPreferenceControls({
           {preferences.furigana ? "ON" : "OFF"}
         </button>
       </div>
-      {startDesign && (
-        <div className="observation-preference-row">
-          <span>難易度</span>
-          <button
-            ref={difficultyTrigger}
-            type="button"
-            aria-label={`難易度 ${difficultyLabel}`}
-            aria-expanded={showDifficulties}
-            aria-controls={showDifficulties ? difficultiesId : undefined}
-            onClick={() =>
-              setPicker(showDifficulties ? undefined : "difficulty")
-            }
-          >
-            {difficultyLabel}
-          </button>
-        </div>
-      )}
-      {(!startDesign || showDifficulties) && (
-        <fieldset id={startDesign ? difficultiesId : undefined}>
-          <legend>難易度</legend>
-          <div className="observation-difficulty-options">
-            {levels.map(({ value, label }) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={difficulty === value}
-                onClick={() => {
-                  onChange({ ...preferences, difficulty: value });
-                  setPicker(undefined);
-                  difficultyTrigger.current?.focus({ preventScroll: true });
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-      )}
+      <div className="observation-preference-row">
+        <span>難易度</span>
+        <button
+          className="observation-difficulty-button"
+          type="button"
+          aria-label={`難易度 ${difficultyLabel}`}
+          onClick={() =>
+            onChange({ ...preferences, difficulty: nextDifficulty[difficulty] })
+          }
+        >
+          {difficultyLabel}
+        </button>
+      </div>
     </div>
   );
 }

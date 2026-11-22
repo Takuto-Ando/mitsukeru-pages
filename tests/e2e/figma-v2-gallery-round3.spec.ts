@@ -169,6 +169,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     cardSelector: string,
     switchWidth: number,
     closeInset: number,
+    cardGap: number,
   ) {
     const card = (await detail.locator(cardSelector).boundingBox())!;
     const switchLabel = detail.locator(".gallery-card-switch-label");
@@ -176,23 +177,28 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     const close = detail.getByRole("button", { name: "一覧に戻る" });
     const closeGlyph = (await close.locator(".gallery-mark").boundingBox())!;
     expect(label.width).toBeCloseTo(switchWidth, 0);
-    expect(label.height).toBeCloseTo(30, 0);
-    expect(card.y - label.y - label.height).toBeCloseTo(17, 0);
-    expect(card.x + card.width - label.x - label.width).toBeCloseTo(47, 0);
+    expect(label.height).toBeCloseTo(36, 0);
+    expect(card.y - label.y - label.height).toBeCloseTo(cardGap, 0);
+    expect(card.x + card.width - label.x - label.width).toBeCloseTo(52, 0);
     expect(closeGlyph.x - card.x).toBeCloseTo(closeInset, 0);
-    expect(closeGlyph.width).toBeCloseTo(34, 0);
-    await expect(save(detail).locator("svg")).toHaveCSS("width", "28px");
-    for (const control of [
+    expect(closeGlyph.width).toBeCloseTo(36, 0);
+    await expect(save(detail).locator("svg")).toHaveCSS("width", "34px");
+    const controls = [
       close,
-      save(detail),
       detail.locator(".gallery-card-switch"),
-    ]) {
-      const bounds = (await control.boundingBox())!;
-      expect(bounds.width).toBeGreaterThanOrEqual(44);
-      expect(bounds.height).toBeGreaterThanOrEqual(44);
+      save(detail),
+    ];
+    const bounds = await Promise.all(
+      controls.map((control) => control.boundingBox()),
+    );
+    for (const box of bounds) {
+      expect(box!.width).toBeGreaterThanOrEqual(48);
+      expect(box!.height).toBeGreaterThanOrEqual(48);
     }
+    expect(bounds[0]!.x + bounds[0]!.width).toBeLessThanOrEqual(bounds[1]!.x);
+    expect(bounds[1]!.x + bounds[1]!.width).toBeLessThanOrEqual(bounds[2]!.x);
   }
-  await checkDetailControls(sketch, ".sketch-result-card", 112, 0);
+  await checkDetailControls(sketch, ".sketch-result-card", 138, 0, 14);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "canShare", {
       configurable: true,
@@ -218,7 +224,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
 
   await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
   const photo = page.getByRole("dialog", { name: "アミメキリンの写真" });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 130, 12);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 12, 23);
   await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
     "700",
@@ -242,10 +248,12 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   ]);
   expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
   await page.setViewportSize({ width: 320, height: 568 });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 130, 12);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 12, 23);
   await photo
     .getByRole("button", { name: "スケッチを見る", exact: true })
     .click();
   await expect(sketch.getByTestId("giraffe-leaf-bite")).toBeAttached();
-  await checkDetailControls(sketch, ".sketch-result-card", 112, 0);
+  await checkDetailControls(sketch, ".sketch-result-card", 138, 0, 14);
+  await sketch.getByRole("button", { name: "一覧に戻る" }).click();
+  await expect(sketch).toBeHidden();
 });
