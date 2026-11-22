@@ -12,6 +12,21 @@
   font-weight: 700;
   font-display: swap;
 }
+/* Same Zen Maru glyphs for the title. Other characters use the full faces. */
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("/fonts/ZenMaruGothic-Medium-Title.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+  unicode-range: U+0020, U+3002, U+3046, U+304B, U+304C, U+304D, U+304F, U+3055, U+3058, U+305D, U+3061, U+3064, U+3065, U+306E, U+306F, U+3073, U+3080, U+3081, U+3085, U+3086, U+3089, U+308B, U+3092, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307;
+}
+@font-face {
+  font-family: "Zen Maru Gothic";
+  src: url("/fonts/ZenMaruGothic-Bold-Title.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+  unicode-range: U+0020, U+3002, U+3046, U+304B, U+304C, U+304D, U+304F, U+3055, U+3058, U+305D, U+3061, U+3064, U+3065, U+306E, U+306F, U+3073, U+3080, U+3081, U+3085, U+3086, U+3089, U+308B, U+3092, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307;
+}
 :root {
   --color-teal: #74bbb0;
   --color-teal-ink: #315f54;
