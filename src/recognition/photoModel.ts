@@ -1,4 +1,4 @@
-import { withDownloadDeadline } from "./download";
+import { trackDownloadedBytes, withDownloadDeadline } from "./download";
 
 import photoModel from "./bioclip-model.json";
 
@@ -6,6 +6,7 @@ export { photoModel };
 
 export const photoModelEvent = "zooketch:photo-model-cached";
 export const photoModelDownloadEvent = "zooketch:photo-model-download";
+export const photoModelProgressEvent = "zooketch:photo-model-progress";
 
 export function canAutoDownloadPhotoModel() {
   const { onLine, connection } = navigator as Navigator & {
@@ -33,7 +34,10 @@ export async function photoModelCached() {
   }
 }
 
-async function storePhotoModel(onDownload?: () => void) {
+async function storePhotoModel(
+  onDownload?: () => void,
+  onBytes?: (downloaded: number) => void,
+) {
   const download = async () => {
     const cache = await caches.open(photoModel.cache);
     if (await cache.match(photoModel.url)) return;
@@ -48,7 +52,10 @@ async function storePhotoModel(onDownload?: () => void) {
         response.headers.get("Content-Type")?.includes("text/html")
       )
         throw new Error("Species model download failed");
-      await cache.put(photoModel.url, response);
+      await cache.put(
+        photoModel.url,
+        onBytes ? trackDownloadedBytes(response, onBytes) : response,
+      );
     });
   };
   return navigator.locks
@@ -58,6 +65,19 @@ async function storePhotoModel(onDownload?: () => void) {
 
 let pending: Promise<void> | undefined;
 let fetching = false;
+let downloadedBytes = 0;
+
+function updateProgress(bytes: number) {
+  const previous = Math.floor((100 * downloadedBytes) / photoModel.bytes);
+  downloadedBytes = bytes;
+  const current = Math.floor((100 * bytes) / photoModel.bytes);
+  if (current !== previous)
+    window.dispatchEvent(new Event(photoModelProgressEvent));
+}
+
+export function photoModelDownloadedBytes() {
+  return downloadedBytes;
+}
 
 export function photoModelDownloading() {
   return fetching;
@@ -70,9 +90,11 @@ export function photoDownloadInProgress() {
 export function downloadPhotoModel() {
   return (pending ??= storePhotoModel(() => {
     fetching = true;
+    updateProgress(0);
     window.dispatchEvent(new Event(photoModelDownloadEvent));
-  })
+  }, updateProgress)
     .then(() => {
+      updateProgress(photoModel.bytes);
       window.dispatchEvent(new Event(photoModelEvent));
     })
     .finally(() => {

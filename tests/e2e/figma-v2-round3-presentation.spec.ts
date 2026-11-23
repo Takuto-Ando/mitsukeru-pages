@@ -21,7 +21,7 @@ test("課題の背景だけが動き、同じ吹き出しのふりがなは高�
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await button("スケッチの準備を確認してつぎへ").click();
 
   const challenge = page.locator(".design3-challenge");

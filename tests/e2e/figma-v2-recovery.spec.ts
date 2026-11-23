@@ -62,7 +62,7 @@ test("描画画面の描画準備で例外が起きても起動し直せる", as
   await click("シャッター");
   await click("修正");
   await click("キリン");
-  await click("ピツネに見せる");
+  await click("描いてもらう");
   await page.evaluate(() => {
     const original = window.matchMedia.bind(window);
     window.matchMedia = (query) => {

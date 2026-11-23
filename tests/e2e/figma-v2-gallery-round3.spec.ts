@@ -3,7 +3,7 @@ import { expect, test, type Page } from "./fixtures";
 const button = (page: Page, name: string) =>
   page.getByRole("button", { name, exact: true });
 
-async function savedGallery(page: Page) {
+async function savedGallery(page: Page, oldPaper = false) {
   await page.addInitScript(() => {
     localStorage.setItem("zooketch-replica-tutorial-v2", "1");
     Object.defineProperty(navigator, "mediaDevices", {
@@ -18,7 +18,7 @@ async function savedGallery(page: Page) {
     });
   });
   await page.goto("./");
-  await page.evaluate(async () => {
+  await page.evaluate(async (oldPaper) => {
     const image = new URL("replica-assets/giraffe-example.png", location.href)
       .href;
     const blob = await (await fetch(image)).blob();
@@ -28,6 +28,19 @@ async function savedGallery(page: Page) {
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(blob);
     });
+    const sketchWithPaper = (color: string) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 600;
+      const context = canvas.getContext("2d")!;
+      context.fillStyle = color;
+      context.fillRect(0, 0, 600, 600);
+      context.fillStyle = "#115599";
+      context.fillRect(170, 175, 50, 75);
+      return canvas.toDataURL();
+    };
+    const sketchImages = oldPaper
+      ? ["#faf7ec", "#fffef8"].map(sketchWithPaper)
+      : [image];
     const database = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("zooketch-figma-replica", 2);
       request.onupgradeneeded = () => {
@@ -50,7 +63,7 @@ async function savedGallery(page: Page) {
             id: `gallery-round3-${i}`,
             createdAt: new Date(Date.UTC(2026, 10, 20, i)).toISOString(),
             photo,
-            sketch: image,
+            sketch: sketchImages[i % sketchImages.length],
             groupId: "giraffe",
             taskId: "giraffe",
             animalName: i === 13 ? "アミメキリン" : "キリン",
@@ -70,7 +83,7 @@ async function savedGallery(page: Page) {
     } finally {
       database.close();
     }
-  });
+  }, oldPaper);
   await button(page, "つづきから").click();
   await button(page, "ギャラリー").click();
   await expect(
@@ -136,6 +149,55 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
   await expect(button(page, "シャッター")).toBeVisible();
 });
 
+test("保存済みスケッチの紙色だけを一覧で白にする", async ({ page }) => {
+  await savedGallery(page, true);
+  const previews = page
+    .getByRole("tabpanel")
+    .locator(".collection-card .replica-sketch-image");
+  for (const [index, paper] of [
+    [0, [255, 254, 248]],
+    [1, [250, 247, 236]],
+  ] as const) {
+    const preview = previews.nth(index);
+    const preserved = await preview.evaluate((element) => {
+      const view = (element as SVGSVGElement).viewBox.baseVal;
+      const area = element.querySelector("clipPath rect")!;
+      const center = (axis: "x" | "y", length: "width" | "height") =>
+        (Number(area.getAttribute(axis)) +
+          Number(area.getAttribute(length)) / 2 -
+          view[axis]) /
+        view[length];
+      return [center("x", "width"), center("y", "height")];
+    });
+    const screenshot = await preview.screenshot({ animations: "disabled" });
+    const colors = await page.evaluate(
+      async ({ png, preserved }) => {
+        const bitmap = new Image();
+        bitmap.src = `data:image/png;base64,${png}`;
+        await bitmap.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d")!;
+        context.drawImage(bitmap, 0, 0);
+        return [[0.2, 0.15], [0.2, 0.38], preserved].map(([x, y]) =>
+          [
+            ...context.getImageData(x * canvas.width, y * canvas.height, 1, 1)
+              .data,
+          ].slice(0, 3),
+        );
+      },
+      { png: screenshot.toString("base64"), preserved },
+    );
+    expect(colors[0]).toEqual([255, 255, 255]);
+    expect(colors[2]).toEqual(paper);
+    // WebKit can round colors of rendered SVG filter layers.
+    colors[1].forEach((value, channel) =>
+      expect(Math.abs(value - [17, 85, 153][channel])).toBeLessThanOrEqual(4),
+    );
+  }
+});
+
 test("同じ記録の写真とスケッチを1回の操作で共有し、非対応環境では保存できる", async ({
   page,
 }) => {
@@ -145,6 +207,10 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   await expect(
     sketch.getByRole("heading", { name: "キリンの舌", exact: true }),
   ).toBeVisible();
+  await expect(sketch.getByRole("img", { name: "難易度 1 / 3" })).toHaveCSS(
+    "min-height",
+    "37px",
+  );
   await expect(sketch.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
     "700",
@@ -162,6 +228,8 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     false,
   );
   const sketchSize = (await sketch.locator(".comparison-stage").boundingBox())!;
+  const closePosition = (detail: typeof sketch) =>
+    detail.getByRole("button", { name: "一覧に戻る" }).boundingBox();
   const save = (detail: typeof sketch) =>
     detail.getByRole("button", { name: "保存", exact: true });
   async function checkDetailControls(
@@ -199,6 +267,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     expect(bounds[1]!.x + bounds[1]!.width).toBeLessThanOrEqual(bounds[2]!.x);
   }
   await checkDetailControls(sketch, ".sketch-result-card", 138, 0, 14);
+  const initialClosePosition = await closePosition(sketch);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "canShare", {
       configurable: true,
@@ -224,7 +293,8 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
 
   await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
   const photo = page.getByRole("dialog", { name: "アミメキリンの写真" });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 12, 23);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 23);
+  expect(await closePosition(photo)).toEqual(initialClosePosition);
   await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
     "700",
@@ -248,12 +318,14 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   ]);
   expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
   await page.setViewportSize({ width: 320, height: 568 });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 12, 23);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 23);
+  const narrowClosePosition = await closePosition(photo);
   await photo
     .getByRole("button", { name: "スケッチを見る", exact: true })
     .click();
   await expect(sketch.getByTestId("giraffe-leaf-bite")).toBeAttached();
   await checkDetailControls(sketch, ".sketch-result-card", 138, 0, 14);
+  expect(await closePosition(sketch)).toEqual(narrowClosePosition);
   await sketch.getByRole("button", { name: "一覧に戻る" }).click();
   await expect(sketch).toBeHidden();
 });

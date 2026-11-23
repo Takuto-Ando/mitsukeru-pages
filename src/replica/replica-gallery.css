@@ -80,6 +80,11 @@
   position: relative;
 }
 
+.replica-sketch-paper-filter {
+  position: absolute;
+  pointer-events: none;
+}
+
 .replica-app[data-variant="replica"]
   .replica-gallery
   .collection-card:has(.replica-photo-tile[data-sample="true"]) {
@@ -342,6 +347,7 @@
 .replica-app[data-variant="product"]
   .replica-gallery-detail
   .replica-gallery-close {
+  top: 0;
   left: 0;
   justify-items: start;
 }
@@ -351,13 +357,6 @@
   .gallery-mark--close {
   width: 36px;
   height: 36px;
-}
-
-.replica-app[data-variant="product"]
-  .replica-gallery-detail--photo
-  .replica-gallery-close {
-  top: 0;
-  left: 12px;
 }
 
 .replica-app[data-variant="product"] .replica-gallery-photo-card {

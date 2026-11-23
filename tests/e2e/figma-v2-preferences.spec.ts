@@ -39,7 +39,7 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   expect(
     (await start.getByRole("button", { name: "閉じる" }).boundingBox())!.y,
   ).toBeLessThan(panelY);
-  await button("年齢を選ぶ").click();
+  await button("10歳").click();
   const ages = start.getByRole("group", { name: "年齢", exact: true });
   await expect(ages).toBeVisible();
   await expect(
@@ -98,7 +98,7 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await expect(
     page.getByRole("heading", { name: "キリンの頭の角を描いてみよう！" }),
   ).toBeVisible();

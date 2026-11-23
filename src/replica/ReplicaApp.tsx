@@ -98,11 +98,17 @@ const StartPreferencesDialog = lazy(() =>
     ({ StartPreferencesDialog }) => ({ default: StartPreferencesDialog }),
   ),
 );
+const TutorialModelDownload = lazy(() =>
+  import("./TutorialModelDownload").then(({ TutorialModelDownload }) => ({
+    default: TutorialModelDownload,
+  })),
+);
 
 type Screen =
   | "splash"
   | "title"
   | "intro"
+  | "tutorial-models"
   | "camera"
   | "review"
   | "cheer"
@@ -152,6 +158,11 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const setScreen = useCallback((next: SetStateAction<Screen>) => {
     startTransition(() => updateScreen(next));
   }, []);
+  const openTutorialCamera = useCallback(
+    () =>
+      setScreen((active) => (active === "tutorial-models" ? "camera" : active)),
+    [setScreen],
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsTrigger = useRef<HTMLElement | null>(null);
   const [preferences, setPreferences] = useState(loadObservationPreferences);
@@ -587,7 +598,11 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
           )}
           <Suspense fallback={null}>
             <div
-              key={screen === "intro" ? `intro-${introPage}` : screen}
+              key={
+                screen === "intro" || screen === "tutorial-models"
+                  ? `intro-${introPage}`
+                  : screen
+              }
               className="replica-screen"
             >
               {screen === "splash" && (
@@ -621,7 +636,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                   onSettings={() => setScreen("free")}
                 />
               )}
-              {screen === "intro" && (
+              {(screen === "intro" || screen === "tutorial-models") && (
                 <ReplicaIntro
                   pose={introSteps[introPage].pose}
                   progress={legacy ? undefined : introPage + 1}
@@ -636,9 +651,14 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                   onNext={() =>
                     introPage < introSteps.length - 1
                       ? setIntroPage(introPage + 1)
-                      : restartCamera()
+                      : legacy
+                        ? restartCamera()
+                        : setScreen("tutorial-models")
                   }
                 />
+              )}
+              {screen === "tutorial-models" && (
+                <TutorialModelDownload onReady={openTutorialCamera} />
               )}
               {camera && (
                 <ReplicaCamera

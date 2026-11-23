@@ -26,7 +26,7 @@ test("長いスケッチ見出しも位置を保ち、難易度と並んで一�
   await button("シャッター").click();
   await button("修正").click();
   await button(animal).click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   const canvas = page.getByTestId("canvas");
   await expect(canvas).toBeVisible({ timeout: 10_000 });
   await canvas.click({ position: { x: 20, y: 20 } });
@@ -90,7 +90,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
 
   const canvas = page.getByTestId("canvas");
   await expect(canvas).toBeVisible({ timeout: 10_000 });

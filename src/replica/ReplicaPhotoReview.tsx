@@ -58,8 +58,22 @@ export function ReplicaPhotoReview({
       : { success: "66-7554", unknown: "66-7655", edit: "66-7604" };
   const fact = zooAnimalSummary(group?.id);
   const search = normalizeAnimalSearch(query);
-  const matchingAnimals = choices.filter(({ name }) =>
-    normalizeAnimalSearch(name).includes(search),
+  const matchingCandidates = (candidates ?? []).flatMap(
+    ({ groupId, speciesId }) => {
+      const choice = choices.find(({ id }) => id === groupId);
+      const name =
+        kyotoSpeciesById.get(speciesId ?? groupId)?.name ?? choice?.name;
+      return choice && name && normalizeAnimalSearch(name).includes(search)
+        ? [{ groupId, speciesId, name }]
+        : [];
+    },
+  );
+  const matchingAnimals = choices.filter(
+    ({ id, name }) =>
+      normalizeAnimalSearch(name).includes(search) &&
+      !matchingCandidates.some(
+        (candidate) => candidate.groupId === id && candidate.name === name,
+      ),
   );
   function closePicker() {
     setEditing(false);
@@ -74,9 +88,12 @@ export function ReplicaPhotoReview({
   const animalName = group?.name ?? "？？？？？";
   const photoHeading = photo
     ? saved
-      ? "写真をアルバムに保存しました。"
+      ? figmaFlow
+        ? "写真をギャラリーに保存しました。"
+        : "写真をアルバムに保存しました。"
       : "撮影した写真を確認する"
     : "観察する動物を選ぶ";
+  const confirmLabel = figmaFlow ? "描いてもらう" : "ピツネに見せる";
   const file = (name: string) =>
     assetPath("illustrations/pdf-design/camera-review-" + name + ".svg");
   return (
@@ -93,7 +110,7 @@ export function ReplicaPhotoReview({
         <span className="replica-photo-heading-content">
           {figmaFlow && photo && saved && (
             <span className="replica-photo-saved-check" aria-hidden="true">
-              <Check size={20} strokeWidth={3} />
+              <Check size={18} strokeWidth={2} />
             </span>
           )}
           <span>{photoHeading}</span>
@@ -156,6 +173,25 @@ export function ReplicaPhotoReview({
                 if (event.key === "Escape") closePicker();
               }}
             >
+              {matchingCandidates.length > 0 && (
+                <ul aria-label="写真から見つけた候補">
+                  {matchingCandidates.map(({ groupId, speciesId, name }) => (
+                    <li key={speciesId ?? groupId}>
+                      <button
+                        className="photo-picker-candidate"
+                        type="button"
+                        aria-pressed={
+                          group?.id === groupId && animalName === name
+                        }
+                        onClick={() => select(groupId, speciesId)}
+                      >
+                        <span>{name}</span>
+                        <span className="photo-picker-candidate-tag">候補</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <input
                 type="search"
                 aria-label="動物の名前で探す"
@@ -176,9 +212,10 @@ export function ReplicaPhotoReview({
                   </li>
                 ))}
               </ul>
-              {matchingAnimals.length === 0 && (
-                <p role="status">名前が見つかりません。</p>
-              )}
+              {matchingAnimals.length === 0 &&
+                matchingCandidates.length === 0 && (
+                  <p role="status">名前が見つかりません。</p>
+                )}
             </div>
           )}
           {createdAt && (
@@ -205,31 +242,6 @@ export function ReplicaPhotoReview({
           {message}
         </p>
       )}
-      {!!candidates?.length && (
-        <div
-          className="replica-photo-candidates"
-          role="group"
-          aria-label="写真から見つけた候補"
-        >
-          <span>写真の候補</span>
-          {candidates.map(({ groupId, speciesId }) => {
-            const name =
-              kyotoSpeciesById.get(speciesId ?? groupId)?.name ??
-              choices.find(({ id }) => id === groupId)?.name;
-            return (
-              name && (
-                <button
-                  key={speciesId ?? groupId}
-                  type="button"
-                  onClick={() => select(groupId, speciesId)}
-                >
-                  {name}
-                </button>
-              )
-            );
-          })}
-        </div>
-      )}
       <div className="design3-actions">
         <button
           className="design3-pill design3-pill--green"
@@ -242,7 +254,7 @@ export function ReplicaPhotoReview({
         </button>
         <button
           className="design3-pill"
-          aria-label="ピツネに見せる"
+          aria-label={confirmLabel}
           disabled={!group}
           onClick={onConfirm}
         >
@@ -252,7 +264,7 @@ export function ReplicaPhotoReview({
             width={18.5146}
             height={17}
           />
-          <span>ピツネに見せる</span>
+          <span>{confirmLabel}</span>
         </button>
       </div>
     </section>

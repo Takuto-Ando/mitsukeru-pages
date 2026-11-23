@@ -1,6 +1,23 @@
-import { test as base } from "@playwright/test";
+import { test as base, type Page } from "@playwright/test";
 import photoModel from "../../src/recognition/bioclip-model.json" with { type: "json" };
 export { expect, type Page } from "@playwright/test";
+
+export async function mockTutorialModels(
+  page: Page,
+  { photo = true, detector = true } = {},
+) {
+  if (photo)
+    await page.route(photoModel.url, (route) =>
+      route.fulfill({
+        body: "mock model asset",
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }),
+    );
+  if (detector)
+    await page.route("**/models/yolox*.onnx", (route) =>
+      route.fulfill({ body: Buffer.alloc(3_659_407) }),
+    );
+}
 
 export const test = base.extend<{
   testLiveModel: boolean;

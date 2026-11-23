@@ -19,8 +19,8 @@ body:has(
   inset: -64px;
   content: "";
   pointer-events: none;
-  opacity: 0.2;
-  --challenge-dot: radial-gradient(circle, #fff 6px, transparent 6.7px);
+  opacity: 0.11;
+  --challenge-dot: radial-gradient(circle, #fff 8px, transparent 8.7px);
   background-image: var(--challenge-dot), var(--challenge-dot);
   background-position:
     0 0,

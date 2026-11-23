@@ -1,5 +1,5 @@
 import { taskById } from "../../src/content/tasks";
-import { expect, test, type Page } from "./fixtures";
+import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 
 const galleryDatabase = "zooketch-figma-replica";
 
@@ -110,7 +110,7 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await button(page, "つづきから").click();
   await button(page, "シャッター").click();
   await expect(
-    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+    page.getByRole("heading", { name: "写真をギャラリーに保存しました。" }),
   ).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
 
@@ -192,7 +192,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
     .poll(async () => (await savedObservations(page))[0]?.photo)
     .toMatch(/^data:image\/jpeg/);
   const savedHeading = page.getByRole("heading", {
-    name: "写真をアルバムに保存しました。",
+    name: "写真をギャラリーに保存しました。",
   });
   await expect(savedHeading).toHaveCSS(
     "font-family",
@@ -201,7 +201,10 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
       : /^"?Zen Maru Gothic"?[, ]/,
   );
   await expect(savedHeading).toHaveCSS("font-weight", "700");
-  await expect(savedHeading.locator("svg")).toBeVisible();
+  const savedCheck = savedHeading.locator(".replica-photo-saved-check");
+  await expect(savedCheck.locator("svg")).toBeVisible();
+  await expect(savedCheck).toHaveCSS("border-top-width", "2px");
+  await expect(savedCheck).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expect(
     savedHeading.locator('ruby[data-reading="ほぞん"]'),
   ).toBeVisible();
@@ -214,7 +217,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
     button(page, "撮りなおす").locator(":scope > svg"),
   ).toBeVisible();
   await expect(
-    button(page, "ピツネに見せる").locator(":scope > img"),
+    button(page, "描いてもらう").locator(":scope > img"),
   ).toBeVisible();
   const jpeg = (await savedObservations(page))[0].photo!;
   const storedRatio = await page.evaluate(async (source) => {
@@ -244,7 +247,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await button(page, "写真を撮る").click();
   await button(page, "シャッター").click();
   await chooseAnimal(page, "キリン");
-  await button(page, "ピツネに見せる").click();
+  await button(page, "描いてもらう").click();
   const preparation = page.locator("[data-screen=easel]");
   await expect(preparation).toHaveAttribute("data-figma-node", "43-1903");
   await expect
@@ -376,6 +379,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
 test("チュートリアルで未検出なら撮影直後に動物を修正でき、写真を保存する", async ({
   page,
 }) => {
+  await mockTutorialModels(page);
   await useTestCamera(page, false);
   await page.goto("./");
   for (const name of [
@@ -397,7 +401,7 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
   ).toBeVisible();
   await expect(button(page, "撮りなおす")).toBeEnabled();
   await expect(button(page, "修正")).toBeEnabled();
-  await expect(button(page, "ピツネに見せる")).toBeDisabled();
+  await expect(button(page, "描いてもらう")).toBeDisabled();
   await expect(page.locator(".replica-recognition-status")).toHaveCount(0);
   await chooseAnimal(page, "キリン");
   await expect
@@ -406,7 +410,7 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
       { groupId: "giraffe", taskId: "giraffe", photo: /^data:image\/jpeg/ },
     ]);
   await expect(page.locator("[data-screen=review]")).toBeVisible();
-  await expect(button(page, "ピツネに見せる")).toBeEnabled();
+  await expect(button(page, "描いてもらう")).toBeEnabled();
 });
 
 test("カメラ権限が得られなくても下部の追加ボタンを使わず動物選択へ進める", async ({
@@ -429,5 +433,5 @@ test("カメラ権限が得られなくても下部の追加ボタンを使わ�
   await expect(page.locator(".replica-camera-alternatives")).toHaveCount(0);
   await button(page, "シャッター").click();
   await expect(page.locator("[data-screen=review]")).toBeVisible();
-  await expect(button(page, "ピツネに見せる")).toBeDisabled();
+  await expect(button(page, "描いてもらう")).toBeDisabled();
 });

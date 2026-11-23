@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./fixtures";
+import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 import { taskById } from "../../src/content/tasks";
 
 function usesProductionShare(baseURL: string): boolean {
@@ -43,6 +43,7 @@ async function drawGiraffeTongue(page: Page) {
 test("フローAは付録のノード順に進み、描いた絵だけを送信して撮影へ合流する", async ({
   page,
 }) => {
+  await mockTutorialModels(page);
   const base = test.info().project.use.baseURL!;
   const production = usesProductionShare(base);
   const endpoint = production
@@ -142,7 +143,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(node("43-1745")).toBeVisible();
   await button("シャッター").click();
   await expect(node("43-1815")).toBeVisible();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await expect(node("52-5335")).toHaveCount(0);
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
@@ -183,7 +184,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   const starGroups = celebration.locator(".photo-celebration-stars");
   await expect(starGroups).toHaveCount(2);
   await expect(starGroups.first()).toHaveCSS("animation-delay", "0.1s");
-  await expect(starGroups.last()).toHaveCSS("animation-delay", "0.4s");
+  await expect(starGroups.last()).toHaveCSS("animation-delay", "0.1s");
   await button("スケッチの結果を見る").click();
   await expect(node("66-8363")).toBeVisible();
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -252,7 +253,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   await expect(node("66-7604")).toBeVisible();
   await button("キリン").click();
   await expect(node("66-7554")).toBeVisible();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await expect(node("43-1903")).toBeVisible();
   await expect(node("66-8272")).toBeVisible();
   await expect(node("66-7869")).toBeVisible();
@@ -351,6 +352,7 @@ test("旧URLからも同一本体が開き、設定でふりがなをOFFにで�
 test("スケッチ準備と課題タイトルをタップすると描画へ進める", async ({
   page,
 }) => {
+  await mockTutorialModels(page);
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "mediaDevices", {
       value: {
@@ -371,7 +373,7 @@ test("スケッチ準備と課題タイトルをタップすると描画へ進�
   await button("撮ってみる！").click();
   await button("シャッター").click();
   await button("シャッター").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await expect(shell).toHaveAttribute("data-screen", "easel");
   await button("描いてみる！").click();
   await expect(shell).toHaveAttribute("data-screen", "challenge");
@@ -386,7 +388,7 @@ test("スケッチ準備と課題タイトルをタップすると描画へ進�
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await expect(shell).toHaveAttribute("data-screen", "easel");
   await button("スケッチの準備を確認してつぎへ").click({
     position: { x: 100, y: 100 },

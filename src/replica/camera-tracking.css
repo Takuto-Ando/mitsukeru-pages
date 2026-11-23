@@ -73,3 +73,19 @@
       height 220ms ease-out;
   }
 }
+
+.camera-pitsune-binoculars {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.camera-pitsune-binoculars > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.camera-pitsune-binoculars > img + img {
+  position: absolute;
+  inset: 0;
+}

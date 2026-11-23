@@ -125,7 +125,11 @@ export function StartPreferencesDialog({
   onCancel: () => void;
   onStart: (settings: ObservationPreferences) => void;
 }) {
-  const [draft, setDraft] = useState(preferences);
+  const [draft, setDraft] = useState<ObservationPreferences>(() =>
+    preferences.age === undefined
+      ? { ...preferences, age: 10, difficulty: preferences.difficulty ?? 1 }
+      : preferences,
+  );
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const title = useId();

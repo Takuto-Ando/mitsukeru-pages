@@ -23,7 +23,7 @@ async function openDrawing(page: Page, animal: string) {
   await button(page, "シャッター").click();
   await button(page, "修正").click();
   await button(page, animal).click();
-  await button(page, "ピツネに見せる").click();
+  await button(page, "描いてもらう").click();
   await page.getByTestId("canvas").waitFor();
   await page.evaluate(() => document.fonts.ready);
 }
@@ -173,7 +173,7 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
   await expect(
     page.locator(".design3-photo-fact .zoo-card-summary-line").first(),
   ).toHaveCSS("font-weight", "700");
-  await button(page, "ピツネに見せる").click();
+  await button(page, "描いてもらう").click();
   const titleRuby = page.locator(".design3-challenge h1 ruby").first();
   await expect(titleRuby).toBeVisible();
   expect(

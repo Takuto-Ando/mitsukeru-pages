@@ -62,21 +62,26 @@
 
 .sketch-result-card-heading .difficulty-pill {
   box-sizing: border-box;
-  flex: 0 0 95px;
-  width: 95px;
-  min-height: 26px;
+  flex: 0 0 auto;
+  width: clamp(112px, calc(100% - 128px), 174px);
+  min-height: 37px;
   padding: 4px 8px;
-  gap: 6px;
+  gap: 10px;
   background: #fffaf0;
 }
 
 .sketch-result-card-heading .difficulty-label {
-  flex: 0 0 28px;
-  width: 28px;
+  flex: 0 0 39px;
+  width: 39px;
 }
 
 .sketch-result-card-heading .difficulty-icons {
-  flex: 1;
+  flex: 0 1 80px;
+  min-width: 0;
+}
+
+.sketch-result-card-heading .difficulty-icons img {
+  width: min(29.4%, 22.3px);
 }
 
 .sketch-result-card-copy {

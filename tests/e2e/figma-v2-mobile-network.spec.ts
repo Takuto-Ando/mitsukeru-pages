@@ -47,7 +47,7 @@ async function useStillCamera(page: Page) {
 }
 
 async function drawTongue(page: Page) {
-  await action(page, "ピツネに見せる").tap();
+  await action(page, "描いてもらう").tap();
   await action(page, "スケッチの準備を確認してつぎへ").tap();
   await action(page, "課題を確認してつぎへ").tap();
   const canvas = page.getByTestId("canvas");

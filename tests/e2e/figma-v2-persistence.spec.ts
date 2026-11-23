@@ -19,7 +19,7 @@ async function openDrawing(page: Page) {
   await button(page, "シャッター").click();
   await button(page, "修正").click();
   await button(page, "キリン").click();
-  await button(page, "ピツネに見せる").click();
+  await button(page, "描いてもらう").click();
   await button(page, "スケッチの準備を確認してつぎへ").click();
   await button(page, "課題を確認してつぎへ").click();
   const canvas = page.getByTestId("canvas");

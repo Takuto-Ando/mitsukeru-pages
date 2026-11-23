@@ -540,11 +540,24 @@ export function ReplicaCamera({
     >
       <h1 className="sr-only">動物を撮影しよう</h1>
       <div className="camera-pitsune">
-        <img
-          alt=""
-          className="camera-pitsune-face"
-          src={assetPath("figma/entry/camera-face.svg")}
-        />
+        {legacy ? (
+          <img
+            alt=""
+            className="camera-pitsune-face"
+            src={assetPath("figma/entry/camera-face.svg")}
+          />
+        ) : (
+          <div
+            className="camera-pitsune-face camera-pitsune-binoculars"
+            aria-hidden="true"
+          >
+            <img alt="" src={assetPath("figma/entry/camera-face.svg")} />
+            <img
+              alt=""
+              src={assetPath("replica-assets/camera-binoculars.svg")}
+            />
+          </div>
+        )}
         <p className="pitsune-bubble">
           {sample && sampleVisible ? (
             <CardLettering
@@ -571,13 +584,15 @@ export function ReplicaCamera({
                   : "動物の名前を調べているよ！"
               }
             />
-          ) : (
+          ) : legacy ? (
             <CardLettering
               className="camera-prompt-art"
               src={assetPath(art + "camera-prompt.svg")}
               text="動物の写真を撮ろう！"
               highlights={["動物の写真"]}
             />
+          ) : (
+            <BubbleLine text="動物を探しにいこう！" highlights={["動物"]} />
           )}
         </p>
       </div>

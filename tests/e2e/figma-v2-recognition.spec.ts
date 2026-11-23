@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import photoModel from "../../src/recognition/bioclip-model.json" with { type: "json" };
-import { expect, test, type Page } from "./fixtures";
+import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 
 test.skip(process.env.VITE_LEGACY_EDITIONS === "1", "Figma v2の本体専用");
 test.use({ serviceWorkers: "block" });
@@ -114,7 +114,7 @@ test("カメラと撮影・写真の保存は失敗しても同じ画面から�
   );
   await button(page, "もう一度試す").click();
   await expect(
-    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+    page.getByRole("heading", { name: "写真をギャラリーに保存しました。" }),
   ).toBeVisible();
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
@@ -122,6 +122,7 @@ test("カメラと撮影・写真の保存は失敗しても同じ画面から�
 test("チュートリアルの見本写真からもカメラへの再試行で実写に復帰できる", async ({
   page,
 }) => {
+  await mockTutorialModels(page);
   await useMockCamera(page);
   await page.addInitScript(() =>
     sessionStorage.setItem("test:camera-denied", "1"),
@@ -142,7 +143,7 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
   await expect(page.getByLabel("動物を映すカメラ")).toBeVisible();
   await button(page, "シャッター").click();
   await expect(
-    page.getByRole("heading", { name: "写真をアルバムに保存しました。" }),
+    page.getByRole("heading", { name: "写真をギャラリーに保存しました。" }),
   ).toBeVisible();
 });
 
@@ -211,7 +212,7 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   await expect(
     review.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
-  await expect(button(page, "ピツネに見せる")).toBeEnabled();
+  await expect(button(page, "描いてもらう")).toBeEnabled();
   await expect(review.getByRole("status")).toContainText(
     "動物の名前を選んでください",
   );
@@ -474,7 +475,7 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
     "data-figma-node",
     "66-7655",
   );
-  await expect(button(page, "ピツネに見せる")).toBeDisabled();
+  await expect(button(page, "描いてもらう")).toBeDisabled();
 });
 
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
@@ -535,6 +536,9 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   });
   await page.goto("./");
   await button(page, "つづきから").click();
+  await expect(page.locator(".pitsune-bubble")).toHaveText(
+    "動物を探しにいこう！",
+  );
   await button(page, "シャッター").click();
   const review = page.locator(".design3-photo-review");
   await expect(
@@ -548,15 +552,30 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   await page.evaluate(() =>
     window.dispatchEvent(new Event("test:species-ready")),
   );
-  const suggestion = review.getByRole("group", {
+  const suggestion = review.getByRole("list", {
     name: "写真から見つけた候補",
   });
-  await suggestion.getByRole("button", { name: "フンボルトペンギン" }).click();
+  await expect(suggestion).toHaveCount(0);
+  await button(page, "修正").click();
+  await expect(
+    review.locator(".replica-photo-picker").locator(":scope > :first-child"),
+  ).toHaveAttribute("aria-label", "写真から見つけた候補");
+  const suggestedBird = suggestion.getByRole("button", {
+    name: "フンボルトペンギン 候補",
+  });
+  await expect(suggestedBird.getByText("候補", { exact: true })).toBeVisible();
+  await expect(
+    review.getByRole("list", { name: "動物の一覧" }).getByRole("button", {
+      name: "フンボルトペンギン",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await suggestedBird.click();
   await expect(
     review.getByRole("heading", { name: "フンボルトペンギン" }),
   ).toBeVisible();
-  await expect(button(page, "ピツネに見せる")).toBeEnabled();
-  await button(page, "ピツネに見せる").click();
+  await expect(button(page, "描いてもらう")).toBeEnabled();
+  await button(page, "描いてもらう").click();
   await button(page, "スケッチの準備を確認してつぎへ").click();
   await expect(page.locator(".design3-challenge h1")).toHaveAccessibleName(
     /^フンボルトペンギン/,
@@ -593,6 +612,7 @@ test("ライブ認識の自動再試行が尽きてもシャッターと手動�
 test("前の版で修了した端末も新しいチュートリアルで撮影でき、白い枠が動物を追う", async ({
   page,
 }) => {
+  await mockTutorialModels(page, { detector: false });
   await useMockCamera(page, true);
   await page.addInitScript(() => {
     localStorage.setItem("zooketch-replica-tutorial-v1", "1");
@@ -650,6 +670,9 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   const camera = page.locator(".replica-camera");
   const shutter = button(page, "シャッター");
   await expect(camera.locator(".camera-frame video")).toBeVisible();
+  await expect(camera.locator(".pitsune-bubble")).toHaveText(
+    "動物を探しにいこう！",
+  );
   await expect(camera.locator(".camera-fallback")).toHaveCount(0);
   await expect(camera.getByText(/カメラを(?:起動|準備)しています/)).toHaveCount(
     0,
@@ -743,7 +766,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
     page.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
   await expect(page.locator(".captured-preview")).toBeVisible();
-  await expect(button(page, "ピツネに見せる")).toBeEnabled();
+  await expect(button(page, "描いてもらう")).toBeEnabled();
 });
 
 test("タイトルからライブ認識を事前準備し、撮影画面でも通信中を表示する", async ({
@@ -763,11 +786,7 @@ test("タイトルからライブ認識を事前準備し、撮影画面でも�
   try {
     await page.goto("./");
     await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
-    await button(page, "はじめから").click();
-    await button(page, "決定！").click();
-    await button(page, "こんにちは！").click();
-    await button(page, "やってみる！").click();
-    await button(page, "撮ってみる！").click();
+    await button(page, "つづきから").click();
     await expect(
       page.locator(".camera-frame .replica-camera-model-status"),
     ).toHaveText("画像認識モデルをダウンロード中…");

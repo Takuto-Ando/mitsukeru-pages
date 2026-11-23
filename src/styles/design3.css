@@ -871,6 +871,10 @@ body:has(.design3-shell) {
   --stars-delay: 400ms;
 }
 
+.design3-photo-celebration[data-purpose="sketch"] .photo-celebration-stars {
+  --stars-delay: 100ms;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .camera-pitsune-face {
     transform-origin: 50% 100%;

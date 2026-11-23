@@ -19,7 +19,7 @@ test("描画中は二本目の指で消しゴムが飛ばない", async ({ page 
   await button("シャッター").click();
   await button("修正").click();
   await button("キリン").click();
-  await button("ピツネに見せる").click();
+  await button("描いてもらう").click();
   await button("スケッチの準備を確認してつぎへ").click();
   await button("課題を確認してつぎへ").click();
   const canvas = page.getByTestId("canvas");

@@ -5,7 +5,7 @@ import {
 } from "../content/zooAnimalSummaries";
 import type { Stroke, StrokeStyle } from "../types";
 import { Furi } from "../furigana/Furigana";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChevronLeft, Share } from "lucide-react";
 import { assetPath } from "../content/artwork";
 import { taskById } from "../content/tasks";
@@ -15,6 +15,7 @@ import { penColorsFor } from "../content/sketchPresentation";
 import { applyStyles } from "../drawing/styles";
 import { designCardViewport } from "../drawing/viewport";
 import { DifficultyPill } from "../components/DifficultyPill";
+import { SceneRegions } from "../components/ObservationScene";
 import { SketchComparison } from "../components/SketchComparison";
 import { SketchResultCardFooter } from "../components/SketchResultCardFooter";
 import { galleryPhotoLocation } from "./storage";
@@ -93,34 +94,110 @@ function Mark({ name }: { name: string }) {
   );
 }
 
-function Sketch({ entry }: { entry: ReplicaRecord }) {
+const legacyPaperColors = [
+  [250, 247, 236],
+  [255, 254, 248],
+];
+const paperChannels = ["feFuncR", "feFuncG", "feFuncB"] as const;
+const paperTables = legacyPaperColors.map((color) =>
+  color.map((channel) =>
+    Array.from({ length: 256 }, (_, value) => (value === channel ? 1 : 0)).join(
+      " ",
+    ),
+  ),
+);
+
+function SketchPaperFilter({ id }: { id: string }) {
+  return (
+    <svg
+      className="replica-sketch-paper-filter"
+      width="0"
+      height="0"
+      aria-hidden="true"
+    >
+      <filter id={id} colorInterpolationFilters="sRGB">
+        {paperTables.map((channels, index) => (
+          <Fragment key={index}>
+            <feComponentTransfer in="SourceGraphic" result={`match-${index}`}>
+              {paperChannels.map((Channel, channel) => (
+                <Channel
+                  key={Channel}
+                  type="discrete"
+                  tableValues={channels[channel]}
+                />
+              ))}
+            </feComponentTransfer>
+            {/* Paint opaque white only where all three channels match. */}
+            <feColorMatrix
+              in={`match-${index}`}
+              values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  1 1 1 0 -2"
+              result={`paper-${index}`}
+            />
+          </Fragment>
+        ))}
+        <feMerge>
+          <feMergeNode in="SourceGraphic" />
+          {paperTables.map((_, index) => (
+            <feMergeNode key={index} in={`paper-${index}`} />
+          ))}
+        </feMerge>
+      </filter>
+    </svg>
+  );
+}
+
+function Sketch({
+  entry,
+  paperFilterId,
+}: {
+  entry: ReplicaRecord;
+  paperFilterId?: string;
+}) {
+  const preservedAreaId = useId();
   const scene = entry.taskId ? taskById[entry.taskId]?.scene : undefined;
   const viewport = scene && designCardViewport(scene);
-  if (!viewport) {
+  const paperFilter = paperFilterId ? `url("#${paperFilterId}")` : undefined;
+  if (!scene || (!viewport && !paperFilter)) {
     return (
       <img
         className="replica-sketch-image"
         src={entry.sketch}
         alt=""
         decoding="async"
+        style={{ filter: paperFilter }}
       />
     );
   }
   // Keep the paper card crop inside the saved image at every screen width.
   const sceneWidth = 600;
   const sceneHeight = scene.frameHeight || 400;
-  const width = Math.min(viewport.width, sceneWidth);
-  const height = Math.min(viewport.height, sceneHeight);
-  const x = Math.max(0, Math.min(viewport.x, sceneWidth - width));
-  const y = Math.max(0, Math.min(viewport.y, sceneHeight - height));
+  const width = Math.min(viewport?.width ?? sceneWidth, sceneWidth);
+  const height = Math.min(viewport?.height ?? sceneHeight, sceneHeight);
+  const x = Math.max(0, Math.min(viewport?.x ?? 0, sceneWidth - width));
+  const y = Math.max(0, Math.min(viewport?.y ?? 0, sceneHeight - height));
+  const artwork = (
+    <image href={entry.sketch} width={sceneWidth} height={sceneHeight} />
+  );
   return (
     <svg
       className="replica-sketch-image"
       viewBox={`${x} ${y} ${width} ${height}`}
-      preserveAspectRatio="none"
+      preserveAspectRatio={viewport ? "none" : "xMidYMid slice"}
       aria-hidden="true"
     >
-      <image href={entry.sketch} width={sceneWidth} height={sceneHeight} />
+      {paperFilter ? (
+        <>
+          <defs>
+            <clipPath id={preservedAreaId}>
+              <SceneRegions scene={scene} />
+            </clipPath>
+          </defs>
+          <g filter={paperFilter}>{artwork}</g>
+          <g clipPath={`url(#${preservedAreaId})`}>{artwork}</g>
+        </>
+      ) : (
+        artwork
+      )}
     </svg>
   );
 }
@@ -337,6 +414,7 @@ export function ReplicaGallery({
     (entry) => entry.id === selected && !!entry[tab],
   );
   const oppositeTab = tab === "sketch" ? "photo" : "sketch";
+  const paperFilterId = !legacy && tab === "sketch" ? `${id}-paper` : undefined;
   const switchLabel = `${tabs[oppositeTab]}を見る`;
   const share =
     preparedShare?.entry === activeEntry && preparedShare?.tab === tab
@@ -426,6 +504,7 @@ export function ReplicaGallery({
       data-figma-node={tab === "photo" ? "66-10991" : "63-6390"}
       aria-labelledby={id}
     >
+      {paperFilterId && <SketchPaperFilter id={paperFilterId} />}
       <header className="gallery-header">
         <button
           className="replica-gallery-back"
@@ -525,7 +604,7 @@ export function ReplicaGallery({
                     aria-label={`${entry.animalName ?? "動物"}の${tabs[tab]}を見る`}
                   >
                     {tab === "sketch" ? (
-                      <Sketch entry={entry} />
+                      <Sketch entry={entry} paperFilterId={paperFilterId} />
                     ) : (
                       <img
                         className="replica-photo-tile"

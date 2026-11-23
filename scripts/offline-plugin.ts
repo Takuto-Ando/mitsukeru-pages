@@ -143,6 +143,7 @@ export function offlinePlugin(legacy = false): Plugin {
           else if (
             entryFiles.has(name) ||
             manifests.has(name) ||
+            name === "favicon.svg" ||
             name === "icon.svg" ||
             name.startsWith("icons/") ||
             name.startsWith("assets/") ||

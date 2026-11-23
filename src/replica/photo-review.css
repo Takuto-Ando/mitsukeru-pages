@@ -9,11 +9,12 @@
   display: grid;
   place-items: center;
   flex: none;
+  box-sizing: border-box;
   width: 30px;
   aspect-ratio: 1;
+  border: 2px solid currentColor;
   border-radius: 50%;
-  background: #835c3b;
-  color: #fffaf0;
+  color: var(--d3-brown);
 }
 
 .replica-app[data-variant="product"] .design3-photo-review .design3-photo-meta {
@@ -79,25 +80,24 @@
 .replica-photo-picker > p {
   margin: 8px;
 }
-.replica-photo-recognition-note,
-.replica-photo-candidates {
+.replica-photo-recognition-note {
   margin: 4px auto;
   font-size: 13px;
   text-align: center;
 }
 
-.replica-photo-candidates {
-  display: flex;
-  flex-wrap: wrap;
+.photo-picker-candidate {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 
-.replica-photo-candidates button {
-  min-height: 44px;
-  padding-inline: 10px;
-  border-radius: 22px;
-  background: var(--d3-cream);
+.photo-picker-candidate-tag {
+  flex: none;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--d3-orange);
   color: var(--d3-brown);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
