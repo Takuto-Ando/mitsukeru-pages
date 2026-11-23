@@ -1,12 +1,15 @@
 import { useEffect } from "react";
 import { downloadLiveModel } from "./liveModel";
-import { downloadPhotoModel } from "./photoModel";
+import {
+  canAutoDownloadPhotoModel,
+  downloadPhotoModel,
+  photoModelCached,
+} from "./photoModel";
 import { speciesRecognizer } from "./species";
 
 export function useModelPreload({
   photo = true,
   enabled = true,
-  allowMetered = false,
   warmPhoto = false,
 } = {}) {
   useEffect(() => {
@@ -17,44 +20,37 @@ export function useModelPreload({
 
     function prepare() {
       if (document.hidden || !navigator.onLine) return;
-      const connection = (
-        navigator as Navigator & {
-          connection?: {
-            saveData?: boolean;
-            type?: string;
-            effectiveType?: string;
-          };
-        }
-      ).connection;
-      const limited =
-        connection?.saveData ||
-        (!allowMetered &&
-          (connection?.type === "cellular" ||
-            connection?.effectiveType === "slow-2g" ||
-            connection?.effectiveType === "2g"));
-
       live ??= downloadLiveModel().catch(() => {
         live = undefined;
       });
-      void live.then(() => {
+      void live.then(async () => {
         if (
           !disposed &&
           photo &&
           !startedPhoto &&
-          !limited &&
           !document.hidden &&
           navigator.onLine &&
           !speciesRecognizer.isBusy()
         ) {
           startedPhoto = true;
-          return downloadPhotoModel()
-            .then(() => {
-              if (warmPhoto && !disposed && !document.hidden)
-                return speciesRecognizer.prepare();
-            })
-            .catch(() => {
+          try {
+            const cached = await photoModelCached();
+            if (disposed || document.hidden) {
               startedPhoto = false;
-            });
+              return;
+            }
+            if (!cached) {
+              if (!canAutoDownloadPhotoModel()) {
+                startedPhoto = false;
+                return;
+              }
+              await downloadPhotoModel();
+            }
+            if (warmPhoto && !disposed && !document.hidden)
+              await speciesRecognizer.prepare();
+          } catch {
+            startedPhoto = false;
+          }
         }
       });
     }
@@ -67,5 +63,5 @@ export function useModelPreload({
       window.removeEventListener("online", prepare);
       document.removeEventListener("visibilitychange", prepare);
     };
-  }, [allowMetered, enabled, photo, warmPhoto]);
+  }, [enabled, photo, warmPhoto]);
 }

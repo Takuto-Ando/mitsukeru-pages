@@ -239,7 +239,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "connection", {
       configurable: true,
-      value: { effectiveType: "3g", saveData: false },
+      value: { effectiveType: "4g", saveData: false },
     });
     const match = Cache.prototype.match;
     Cache.prototype.match = async function (request, options) {
@@ -254,6 +254,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
       return hit;
     };
     let reviewImages = 0;
+    let liveImages = 0;
     window.Worker = new Proxy(window.Worker, {
       construct(target, args: [string | URL, WorkerOptions?]) {
         if (args[1]?.name === "zooketch-live-detection") {
@@ -291,7 +292,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
           onmessage: undefined as
             ((event: { data: unknown }) => void) | undefined,
           terminate() {},
-          postMessage({ photo }: { photo?: string }) {
+          postMessage({ photo, fit }: { photo?: string; fit?: string }) {
             if (!photo) {
               const root = document.documentElement;
               root.dataset.testModelWarm = String(
@@ -304,11 +305,25 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
               );
               return;
             }
-            if (document.querySelector(".design3-photo-review")) {
+            const isReview = !!document.querySelector(".design3-photo-review");
+            if (isReview) {
               document.documentElement.dataset.testReviewImages = String(
                 ++reviewImages,
               );
-              if (reviewImages === 1) {
+              if (reviewImages <= 2) {
+                queueMicrotask(() =>
+                  this.onmessage?.({
+                    data: { type: "result", result: { status: "unknown" } },
+                  }),
+                );
+                return;
+              }
+            }
+            if (!isReview) {
+              document.documentElement.dataset.testLiveImages = String(
+                ++liveImages,
+              );
+              if (fit !== "contain") {
                 queueMicrotask(() =>
                   this.onmessage?.({
                     data: { type: "result", result: { status: "unknown" } },
@@ -343,6 +358,12 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
     const downloading = page.waitForRequest(photoModel.url);
     await page.goto("./");
     await downloading;
+    await page.evaluate(() => {
+      const connection = navigator as Navigator & {
+        connection: { effectiveType: string };
+      };
+      connection.connection.effectiveType = "3g";
+    });
     await button(page, "つづきから").click();
     await expect(page.locator(".replica-camera-model-status")).toHaveText(
       "画像認識モデルをダウンロード中…",
@@ -363,10 +384,14 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
     "レッサーパンダがいるよ！",
   );
   await expect(page.locator(".replica-camera-tracking")).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-test-live-images",
+    "2",
+  );
   await button(page, "シャッター").click();
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-review-images",
-    "2",
+    "3",
   );
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-model-warm",

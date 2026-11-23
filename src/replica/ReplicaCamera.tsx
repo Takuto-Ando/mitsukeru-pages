@@ -28,6 +28,11 @@ import {
   openPreferredCamera,
   type CameraFailure,
 } from "../camera/media";
+import {
+  cameraPermissionSettings,
+  cameraSettingsReturnedEvent,
+  openCameraPermissionSettings,
+} from "../camera/permission";
 import "./camera-tracking.css";
 
 export const samplePhoto = () =>
@@ -70,7 +75,7 @@ export function ReplicaCamera({
   onSettings?: (trigger: HTMLButtonElement) => void;
   suspended?: boolean;
 }) {
-  useModelPreload({ enabled: legacy, allowMetered: true });
+  useModelPreload({ enabled: legacy });
   const photoModelDownloading = usePhotoModelDownloading();
   const [sample, setSample] = useState((legacy && tutorial) || framedExample);
   const [sampleHasAnimal, setSampleHasAnimal] = useState(framedExample);
@@ -85,6 +90,7 @@ export function ReplicaCamera({
   const [requestNumber, retryCamera] = useState(0);
   const [visible, setVisible] = useState(() => !document.hidden);
   const lastFailure = useRef<CameraFailure | undefined>(undefined);
+  const returningFromSettings = useRef(false);
   const fallbackSample = useRef(false);
   const captureStarted = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
@@ -248,6 +254,19 @@ export function ReplicaCamera({
     retryCamera((number) => number + 1);
   }, []);
 
+  const cameraSettings =
+    message && lastFailure.current === "permission"
+      ? cameraPermissionSettings()
+      : undefined;
+
+  async function openDeviceSettings() {
+    returningFromSettings.current = true;
+    if (!(await openCameraPermissionSettings())) {
+      returningFromSettings.current = false;
+      setMessage("設定を開けませんでした。");
+    }
+  }
+
   useEffect(() => {
     if (menuOpen || suspended) return;
     let active = true;
@@ -258,7 +277,16 @@ export function ReplicaCamera({
     const permissionChanged = () => {
       if (permission?.state === "granted") retry();
     };
+    const settingsReturned = () => {
+      if (document.hidden || !returningFromSettings.current) return;
+      returningFromSettings.current = false;
+      retry();
+    };
     const focused = () => {
+      if (returningFromSettings.current) {
+        settingsReturned();
+        return;
+      }
       const reason = lastFailure.current;
       if (
         reason === "busy" ||
@@ -268,6 +296,8 @@ export function ReplicaCamera({
         retry();
     };
     window.addEventListener("focus", focused);
+    window.addEventListener(cameraSettingsReturnedEvent, settingsReturned);
+    document.addEventListener("visibilitychange", settingsReturned);
     void navigator.permissions
       ?.query({ name: "camera" as PermissionName })
       .then((status) => {
@@ -283,6 +313,8 @@ export function ReplicaCamera({
       active = false;
       permission?.removeEventListener?.("change", permissionChanged);
       window.removeEventListener("focus", focused);
+      window.removeEventListener(cameraSettingsReturnedEvent, settingsReturned);
+      document.removeEventListener("visibilitychange", settingsReturned);
     };
   }, [menuOpen, retryUnavailableCamera, suspended]);
 
@@ -570,6 +602,7 @@ export function ReplicaCamera({
                 {message && (
                   <span role="status">
                     {message}
+                    {cameraSettings && <> {cameraSettings.instructions}</>}
                     {!legacy && cameraUnavailable && (
                       <> シャッターで動物を選べます。</>
                     )}
@@ -645,9 +678,26 @@ export function ReplicaCamera({
             画像認識モデルをダウンロード中…
           </p>
         )}
+        {!legacy &&
+          !sample &&
+          streamReady &&
+          !livePreparing &&
+          !photoModelDownloading &&
+          !message &&
+          species.modelStatus &&
+          species.modelStatus !== "ready" && (
+            <p className="replica-camera-model-status" role="status">
+              {species.modelStatus === "deferred"
+                ? "未準備の認識モデルは、Wi-Fi接続時かマイページから保存できます。"
+                : species.modelStatus === "failed"
+                  ? "動物名を調べるモデルを準備できませんでした。"
+                  : "動物名を調べるモデルを準備中…"}
+            </p>
+          )}
         {!legacy && (streamReady || sample) && message && (
           <p className="replica-camera-model-status" role="status">
             {message}
+            {cameraSettings && <> {cameraSettings.instructions}</>}
           </p>
         )}
         {!legacy &&
@@ -658,9 +708,15 @@ export function ReplicaCamera({
               <button
                 type="button"
                 className="text-button"
-                onClick={retryUnavailableCamera}
+                onClick={
+                  cameraSettings?.canOpen
+                    ? () => void openDeviceSettings()
+                    : retryUnavailableCamera
+                }
               >
-                カメラをもう一度開く
+                {cameraSettings?.canOpen
+                  ? "端末の設定を開く"
+                  : "カメラをもう一度開く"}
               </button>
             </div>
           )}

@@ -3,6 +3,7 @@ import wasm from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded
 import runtime from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs?url";
 import { readPhotoModel } from "./photoModel";
 import { classifyBioClip } from "./labels";
+import type { SpeciesImageFit } from "./species";
 import promptBank from "./bioclip-labels.json";
 
 env.wasm.numThreads = 1;
@@ -41,22 +42,37 @@ async function createClassifier() {
     executionProviders: ["wasm"],
   });
 
-  const recognize = async (photo: string) => {
+  const recognize = async (photo: string, fit: SpeciesImageFit = "crop") => {
     if (!photo.startsWith("data:image/")) throw new Error("No local photo");
     const image = await createImageBitmap(await (await fetch(photo)).blob());
     try {
-      const side = Math.min(image.width, image.height);
-      context.drawImage(
-        image,
-        (image.width - side) / 2,
-        (image.height - side) / 2,
-        side,
-        side,
-        0,
-        0,
-        size,
-        size,
-      );
+      if (fit === "contain") {
+        const scale = size / Math.max(image.width, image.height);
+        const width = image.width * scale;
+        const height = image.height * scale;
+        context.fillStyle = "#7b7568";
+        context.fillRect(0, 0, size, size);
+        context.drawImage(
+          image,
+          (size - width) / 2,
+          (size - height) / 2,
+          width,
+          height,
+        );
+      } else {
+        const side = Math.min(image.width, image.height);
+        context.drawImage(
+          image,
+          (image.width - side) / 2,
+          (image.height - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          size,
+          size,
+        );
+      }
     } finally {
       image.close();
     }
@@ -90,7 +106,9 @@ async function createClassifier() {
   return { recognize, dispose: () => session.release() };
 }
 
-self.onmessage = async (event: MessageEvent<{ photo?: string }>) => {
+self.onmessage = async (
+  event: MessageEvent<{ photo?: string; fit?: SpeciesImageFit }>,
+) => {
   try {
     const { recognize } = await (classifier ??= createClassifier());
     if (!event.data.photo) {
@@ -99,7 +117,7 @@ self.onmessage = async (event: MessageEvent<{ photo?: string }>) => {
     }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
     const { candidates, recognition } = classifyBioClip(
-      await recognize(event.data.photo),
+      await recognize(event.data.photo, event.data.fit),
     );
     postMessage({
       type: "result",

@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import type { Candidate } from "./labels";
 import {
+  canAutoDownloadPhotoModel,
   downloadPhotoModel,
+  photoDownloadInProgress,
   photoModelDownloading,
   photoModelCached,
   photoModelDownloadEvent,
 } from "./photoModel";
 import { speciesRecognizer } from "./species";
+import { recognizeSpeciesViews } from "./speciesViews";
 
 export function usePhotoModelDownloading() {
   const [downloading, setDownloading] = useState(photoModelDownloading);
@@ -44,9 +47,13 @@ export function usePhotoIdentification(
       try {
         if (!(await photoModelCached())) {
           if (!active) return;
-          if (!navigator.onLine) throw new Error("offline");
+          const pending = photoDownloadInProgress();
+          if (!pending && !canAutoDownloadPhotoModel()) {
+            update({ message: "写真を見て、動物の名前を選んでください。" });
+            return;
+          }
           update({ message: "画像認識モデルをダウンロード中…" });
-          await downloadPhotoModel();
+          await (pending ?? downloadPhotoModel());
         }
         if (!active) return;
         update({ message: "写真から動物の候補を探しています…" });
@@ -54,31 +61,31 @@ export function usePhotoIdentification(
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
         if (prepared.status !== "ready") throw new Error("unavailable");
-        const reportProgress = (message: string) => update({ message });
-        const focused = crop
-          ? await speciesRecognizer.recognize(crop, reportProgress)
-          : undefined;
-        if (!active) return;
-        const sure =
-          focused?.status === "candidates" &&
-          focused.recognition?.status === "identified";
-        const outcome =
-          focused && sure
-            ? focused
-            : await speciesRecognizer.recognize(image, reportProgress);
+        const views = [
+          ...(crop
+            ? [
+                { photo: crop, source: "focus" as const },
+                {
+                  photo: crop,
+                  fit: "contain" as const,
+                  source: "focus" as const,
+                },
+              ]
+            : []),
+          { photo: image },
+          { photo: image, fit: "contain" as const },
+        ];
+        const { candidates } = await recognizeSpeciesViews(
+          views,
+          () => active,
+          (message) => update({ message }),
+        );
         cancelInference = false;
+        if (!active) return;
         speciesRecognizer.unload();
-        const candidates = new Map<string, Candidate>();
-        for (const result of [outcome, focused]) {
-          if (result?.status !== "candidates") continue;
-          for (const candidate of result.candidates) {
-            const id = candidate.speciesId ?? candidate.groupId;
-            if (!candidates.has(id)) candidates.set(id, candidate);
-          }
-        }
-        if (candidates.size) {
+        if (candidates.length) {
           update({
-            candidates: [...candidates.values()].slice(0, 3),
+            candidates,
             message: "",
           });
         } else {

@@ -192,7 +192,6 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const [tutorial, setTutorial] = useState(false);
   useModelPreload({
     enabled: !legacy,
-    allowMetered: true,
     warmPhoto: true,
   });
   const [framedExample, setFramedExample] = useState(false);

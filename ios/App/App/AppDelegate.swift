@@ -21,9 +21,14 @@ class DemoSceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = CAPBridgeViewController()
+        window.rootViewController = ZooketchBridgeViewController()
         self.window = window
         window.makeKeyAndVisible()
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        guard let controller = window?.rootViewController as? ZooketchBridgeViewController else { return }
+        controller.bridge?.triggerJSEvent(eventName: "zooketch:camera-settings-returned", target: "window")
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
@@ -34,5 +39,32 @@ class DemoSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         _ = ApplicationDelegateProxy.shared.application(UIApplication.shared, continue: userActivity, restorationHandler: { _ in })
+    }
+}
+
+final class ZooketchBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        bridge?.registerPluginInstance(CameraPermissionSettingsPlugin())
+    }
+}
+
+@objc(CameraPermissionSettingsPlugin)
+final class CameraPermissionSettingsPlugin: CAPPlugin, CAPBridgedPlugin {
+    let identifier = "CameraPermissionSettingsPlugin"
+    let jsName = "CameraPermissionSettings"
+    let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "open", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func open(_ call: CAPPluginCall) {
+        Task { @MainActor in
+            guard let url = URL(string: UIApplication.openSettingsURLString) else {
+                call.resolve(["opened": false])
+                return
+            }
+            let opened = await UIApplication.shared.open(url)
+            call.resolve(["opened": opened])
+        }
     }
 }

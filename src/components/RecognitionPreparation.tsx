@@ -14,14 +14,22 @@ export function RecognitionPreparation() {
   const [message, setMessage] = useState("");
   useEffect(() => {
     let mounted = true;
-    void photoModelCached().then((cached) => {
-      if (mounted && cached) setPhotoReady(true);
-    });
-    const ready = () => setPhotoReady(true);
-    window.addEventListener(photoModelEvent, ready);
+    let latestCheck = 0;
+    const refresh = () => {
+      const request = ++latestCheck;
+      void photoModelCached().then((cached) => {
+        if (mounted && request === latestCheck) setPhotoReady(cached);
+      });
+    };
+    refresh();
+    window.addEventListener(photoModelEvent, refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       mounted = false;
-      window.removeEventListener(photoModelEvent, ready);
+      window.removeEventListener(photoModelEvent, refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, []);
 
@@ -77,7 +85,7 @@ export function RecognitionPreparation() {
       </div>
       <p role="status">{message}</p>
       <p className="quiet-note">
-        園に行く前に、当日使う端末・ブラウザで準備してください。
+        園に行く前に、当日使う端末・ブラウザでWi-Fiにつないで準備してください。
       </p>
     </details>
   );

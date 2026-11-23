@@ -7,6 +7,22 @@ export { photoModel };
 export const photoModelEvent = "zooketch:photo-model-cached";
 export const photoModelDownloadEvent = "zooketch:photo-model-download";
 
+export function canAutoDownloadPhotoModel() {
+  const { onLine, connection } = navigator as Navigator & {
+    connection?: {
+      saveData?: boolean;
+      type?: string;
+      effectiveType?: string;
+    };
+  };
+  return (
+    onLine &&
+    !connection?.saveData &&
+    connection?.type !== "cellular" &&
+    !/2g|3g/.test(connection?.effectiveType ?? "")
+  );
+}
+
 export async function photoModelCached() {
   try {
     return Boolean(
@@ -23,9 +39,15 @@ async function storePhotoModel(onDownload?: () => void) {
     if (await cache.match(photoModel.url)) return;
     if (!navigator.onLine) throw new Error("No offline species model");
     onDownload?.();
-    await withDownloadDeadline(120_000, async (signal) => {
+    // Give a transfer on a slower connection time to finish without
+    // discarding the response partway through and starting over.
+    await withDownloadDeadline(300_000, async (signal) => {
       const response = await fetch(photoModel.url, { priority: "low", signal });
-      if (!response.ok) throw new Error("Species model download failed");
+      if (
+        !response.ok ||
+        response.headers.get("Content-Type")?.includes("text/html")
+      )
+        throw new Error("Species model download failed");
       await cache.put(photoModel.url, response);
     });
   };

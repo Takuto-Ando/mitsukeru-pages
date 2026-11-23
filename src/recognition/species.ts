@@ -1,5 +1,6 @@
 import type { SpeciesRecognition } from "./contracts";
 import type { Candidate } from "./labels";
+export type SpeciesImageFit = "crop" | "contain";
 export type SpeciesResult =
   | { status: "ready" }
   | {
@@ -12,6 +13,7 @@ export interface SpeciesRecognizer {
   recognize(
     photo: string,
     progress?: (text: string) => void,
+    fit?: SpeciesImageFit,
   ): Promise<SpeciesResult>;
   prepare(progress?: (text: string) => void): Promise<SpeciesResult>;
   isReady(): boolean;
@@ -81,11 +83,12 @@ export const speciesRecognizer: SpeciesRecognizer = {
       });
     return preparation;
   },
-  recognize: (photo, progress) => run(photo, progress),
+  recognize: (photo, progress, fit) => run(photo, progress, fit),
 };
 async function run(
   photo?: string,
   progress?: (text: string) => void,
+  fit?: SpeciesImageFit,
 ): Promise<SpeciesResult> {
   if (photo !== undefined && !photo.startsWith("data:image/"))
     return { status: "unavailable", reason: "撮影した写真がありません。" };
@@ -132,7 +135,7 @@ async function run(
           reason: "簡易AIが停止しました。手動で選んでください。",
         });
       };
-      worker.postMessage({ photo, offline: !navigator.onLine });
+      worker.postMessage({ photo, fit });
     } catch {
       cancel();
     }
