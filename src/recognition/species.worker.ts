@@ -5,7 +5,8 @@ import { readPhotoModel } from "./photoModel";
 import { classifyBioClip } from "./labels";
 import { createPhotoReferenceMatcher } from "./photoReferenceMatcher";
 import photoReferences from "./bioclip-photo-references.json";
-import type { SpeciesImageFit } from "./species";
+import type { SpeciesImageFit, SpeciesPhoto } from "./species";
+import { createRecentFrameResults } from "./recentFrameResults";
 import promptBank from "./bioclip-labels.json";
 
 env.wasm.numThreads = 1;
@@ -45,9 +46,16 @@ async function createClassifier() {
     executionProviders: ["wasm"],
   });
 
-  const recognize = async (photo: string, fit: SpeciesImageFit = "crop") => {
-    if (!photo.startsWith("data:image/")) throw new Error("No local photo");
-    const image = await createImageBitmap(await (await fetch(photo)).blob());
+  const recent = createRecentFrameResults<ReturnType<typeof classifyBioClip>>();
+  const recognize = async (
+    photo: SpeciesPhoto,
+    fit: SpeciesImageFit = "crop",
+  ) => {
+    if (typeof photo === "string" && !photo.startsWith("data:image/"))
+      throw new Error("No local photo");
+    const blob =
+      typeof photo === "string" ? await (await fetch(photo)).blob() : photo;
+    const image = await createImageBitmap(blob);
     try {
       if (fit === "contain") {
         const scale = size / Math.max(image.width, image.height);
@@ -80,6 +88,12 @@ async function createClassifier() {
       image.close();
     }
     const { data } = context.getImageData(0, 0, size, size);
+    const pixels =
+      typeof photo === "string"
+        ? undefined
+        : new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4);
+    const previous = pixels && recent.read(pixels);
+    if (previous) return previous;
     for (let channel = 0; channel < mean.length; channel++) {
       const offset = channel * planeSize;
       for (let index = 0; index < planeSize; index++) {
@@ -99,12 +113,14 @@ async function createClassifier() {
             dot += features[index] * vector[index];
           return { label, cosine: dot / norm };
         });
-        return classifyBioClip(
+        const result = classifyBioClip(
           output,
           matchPhoto
             ? (speciesIds) => matchPhoto(features, speciesIds)
             : undefined,
         );
+        if (pixels) recent.write(pixels, result);
+        return result;
       } finally {
         embedding.dispose();
       }
@@ -116,7 +132,7 @@ async function createClassifier() {
 }
 
 self.onmessage = async (
-  event: MessageEvent<{ photo?: string; fit?: SpeciesImageFit }>,
+  event: MessageEvent<{ photo?: SpeciesPhoto; fit?: SpeciesImageFit }>,
 ) => {
   try {
     const { recognize } = await (classifier ??= createClassifier());

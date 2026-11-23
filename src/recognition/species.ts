@@ -1,6 +1,7 @@
 import type { SpeciesRecognition } from "./contracts";
 import type { Candidate } from "./labels";
 export type SpeciesImageFit = "crop" | "contain";
+export type SpeciesPhoto = string | Blob;
 export type SpeciesResult =
   | { status: "ready" }
   | {
@@ -11,7 +12,7 @@ export type SpeciesResult =
   | { status: "unknown" | "unavailable"; reason: string };
 export interface SpeciesRecognizer {
   recognize(
-    photo: string,
+    photo: SpeciesPhoto,
     progress?: (text: string) => void,
     fit?: SpeciesImageFit,
   ): Promise<SpeciesResult>;
@@ -86,11 +87,11 @@ export const speciesRecognizer: SpeciesRecognizer = {
   recognize: (photo, progress, fit) => run(photo, progress, fit),
 };
 async function run(
-  photo?: string,
+  photo?: SpeciesPhoto,
   progress?: (text: string) => void,
   fit?: SpeciesImageFit,
 ): Promise<SpeciesResult> {
-  if (photo !== undefined && !photo.startsWith("data:image/"))
+  if (typeof photo === "string" && !photo.startsWith("data:image/"))
     return { status: "unavailable", reason: "撮影した写真がありません。" };
   if (typeof Worker === "undefined")
     return {

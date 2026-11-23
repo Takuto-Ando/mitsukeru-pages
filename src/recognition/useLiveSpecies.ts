@@ -12,7 +12,7 @@ import {
   photoModelCached,
   photoModelEvent,
 } from "./photoModel";
-import { speciesRecognizer } from "./species";
+import { speciesRecognizer, type SpeciesPhoto } from "./species";
 import { recognizeSpeciesViews, type SpeciesView } from "./speciesViews";
 import type { TrackedLiveBox } from "./liveBoxes";
 import type { Candidate } from "./labels";
@@ -45,15 +45,25 @@ function sameSubject(first: CameraView, second: CameraView) {
   );
 }
 
+function cameraViewPhoto(canvas: HTMLCanvasElement) {
+  let image: Promise<SpeciesPhoto | undefined> | undefined;
+  // Encode only a crop the recognizer actually requests. Crop and contain
+  // share the encoded image, and the live frame never needs a base64 string.
+  return () =>
+    (image ??= new Promise((resolve) =>
+      canvas.toBlob((blob) => resolve(blob ?? undefined), "image/jpeg", 0.85),
+    ));
+}
+
 function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
   const whole = drawRecognitionFrame(video, zoom);
   if (!whole) return [];
-  const photo = whole.canvas.toDataURL("image/jpeg", 0.85);
+  const photo = cameraViewPhoto(whole.canvas);
   const wholeViews: SpeciesView[] = [{ photo }, { photo, fit: "contain" }];
   const focused = box && drawTrackedAnimal(video, zoom, box);
   if (!focused) return wholeViews;
 
-  const focusPhoto = focused.canvas.toDataURL("image/jpeg", 0.85);
+  const focusPhoto = cameraViewPhoto(focused.canvas);
   const views: SpeciesView[] = [
     { photo: focusPhoto, source: "focus" },
     { photo: focusPhoto, fit: "contain", source: "focus" },
@@ -73,7 +83,7 @@ function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
     });
     if (region)
       views.push({
-        photo: region.canvas.toDataURL("image/jpeg", 0.85),
+        photo: cameraViewPhoto(region.canvas),
         source: "tile",
       });
   }

@@ -1,8 +1,12 @@
-import { speciesRecognizer, type SpeciesImageFit } from "./species";
+import {
+  speciesRecognizer,
+  type SpeciesImageFit,
+  type SpeciesPhoto,
+} from "./species";
 import type { Candidate } from "./labels";
 
 export type SpeciesView = {
-  photo: string;
+  photo: string | (() => Promise<SpeciesPhoto | undefined>);
   fit?: SpeciesImageFit;
   source?: "focus" | "tile";
 };
@@ -30,11 +34,11 @@ export async function recognizeSpeciesViews(
 
   for (const view of views) {
     if (!active()) break;
-    const result = await speciesRecognizer.recognize(
-      view.photo,
-      progress,
-      view.fit,
-    );
+    const photo =
+      typeof view.photo === "string" ? view.photo : await view.photo();
+    if (!active()) break;
+    if (!photo) continue;
+    const result = await speciesRecognizer.recognize(photo, progress, view.fit);
     if (result.status === "unavailable") {
       unavailable = true;
       break;

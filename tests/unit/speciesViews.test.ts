@@ -136,3 +136,20 @@ test("枠付きの別々の拡大で一致した候補を、確認を待たず�
     suggestion: { speciesId: redPanda },
   });
 });
+
+test("必要な映像だけを画像化し、使わなかった切り出しは作らない", async () => {
+  const blob = new Blob(["frame"], { type: "image/jpeg" });
+  const first = vi.fn().mockResolvedValue(blob);
+  const fallback = vi.fn().mockResolvedValue(blob);
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValue(outcome(redPanda, 0.9, true));
+  const result = await recognizeSpeciesViews(
+    [{ photo: first }, { photo: fallback, fit: "contain" }],
+    () => true,
+  );
+  expect(result.supported?.speciesId).toBe(redPanda);
+  expect(first).toHaveBeenCalledOnce();
+  expect(recognize).toHaveBeenCalledExactlyOnceWith(blob, undefined, undefined);
+  expect(fallback).not.toHaveBeenCalled();
+});
