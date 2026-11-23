@@ -63,6 +63,7 @@ export function useLiveDetection(
     boxes: [],
   });
   const currentZoom = useRef(zoom);
+  const nextId = useRef(0);
   currentZoom.current = zoom;
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export function useLiveDetection(
       let closed = false;
       let frameAspect = 0;
       let frameZoom = currentZoom.current;
-      let nextId = 0;
+      let missedFrame = false;
       let tracked: TrackedLiveBox[] = [];
       let previousBoxes: LiveBox[] = [];
       let frameStartedAt = 0;
@@ -131,6 +132,7 @@ export function useLiveDetection(
         ) {
           tracked = [];
           previousBoxes = [];
+          missedFrame = false;
           setResult({ status: "running", boxes: [] });
           timer = window.setTimeout(nextFrame, 300);
           return;
@@ -142,6 +144,7 @@ export function useLiveDetection(
           if (frameZoom !== zoom || Math.abs(frameAspect - aspect) >= 0.015) {
             tracked = [];
             previousBoxes = [];
+            missedFrame = false;
           }
           frameAspect = aspect;
           frameZoom = zoom;
@@ -200,14 +203,22 @@ export function useLiveDetection(
               Math.abs(
                 frameAspect - element.clientWidth / element.clientHeight,
               ) < 0.015;
-            tracked = fits
+            const boxes = fits
               ? trackLiveBoxes(
                   tracked,
                   confirmLiveBoxes(previousBoxes, data.boxes),
-                  () => ++nextId,
+                  () => ++nextId.current,
                 )
               : [];
-            previousBoxes = fits ? data.boxes : [];
+            // One empty frame is often an occlusion or momentary blur. Give
+            // the same subject a chance to reappear before removing its ID.
+            const holding =
+              fits && !boxes.length && !missedFrame && tracked.length > 0;
+            if (!holding) {
+              tracked = boxes;
+              previousBoxes = fits ? data.boxes : [];
+            }
+            missedFrame = !!fits && boxes.length === 0;
             setResult({ status: "running", boxes: tracked });
             const now = performance.now();
             const elapsed = now - frameStartedAt;

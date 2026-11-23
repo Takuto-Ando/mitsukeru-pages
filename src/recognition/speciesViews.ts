@@ -76,6 +76,7 @@ export async function recognizeSpeciesViews(
   active: () => boolean,
   progress?: (message: string) => void,
   onSuggestion?: (candidate: Candidate) => void,
+  recognize = speciesRecognizer.recognize,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
@@ -99,7 +100,7 @@ export async function recognizeSpeciesViews(
       typeof view.photo === "string" ? view.photo : await view.photo();
     if (!active()) break;
     if (!photo) continue;
-    const result = await speciesRecognizer.recognize(photo, progress, view.fit);
+    const result = await recognize(photo, progress, view.fit);
     if (result.status === "unavailable") {
       unavailable = true;
       break;

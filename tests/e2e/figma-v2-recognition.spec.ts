@@ -894,7 +894,7 @@ test("最初の切り出しで誤認識しても、次の読み取りを確認�
   await verifySpeciesSwitch(page, false);
 });
 
-test("同じ追跡IDで白枠が動いたら古い候補を外し、新しい枠内の名前を再推論する", async ({
+test("別の動物へ白枠が切り替わったら古い候補を外し、新しい枠内の名前を再推論する", async ({
   page,
 }) => {
   await verifySpeciesSwitch(page, true);
@@ -958,9 +958,9 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                       {
                         label: "クマ",
                         score: 0.9,
-                        left: moveBox && switched ? 0.42 : 0.22,
+                        left: moveBox ? (switched ? 0.57 : 0.15) : 0.22,
                         top: 0.22,
-                        right: moveBox && switched ? 0.9 : 0.76,
+                        right: moveBox ? (switched ? 0.94 : 0.54) : 0.76,
                         bottom: 0.76,
                       },
                     ],
@@ -1042,7 +1042,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     await expect
       .poll(async () => (await guide.boundingBox())?.x)
       .toBeGreaterThan(before.x + 20);
-    await expect(bubble).toHaveText("動物の写真を撮ろう！");
+    await expect(bubble).toHaveText("動物の名前を調べているよ！");
     await emit("test:finish-prior");
   } else {
     await expect(bubble).toHaveText("ホンドギツネがいるよ！");
@@ -1053,8 +1053,217 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     "pending",
   );
   await expect(bubble).toHaveText(
-    moveBox ? "動物の写真を撮ろう！" : "ホンドギツネがいるよ！",
+    moveBox ? "動物の名前を調べているよ！" : "ホンドギツネがいるよ！",
   );
   await emit("test:confirm-species");
   await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+}
+
+test("白枠が揺れ続けても種識別が終わり、一度だけ検出が途切れても名前を保つ", async ({
+  page,
+}) => {
+  const { guide, root, bubble, emit, settleReading } =
+    await startControlledRecognition(page);
+  await guide.evaluate((element) =>
+    element.setAttribute("data-test-original-track", "true"),
+  );
+  // Move the same overlapping box before each pending inference reply.
+  // A geometry-only invalidation would discard both and keep the prompt.
+  for (const [reading, left] of [
+    [1, 36],
+    [2, 22],
+  ] as const) {
+    await expect(root).toHaveAttribute(
+      "data-test-jitter-readings",
+      String(reading),
+    );
+    await emit("test:jitter-box");
+    await expect(guide).toHaveAttribute(
+      "style",
+      new RegExp(`--tracking-left: ${left}%`),
+    );
+    await expect(guide).toHaveAttribute("data-test-original-track", "true");
+    await settleReading("kyoto-a-fulgens");
+  }
+  await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+
+  await emit("test:jitter-box");
+  await expect(guide).toHaveAttribute("style", /--tracking-left: 36%/);
+  await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+  await emit("test:skip-detection");
+  await expect(root).toHaveAttribute("data-test-jitter-miss", "settled");
+  await expect(guide).toHaveAttribute("data-test-original-track", "true");
+  await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+  await expect(button(page, "シャッター")).toBeEnabled();
+});
+
+test("白枠があって候補が割れたときは、判定中と撮影で確認できる状態を区別する", async ({
+  page,
+}) => {
+  const { root, bubble, settleReading } =
+    await startControlledRecognition(page);
+  await expect(root).toHaveAttribute("data-test-jitter-readings", "1");
+  await expect(bubble).toHaveText("動物の名前を調べているよ！");
+  for (const [index, species] of [
+    "kyoto-a-fulgens",
+    "kyoto-v-vulpes",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  ].entries()) {
+    await expect(root).toHaveAttribute(
+      "data-test-jitter-readings",
+      String(index + 1),
+    );
+    await settleReading(species);
+  }
+  await expect(bubble).toHaveText("写真を撮って確かめよう！");
+  await expect(button(page, "シャッター")).toBeEnabled();
+});
+
+test("種識別の応答が途切れたら、白枠とシャッターを使ったまま推論をやり直す", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const { root, bubble, guide, settleReading } =
+    await startControlledRecognition(page);
+  await expect(root).toHaveAttribute("data-test-jitter-readings", "1");
+  await page.clock.fastForward(15_100);
+  await expect(button(page, "シャッター")).toBeEnabled();
+  await expect(guide).toBeVisible();
+  await page.clock.fastForward(1_600);
+  for (const reading of [2, 3]) {
+    await expect(root).toHaveAttribute(
+      "data-test-jitter-readings",
+      String(reading),
+    );
+    await settleReading("kyoto-a-fulgens");
+  }
+  await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+});
+
+async function startControlledRecognition(page: Page) {
+  await useMockCamera(page);
+  await page.route("**/models/yolox*.onnx", (route) =>
+    route.fulfill({ body: Buffer.alloc(3_659_407) }),
+  );
+  let releaseDownload!: () => void;
+  const pending = new Promise<void>((resolve) => (releaseDownload = resolve));
+  await page.route(photoModel.url, async (route) => {
+    await pending;
+    await route.fulfill({
+      body: "mock model asset",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "connection", {
+      configurable: true,
+      value: { effectiveType: "4g", saveData: false },
+    });
+    let shifted = false;
+    let skipDetection = false;
+    let detectionPaused = false;
+    let readings = 0;
+    let finishReading: ((species?: string) => void) | undefined;
+    window.addEventListener("test:jitter-box", () => (shifted = !shifted));
+    window.addEventListener(
+      "test:skip-detection",
+      () => (skipDetection = true),
+    );
+    window.addEventListener("test:settle-reading", (event) =>
+      finishReading?.((event as CustomEvent<string | undefined>).detail),
+    );
+
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        const kind = args[1]?.name;
+        if (
+          kind !== "zooketch-species-recognition" &&
+          kind !== "zooketch-live-detection"
+        )
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          postMessage({ type, photo }: { type?: string; photo?: Blob }) {
+            const root = document.documentElement;
+            const reply = (data: unknown) =>
+              queueMicrotask(() => this.onmessage?.({ data }));
+            if (kind === "zooketch-live-detection") {
+              if (type === "prepare") {
+                reply({ type: "ready" });
+              } else if (skipDetection) {
+                skipDetection = false;
+                detectionPaused = true;
+                reply({ type: "boxes", boxes: [] });
+              } else if (detectionPaused) {
+                root.dataset.testJitterMiss = "settled";
+              } else {
+                reply({
+                  type: "boxes",
+                  boxes: [
+                    {
+                      label: "クマ",
+                      score: 0.9,
+                      left: shifted ? 0.36 : 0.22,
+                      top: 0.22,
+                      right: shifted ? 0.9 : 0.76,
+                      bottom: 0.76,
+                    },
+                  ],
+                });
+              }
+              return;
+            }
+            if (!photo) {
+              reply({ type: "result", result: { status: "ready" } });
+              return;
+            }
+            root.dataset.testJitterReadings = String(++readings);
+            finishReading = (species) =>
+              reply({
+                type: "result",
+                result: species
+                  ? {
+                      status: "candidates",
+                      candidates: [
+                        { groupId: species, speciesId: species, score: 0.91 },
+                      ],
+                      recognition: { status: "identified" },
+                    }
+                  : { status: "unknown" },
+              });
+          },
+        };
+      },
+    });
+  });
+
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  const guide = page.locator(".replica-camera-tracking");
+  try {
+    await expect(guide).toBeVisible();
+  } finally {
+    releaseDownload();
+  }
+  return {
+    guide,
+    root: page.locator("html"),
+    bubble: page.locator(".pitsune-bubble"),
+    emit: (name: string) =>
+      page.evaluate((type) => window.dispatchEvent(new Event(type)), name),
+    settleReading: (species?: string) =>
+      page.evaluate(
+        (detail) =>
+          window.dispatchEvent(
+            new CustomEvent("test:settle-reading", { detail }),
+          ),
+        species,
+      ),
+  };
 }

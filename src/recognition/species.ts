@@ -15,6 +15,7 @@ export interface SpeciesRecognizer {
     photo: SpeciesPhoto,
     progress?: (text: string) => void,
     fit?: SpeciesImageFit,
+    timeoutMs?: number,
   ): Promise<SpeciesResult>;
   prepare(progress?: (text: string) => void): Promise<SpeciesResult>;
   isReady(): boolean;
@@ -29,6 +30,7 @@ let preparation: Promise<SpeciesResult> | undefined;
 let idleWarmTimer: ReturnType<typeof setTimeout> | undefined;
 let worker: Worker | undefined,
   finish: ((r: SpeciesResult) => void) | undefined;
+const modelRequestTimeout = 180_000;
 const stopInBackground = () => {
   if (document.hidden) cancel();
 };
@@ -40,13 +42,12 @@ function stopWorker() {
   document.removeEventListener("visibilitychange", stopInBackground);
   window.removeEventListener("pagehide", cancel);
 }
-function cancel() {
+function failRequest(reason: string) {
   stopWorker();
-  finish?.({
-    status: "unavailable",
-    reason: "候補の検索を中止しました。手動でも選べます。",
-  });
-  finish = undefined;
+  finish?.({ status: "unavailable", reason });
+}
+function cancel() {
+  failRequest("候補の検索を中止しました。手動でも選べます。");
 }
 export const speciesRecognizer: SpeciesRecognizer = {
   cancel,
@@ -84,12 +85,14 @@ export const speciesRecognizer: SpeciesRecognizer = {
       });
     return preparation;
   },
-  recognize: (photo, progress, fit) => run(photo, progress, fit),
+  recognize: (photo, progress, fit, timeoutMs) =>
+    run(photo, progress, fit, timeoutMs),
 };
 async function run(
   photo?: SpeciesPhoto,
   progress?: (text: string) => void,
   fit?: SpeciesImageFit,
+  timeoutMs = modelRequestTimeout,
 ): Promise<SpeciesResult> {
   if (typeof photo === "string" && !photo.startsWith("data:image/"))
     return { status: "unavailable", reason: "撮影した写真がありません。" };
@@ -106,8 +109,13 @@ async function run(
       reason: "候補の検索を中止しました。手動でも選べます。",
     };
   if (photo) clearTimeout(idleWarmTimer);
+  // Live callers can recover a stalled warm inference sooner, while loading
+  // the model and identifying a still photo keep their existing budget.
+  const requestTimeout = ready && photo ? timeoutMs : modelRequestTimeout;
   return new Promise<SpeciesResult>((resolve) => {
-    const timer = setTimeout(cancel, 180000);
+    const timer = setTimeout(() => {
+      failRequest("動物の識別に時間がかかっています。");
+    }, requestTimeout);
     finish = (r) => {
       clearTimeout(timer);
       finish = undefined;
@@ -122,21 +130,22 @@ async function run(
         document.addEventListener("visibilitychange", stopInBackground);
         window.addEventListener("pagehide", cancel);
       }
-      worker.onmessage = (e) => {
+      const requestWorker = worker;
+      requestWorker.onmessage = (e) => {
+        if (worker !== requestWorker) return;
         if (e.data.type === "progress") progress?.(e.data.text);
         else if (e.data.type === "result") {
           ready = e.data.result.status !== "unavailable";
           finish?.(e.data.result);
         }
       };
-      worker.onerror = () => {
-        stopWorker();
-        finish?.({
-          status: "unavailable",
-          reason: "簡易AIが停止しました。手動で選んでください。",
-        });
+      const workerFailed = () => {
+        if (worker !== requestWorker) return;
+        failRequest("簡易AIが停止しました。手動で選んでください。");
       };
-      worker.postMessage({ photo, fit });
+      requestWorker.onerror = workerFailed;
+      requestWorker.onmessageerror = workerFailed;
+      requestWorker.postMessage({ photo, fit });
     } catch {
       cancel();
     }

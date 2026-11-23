@@ -563,6 +563,14 @@ export function ReplicaCamera({
               text={`${candidate.name}かも！`}
               highlights={[candidate.name]}
             />
+          ) : bestMatch && species.modelStatus === "ready" ? (
+            <BubbleLine
+              text={
+                species.checked
+                  ? "写真を撮って確かめよう！"
+                  : "動物の名前を調べているよ！"
+              }
+            />
           ) : (
             <CardLettering
               className="camera-prompt-art"

@@ -20,6 +20,7 @@ import type { Candidate } from "./labels";
 
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
 type CameraView = { zoom: number; box?: TrackedLiveBox };
+const LIVE_INFERENCE_TIMEOUT_MS = 15_000;
 
 function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
   const id = candidate?.speciesId ?? candidate?.groupId;
@@ -34,11 +35,11 @@ function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
 }
 
 function sameReadingArea(first: CameraView, second: CameraView) {
-  if (first.zoom !== second.zoom) return false;
+  if (!sameTarget(first, second)) return false;
   const a = first.box;
   const b = second.box;
   if (a === b) return true;
-  if (!a || !b || a.id !== b.id) return false;
+  if (!a || !b) return false;
   // Ignore detector jitter, but compare against the crop that was actually
   // sampled so small movements that accumulate also trigger a new reading.
   const x = Math.max(
@@ -55,6 +56,10 @@ function sameReadingArea(first: CameraView, second: CameraView) {
     Math.abs(a.top - b.top) <= y &&
     Math.abs(a.bottom - b.bottom) <= y
   );
+}
+
+function sameTarget(first: CameraView, second: CameraView) {
+  return first.zoom === second.zoom && first.box?.id === second.box?.id;
 }
 
 function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
@@ -130,31 +135,44 @@ export function useLiveSpecies(
       if (!speciesRecognizer.isBusy()) {
         const source = recognitionViews(frame, snapshot);
         if (source.length) {
-          const current = () =>
-            visible() && sameReadingArea(snapshot, view.current);
+          const current = () => visible() && sameTarget(snapshot, view.current);
           ownsWorker = true;
           const { primary, supported, suggestion, unavailable } =
-            await recognizeSpeciesViews(source, current, undefined, (guess) => {
-              const candidate = animalFromCandidate(guess);
-              if (!candidate || !current()) return;
-              setResult((prior) => {
-                if (prior && sameReadingArea(prior.snapshot, snapshot)) {
-                  if (prior.animal?.name === candidate.name) return prior;
-                }
-                // Show the new name as a suggestion. Only the completed
-                // multi-view check may make it the capture's chosen animal.
-                return { snapshot, candidate };
-              });
-            });
+            await recognizeSpeciesViews(
+              source,
+              current,
+              undefined,
+              (guess) => {
+                const candidate = animalFromCandidate(guess);
+                if (!candidate || !current()) return;
+                setResult((prior) => {
+                  if (
+                    prior &&
+                    sameTarget(prior.snapshot, snapshot) &&
+                    prior.animal?.name === candidate.name
+                  )
+                    return prior;
+                  // Keep a suggestion separate from the capture's answer.
+                  return { snapshot, candidate };
+                });
+              },
+              (photo, progress, fit) =>
+                speciesRecognizer.recognize(
+                  photo,
+                  progress,
+                  fit,
+                  LIVE_INFERENCE_TIMEOUT_MS,
+                ),
+            );
           if (!visible()) return;
           if (unavailable) {
             restart();
             return;
           }
           if (current()) {
+            retried = false;
             const speciesId = primary?.speciesId ?? primary?.groupId;
-            const same =
-              previous && sameReadingArea(previous.snapshot, snapshot);
+            const same = previous && sameTarget(previous.snapshot, snapshot);
             const keep = !speciesId && !suggestion && same && !previous?.missed;
             const confirmed =
               supported ??
@@ -163,7 +181,8 @@ export function useLiveSpecies(
               primary === suggestion
                 ? primary
                 : undefined);
-            needsConfirmation = !confirmed && (!!suggestion || !!keep);
+            needsConfirmation =
+              !confirmed && (!!snapshot.box || !!suggestion || !!keep);
             if (speciesId) previous = { snapshot, speciesId, missed: false };
             else if (keep && previous) previous.missed = true;
             else previous = undefined;
@@ -191,10 +210,21 @@ export function useLiveSpecies(
       if (!needsConfirmation) quickChecks = 0;
       const quick = needsConfirmation && !idle && quickChecks < 2;
       if (quick) quickChecks += 1;
+      // A detector update for the same animal should refresh the crop, but
+      // must never cancel the running round or erase its visible name.
+      const moved = !sameReadingArea(snapshot, view.current);
+      const normalRecovery = (now - began) * 1.5;
       coolingView = snapshot;
       timer = window.setTimeout(
         nextFrame,
-        quick ? 650 : Math.max(idle ? 4000 : 1100, (now - began) * 1.5),
+        moved || quick
+          ? 650
+          : Math.max(
+              idle ? 4000 : 1100,
+              needsConfirmation
+                ? Math.min(4000, normalRecovery)
+                : normalRecovery,
+            ),
       );
     }
 
@@ -270,10 +300,12 @@ export function useLiveSpecies(
       if (!visible() || !coolingView) return;
       if (sameReadingArea(coolingView, view.current)) return;
       window.clearTimeout(timer);
-      setResult(undefined);
-      previous = undefined;
       updateInteraction();
-      quickChecks = 0;
+      if (!sameTarget(coolingView, view.current)) {
+        setResult(undefined);
+        previous = undefined;
+        quickChecks = 0;
+      }
       nextFrame();
     };
     window.addEventListener(photoModelEvent, modelReady);
@@ -317,7 +349,7 @@ export function useLiveSpecies(
   }, [box, zoom]);
 
   const checked =
-    active && !!result && sameReadingArea(result.snapshot, view.current);
+    active && !!result && sameTarget(result.snapshot, view.current);
   return {
     animal: checked ? result.animal : undefined,
     candidate: checked ? result.candidate : undefined,
