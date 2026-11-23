@@ -1,5 +1,8 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { recognizeSpeciesViews } from "../../src/recognition/speciesViews";
+import {
+  photoSpeciesViews,
+  recognizeSpeciesViews,
+} from "../../src/recognition/speciesViews";
 import {
   speciesRecognizer,
   type SpeciesResult,
@@ -77,11 +80,8 @@ test("全体に有力な候補が出た時点で知らせ、確定とは区別�
     undefined,
     onSuggestion,
   );
-  await vi.waitFor(() =>
-    expect(onSuggestion).toHaveBeenCalledWith(
-      expect.objectContaining({ speciesId: redPanda }),
-    ),
-  );
+  await vi.waitFor(() => expect(resolveLast).toBeTypeOf("function"));
+  expect(onSuggestion).not.toHaveBeenCalled();
   resolveLast({ status: "unknown", reason: "ambiguous" });
   const result = await pending;
   expect(result.suggestion?.speciesId).toBe(redPanda);
@@ -126,8 +126,7 @@ test("枠付きの別々の拡大で一致した候補を、確認を待たず�
 
   await vi.waitFor(() =>
     expect(suggest.mock.calls).toEqual([
-      [expect.objectContaining({ speciesId: fox })],
-      [expect.objectContaining({ speciesId: redPanda }), "agreement"],
+      [expect.objectContaining({ speciesId: redPanda })],
     ]),
   );
   finish(outcome(fox, 0.75));
@@ -154,7 +153,7 @@ test("必要な映像だけを画像化し、使わなかった切り出しは�
   expect(fallback).not.toHaveBeenCalled();
 });
 
-test("別の種を枠内で明瞭に識別したら、先に出した候補を更新する", async () => {
+test("写真の見え方が食い違うときは単独の候補を途中で表示しない", async () => {
   const fox = "kyoto-v-vulpes";
   vi.spyOn(speciesRecognizer, "recognize")
     .mockResolvedValueOnce(outcome(fox, 0.62))
@@ -173,8 +172,38 @@ test("別の種を枠内で明瞭に識別したら、先に出した候補を�
     suggest,
   );
 
-  expect(suggest.mock.calls).toEqual([
-    [expect.objectContaining({ speciesId: fox })],
-    [expect.objectContaining({ speciesId: redPanda }), "strong"],
+  expect(suggest).not.toHaveBeenCalled();
+});
+
+test("写真全体と枠の候補が分かれたら、追加の2視点で一致した種を先頭にする", async () => {
+  const unknown: SpeciesResult = { status: "unknown", reason: "ambiguous" };
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("kyoto-v-vulpes", 0.52))
+    .mockResolvedValueOnce(unknown)
+    .mockResolvedValueOnce(outcome("bush-dog", 0.83, true))
+    .mockResolvedValueOnce(unknown)
+    .mockResolvedValueOnce(outcome(redPanda, 0.66))
+    .mockResolvedValueOnce(outcome(redPanda, 0.79));
+  const views = photoSpeciesViews("whole", "focus", ["middle", "side"]);
+  const suggest = vi.fn();
+  const result = await recognizeSpeciesViews(
+    views,
+    () => true,
+    undefined,
+    suggest,
+  );
+
+  expect(recognize.mock.calls.map(([photo, , fit]) => [photo, fit])).toEqual([
+    ["focus", undefined],
+    ["focus", "contain"],
+    ["whole", undefined],
+    ["whole", "contain"],
+    ["middle", undefined],
+    ["side", undefined],
   ]);
+  expect(result.candidates[0]?.speciesId).toBe(redPanda);
+  expect(suggest).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ speciesId: redPanda }),
+  );
 });

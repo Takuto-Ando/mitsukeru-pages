@@ -1,9 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import {
-  drawCameraFrame,
-  drawRecognitionFrame,
-  drawTrackedAnimal,
-} from "../camera/zoom";
+import { drawPhotoRecognitionFrames } from "../camera/zoom";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import {
   canAutoDownloadPhotoModel,
@@ -12,8 +8,13 @@ import {
   photoModelCached,
   photoModelEvent,
 } from "./photoModel";
-import { speciesRecognizer, type SpeciesPhoto } from "./species";
-import { recognizeSpeciesViews, type SpeciesView } from "./speciesViews";
+import { speciesRecognizer } from "./species";
+import {
+  photoFromCanvas,
+  photoSpeciesViews,
+  photoViewQuality,
+  recognizeSpeciesViews,
+} from "./speciesViews";
 import type { TrackedLiveBox } from "./liveBoxes";
 import type { Candidate } from "./labels";
 
@@ -56,52 +57,14 @@ function sameReadingArea(first: CameraView, second: CameraView) {
   );
 }
 
-function cameraViewPhoto(canvas: HTMLCanvasElement) {
-  let image: Promise<SpeciesPhoto | undefined> | undefined;
-  // Encode only a crop the recognizer actually requests. Crop and contain
-  // share the encoded image, and the live frame never needs a base64 string.
-  return () =>
-    (image ??= new Promise((resolve) =>
-      canvas.toBlob((blob) => resolve(blob ?? undefined), "image/jpeg", 0.85),
-    ));
-}
-
 function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
-  const whole = drawRecognitionFrame(video, zoom);
-  if (!whole) return [];
-  const photo = cameraViewPhoto(whole.canvas);
-  const wholeViews: SpeciesView[] = [{ photo }, { photo, fit: "contain" }];
-  const focused = box && drawTrackedAnimal(video, zoom, box);
-  if (!focused) return wholeViews;
-
-  const focusPhoto = cameraViewPhoto(focused.canvas);
-  const views: SpeciesView[] = [
-    { photo: focusPhoto, source: "focus" },
-    { photo: focusPhoto, fit: "contain", source: "focus" },
-    wholeViews[0],
-  ];
-  const ratio = [video.clientWidth || 4, video.clientHeight || 5] as const;
-  const aspect = ratio[0] / ratio[1];
-  const width = 0.68 * Math.min(1, 1 / aspect);
-  const height = 0.68 * Math.min(1, aspect);
-  for (const position of [0.5, 0.26, 0.74]) {
-    const left = Math.max(0, Math.min(1 - width, position - width / 2));
-    const region = drawCameraFrame(video, 384, zoom, ratio, {
-      left,
-      top: (1 - height) / 2,
-      right: left + width,
-      bottom: (1 + height) / 2,
-    });
-    if (region)
-      views.push({
-        photo: cameraViewPhoto(region.canvas),
-        source: "tile",
-      });
-  }
-  // If the direct views were ambiguous, try a tighter crop before another
-  // whole-frame pass. The recognized name can still use all available votes.
-  views.push(wholeViews[1]);
-  return views;
+  const frames = drawPhotoRecognitionFrames(video, zoom, box);
+  if (!frames) return [];
+  return photoSpeciesViews(
+    photoFromCanvas(frames.full, photoViewQuality.full),
+    frames.crop && photoFromCanvas(frames.crop, photoViewQuality.crop),
+    frames.tiles.map((tile) => photoFromCanvas(tile, photoViewQuality.crop)),
+  );
 }
 
 export function useLiveSpecies(
@@ -171,25 +134,18 @@ export function useLiveSpecies(
             visible() && sameReadingArea(snapshot, view.current);
           ownsWorker = true;
           const { primary, supported, suggestion, unavailable } =
-            await recognizeSpeciesViews(
-              source,
-              current,
-              undefined,
-              (guess, evidence) => {
-                const candidate = animalFromCandidate(guess);
-                if (!candidate || !current()) return;
-                setResult((prior) => {
-                  if (prior && sameReadingArea(prior.snapshot, snapshot)) {
-                    if (prior.animal?.name === candidate.name) return prior;
-                    if (!evidence && (prior.animal || prior.candidate))
-                      return prior;
-                  }
-                  // Show the new name as a suggestion. Only the completed
-                  // multi-view check may make it the capture's chosen animal.
-                  return { snapshot, candidate };
-                });
-              },
-            );
+            await recognizeSpeciesViews(source, current, undefined, (guess) => {
+              const candidate = animalFromCandidate(guess);
+              if (!candidate || !current()) return;
+              setResult((prior) => {
+                if (prior && sameReadingArea(prior.snapshot, snapshot)) {
+                  if (prior.animal?.name === candidate.name) return prior;
+                }
+                // Show the new name as a suggestion. Only the completed
+                // multi-view check may make it the capture's chosen animal.
+                return { snapshot, candidate };
+              });
+            });
           if (!visible()) return;
           if (unavailable) {
             restart();
@@ -202,7 +158,11 @@ export function useLiveSpecies(
             const keep = !speciesId && !suggestion && same && !previous?.missed;
             const confirmed =
               supported ??
-              (same && previous?.speciesId === speciesId ? primary : undefined);
+              (same &&
+              previous?.speciesId === speciesId &&
+              primary === suggestion
+                ? primary
+                : undefined);
             needsConfirmation = !confirmed && (!!suggestion || !!keep);
             if (speciesId) previous = { snapshot, speciesId, missed: false };
             else if (keep && previous) previous.missed = true;

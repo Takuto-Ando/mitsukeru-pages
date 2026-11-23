@@ -5,13 +5,44 @@ import {
 } from "./species";
 import type { Candidate } from "./labels";
 
+export type PhotoSource = string | (() => Promise<SpeciesPhoto | undefined>);
 export type SpeciesView = {
-  photo: string | (() => Promise<SpeciesPhoto | undefined>);
+  photo: PhotoSource;
   fit?: SpeciesImageFit;
   source?: "focus" | "tile";
 };
 
-type SuggestionEvidence = "strong" | "agreement";
+export const photoViewQuality = { full: 0.8, crop: 0.85 };
+
+export function photoFromCanvas(canvas: HTMLCanvasElement, quality: number) {
+  let image: Promise<SpeciesPhoto | undefined> | undefined;
+  return () =>
+    (image ??= new Promise((resolve) =>
+      canvas.toBlob(
+        (blob) => resolve(blob ?? undefined),
+        "image/jpeg",
+        quality,
+      ),
+    ));
+}
+
+export function photoSpeciesViews(
+  full: PhotoSource,
+  crop?: PhotoSource,
+  tiles: readonly PhotoSource[] = [],
+): SpeciesView[] {
+  return [
+    ...(crop
+      ? [
+          { photo: crop, source: "focus" as const },
+          { photo: crop, fit: "contain" as const, source: "focus" as const },
+        ]
+      : []),
+    { photo: full },
+    { photo: full, fit: "contain" },
+    ...tiles.map((photo) => ({ photo, source: "tile" as const })),
+  ];
+}
 
 type Vote = {
   candidate: Candidate;
@@ -21,11 +52,30 @@ type Vote = {
 };
 const key = (candidate: Candidate) => candidate.speciesId ?? candidate.groupId;
 
+function supportedByViews(votes: readonly Vote[]) {
+  const pairs = new Map<string, Vote[]>();
+  for (const vote of votes) {
+    const id = key(vote.candidate);
+    const group = pairs.get(id) ?? [];
+    group.push(vote);
+    pairs.set(id, group);
+  }
+  const ranked = [...pairs.values()].sort((a, b) => b.length - a.length);
+  if (ranked[0]?.length >= 2 && ranked[0].length > (ranked[1]?.length ?? 0))
+    return ranked[0][0].candidate;
+  if (ranked.length === 1) {
+    const clearFocus = votes.find(
+      ({ view, strong }) => view.source === "focus" && !view.fit && strong,
+    );
+    return clearFocus?.candidate;
+  }
+}
+
 export async function recognizeSpeciesViews(
   views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
-  onSuggestion?: (candidate: Candidate, evidence?: SuggestionEvidence) => void,
+  onSuggestion?: (candidate: Candidate) => void,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
@@ -33,10 +83,17 @@ export async function recognizeSpeciesViews(
   let supported: Candidate | undefined;
   let provisional: Candidate | undefined;
   let suggestion: Candidate | undefined;
-  let suggestionEvidence: SuggestionEvidence | undefined;
+
   let unavailable = false;
 
+  let triedTiles = false;
   for (const view of views) {
+    if (view.source === "tile" && !triedTiles) {
+      triedTiles = true;
+      // Use the same result as photo review whenever its views agree.
+      supported = supportedByViews(votes);
+      if (supported) break;
+    }
     if (!active()) break;
     const photo =
       typeof view.photo === "string" ? view.photo : await view.photo();
@@ -57,35 +114,6 @@ export async function recognizeSpeciesViews(
     const [first, runner] = result.candidates;
     const margin = first ? first.score - (runner?.score ?? 0) : 0;
     const strong = result.recognition?.status === "identified";
-    // A clear direct reading may update a name before the other views finish.
-    // A whole frame is only direct evidence while there is no focused crop.
-    const clearDirectView =
-      strong &&
-      first &&
-      first.score >= 0.8 &&
-      margin >= 0.2 &&
-      (!hasFocus || view.source === "focus");
-    const suggestionMinimum = !hasFocus
-      ? 0.6
-      : view.source === "focus"
-        ? 0.4
-        : 0.45;
-    if (
-      onSuggestion &&
-      first &&
-      view.source !== "tile" &&
-      first.score >= suggestionMinimum &&
-      margin >= 0.07 &&
-      (!suggestion || (clearDirectView && !suggestionEvidence))
-    ) {
-      suggestion = first;
-      if (clearDirectView) {
-        suggestionEvidence = "strong";
-        onSuggestion(first, suggestionEvidence);
-      } else {
-        onSuggestion(first);
-      }
-    }
     const minimum = hasFocus ? 0.4 : 0.6;
     if (!first || first.score < minimum || margin < 0.07) continue;
     const agree = votes.filter(
@@ -100,7 +128,6 @@ export async function recognizeSpeciesViews(
       hasFocus &&
       view.source === "tile" &&
       first.score >= 0.65 &&
-      suggestionEvidence !== "agreement" &&
       (!suggestion || key(suggestion) !== key(first)) &&
       agree.some(
         ({ view, candidate }) =>
@@ -108,8 +135,7 @@ export async function recognizeSpeciesViews(
       )
     ) {
       suggestion = first;
-      suggestionEvidence = "agreement";
-      onSuggestion(first, suggestionEvidence);
+      onSuggestion(first);
     }
 
     // A pair of consistent views of the subject outranks incidental details
@@ -130,22 +156,7 @@ export async function recognizeSpeciesViews(
 
   if (!supported && hasFocus) {
     const frame = votes.filter(({ view }) => !view.source);
-    const pairs = new Map<string, Vote[]>();
-    for (const vote of votes) {
-      const id = key(vote.candidate);
-      const group = pairs.get(id) ?? [];
-      group.push(vote);
-      pairs.set(id, group);
-    }
-    const ranked = [...pairs.values()].sort((a, b) => b.length - a.length);
-    if (ranked[0]?.length >= 2 && ranked[0].length > (ranked[1]?.length ?? 0))
-      supported = ranked[0][0].candidate;
-    if (ranked.length === 1) {
-      const clearFocus = votes.find(
-        ({ view, strong }) => view.source === "focus" && !view.fit && strong,
-      );
-      supported ??= clearFocus?.candidate;
-    }
+    supported = supportedByViews(votes);
     // Repeat only convincing local evidence when the full frame offers no
     // competing name. The camera requires it again before using it as a label.
     if (!supported && !frame.some(({ candidate }) => candidate.score >= 0.55)) {
@@ -164,6 +175,11 @@ export async function recognizeSpeciesViews(
     }
   }
 
+  const direct = votes.find(({ view }) => view.source !== "tile")?.candidate;
+  const tentative =
+    direct && votes.every(({ candidate }) => key(direct) === key(candidate))
+      ? direct
+      : undefined;
   const ranked = [...candidates.values()];
   if (supported) {
     const winner = supported;
@@ -176,7 +192,7 @@ export async function recognizeSpeciesViews(
   return {
     primary: supported ?? provisional,
     supported,
-    suggestion: supported ?? suggestion,
+    suggestion: supported ?? suggestion ?? tentative,
     candidates: ranked.slice(0, 3),
     unavailable,
   };

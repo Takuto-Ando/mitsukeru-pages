@@ -429,10 +429,7 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
             ((event: { data: unknown }) => void) | undefined,
           terminate() {},
           postMessage({ photo, fit }: { photo?: string; fit?: string }) {
-            if (
-              fit === "contain" ||
-              (photo && document.querySelector(".design3-photo-review"))
-            )
+            if (photo && document.querySelector(".design3-photo-review"))
               return;
             queueMicrotask(() =>
               this.onmessage?.({
@@ -440,17 +437,19 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
                   type: "result",
                   result: !photo
                     ? { status: "ready" }
-                    : {
-                        status: "candidates",
-                        candidates: [
-                          {
-                            groupId: "kyoto-s-humboldti",
-                            speciesId: "kyoto-s-humboldti",
-                            score: 0.64,
-                          },
-                        ],
-                        recognition: { status: "uncertain" },
-                      },
+                    : fit === "contain"
+                      ? { status: "unknown" }
+                      : {
+                          status: "candidates",
+                          candidates: [
+                            {
+                              groupId: "kyoto-s-humboldti",
+                              speciesId: "kyoto-s-humboldti",
+                              score: 0.64,
+                            },
+                          ],
+                          recognition: { status: "uncertain" },
+                        },
                 },
               }),
             );
@@ -889,7 +888,7 @@ test("低負荷端末では検出間隔を広げ、ズームでWorkerを作り�
     .toBeGreaterThan(framesWhenHidden);
 });
 
-test("誤った種名を表示中でも、次の有力な候補を確認待ちで止めない", async ({
+test("最初の切り出しで誤認識しても、次の読み取りを確認してから名前を更新する", async ({
   page,
 }) => {
   await verifySpeciesSwitch(page, false);
@@ -973,9 +972,13 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                 reply({ type: "result", result: { status: "ready" } });
                 return;
               }
-              const id = switched ? "kyoto-a-fulgens" : "kyoto-v-vulpes";
               const weak = moveBox && switched;
               const reading = switched ? ++newReadings : ++priorReadings;
+              const id = switched
+                ? !moveBox && reading === 1
+                  ? "kyoto-s-humboldti"
+                  : "kyoto-a-fulgens"
+                : "kyoto-v-vulpes";
               const finish = () => {
                 const result =
                   weak && reading % 7 !== 1
@@ -995,7 +998,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                       };
                 reply({ type: "result", result });
               };
-              if (moveBox && !switched && reading === 2) {
+              if (moveBox && !switched && reading === 3) {
                 root.dataset.testPriorReading = "pending";
                 finishPrior = finish;
                 return;
@@ -1032,7 +1035,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
       "data-test-prior-reading",
       "pending",
     );
-    await expect(bubble).toHaveText("ホンドギツネかも！");
+    await expect(bubble).toHaveText("ホンドギツネがいるよ！");
     const guide = page.locator(".replica-camera-tracking");
     const before = (await guide.boundingBox())!;
     await emit("test:change-species");
@@ -1049,7 +1052,9 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     "data-test-switch-confirmation",
     "pending",
   );
-  await expect(bubble).toHaveText("レッサーパンダかも！");
+  await expect(bubble).toHaveText(
+    moveBox ? "動物の写真を撮ろう！" : "ホンドギツネがいるよ！",
+  );
   await emit("test:confirm-species");
   await expect(bubble).toHaveText("レッサーパンダがいるよ！");
 }

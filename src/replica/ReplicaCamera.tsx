@@ -19,8 +19,9 @@ import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
 import {
+  cameraPhotoRatio,
   drawCameraFrame,
-  drawTrackedAnimal,
+  drawPhotoRecognitionFrames,
   useCameraZoom,
 } from "../camera/zoom";
 import {
@@ -33,13 +34,17 @@ import {
   cameraSettingsReturnedEvent,
   openCameraPermissionSettings,
 } from "../camera/permission";
+import {
+  photoFromCanvas,
+  photoViewQuality,
+  type PhotoSource,
+} from "../recognition/speciesViews";
 import "./camera-tracking.css";
 
 export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
 
 const liveSetting = "zooketch-live-detection-v1";
-const photoRatio = [4, 5] as const;
 
 const recognizedAnimals = new Map([
   ["キリン", { groupId: "giraffe" }],
@@ -49,7 +54,7 @@ const recognizedAnimals = new Map([
 
 export type CameraCapture = {
   photo?: string;
-  recognitionInput?: { full?: string; crop?: string };
+  recognitionInput?: { full?: string; crop?: string; tiles?: PhotoSource[] };
   sample: boolean;
   animal?: { groupId: string; name: string; taskId?: string };
 };
@@ -483,7 +488,7 @@ export function ReplicaCamera({
     }
 
     const frame = sample ? example.current : video.current;
-    const ratio = legacy ? undefined : photoRatio;
+    const ratio = legacy ? undefined : cameraPhotoRatio;
     try {
       const shot =
         frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
@@ -492,21 +497,26 @@ export function ReplicaCamera({
         let recognitionInput: CameraCapture["recognitionInput"];
         if (!legacy && !sample && video.current) {
           try {
-            recognitionInput = {
-              full: drawCameraFrame(
-                shot.canvas,
-                384,
-                1,
-                photoRatio,
-              )?.canvas.toDataURL("image/jpeg", 0.8),
-            };
-            if (bestMatch)
-              recognitionInput.crop = drawTrackedAnimal(
-                video.current,
-                cameraZoom.digital,
-                bestMatch,
-                shot.canvas,
-              )?.canvas.toDataURL("image/jpeg", 0.85);
+            const frames = drawPhotoRecognitionFrames(
+              video.current,
+              cameraZoom.digital,
+              bestMatch,
+              shot.canvas,
+            );
+            if (frames)
+              recognitionInput = {
+                full: frames.full.toDataURL(
+                  "image/jpeg",
+                  photoViewQuality.full,
+                ),
+                crop: frames.crop?.toDataURL(
+                  "image/jpeg",
+                  photoViewQuality.crop,
+                ),
+                tiles: frames.tiles.map((tile) =>
+                  photoFromCanvas(tile, photoViewQuality.crop),
+                ),
+              };
           } catch {
             // The full photo is still available for recognition.
           }

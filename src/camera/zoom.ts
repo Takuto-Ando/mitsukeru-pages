@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { cameraWindow, type LiveBox } from "../recognition/liveBoxes";
 
 type Zoom = 0.5 | 1 | 2;
+export const cameraPhotoRatio = [4, 5] as const;
 type ZoomCapabilities = MediaTrackCapabilities & {
   zoom?: { min: number; max: number };
 };
@@ -112,11 +113,11 @@ export function drawCameraFrame(
 
 // Use the same visible crop as the tracking worker. Give the animal room
 // around its silhouette without giving the enclosure most of the input.
-export function drawTrackedAnimal(
+function drawTrackedAnimal(
   video: HTMLVideoElement,
   zoom: number,
   box: LiveBox,
-  captured?: HTMLCanvasElement,
+  captured: HTMLCanvasElement,
 ) {
   const width = box.right - box.left;
   const height = box.bottom - box.top;
@@ -136,16 +137,21 @@ export function drawTrackedAnimal(
     bottom: Math.min(1, box.bottom + vertical),
   };
   if ((focus.right - focus.left) * (focus.bottom - focus.top) >= 0.8) return;
-  const ratio = [video.clientWidth, video.clientHeight] as const;
-  if (!captured) return drawCameraFrame(video, 384, zoom, ratio, focus);
+  return drawPreviewRegion(video, zoom, captured, focus);
+}
 
-  // The saved photo has a fixed aspect ratio while the preview adapts
-  // to the screen. Translate the tracked edges into the captured frame.
+function drawPreviewRegion(
+  video: HTMLVideoElement,
+  zoom: number,
+  captured: HTMLCanvasElement,
+  region: Pick<LiveBox, "left" | "top" | "right" | "bottom">,
+) {
+  // Preview and saved photo can have different aspect ratios.
   const { videoWidth, videoHeight } = video;
   const preview = cameraWindow(
     videoWidth,
     videoHeight,
-    ratio[0] / ratio[1],
+    video.clientWidth / video.clientHeight,
     zoom,
   );
   const photo = cameraWindow(
@@ -157,19 +163,19 @@ export function drawTrackedAnimal(
   const normalized = {
     left: Math.max(
       0,
-      (preview.x + preview.width * focus.left - photo.x) / photo.width,
+      (preview.x + preview.width * region.left - photo.x) / photo.width,
     ),
     top: Math.max(
       0,
-      (preview.y + preview.height * focus.top - photo.y) / photo.height,
+      (preview.y + preview.height * region.top - photo.y) / photo.height,
     ),
     right: Math.min(
       1,
-      (preview.x + preview.width * focus.right - photo.x) / photo.width,
+      (preview.x + preview.width * region.right - photo.x) / photo.width,
     ),
     bottom: Math.min(
       1,
-      (preview.y + preview.height * focus.bottom - photo.y) / photo.height,
+      (preview.y + preview.height * region.bottom - photo.y) / photo.height,
     ),
   };
   if (
@@ -180,9 +186,30 @@ export function drawTrackedAnimal(
   return drawCameraFrame(captured, 384, 1, undefined, normalized);
 }
 
-export function drawRecognitionFrame(video: HTMLVideoElement, zoom: number) {
-  return drawCameraFrame(video, 384, zoom, [
-    video.clientWidth || 4,
-    video.clientHeight || 5,
-  ]);
+export function drawPhotoRecognitionFrames(
+  video: HTMLVideoElement,
+  zoom: number,
+  box?: LiveBox,
+  captured = drawCameraFrame(video, 1000, zoom, cameraPhotoRatio)?.canvas,
+) {
+  if (!captured) return;
+  const full = drawCameraFrame(captured, 384, 1, cameraPhotoRatio)?.canvas;
+  if (!full) return;
+  const crop = box && drawTrackedAnimal(video, zoom, box, captured)?.canvas;
+  const aspect = video.clientWidth / video.clientHeight;
+  const width = 0.68 * Math.min(1, 1 / aspect);
+  const height = 0.68 * Math.min(1, aspect);
+  const tiles = crop
+    ? [0.5, 0.26, 0.74].flatMap((position) => {
+        const left = Math.max(0, Math.min(1 - width, position - width / 2));
+        const tile = drawPreviewRegion(video, zoom, captured, {
+          left,
+          top: (1 - height) / 2,
+          right: left + width,
+          bottom: (1 + height) / 2,
+        });
+        return tile ? [tile.canvas] : [];
+      })
+    : [];
+  return { full, crop, tiles };
 }

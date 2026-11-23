@@ -9,7 +9,11 @@ import {
   photoModelDownloadEvent,
 } from "./photoModel";
 import { speciesRecognizer } from "./species";
-import { recognizeSpeciesViews } from "./speciesViews";
+import {
+  photoSpeciesViews,
+  recognizeSpeciesViews,
+  type PhotoSource,
+} from "./speciesViews";
 
 export function usePhotoModelDownloading() {
   const [downloading, setDownloading] = useState(photoModelDownloading);
@@ -28,6 +32,7 @@ const empty: Identification = { message: "" };
 export function usePhotoIdentification(
   photo?: string,
   crop?: string,
+  tiles?: readonly PhotoSource[],
 ): Identification {
   // Keep the result bound to the exact captured image. A late inference cannot
   // select a species for a retaken photo.
@@ -61,22 +66,8 @@ export function usePhotoIdentification(
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
         if (prepared.status !== "ready") throw new Error("unavailable");
-        const views = [
-          ...(crop
-            ? [
-                { photo: crop, source: "focus" as const },
-                {
-                  photo: crop,
-                  fit: "contain" as const,
-                  source: "focus" as const,
-                },
-              ]
-            : []),
-          { photo: image },
-          { photo: image, fit: "contain" as const },
-        ];
         const { candidates } = await recognizeSpeciesViews(
-          views,
+          photoSpeciesViews(image, crop, tiles),
           () => active,
           (message) => update({ message }),
         );
@@ -109,7 +100,7 @@ export function usePhotoIdentification(
       active = false;
       if (cancelInference) speciesRecognizer.release();
     };
-  }, [crop, photo]);
+  }, [crop, photo, tiles]);
 
   return result && result.photo === photo ? result.value : empty;
 }
