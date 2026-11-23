@@ -140,3 +140,66 @@ test("低い検出スコアの枠は同じ位置が続いたときだけ表示�
   expect(confirmLiveBoxes([weak], [next])).toEqual([next]);
   expect(trackLiveBoxes([{ ...strong, id: 1 }], [next], () => 2)[0].id).toBe(1);
 });
+
+test("見本写真で近い候補を並べ替えても対象外判定を維持する", () => {
+  const output = [
+    { label: "a Japanese Asian black bear", cosine: 0.34 },
+    { label: "a red panda", cosine: 0.323 },
+    { label: "cage bars", cosine: 0.23 },
+    { label: "a goat", cosine: 0.22 },
+  ];
+  const requests: (readonly string[])[] = [];
+  const match = (ids: readonly string[]) => {
+    requests.push(ids);
+    return new Map([
+      ["kyoto-a-fulgens", 0.83],
+      ["bear", 0.61],
+      ["goat", 0.98],
+    ]);
+  };
+  const corrected = classifyBioClip(output, match);
+  expect(corrected.recognition).toMatchObject({
+    speciesId: "kyoto-a-fulgens",
+    status: "uncertain",
+  });
+  expect(corrected.candidates[0].score).toBeGreaterThan(0.6);
+  expect(requests).toEqual([["bear", "kyoto-a-fulgens"]]);
+  expect(
+    classifyBioClip(
+      [{ label: "cage bars", cosine: 0.39 }, ...output.slice(0, 2)],
+      match,
+    ).candidates,
+  ).toEqual([]);
+  expect(requests).toHaveLength(1);
+});
+
+test("見本写真データの破損や対象種の欠落時は元の候補を使う", async () => {
+  const { createPhotoReferenceMatcher } =
+    await import("../../src/recognition/photoReferenceMatcher");
+  const { default: bank } =
+    await import("../../src/recognition/bioclip-photo-references.json");
+  expect(new Set(bank.speciesIds).size).toBe(97);
+  expect(bank.speciesIds).toContain("kyoto-a-fulgens");
+  expect(Buffer.from(bank.vectors, "base64")).toHaveLength(
+    512 * bank.speciesIds.length,
+  );
+  expect(
+    createPhotoReferenceMatcher({ speciesIds: ["goat"], vectors: "!" }),
+  ).toBeUndefined();
+  const match = createPhotoReferenceMatcher(bank);
+  expect(match).toBeDefined();
+  const firstTemplate = new Float32Array(
+    new Int8Array(Buffer.from(bank.vectors, "base64").subarray(0, 512)),
+  );
+  expect(
+    match?.(firstTemplate, [bank.speciesIds[0]]).get(bank.speciesIds[0]),
+  ).toBeCloseTo(1);
+  const incomplete = [
+    { label: "a giraffe", cosine: 0.34 },
+    { label: "a goat", cosine: 0.33 },
+    { label: "a dog", cosine: 0.21 },
+  ];
+  expect(classifyBioClip(incomplete, () => new Map([["goat", 0.99]]))).toEqual(
+    classifyBioClip(incomplete),
+  );
+});

@@ -121,25 +121,95 @@ export function recognitionFromOutput(
   };
 }
 
-export function classifyBioClip(output: { label: string; cosine: number }[]) {
+type BioClipScore = { label: string; cosine: number };
+type PhotoSimilarity = (
+  speciesIds: readonly string[],
+) => ReadonlyMap<string, number>;
+
+const photoReferenceWeight = 0.6;
+const candidateWindow = 0.065;
+
+function reorderByPhoto(
+  ranked: BioClipScore[],
+  rejection: BioClipScore | undefined,
+  similarity: PhotoSimilarity,
+) {
+  const [top] = ranked;
+  const shortlist = ranked.flatMap((entry) => {
+    const speciesId = byPrompt.get(entry.label)?.speciesId;
+    if (
+      !speciesId ||
+      top.cosine - entry.cosine > candidateWindow ||
+      (rejection && entry.cosine <= rejection.cosine)
+    )
+      return [];
+    return [{ entry, speciesId }];
+  });
+  if (shortlist.length < 2) return ranked;
+
+  const visual = similarity(shortlist.map(({ speciesId }) => speciesId));
+  const firstSpecies = shortlist[0].speciesId;
+  if (!visual.has(firstSpecies)) return ranked;
+
+  const combined = shortlist.flatMap(({ entry, speciesId }) => {
+    const score = visual.get(speciesId);
+    return score === undefined
+      ? []
+      : [{ entry, score: entry.cosine + photoReferenceWeight * score }];
+  });
+  combined.sort((a, b) => b.score - a.score);
+  const winner = combined[0];
+  if (!winner || winner.entry === top) return ranked;
+
+  // Keep the original leading cosine and the background scores on their
+  // existing scale. Only change the order of plausible known candidates.
+  const updated = new Map(
+    combined.map(({ entry, score }) => [
+      entry,
+      top.cosine - (winner.score - score),
+    ]),
+  );
+  return ranked
+    .map((entry) => ({
+      ...entry,
+      cosine: updated.get(entry) ?? entry.cosine,
+    }))
+    .sort((a, b) => b.cosine - a.cosine);
+}
+
+export function classifyBioClip(
+  output: BioClipScore[],
+  photoSimilarity?: PhotoSimilarity,
+) {
   const ranked = output
     .filter(({ cosine }) => Number.isFinite(cosine))
     .sort((a, b) => b.cosine - a.cosine);
-  const [top, second] = ranked;
+  const [top] = ranked;
   const rejection = ranked.find(({ label }) => !byPrompt.has(label));
   const candidates: Candidate[] = [];
+  let confidenceMargin = 0;
   if (
     top &&
     byPrompt.has(top.label) &&
     top.cosine >= 0.24 &&
     top.cosine - (rejection?.cosine ?? 0) >= 0.008
   ) {
-    const normalized = ranked.map(({ cosine }) =>
-      Math.exp((cosine - top.cosine) * 100),
+    const scores = photoSimilarity
+      ? reorderByPhoto(ranked, rejection, photoSimilarity)
+      : ranked;
+    const [first, second] = scores;
+    if (first.label === top.label)
+      confidenceMargin = first.cosine - (second?.cosine ?? 0);
+    const normalized = scores.map(({ cosine }) =>
+      Math.exp((cosine - first.cosine) * 100),
     );
     const sum = normalized.reduce((total, value) => total + value, 0);
-    for (const [index, entry] of ranked.entries()) {
-      if (top.cosine - entry.cosine > 0.065 || candidates.length === 3) break;
+    for (const [index, entry] of scores.entries()) {
+      if (
+        first.cosine - entry.cosine > candidateWindow ||
+        candidates.length === 3
+      )
+        break;
       const match = byPrompt.get(entry.label);
       if (match && (!rejection || entry.cosine > rejection.cosine))
         candidates.push({ ...match, score: normalized[index] / sum });
@@ -153,7 +223,7 @@ export function classifyBioClip(output: { label: string; cosine: number }[]) {
       confidence: best?.score ?? 0,
       status: !best
         ? ("unknown" as const)
-        : top.cosine - (second?.cosine ?? 0) >= 0.04
+        : confidenceMargin >= 0.04
           ? ("identified" as const)
           : ("uncertain" as const),
       modelVersion: speciesModelVersion,

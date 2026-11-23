@@ -1,0 +1,657 @@
+ズーケッチ / Zooketch — BioCLIP photo reference credits
+
+The original photos are available only at their sources. The app uses aggregated, quantized image features.
+Source photos were resized and encoded with the BioCLIP image model; the original photo files are not distributed in the app.
+
+badger | (c) Nathan Ruser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/189670538
+badger | (c) Isy VD, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/205197890
+badger | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/267729863
+badger | (c) Ashwin Srinivasan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/296942797
+badger | (c) 岸本年郎, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/410248394
+bear | Wich’yanan (Jay) Limparungpatthanakij | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Ursus_thibetanus_mupinensis_177243215.jpg
+bear | (c) 岸本年郎, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/132054923
+bear | (c) shahar chaikin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/141196750
+bear | (c) Carlos Otávio Gussoni, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/204793691
+bear | (c) Utain Pummarin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/241242116
+bear | (c) Tatsutomo Chin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/27911358
+bear | (c) Ian Dugdale, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/302036455
+bear | (c) 呂一起(Lyu yi-chi), some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/40575445
+bush-dog | Vassil | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Chien_des_buissons_Safari_de_Peaugres_07082017_1_(cropped).jpg
+bush-dog | Александр Сигачёв | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Animals_in_Kaliningrad_Zoo_-_Speothos_venaticus_-_2024-06-13_-_p4.jpg
+bush-dog | Miguelrangeljr | CC BY 3.0 https://creativecommons.org/licenses/by/3.0 | https://commons.wikimedia.org/wiki/File:Cachorro-vinagre.jpg
+bush-dog | (c) Fábio Olmos, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/105740174
+bush-dog | (c) Daniel Nicholson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/411474115
+capuchin | (c) Guillaume Delaitre, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/103122187
+capuchin | (c) Caroline Quinn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/130240635
+capuchin | (c) desertnaturalist, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/139492773
+capuchin | (c) Adrien Jailloux, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/144810437
+capuchin | (c) Rajan Rao, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/228850668
+capuchin | (c) scaup, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/259393797
+capuchin | (c) François Dunoyer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/326816525
+capuchin | (c) Tom Heijnen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/390958532
+deer | (c) stephen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/156973311
+deer | (c) Toby Y, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/227733475
+deer | (c) Erwann André, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/235240167
+deer | (c) Will Taylor, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/309109996
+deer | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/4626387
+deer | (c) Brian Magurn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/388889065
+deer | (c) Michal Honskus, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/389939282
+deer | (c) Phil James, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/405013322
+donkey | (c) Meghaa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/110163617
+donkey | (c) Ian Webb, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/124710000
+donkey | (c) Bethany Harrison, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/254915620
+donkey | (c) David Pereira, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/258070111
+donkey | (c) Josh B, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/272707569
+donkey | (c) Eamon Corbett, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/38012764
+donkey | (c) Steve Matson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/341198422
+donkey | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/48275866
+elephant | (c) Ansil B.R., some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/86555904
+elephant | (c) tlaloc27, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/175276980
+elephant | (c) Emanuel Kern, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/178492999
+elephant | (c) Navin Sasikumar, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/180836907
+elephant | (c) Griha Hasanov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/189705361
+elephant | (c) Ronith Urs, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/237232926
+elephant | (c) Navaneeth Sini George, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/287548082
+elephant | (c) Mario Barroso, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/56831407
+fennec | Umberto Salvagnin | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Fennec_Foxes.jpg
+fennec | (c) Valentin Moser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/265552320
+fennec | (c) Juan Rodríguez, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/271760993
+fennec | (c) Horatiu Stefanie, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/338456579
+fennec | (c) Antoine Thivolle, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/346443296
+gibbon | (c) John Witton, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/186821481
+gibbon | (c) anukma, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/22453662
+gibbon | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/259416035
+gibbon | (c) Ashwin Viswanathan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/269992736
+gibbon | (c) Adam Kamal, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/316466988
+gibbon | (c) Julia Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/37678168
+gibbon | (c) scaup, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/44320160
+giraffe | (c) Henry de Lange, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/10675675
+giraffe | (c) Kyle Van Houtan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/129410766
+giraffe | (c) Thorsten Hackbarth, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/151062719
+giraffe | (c) Tuoichen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/215799824
+giraffe | (c) Mark Wagner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/28307769
+giraffe | (c) Darren Obbard, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/313286589
+giraffe | (c) Hydrocycler (Elizabeth Dougherty), some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/37249791
+giraffe | (c) Presha Soogrim, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/51235677
+goat | (c) Michael Bakker Paiva, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/103483227
+goat | (c) wild_wind, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/17420460
+goat | (c) David Anderson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/154853535
+goat | (c) Belinda Forbes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/229646807
+goat | (c) Henry de Lange, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/277291487
+goat | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/33120448
+goat | (c) Umut Nuri Erdoğan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/388710528
+goat | (c) David Elrington, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/395187894
+gorilla | Tony King | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Gorilla_gorilla_gorilla_350337595.jpg
+gorilla | Macinate | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Gorille.jpg
+gorilla | (c) Tony King, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/187534546
+hippo | (c) dhfischer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/98470542
+hippo | (c) libby hepburn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/21203133
+hippo | (c) Rafael Würtemberger, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/222296176
+hippo | (c) Jonas Kraft, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/232106686
+hippo | (c) Forest Botial-Jarvis, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/26966025
+hippo | (c) Guillaume Rischard, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/241033750
+hippo | (c) scaup, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/265085464
+hippo | (c) Seig, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/32076998
+hyrax | (c) Josiah Londerée, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/161829969
+hyrax | (c) Ryan van Huyssteen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/285893082
+hyrax | (c) Peter Archdale, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/312153883
+hyrax | (c) William Keenan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/322781329
+hyrax | (c) Norma Malinowski, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/340584691
+hyrax | (c) Svyatoslav Knyazev, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342932706
+hyrax | (c) Timothy Whitehead, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/57247150
+hyrax | (c) dhfischer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/58482103
+kyoto-a-ambiguus | (c) portioid, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/255702309
+kyoto-a-ambiguus | (c) My-Lan Le, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/284473358
+kyoto-a-ambiguus | (c) Alex Novarro, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/36287164
+kyoto-a-ambiguus | (c) Jo Roberts, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/319962245
+kyoto-a-ambiguus | (c) Andrew Hrycyna, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/333113758
+kyoto-a-ambiguus | (c) Eric Klug, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342263455
+kyoto-a-ambiguus | (c) Thomas Ebner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/346606450
+kyoto-a-ambiguus | (c) Nathan Van Cooten, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/364495789
+kyoto-a-cunicularia | (c) er-birds, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/63484085
+kyoto-a-cunicularia | (c) Monics Paredes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/87167828
+kyoto-a-cunicularia | (c) Diana, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/102239799
+kyoto-a-cunicularia | (c) RAP, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/117724791
+kyoto-a-cunicularia | (c) Bruno Siqueira, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/207177101
+kyoto-a-cunicularia | (c) Colin Croft, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/279619269
+kyoto-a-cunicularia | (c) ian bullock, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/294465626
+kyoto-a-cunicularia | (c) Ronald Péret, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/326566113
+kyoto-a-falcata | (c) Se Lena, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/109919669
+kyoto-a-falcata | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/2456756
+kyoto-a-falcata | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/191571756
+kyoto-a-falcata | (c) Валерия Ковалева, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/226794962
+kyoto-a-falcata | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/233642442
+kyoto-a-falcata | (c) brendanboyd, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/27972426
+kyoto-a-falcata | (c) Константин Шатилов, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/287511659
+kyoto-a-falcata | (c) Jason Alexander, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/324982469
+kyoto-a-fulgens | (c) zhangshen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/72248258
+kyoto-a-fulgens | (c) Wang.QG, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/177999577
+kyoto-a-fulgens | (c) Brian Henderson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/254393152
+kyoto-a-fulgens | (c) Bren Zo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/256689162
+kyoto-a-fulgens | (c) Luciano Massa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/270801943
+kyoto-a-fulgens | (c) Sheelagh Halsey, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/32698031
+kyoto-a-fulgens | (c) Marie Hosch, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/37642855
+kyoto-a-fuligula | (c) Dr. Sven Gippner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/109922757
+kyoto-a-fuligula | (c) Pavel Kacl, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/196696373
+kyoto-a-fuligula | (c) Ron Pasieczna, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/228698058
+kyoto-a-fuligula | (c) Johannes Schlagbauer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/251015875
+kyoto-a-fuligula | (c) Nicole Kearney, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/270396413
+kyoto-a-fuligula | (c) Maeve Hall, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/271500836
+kyoto-a-fuligula | (c) Marco Zaccaria Di Fraia, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/292060448
+kyoto-a-fuligula | (c) Viktor Strenada, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335600961
+kyoto-a-galericulata | (c) Павел Кунгуров, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/148606020
+kyoto-a-galericulata | (c) frangp, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/236099645
+kyoto-a-galericulata | (c) Sheelagh Halsey, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/258746681
+kyoto-a-galericulata | (c) Олеся, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/317062404
+kyoto-a-galericulata | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/4876025
+kyoto-a-galericulata | (c) Vítor Jorge, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/348513565
+kyoto-a-galericulata | (c) wil, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/361198218
+kyoto-a-galericulata | (c) Ron Pasieczna, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/44178839
+kyoto-a-japnicus | Y. de Hoev. | Public domain  | https://commons.wikimedia.org/wiki/File:Cryptobranchus_japonicus.jpg
+kyoto-a-japnicus | Naturalis Biodiversity Center | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Naturalis_Biodiversity_Center_-_Andrias_japonicus_-_Japanese_giant_salamander_-_Siebold_Collection.jpg
+kyoto-a-japnicus | (c) Ron M, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/294970392
+kyoto-a-japnicus | (c) Ken-ichi Ueda, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/295734850
+kyoto-a-japnicus | (c) Raymond Fedrick, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/372983358
+kyoto-a-penelope | (c) John Ashburner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/179120309
+kyoto-a-penelope | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/203360524
+kyoto-a-penelope | (c) Paul Lewis, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/34451258
+kyoto-a-penelope | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/317504709
+kyoto-a-penelope | (c) SIA, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335369880
+kyoto-a-penelope | (c) Martin Kalfatovic, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/346210931
+kyoto-a-penelope | (c) Barry Walter, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/355145745
+kyoto-a-penelope | (c) Валерия Ковалева, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/376128377
+kyoto-a-platyrhynchos | (c) Hunter Hickok, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/66981996
+kyoto-a-platyrhynchos | (c) Peter Waycik, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/98241618
+kyoto-a-platyrhynchos | (c) Thomas Ebner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/107064862
+kyoto-a-platyrhynchos | (c) Irina Mitine, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/198372039
+kyoto-a-platyrhynchos | (c) Martin Maitz, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/275022029
+kyoto-a-platyrhynchos | (c) Daughter Dad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335166934
+kyoto-a-platyrhynchos | (c) Igor Balashov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/337335973
+kyoto-a-platyrhynchos | (c) nerpanura, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/356938843
+kyoto-a-platyrhynchos-d | Tiff from Seattle, USA | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Poof_Dry.jpg
+kyoto-a-poecilorhyncha | (c) Se Lena, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/70664942
+kyoto-a-poecilorhyncha | (c) Samuele Papeschi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/155908568
+kyoto-a-poecilorhyncha | (c) Sundar Lakshmanan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/244843702
+kyoto-a-poecilorhyncha | (c) Joshua Chen 陳是語, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/33591728
+kyoto-a-poecilorhyncha | (c) 夏仲归, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330656339
+kyoto-a-poecilorhyncha | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/331290354
+kyoto-a-poecilorhyncha | (c) 7695_Reikyu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/348010503
+kyoto-a-poecilorhyncha | (c) Joseph Ugoretz, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/401454825
+kyoto-a-strepera | (c) Victor Engel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/64488947
+kyoto-a-strepera | (c) Вячеслав Юсупов, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/160167492
+kyoto-a-strepera | (c) Viktor, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/252691542
+kyoto-a-strepera | (c) Aaron Liston, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/261249687
+kyoto-a-strepera | (c) u101125, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/308641811
+kyoto-a-strepera | (c) Sergio Garrido Villa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330020566
+kyoto-a-strepera | (c) Conquest, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/369599348
+kyoto-a-strepera | (c) Mike Duran, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/58915990
+kyoto-b-bubo | JarroNevsbaru | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Eurasian_eagle_owl_(Bubo_bubo)_2024.jpg
+kyoto-c-didactylus | (c) Suhei Castro, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/145021578
+kyoto-c-didactylus | (c) eloise kerroux, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/152542330
+kyoto-c-didactylus | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/257852785
+kyoto-c-didactylus | (c) Artur Alves, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/306576472
+kyoto-c-didactylus | (c) Enrique Salazar, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/316609395
+kyoto-c-didactylus | (c) Kai Squires, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/39613520
+kyoto-c-didactylus | (c) Wairambar Rainforest, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/367963421
+kyoto-c-didactylus | (c) Samuel GUIRAUDOU, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/413542160
+kyoto-c-flavomarginata | Daderot | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Cuora_flavomarginata_-_National_Aquarium_of_New_Zealand_-_Napier,_NZ_-_DSC05775.jpg
+kyoto-c-flavomarginata | (c) 何小花, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/119207583
+kyoto-c-flavomarginata | (c) Licheng Shih, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/121577936
+kyoto-c-flavomarginata | (c) 槲蕨Miu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/221461720
+kyoto-c-flavomarginata | (c) 林正文, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/291551183
+kyoto-c-flavomarginata | (c) Jonghyun Park, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/308183564
+kyoto-c-flavomarginata | (c) 祐, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/373535988
+kyoto-c-flavomarginata | (c) Cheng-Te Hsu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/45350338
+kyoto-c-japonica | Ingrid Taylar | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Japanese_Quail.jpg
+kyoto-c-japonica | Edelmauswaldgeist | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Vogelpark_Olching_57.jpg
+kyoto-c-japonica | (c) 夏仲归, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/147763737
+kyoto-c-japonica | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/2431133
+kyoto-c-japonica | (c) yiiwen fang, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/22798604
+kyoto-c-japonica | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/333427628
+kyoto-c-japonica | (c) MIMI, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/334807162
+kyoto-c-japonica | (c) Wang.QG, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/406577737
+kyoto-c-mccordi | Adolphus79 ( talk ) | Public domain  | https://commons.wikimedia.org/wiki/File:Chelodina_mccordi_2.jpg
+kyoto-c-moluccensis | AlicePopkorn2 from Germany | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Cacatua_moluccensis_-captive_-front-8a.jpg
+kyoto-c-moluccensis | Philip Nalangan | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Moluccan_cockatoo_in_Indonesia.jpg
+kyoto-c-moluccensis | xpcfan | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Cacatua_moluccensis_-Charles_Paddock_Zoo,_Atascadero,_California,_USA-8a.jpg
+kyoto-c-moluccensis | No machine-readable author provided. BetacommandBot assumed (based on copyright claims). | Public domain  | https://commons.wikimedia.org/wiki/File:Cacatua_moluccensis_003.jpg
+kyoto-c-moluccensis | (c) desertnaturalist, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/144093476
+kyoto-c-moluccensis | (c) Grze Swis, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/206346062
+kyoto-c-moluccensis | (c) Ryan Donnelly, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/231545016
+kyoto-c-moluccensis | (c) Alexander Wentworth, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/268478386
+kyoto-c-mouhotii | (c) rohanmenzies, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/33787673
+kyoto-c-mouhotii | (c) Trương Việt Hưng, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/298392699
+kyoto-c-picta | (c) Yannick Lamontagne, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/80025728
+kyoto-c-picta | (c) Rose Zappa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/165245892
+kyoto-c-picta | (c) Andrew Murray, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/176834882
+kyoto-c-picta | (c) Richard Littauer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/207674804
+kyoto-c-picta | (c) evangrimes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/24929852
+kyoto-c-picta | (c) Bryce, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/249816847
+kyoto-c-picta | (c) Steven Lamonde, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/279009436
+kyoto-c-picta | (c) Itamar Shifrin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/57255350
+kyoto-c-porcellus | Zi X. Ou | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Cavia_porcellus_(YPM_IZ_096779)_010.jpeg
+kyoto-c-porcellus | (c) Y. Liu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/233605073
+kyoto-c-porcellus | (c) Millie Brady, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/389533076
+kyoto-c-pyrrhogaster | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/122466480
+kyoto-c-pyrrhogaster | (c) Samuele Papeschi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/145576875
+kyoto-c-pyrrhogaster | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/216098009
+kyoto-c-pyrrhogaster | (c) 岸本年郎, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/237756920
+kyoto-c-pyrrhogaster | (c) Rajan Rao, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/292282455
+kyoto-c-pyrrhogaster | (c) Ken-ichi Ueda, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/293695030
+kyoto-c-pyrrhogaster | (c) Tatsutomo Chin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/345649721
+kyoto-c-pyrrhogaster | (c) Raymond Fedrick, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/359080341
+kyoto-c-reevesii | (c) Se Lena, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/72134152
+kyoto-c-reevesii | (c) Oleg, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/97732480
+kyoto-c-reevesii | (c) Atsushi Nakajima, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/165900520
+kyoto-c-reevesii | (c) Nathan Ruser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/190206910
+kyoto-c-reevesii | (c) Yung-Lun Lin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/267019660
+kyoto-c-reevesii | (c) Ashwin Srinivasan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/296695661
+kyoto-c-reevesii | (c) Kai Löhr, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/36532366
+kyoto-c-reevesii | (c) Ксения Витвицкая, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/404427811
+kyoto-d-novaehollandiae | (c) desertnaturalist, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/62437728
+kyoto-d-novaehollandiae | (c) Guy Taseski, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/140358893
+kyoto-d-novaehollandiae | (c) Sam Westbrook, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/253971051
+kyoto-d-novaehollandiae | (c) Tyler Anthony, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/324470495
+kyoto-d-novaehollandiae | (c) rBirdy, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330411562
+kyoto-d-novaehollandiae | (c) JR Ferrer-Paris, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/339394787
+kyoto-d-novaehollandiae | (c) Rosalie Lawrence, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/46051574
+kyoto-d-novaehollandiae | (c) Thomas Mesaglio, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/402962232
+kyoto-e-climacophora | (c) lunardog, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/80427758
+kyoto-e-climacophora | (c) Se Lena, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/119414701
+kyoto-e-climacophora | (c) Илья Руденко, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/174970304
+kyoto-e-climacophora | (c) Rajan Rao, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/289413273
+kyoto-e-climacophora | (c) Ashwin Srinivasan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/292378638
+kyoto-e-climacophora | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/299452058
+kyoto-e-climacophora | (c) Genevieve Early, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/306394082
+kyoto-e-climacophora | (c) Mustapha, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/412005887
+kyoto-e-macularius | Kinori | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Eublepharis_macularius_after_molting.jpg
+kyoto-e-subglobosa | (c) Nathan Ruser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104738177
+kyoto-e-subglobosa | (c) rjtizard, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260974475
+kyoto-e-subglobosa | (c) Kevin Floyd, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/331159813
+kyoto-e-subglobosa | (c) Mark Clarke, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/405996524
+kyoto-f-pardalis | (c) Jacobus Retief, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/127633076
+kyoto-f-pardalis | (c) Lennart Hudel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/17409991
+kyoto-f-pardalis | (c) Tony King, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/189875932
+kyoto-f-pardalis | (c) Nigel Voaden, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/3424920
+kyoto-f-pardalis | (c) amantedarmanin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/315643147
+kyoto-f-pardalis | (c) Samuel GUIRAUDOU, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330440396
+kyoto-f-pardalis | (c) Paul Prior, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330504128
+kyoto-f-pardalis | (c) Jason Berger, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/343943339
+kyoto-f-peregrinus | (c) Caroline Quinn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/65281087
+kyoto-f-peregrinus | (c) Maura, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/76922683
+kyoto-f-peregrinus | (c) Nicolás Lavandero, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/78385495
+kyoto-f-peregrinus | (c) Alexis Williams, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/150439782
+kyoto-f-peregrinus | (c) tcantrell52, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/190852793
+kyoto-f-peregrinus | (c) Kat B, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/197435863
+kyoto-f-peregrinus | (c) Sean Frey, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/282280118
+kyoto-f-peregrinus | (c) Brodie Cass Talbott, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/301055212
+kyoto-f-tinnunculus | (c) ajott, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/64788509
+kyoto-f-tinnunculus | (c) Don Loarie, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/17723824
+kyoto-f-tinnunculus | (c) Daniel S. Katz, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/240399143
+kyoto-f-tinnunculus | (c) gab_1, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/256637294
+kyoto-f-tinnunculus | (c) Edoardo Nardelli, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/257626469
+kyoto-f-tinnunculus | (c) Tristan Jobin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/319393954
+kyoto-f-tinnunculus | (c) Codrin Bucur, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/337938060
+kyoto-f-tinnunculus | (c) D. Rafael S. Fernandes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342562743
+kyoto-g-antigone | (c) Paul Whitington, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/133735615
+kyoto-g-antigone | (c) Oscar Dove, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/221781623
+kyoto-g-antigone | (c) Laura Sewell, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/303715650
+kyoto-g-antigone | (c) Daniel S. Katz, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/321805694
+kyoto-g-antigone | (c) desertnaturalist, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/42418479
+kyoto-g-antigone | (c) Richard Littauer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/394079737
+kyoto-g-antigone | (c) Martin Rady, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/405129150
+kyoto-g-antigone | (c) dhfischer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/56083387
+kyoto-g-carbonaria | (c) Lucero Luna Montilla, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/120566231
+kyoto-g-carbonaria | (c) Carlos Ruiz, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/21706373
+kyoto-g-carbonaria | (c) Dan Riskin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/230605870
+kyoto-g-carbonaria | (c) Rosario Douglas, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/299991560
+kyoto-g-carbonaria | (c) Artur Alves, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/343714015
+kyoto-g-carbonaria | (c) Gianmaria Bonari, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/42487949
+kyoto-g-carbonaria | (c) Carlos Otávio Gussoni, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/384740704
+kyoto-g-carbonaria | (c) Gerardo Chavarri, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/386952269
+kyoto-g-elegans | (c) Swarochi Tathagath, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/64355277
+kyoto-g-elegans | (c) Viral joshi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/83481912
+kyoto-g-elegans | (c) P Jeganathan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/159869468
+kyoto-g-elegans | (c) @dineshphotography7797, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/175341479
+kyoto-g-elegans | (c) Pirataber, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/38118741
+kyoto-g-elegans | (c) Lasse W., some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/340165542
+kyoto-g-elegans | (c) rajesh rocky, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/387211464
+kyoto-g-elegans | (c) Aravinth, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/412631300
+kyoto-g-eremita | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71616141
+kyoto-g-eremita | (c) David F. Belmonte, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/83170560
+kyoto-g-eremita | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104016670
+kyoto-g-eremita | (c) Holger Braun, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/22362935
+kyoto-g-eremita | (c) Karsten Ste, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/201850380
+kyoto-g-eremita | (c) Antoine Thivolle, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/331649180
+kyoto-g-eremita | (c) Barry Stewart, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/376351273
+kyoto-g-eremita | (c) Roland Gromes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/405067989
+kyoto-g-goisagi | Nicolas Huet / Jean Gabriel Prêtre | Public domain  | https://commons.wikimedia.org/wiki/File:Gorsachius_goisagi_1838.jpg
+kyoto-g-goisagi | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/400219182
+kyoto-g-goisagi | (c) ꦥꦤ꧀ꦗꦶꦒꦸꦱ꧀ꦠꦶꦄꦏ꧀ꦧꦂ, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/416481000
+kyoto-g-japonensis | (c) Christoph Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/63813236
+kyoto-g-japonensis | (c) Austin 0201, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/9600943
+kyoto-g-japonensis | (c) Patrick Lam, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/149873933
+kyoto-g-japonensis | (c) Михаил Голомысов, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/222603021
+kyoto-g-japonensis | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/265705611
+kyoto-g-japonensis | (c) Rajan Rao, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/293650382
+kyoto-g-japonensis | (c) Jono, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/307816776
+kyoto-g-japonensis | (c) Pavel Smirnov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/374456484
+kyoto-g-nigrinoda | (c) evangrimes, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/70357178
+kyoto-g-radiata | Jose Antonio | Public domain  | https://commons.wikimedia.org/wiki/File:Geochelone_radiata_Madagascar.JPG
+kyoto-g-radiata | gailhampshire from Cradley, Malvern, U.K | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Geochelone_radiata._Radiated_Tortoise_-_Flickr_-_gailhampshire.jpg
+kyoto-g-radiata | Vassil | Public domain  | https://commons.wikimedia.org/wiki/File:Tortue_rayonn%C3%A9e_Ile_aux_Serpents_191108.jpg
+kyoto-g-radiata | (c) Dominik Maximilián Ramík, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/109342529
+kyoto-g-radiata | (c) Nigel Voaden, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/3240596
+kyoto-g-radiata | (c) gwynmwilliams, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/253524929
+kyoto-g-radiata | (c) amantedarmanin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/411605406
+kyoto-g-senegalensis | Photo by Andy Deans (CC BY 2.0) Frost Museum | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Lemurphthirus_stigmosus_1954.jpg
+kyoto-g-senegalensis | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104974616
+kyoto-g-senegalensis | (c) Summer J. Smentek, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/152225163
+kyoto-g-senegalensis | (c) Lucky Atabo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/160103555
+kyoto-g-senegalensis | (c) Kian Hayles-Cotton, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/180488298
+kyoto-g-senegalensis | (c) ecovore, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/216111257
+kyoto-g-senegalensis | (c) Adrien Jailloux, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/332781328
+kyoto-g-sulcata | (c) Chiara, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/97624351
+kyoto-g-sulcata | (c) pavlaki1968, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/259348481
+kyoto-h-cristata | (c) Lucky Atabo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/117510578
+kyoto-h-cristata | (c) Jean Jacques Godon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/121384640
+kyoto-h-cristata | (c) Golfopolikayak, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/197633969
+kyoto-h-cristata | (c) Paolo Zucca, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/235850891
+kyoto-h-cristata | (c) Nicholas Moray Williams, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/236797479
+kyoto-h-cristata | (c) Giacomo Navari, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/375163305
+kyoto-h-cristata | (c) Graziella Soulsbury, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/396100740
+kyoto-h-cristata | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/397462108
+kyoto-i-elongata | Wich’yanan (Jay) Limparungpatthanakij | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Indotestudo_elongata_438964768.jpg
+kyoto-i-elongata | (Photos A & C by Daniel G. Mulcahy, all others by Myint Kyaw Thura) Mulcahy DG, Lee JL, Miller AH, Chand M, Thura MK, Zug GR (2018) Filling the BINs of life: Report of an amphibian and reptile survey of the Tanintharyi (Tenasserim) Region of Myanmar, with DNA barcode data. ZooKeys 757: 85-152. https://doi.org/10.3897/zookeys.757.24453 | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Turtles_and_lizards_(10.3897-zookeys.757.24453)_Figure_4.jpg
+kyoto-i-elongata | (c) Gerard Chartier, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/252112056
+kyoto-i-elongata | (c) Ashwin Viswanathan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/268490839
+kyoto-i-elongata | (c) bewambay, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342717281
+kyoto-i-elongata | (c) khalebyordan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/360643727
+kyoto-i-elongata | (c) Sabarni Sarker, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/391120982
+kyoto-i-elongata | (c) Jean Jacques Godon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/47504165
+kyoto-l-lynx | Michael Gäbler | CC BY 3.0 https://creativecommons.org/licenses/by/3.0 | https://commons.wikimedia.org/wiki/File:Lynx_lynx,_Linnaeus_1758.jpg
+kyoto-l-lynx | This image was produced by me, David Castor ( user:dcastor ). The pictures I submit to the Wikipedia Project are released to the public domain. This gives you the right to use them in any way you like, without any kind of notification. This said, I would still appreciate to be mentioned as the originator whenever you think it complies well with your use of the picture. A message to me about how it has been used would also be welcome. You are obviously not required to respond to these wishes of mine, just in a friendly manner encouraged to. (All my photos are placed in Category:Images by David Castor or a subcategory thereof.) | Public domain  | https://commons.wikimedia.org/wiki/File:Lynx_lynx-4.JPG
+kyoto-l-ridibundus | (c) Вячеслав Юсупов, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/111637833
+kyoto-l-ridibundus | (c) Edoardo Nardelli, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/137314348
+kyoto-l-ridibundus | (c) toby, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/144075166
+kyoto-l-ridibundus | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/2392726
+kyoto-l-ridibundus | (c) Danil Asotsky, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/197800022
+kyoto-l-ridibundus | (c) Daniel Cahen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/261175625
+kyoto-l-ridibundus | (c) lalaia, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/309686422
+kyoto-l-ridibundus | (c) Yung-Lun Lin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/339865108
+kyoto-m-alba | (c) Dr. Sven Gippner, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/112461719
+kyoto-m-alba | (c) Ксения Волянская, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/115896603
+kyoto-m-alba | (c) John Hepburn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/196340384
+kyoto-m-alba | (c) Florencia Grattarola, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/352233942
+kyoto-m-alba | (c) Михаил Малышев, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/41756366
+kyoto-m-alba | (c) Pavel Komkov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/46368263
+kyoto-m-alba | (c) Summer J. Smentek, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/413553811
+kyoto-m-alba | (c) Nico Hernandez, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/416310461
+kyoto-m-japonica | Ceiocaciaca | Public domain  | https://commons.wikimedia.org/wiki/File:Mauremys_japonica_fase.jpg
+kyoto-m-japonica | heikindai_87 | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Mauremys_japonica_114185634.jpg
+kyoto-m-japonica | pavlaki1968 | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Mauremys_japonica_70191822.jpg
+kyoto-m-japonica | N yotarou | CC BY 2.5 https://creativecommons.org/licenses/by/2.5 | https://commons.wikimedia.org/wiki/File:Mauremys_japonica_01.JPG
+kyoto-m-japonica | (c) Kai Löhr, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/36382976
+kyoto-m-japonica | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/373501925
+kyoto-m-japonica | (c) ykkentr, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/386591882
+kyoto-m-japonica | (c) Ксения Витвицкая, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/404427806
+kyoto-m-solitarius | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/106508277
+kyoto-m-solitarius | (c) Takaaki Hattori, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/147608754
+kyoto-m-solitarius | (c) carnifex, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/147976247
+kyoto-m-solitarius | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/153544782
+kyoto-m-solitarius | (c) Lasse W., some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/176108317
+kyoto-m-solitarius | (c) Tom Heijnen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/230366920
+kyoto-m-solitarius | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/269937689
+kyoto-m-solitarius | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/379478633
+kyoto-m-tornieri | Dick Culbert from Gibsons, B.C., Canada | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Malacochersus_tornieri--_a_Pancake_Tortoise._(21691881960).jpg
+kyoto-m-tornieri | (c) Matt Pilkington, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/56152762
+kyoto-m-viridis | L. Shyamal | Public domain  | https://commons.wikimedia.org/wiki/File:MoreliaViridisOslo.jpg
+kyoto-m-viridis | Michael Bentley | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Coiled_Morelia_viridis.jpg
+kyoto-m-viridis | frank wouters from antwerpen, belgium , België , Belgique | CC BY 2.0 https://creativecommons.org/licenses/by/2.0 | https://commons.wikimedia.org/wiki/File:Boomslang_(443113819).jpg
+kyoto-m-viridis | (c) Rod Lowther, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/175330098
+kyoto-m-viridis | (c) Bryce Watts-Parker, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/244043246
+kyoto-m-viridis | (c) Alexander A. Fomichev, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/315687106
+kyoto-m-viridis | (c) Ged Tranter, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335029126
+kyoto-m-viridis | (c) dhfischer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/55684400
+kyoto-mejiro | (c) David Anderson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/155847140
+kyoto-mejiro | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/165864756
+kyoto-mejiro | (c) Liam southwell, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/199764776
+kyoto-mejiro | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/324871401
+kyoto-mejiro | (c) Rosario Douglas, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/329155622
+kyoto-mejiro | (c) Yung-Lun Lin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/339831585
+kyoto-mejiro | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/407415126
+kyoto-mejiro | (c) Nathan Nguyen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/409091490
+kyoto-n-meleagris | (c) Dave Richardson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/110400068
+kyoto-n-meleagris | (c) Nico Hernandez, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/209073514
+kyoto-n-meleagris | (c) Shaun Lee, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/34342876
+kyoto-n-meleagris | (c) Scott Shanks, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/312260366
+kyoto-n-meleagris | (c) portioid, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/325089448
+kyoto-n-meleagris | (c) le0p0ld_d, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/341546491
+kyoto-n-meleagris | (c) Presha Soogrim, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/41987405
+kyoto-n-meleagris | (c) Albertus Horn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/43155213
+kyoto-n-procyonoides | Марина Садыкова | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Nyctereutes_procyonoides_379771229.jpg
+kyoto-n-procyonoides | (c) Татьяна Максимова, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71741988
+kyoto-n-procyonoides | (c) Dmitry Ivanov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/249063333
+kyoto-n-procyonoides | (c) Полина Полежанкина, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/267332383
+kyoto-n-procyonoides | (c) Svyatoslav Knyazev, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/307959430
+kyoto-n-procyonoides | (c) Nina Filippova, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/42842294
+kyoto-n-procyonoides | (c) Илья Руденко, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/390152511
+kyoto-n-procyonoides | (c) Edoardo Nardelli, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/402181612
+kyoto-n-pygmaeus | Lionel Mauritson | Public domain  | https://commons.wikimedia.org/wiki/File:Slow_Loris_Female.jpg
+kyoto-n-pygmaeus | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/405471168
+kyoto-n-pygmaeus | (c) Long Vu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/62178772
+kyoto-n-scandiaca | (c) Marie Hosch, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/10684273
+kyoto-n-scandiaca | (c) Alexis Williams, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104605655
+kyoto-n-scandiaca | (c) Carrie Seltzer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/109340765
+kyoto-n-scandiaca | (c) Derek Spencer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/242690789
+kyoto-n-scandiaca | (c) Jeremy Atherton, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/327948923
+kyoto-n-scandiaca | (c) Laurel Meredyk, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/332331070
+kyoto-n-scandiaca | (c) Karen Offereins, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/337278862
+kyoto-n-scandiaca | (c) Kristy Morley, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/49768593
+kyoto-o-cuniculus | (c) Pablo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/99022893
+kyoto-o-cuniculus | (c) Dylan Wishart, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/119976405
+kyoto-o-cuniculus | (c) Ben, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/135076016
+kyoto-o-cuniculus | (c) Alice McCormick, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/139372026
+kyoto-o-cuniculus | (c) lmw579, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/157789651
+kyoto-o-cuniculus | (c) Jerry Lanfear, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/178511960
+kyoto-o-cuniculus | (c) Svend Hansen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/205596024
+kyoto-o-cuniculus | (c) Nico Hernandez, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/376466743
+kyoto-o-tetraspis | Adrian Pingstone | Public domain  | https://commons.wikimedia.org/wiki/File:Bristol.zoo.westafrican.dwarf.croc.arp.jpg
+kyoto-o-tetraspis | (c) Fábio Olmos, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/257355611
+kyoto-o-tetraspis | (c) Antoine Thivolle, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/261998807
+kyoto-o-tetraspis | (c) James Telford, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/333654805
+kyoto-o-tetraspis | (c) Valentin Moser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/339072258
+kyoto-p-bengalensis | (c) Ramnarayan K, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/77881374
+kyoto-p-bengalensis | (c) insect ID, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/152595895
+kyoto-p-bengalensis | (c) Kim, Hyun-tae, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/2430864
+kyoto-p-bengalensis | (c) Gerard Chartier, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/215669097
+kyoto-p-bengalensis | (c) Jagdish Singh Negi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260064569
+kyoto-p-bengalensis | (c) Ian Dugdale, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/302034835
+kyoto-p-bengalensis | (c) Dmitry Ivanov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/343965487
+kyoto-p-bengalensis | (c) Long Vu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/62182143
+kyoto-p-chilensis | (c) Luciano Massa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71632143
+kyoto-p-chilensis | (c) Patricio Cowper Coles, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/73382760
+kyoto-p-chilensis | (c) Philipp, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/91247872
+kyoto-p-chilensis | (c) David F. Belmonte, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/100013487
+kyoto-p-chilensis | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/27133260
+kyoto-p-chilensis | (c) Eduardo Luis Beltrocco, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260118767
+kyoto-p-chilensis | (c) Sergio Garrido Villa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335611815
+kyoto-p-chilensis | (c) gabbieb, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/38679192
+kyoto-p-giganteus | (c) Pranav Chandra Bose, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/70382594
+kyoto-p-giganteus | (c) Viral joshi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/74344607
+kyoto-p-giganteus | (c) Sabarni Sarker, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/86152281
+kyoto-p-giganteus | (c) Navaneeth Sini George, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/152263214
+kyoto-p-giganteus | (c) Livson Thomas, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/187229760
+kyoto-p-giganteus | (c) haemanthus, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/297606033
+kyoto-p-giganteus | (c) Daniel Z, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342536320
+kyoto-p-giganteus | (c) renjus box, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/365711891
+kyoto-p-leucogenys | Christoph Moning | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Petaurista_leucogenys_60436826.jpg
+kyoto-p-leucogenys | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104902045
+kyoto-p-leucogenys | (c) Nathan Ruser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/189670539
+kyoto-p-leucogenys | (c) Julia Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/38022987
+kyoto-p-leucogenys | (c) unipon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/379680741
+kyoto-p-leucogenys | (c) turtlecrab, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/385140709
+kyoto-p-ornata | (c) Ben, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/70387161
+kyoto-p-ornata | (c) Jean Jacques Godon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/152530703
+kyoto-p-ornata | (c) Matthew Morgan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/242326992
+kyoto-p-ornata | (c) Mike Musgrave, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/251529651
+kyoto-p-ornata | (c) Carrie Powers, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/258246871
+kyoto-p-ornata | (c) Charly, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260070728
+kyoto-p-ornata | (c) Josh Noseworthy, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335156338
+kyoto-p-ornata | (c) Jason Berger, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/373168770
+kyoto-p-perspicillata | (c) Christoph Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/65147977
+kyoto-p-perspicillata | (c) Barry Cottam, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/108323501
+kyoto-p-perspicillata | (c) Melissa McMasters, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/150385582
+kyoto-p-perspicillata | (c) Christina S. Baer, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/156227074
+kyoto-p-perspicillata | (c) Greg Gurley, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/193705080
+kyoto-p-perspicillata | (c) Laurel Meredyk, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/195338949
+kyoto-p-perspicillata | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260218117
+kyoto-p-perspicillata | (c) Xochitl Castaño, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/383829259
+kyoto-p-regius | Jkivve | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:%D0%9A%D1%80%D0%B0%D0%BB%D1%81%D0%BA%D0%B8_%D0%BF%D0%B8%D1%82%D0%BE%D0%BD.jpg
+kyoto-p-regius | (c) Philippe Hornus, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/366284481
+kyoto-p-regius | (c) otomops, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/407907887
+kyoto-p-roseus | (c) Roland Godon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/69497100
+kyoto-p-roseus | (c) Karim Haddad, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/16833964
+kyoto-p-roseus | (c) Samuel GUIRAUDOU, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/148697055
+kyoto-p-roseus | (c) Gijs Romijn, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/177617182
+kyoto-p-roseus | (c) Sunny Joseph, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/267886984
+kyoto-p-roseus | (c) Leonardo Rapisarda, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/332648356
+kyoto-p-roseus | (c) Philippe Hornus, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/360835975
+kyoto-p-roseus | (c) Paolo Zucca, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/60972708
+kyoto-p-ruber | E bailey | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:American_flamingo_in_Gal%C3%A1pagos_(Phoenicopterus_ruber).jpg
+kyoto-p-ruber | Jebulon | CC0 http://creativecommons.org/publicdomain/zero/1.0/deed.en | https://commons.wikimedia.org/wiki/File:Phoenicopterus_ruber_Tiergarten_Sch%C3%B6nbrunn.jpg
+kyoto-p-ruber | (c) Luke Lythgoe, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/108421619
+kyoto-p-ruber | (c) Suhei Castro, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/161414709
+kyoto-p-ruber | (c) José Garrido, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/20273132
+kyoto-p-ruber | (c) Tom Heijnen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/232173465
+kyoto-p-ruber | (c) Jay Brasher, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/256393228
+kyoto-p-ruber | (c) Joe crutwell, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/295208982
+kyoto-p-troglodytes | (c) Valentin Moser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/8826151
+kyoto-p-troglodytes | (c) Wairambar Rainforest, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/127958395
+kyoto-p-troglodytes | (c) tlaloc27, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/128571682
+kyoto-p-troglodytes | (c) Lennart Hudel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/17672056
+kyoto-p-troglodytes | (c) Dirk Froebel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/167150830
+kyoto-p-troglodytes | (c) Stan Rullman, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/205306017
+kyoto-p-troglodytes | (c) B. Phalan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/256670626
+kyoto-p-troglodytes | (c) Robert Hoehndorf, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/394329809
+kyoto-p-unifilis | (c) Andy Jordan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/133200760
+kyoto-p-unifilis | (c) Betsy Lambert, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/143839729
+kyoto-p-unifilis | (c) Tommy Andriollo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/194908192
+kyoto-p-unifilis | (c) Brian Henderson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/333361995
+kyoto-p-unifilis | (c) cactusauria, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/347712106
+kyoto-p-unifilis | (c) Wairambar Rainforest, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/365957519
+kyoto-p-unifilis | (c) Sebastian Doak, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/385395238
+kyoto-p-unifilis | (c) otomops, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/388353943
+kyoto-p-versicolor | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71541204
+kyoto-p-versicolor | (c) Oleg, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/72262764
+kyoto-p-versicolor | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/116147883
+kyoto-p-versicolor | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/268690547
+kyoto-p-versicolor | (c) リバー, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/273468979
+kyoto-p-versicolor | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/330553192
+kyoto-p-versicolor | (c) IMORI MIHO, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/399413256
+kyoto-s-humboldti | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/70416535
+kyoto-s-humboldti | (c) Ben Hayden, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/13591097
+kyoto-s-humboldti | (c) Eamon Corbett, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/16077225
+kyoto-s-humboldti | (c) Flavien Saboureau, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/209141799
+kyoto-s-humboldti | (c) Christoph Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/217483175
+kyoto-s-humboldti | (c) the natural moment, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/264609096
+kyoto-s-humboldti | (c) Doug Macaulay, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/4771419
+kyoto-s-humboldti | (c) Víctor Sarabia Sánchez, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/338532403
+kyoto-s-lis | Eponimm | CC BY 3.0 https://creativecommons.org/licenses/by/3.0 | https://commons.wikimedia.org/wiki/File:%C3%89cureuil_du_japon_kamakura.JPG
+kyoto-s-lis | Sciurus lis 86968412.jpg : Wich'yanan L Derivative work: Theriocephalus | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Sciurus_lis_summer_coat.jpg
+kyoto-s-lis | Nesnad | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Sciurus_lis_on_a_branch_20160710.jpg
+kyoto-s-uralensis | (c) desertnaturalist, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/65977529
+kyoto-s-uralensis | (c) Виктор, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71856640
+kyoto-s-uralensis | (c) Ксения Волянская, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104266028
+kyoto-s-uralensis | (c) Михаил Языков, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/189648594
+kyoto-s-uralensis | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/262927257
+kyoto-s-uralensis | (c) polina567, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/290642157
+kyoto-s-uralensis | (c) Alexander A. Fomichev, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/340874233
+kyoto-s-uralensis | (c) Christoph Moning, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/57120147
+kyoto-serval | (c) Ryan van Huyssteen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/11074132
+kyoto-serval | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/14004147
+kyoto-serval | (c) Ryan Donnelly, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/7094165
+kyoto-serval | (c) Stan Rullman, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/18111053
+kyoto-serval | (c) bewambay, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/162270139
+kyoto-serval | (c) Harsha Jayaramaiah, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/218197717
+kyoto-serval | (c) Tristan Jobin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/286043244
+kyoto-serval | (c) Cindy Bell, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/408471808
+kyoto-t-glaucops | avocat | CC BY 4.0 https://creativecommons.org/licenses/by/4.0 | https://commons.wikimedia.org/wiki/File:Ashy-faced_Owl_(Tyto_glaucops),_Pedernales,_Dominican_Republic_3.jpg
+kyoto-t-glaucops | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/194337575
+kyoto-t-glaucops | (c) R Grullón Feria, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/265689965
+kyoto-t-glaucops | (c) Dan Riley, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/324808835
+kyoto-t-pallidus | (c) Licheng Shih, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/148747208
+kyoto-t-pallidus | (c) Tatsutomo Chin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/25506039
+kyoto-t-pallidus | (c) 許慶棠Ray, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/254377311
+kyoto-t-pallidus | (c) Yi CHEN, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/255170041
+kyoto-t-pallidus | (c) Mickey Wu, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/309523417
+kyoto-t-pallidus | (c) mami_t_t, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/334711217
+kyoto-t-pallidus | (c) Yung-Lun Lin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/339831588
+kyoto-t-pallidus | (c) WATANABE Hitoshi 渡辺仁, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/343967516
+kyoto-t-sieboldii | (c) Austin 0201, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/10428371
+kyoto-t-sieboldii | (c) 呂一起(Lyu yi-chi), some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/138220362
+kyoto-t-sieboldii | (c) Toby Y, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/246454734
+kyoto-t-sieboldii | (c) Rajan Rao, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/293880194
+kyoto-t-sieboldii | (c) Ian Dugdale, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/303667377
+kyoto-t-sieboldii | (c) Griha Hasanov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/371559945
+kyoto-t-sieboldii | (c) Pavel Smirnov, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/378739790
+kyoto-t-sieboldii | (c) Nathan Ruser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/380551226
+kyoto-v-vulpes | (c) Михаил Малышев, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/72285456
+kyoto-v-vulpes | (c) mrcrow, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/121937127
+kyoto-v-vulpes | (c) Francesco Santoro, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/162294121
+kyoto-v-vulpes | (c) otiegoat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/254419775
+kyoto-v-vulpes | (c) Валерия Ковалева, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/293337940
+kyoto-v-vulpes | (c) sblumen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/342987205
+kyoto-v-vulpes | (c) SIA, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/359733542
+kyoto-v-vulpes | (c) Tom Heijnen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/362790727
+lemur | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/141664278
+lemur | (c) Josip Skejo, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/200742494
+lemur | (c) Nigel Voaden, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/3210773
+lemur | (c) Jim Moore (Maryland), some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/325203704
+lemur | (c) Fionn Ó Marcaigh, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/389051411
+lemur | (c) Dan Riskin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/415835055
+lemur | (c) Jean Jacques Godon, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/61418596
+lemur | (c) George Williams, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/62221486
+macaque | (c) portioid, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/7760488
+macaque | (c) Toby Y, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/71414795
+macaque | (c) Sunny Joseph, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/188762615
+macaque | (c) Afsar Nayakkan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/195547845
+macaque | (c) Bob Miller, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/193123135
+macaque | (c) Michael Meiring, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/319577028
+macaque | (c) datadan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/37098175
+macaque | (c) Ashwin Viswanathan, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/40578729
+mandrill | Malene Thyssen | CC BY 2.5 https://creativecommons.org/licenses/by/2.5 | https://commons.wikimedia.org/wiki/File:Mandril.jpg
+mandrill | (c) Dan Riley, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/9893905
+mandrill | (c) Tony King, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/149902389
+meerkat | (c) Henry de Lange, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/8293788
+meerkat | (c) Matthew Fainman, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/99228388
+meerkat | (c) Alan Manson, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/116820461
+meerkat | (c) Dirk Froebel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/167035188
+meerkat | (c) Jacobus Retief, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/205273925
+meerkat | (c) Suhei Castro, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/291370471
+meerkat | (c) Wynand Uys, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/320433675
+meerkat | (c) Diego Rubolini, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/335213759
+sheep | (c) Pavel Kacl, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/27585364
+sheep | (c) Jana Paulsen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/257602838
+sheep | (c) Samuele Papeschi, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/259462328
+sheep | (c) Aitor Labandibar, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/260730106
+sheep | (c) Petr Harant, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/277443507
+sheep | (c) Kai Löhr, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/291857768
+sheep | (c) Stanislav Murashkin, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/373699550
+sheep | (c) Thomas Koffel, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/6850936
+tapir | (c) Lucas Kaminski, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/72169332
+tapir | (c) Pablo H Capovilla, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/75491729
+tapir | (c) Luciano Massa, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/134597058
+tapir | (c) Jan Ebr &amp; Ivana Ebrová, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/164676060
+tapir | (c) Jono, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/250952939
+tapir | (c) Sheelagh Halsey, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/322071355
+tapir | (c) avocat, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/400394753
+tapir | (c) Valentin Moser, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/414920349
+zebra | (c) rdodhia, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/66619403
+zebra | (c) Peter Archdale, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/104021191
+zebra | (c) Darren Obbard, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/153374802
+zebra | (c) Harsha Jayaramaiah, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/218199360
+zebra | (c) ecovore, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/226374165
+zebra | (c) Mike Musgrave, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/283562334
+zebra | (c) Tom Heijnen, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/323380819
+zebra | (c) Martin Kalfatovic, some rights reserved (CC BY) | CC-BY https://creativecommons.org/licenses/by/4.0/ | https://www.inaturalist.org/observations/7396644

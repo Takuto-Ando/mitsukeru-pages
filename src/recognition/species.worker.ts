@@ -3,6 +3,8 @@ import wasm from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded
 import runtime from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs?url";
 import { readPhotoModel } from "./photoModel";
 import { classifyBioClip } from "./labels";
+import { createPhotoReferenceMatcher } from "./photoReferenceMatcher";
+import photoReferences from "./bioclip-photo-references.json";
 import type { SpeciesImageFit } from "./species";
 import promptBank from "./bioclip-labels.json";
 
@@ -38,6 +40,7 @@ async function createClassifier() {
     for (const value of vector) squareSum += value ** 2;
     return { label, vector, norm: Math.sqrt(squareSum) };
   });
+  const matchPhoto = createPhotoReferenceMatcher(photoReferences);
   const session = await InferenceSession.create(await readPhotoModel(), {
     executionProviders: ["wasm"],
   });
@@ -90,12 +93,18 @@ async function createClassifier() {
       const { embedding } = await session.run({ pixels: input });
       try {
         const features = embedding.data as Float32Array;
-        return bank.map(({ label, vector, norm }) => {
+        const output = bank.map(({ label, vector, norm }) => {
           let dot = 0;
           for (let index = 0; index < dimensions; index++)
             dot += features[index] * vector[index];
           return { label, cosine: dot / norm };
         });
+        return classifyBioClip(
+          output,
+          matchPhoto
+            ? (speciesIds) => matchPhoto(features, speciesIds)
+            : undefined,
+        );
       } finally {
         embedding.dispose();
       }
@@ -116,8 +125,9 @@ self.onmessage = async (
       return;
     }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
-    const { candidates, recognition } = classifyBioClip(
-      await recognize(event.data.photo, event.data.fit),
+    const { candidates, recognition } = await recognize(
+      event.data.photo,
+      event.data.fit,
     );
     postMessage({
       type: "result",
