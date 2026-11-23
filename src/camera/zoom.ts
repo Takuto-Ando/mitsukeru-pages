@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { cameraWindow } from "../recognition/liveBoxes";
+import { cameraWindow, type LiveBox } from "../recognition/liveBoxes";
 
 type Zoom = 0.5 | 1 | 2;
 type ZoomCapabilities = MediaTrackCapabilities & {
@@ -60,26 +60,39 @@ export function useCameraZoom(track?: MediaStreamTrack, sample = false) {
 }
 
 export function drawCameraFrame(
-  source: HTMLVideoElement | HTMLImageElement,
+  source: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement,
   maxSize: number,
   digital: number,
   ratio?: readonly [width: number, height: number],
+  focus?: Pick<LiveBox, "left" | "top" | "right" | "bottom">,
 ) {
-  const video = source instanceof HTMLVideoElement;
-  const sourceWidth = video ? source.videoWidth : source.naturalWidth;
-  const sourceHeight = video ? source.videoHeight : source.naturalHeight;
+  const [sourceWidth, sourceHeight] =
+    source instanceof HTMLVideoElement
+      ? [source.videoWidth, source.videoHeight]
+      : source instanceof HTMLImageElement
+        ? [source.naturalWidth, source.naturalHeight]
+        : [source.width, source.height];
   if (!sourceWidth || !sourceHeight) return;
   const aspect = ratio ? ratio[0] / ratio[1] : sourceWidth / sourceHeight;
-  const crop = cameraWindow(sourceWidth, sourceHeight, aspect, digital);
+  const visible = cameraWindow(sourceWidth, sourceHeight, aspect, digital);
+  const crop = focus
+    ? {
+        x: visible.x + visible.width * focus.left,
+        y: visible.y + visible.height * focus.top,
+        width: visible.width * (focus.right - focus.left),
+        height: visible.height * (focus.bottom - focus.top),
+      }
+    : visible;
   const scale = Math.min(1, maxSize / Math.max(crop.width, crop.height));
   const canvas = document.createElement("canvas");
-  if (ratio) {
-    const units = Math.max(1, Math.floor((crop.width * scale) / ratio[0]));
+  const units =
+    ratio && !focus ? Math.floor((crop.width * scale) / ratio[0]) : 0;
+  if (ratio && units > 0) {
     canvas.width = units * ratio[0];
     canvas.height = units * ratio[1];
   } else {
-    canvas.width = Math.round(crop.width * scale);
-    canvas.height = Math.round(crop.height * scale);
+    canvas.width = Math.max(1, Math.round(crop.width * scale));
+    canvas.height = Math.max(1, Math.round(crop.height * scale));
   }
   const context = canvas.getContext("2d");
   if (!context) return;
@@ -95,4 +108,81 @@ export function drawCameraFrame(
     canvas.height,
   );
   return { canvas, context };
+}
+
+// Use the same visible crop as the tracking worker. Give the animal room
+// around its silhouette without giving the enclosure most of the input.
+export function drawTrackedAnimal(
+  video: HTMLVideoElement,
+  zoom: number,
+  box: LiveBox,
+  captured?: HTMLCanvasElement,
+) {
+  const width = box.right - box.left;
+  const height = box.bottom - box.top;
+  if (
+    !video.clientWidth ||
+    !video.clientHeight ||
+    width < 0.07 ||
+    height < 0.07
+  )
+    return;
+  const horizontal = Math.max(0.04, width * 0.15);
+  const vertical = Math.max(0.04, height * 0.15);
+  const focus = {
+    left: Math.max(0, box.left - horizontal),
+    top: Math.max(0, box.top - vertical),
+    right: Math.min(1, box.right + horizontal),
+    bottom: Math.min(1, box.bottom + vertical),
+  };
+  if ((focus.right - focus.left) * (focus.bottom - focus.top) >= 0.8) return;
+  const ratio = [video.clientWidth, video.clientHeight] as const;
+  if (!captured) return drawCameraFrame(video, 384, zoom, ratio, focus);
+
+  // The saved photo has a fixed aspect ratio while the preview adapts
+  // to the screen. Translate the tracked edges into the captured frame.
+  const { videoWidth, videoHeight } = video;
+  const preview = cameraWindow(
+    videoWidth,
+    videoHeight,
+    ratio[0] / ratio[1],
+    zoom,
+  );
+  const photo = cameraWindow(
+    videoWidth,
+    videoHeight,
+    captured.width / captured.height,
+    zoom,
+  );
+  const normalized = {
+    left: Math.max(
+      0,
+      (preview.x + preview.width * focus.left - photo.x) / photo.width,
+    ),
+    top: Math.max(
+      0,
+      (preview.y + preview.height * focus.top - photo.y) / photo.height,
+    ),
+    right: Math.min(
+      1,
+      (preview.x + preview.width * focus.right - photo.x) / photo.width,
+    ),
+    bottom: Math.min(
+      1,
+      (preview.y + preview.height * focus.bottom - photo.y) / photo.height,
+    ),
+  };
+  if (
+    normalized.right - normalized.left < 0.07 ||
+    normalized.bottom - normalized.top < 0.07
+  )
+    return;
+  return drawCameraFrame(captured, 384, 1, undefined, normalized);
+}
+
+export function drawRecognitionFrame(video: HTMLVideoElement, zoom: number) {
+  return drawCameraFrame(video, 384, zoom, [
+    video.clientWidth || 4,
+    video.clientHeight || 5,
+  ]);
 }

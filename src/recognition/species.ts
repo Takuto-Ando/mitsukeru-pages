@@ -16,6 +16,7 @@ export interface SpeciesRecognizer {
   prepare(progress?: (text: string) => void): Promise<SpeciesResult>;
   isReady(): boolean;
   isBusy(): boolean;
+  keepWarm(): boolean;
   release(): void;
   unload(): void;
   cancel(): void;
@@ -48,6 +49,12 @@ export const speciesRecognizer: SpeciesRecognizer = {
   cancel,
   isReady: () => ready,
   isBusy: () => !!finish,
+  keepWarm: () => {
+    if (!ready || finish) return false;
+    clearTimeout(idleWarmTimer);
+    idleWarmTimer = setTimeout(() => speciesRecognizer.unload(), 8_000);
+    return true;
+  },
   release: () => {
     if (finish) cancel();
   },

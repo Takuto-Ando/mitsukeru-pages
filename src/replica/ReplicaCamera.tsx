@@ -18,7 +18,11 @@ import {
 import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
-import { drawCameraFrame, useCameraZoom } from "../camera/zoom";
+import {
+  drawCameraFrame,
+  drawTrackedAnimal,
+  useCameraZoom,
+} from "../camera/zoom";
 import {
   cameraFailure,
   openPreferredCamera,
@@ -36,12 +40,11 @@ const recognizedAnimals = new Map([
   ["キリン", { groupId: "giraffe" }],
   ["シマウマ", { groupId: "zebra" }],
   ["ゾウ", { groupId: "elephant" }],
-  ["クマ", { groupId: "bear" }],
-  ["ヒツジ", { groupId: "goat", taskId: "sheep" }],
 ]);
 
 export type CameraCapture = {
   photo?: string;
+  recognitionInput?: { full?: string; crop?: string };
   sample: boolean;
   animal?: { groupId: string; name: string; taskId?: string };
 };
@@ -119,30 +122,25 @@ export function ReplicaCamera({
   const sampleVisible = sampleHasAnimal || (legacy && cameraZoom.zoom === 0.5);
   const bestMatch =
     !legacy && liveActive
-      ? (live.boxes.find(
-          ({ id, label }) =>
-            id === trackedAnimalId && recognizedAnimals.has(label),
-        ) ?? live.boxes.find(({ label }) => recognizedAnimals.has(label)))
+      ? (live.boxes.find(({ id }) => id === trackedAnimalId) ?? live.boxes[0])
       : undefined;
-  const selection = bestMatch && recognizedAnimals.get(bestMatch.label);
-  // The COCO bear label localizes the animal but cannot distinguish the
-  // zoo's black bear from lookalikes such as a red panda.
+  // Keep a provisional name only for distinctive detector labels. Broad
+  // labels such as bear, sheep and bird can still localize the subject.
+  const selection =
+    bestMatch && bestMatch.score >= 0.45
+      ? recognizedAnimals.get(bestMatch.label)
+      : undefined;
   const boxAnimal =
-    bestMatch && selection && selection.groupId !== "bear"
+    bestMatch && selection
       ? { ...selection, name: bestMatch.label }
       : undefined;
   const species = useLiveSpecies(
     video,
-    !legacy &&
-      !sample &&
-      streamReady &&
-      visible &&
-      !menuOpen &&
-      !suspended &&
-      !boxAnimal,
+    !legacy && !sample && streamReady && visible && !menuOpen && !suspended,
     cameraZoom.digital,
+    bestMatch,
   );
-  const animal = boxAnimal ?? species.animal;
+  const animal = species.animal ?? (species.checked ? undefined : boxAnimal);
   const recognized = sample
     ? sampleVisible
     : legacy
@@ -451,11 +449,30 @@ export function ReplicaCamera({
       const shot =
         frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
       if (shot) {
-        submitCapture({
-          photo: shot.canvas.toDataURL("image/jpeg", 0.82),
-          sample,
-          animal,
-        });
+        const photo = shot.canvas.toDataURL("image/jpeg", 0.82);
+        let recognitionInput: CameraCapture["recognitionInput"];
+        if (!legacy && !sample && video.current) {
+          try {
+            recognitionInput = {
+              full: drawCameraFrame(
+                shot.canvas,
+                384,
+                1,
+                photoRatio,
+              )?.canvas.toDataURL("image/jpeg", 0.8),
+            };
+            if (bestMatch)
+              recognitionInput.crop = drawTrackedAnimal(
+                video.current,
+                cameraZoom.digital,
+                bestMatch,
+                shot.canvas,
+              )?.canvas.toDataURL("image/jpeg", 0.85);
+          } catch {
+            // The full photo is still available for recognition.
+          }
+        }
+        submitCapture({ photo, sample, animal, recognitionInput });
       } else if (legacy && sample) {
         submitCapture({ photo: samplePhoto(), sample: true });
       } else {

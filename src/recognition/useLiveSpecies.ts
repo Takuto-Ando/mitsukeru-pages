@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { drawCameraFrame } from "../camera/zoom";
+import { drawRecognitionFrame, drawTrackedAnimal } from "../camera/zoom";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import {
   downloadPhotoModel,
@@ -7,6 +7,7 @@ import {
   photoModelEvent,
 } from "./photoModel";
 import { speciesRecognizer } from "./species";
+import type { TrackedLiveBox } from "./liveBoxes";
 
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
 
@@ -14,14 +15,19 @@ export function useLiveSpecies(
   video: RefObject<HTMLVideoElement | null>,
   active: boolean,
   zoom: number,
+  box?: TrackedLiveBox,
 ) {
-  const [animal, setAnimal] = useState<LiveSpecies>();
+  const [result, setResult] = useState<{
+    target: string;
+    animal?: LiveSpecies;
+  }>();
   const stop = useRef<() => void>(() => undefined);
-  const currentZoom = useRef(zoom);
-  currentZoom.current = zoom;
+  const target = `${zoom}:${box?.id ?? ""}`;
+  const view = useRef({ zoom, box, target });
+  view.current = { zoom, box, target };
 
   useEffect(() => {
-    setAnimal(undefined);
+    setResult(undefined);
     if (!active) return;
     let running = true;
     let ownsWorker = false;
@@ -29,13 +35,25 @@ export function useLiveSpecies(
     let started = false;
     let retried = false;
     let timer = 0;
+    let lastInteraction = performance.now();
+    const updateInteraction = () => {
+      lastInteraction = performance.now();
+    };
+    let checkFullFrameFor: string | undefined;
+    let previous:
+      { target: string; speciesId: string; missed: boolean } | undefined;
 
     async function classifyFrame() {
       if (!running || document.hidden) return;
       const began = performance.now();
       const frame = video.current;
       if (frame && !speciesRecognizer.isBusy()) {
-        const image = drawCameraFrame(frame, 384, currentZoom.current, [4, 5]);
+        const { zoom, box, target } = view.current;
+        const focused =
+          box && checkFullFrameFor !== target
+            ? drawTrackedAnimal(frame, zoom, box)
+            : undefined;
+        const image = focused ?? drawRecognitionFrame(frame, zoom);
         if (image) {
           ownsWorker = true;
           const result = await speciesRecognizer.recognize(
@@ -45,31 +63,57 @@ export function useLiveSpecies(
           if (result.status === "unavailable") {
             speciesRecognizer.unload();
             ownsWorker = false;
-            setAnimal(undefined);
+            setResult(undefined);
             started = false;
             retry();
             return;
           }
           const [first, runner] =
             result.status === "candidates" ? result.candidates : [];
+          const speciesId = first && (first.speciesId ?? first.groupId);
+          const plausible =
+            first &&
+            first.score >= 0.45 &&
+            first.score - (runner?.score ?? 0) >= 0.12;
+          const sameSpecies =
+            previous?.target === target && previous.speciesId === speciesId;
+          const clear =
+            result.status === "candidates" &&
+            (result.recognition
+              ? result.recognition.status === "identified"
+              : plausible);
           const species =
-            first?.score >= 0.45 && first.score - (runner?.score ?? 0) >= 0.12
-              ? kyotoSpeciesById.get(first.speciesId ?? first.groupId)
+            speciesId && (clear || (plausible && sameSpecies))
+              ? kyotoSpeciesById.get(speciesId)
               : undefined;
-          setAnimal(
-            species && {
-              groupId: species.groupId,
-              name: species.name,
-              taskId: species.id === "sheep" ? "sheep" : undefined,
-            },
-          );
+          // Recheck borderline crops with the next full frame. A lower-margin
+          // name is shown only when two observations agree for the same target.
+          checkFullFrameFor =
+            !clear && (focused || plausible) ? target : undefined;
+          const hold =
+            !speciesId && previous?.target === target && !previous.missed;
+          if (speciesId && plausible)
+            previous = { target, speciesId, missed: false };
+          else if (hold && previous) previous.missed = true;
+          else previous = undefined;
+          if (view.current.target === target && !hold)
+            setResult({
+              target,
+              animal: species && {
+                groupId: species.groupId,
+                name: species.name,
+                taskId: species.id === "sheep" ? "sheep" : undefined,
+              },
+            });
         }
       }
       // Sample again promptly after an empty frame, while limiting the
       // sustained workload on phones that take longer to infer.
+      const now = performance.now();
+      const idle = now - lastInteraction >= 25_000;
       timer = window.setTimeout(
         nextFrame,
-        Math.max(1200, (performance.now() - began) * 3),
+        Math.max(idle ? 4200 : 1200, (now - began) * 2.5),
       );
     }
 
@@ -81,6 +125,7 @@ export function useLiveSpecies(
 
     function nextFrame() {
       void classifyFrame().catch(() => {
+        if (!running) return;
         speciesRecognizer.unload();
         ownsWorker = false;
         started = false;
@@ -133,20 +178,28 @@ export function useLiveSpecies(
     }
     window.addEventListener(photoModelEvent, modelReady);
     window.addEventListener("online", resume);
+    window.addEventListener("pointerdown", updateInteraction, {
+      passive: true,
+    });
+    window.addEventListener("keydown", updateInteraction);
     void prepare();
-    stop.current = () => {
+    const close = (handoff: boolean) => {
+      if (!running) return;
       running = false;
       window.clearTimeout(timer);
       window.removeEventListener(photoModelEvent, modelReady);
       window.removeEventListener("online", resume);
-      if (ownsWorker) {
+      window.removeEventListener("pointerdown", updateInteraction);
+      window.removeEventListener("keydown", updateInteraction);
+      if (ownsWorker && !(handoff && speciesRecognizer.keepWarm())) {
         speciesRecognizer.release();
         speciesRecognizer.unload();
-        ownsWorker = false;
       }
     };
-    return stop.current;
+    stop.current = () => close(true);
+    return () => close(false);
   }, [active, video]);
 
-  return { animal: active ? animal : undefined, stop };
+  const checked = active && result?.target === target;
+  return { animal: checked ? result?.animal : undefined, checked, stop };
 }

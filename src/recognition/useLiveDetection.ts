@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   cameraWindow,
+  confirmLiveBoxes,
   inputSize,
   trackLiveBoxes,
   type LiveBox,
@@ -100,6 +101,7 @@ export function useLiveDetection(
       let frameZoom = currentZoom.current;
       let nextId = 0;
       let tracked: TrackedLiveBox[] = [];
+      let previousBoxes: LiveBox[] = [];
       let frameStartedAt = 0;
       const input = document.createElement("canvas");
       input.width = input.height = inputSize;
@@ -128,6 +130,7 @@ export function useLiveDetection(
           !element.clientHeight
         ) {
           tracked = [];
+          previousBoxes = [];
           setResult({ status: "running", boxes: [] });
           timer = window.setTimeout(nextFrame, 300);
           return;
@@ -136,8 +139,10 @@ export function useLiveDetection(
           frameStartedAt = performance.now();
           const aspect = element.clientWidth / element.clientHeight;
           const zoom = currentZoom.current;
-          if (frameZoom !== zoom || Math.abs(frameAspect - aspect) >= 0.015)
+          if (frameZoom !== zoom || Math.abs(frameAspect - aspect) >= 0.015) {
             tracked = [];
+            previousBoxes = [];
+          }
           frameAspect = aspect;
           frameZoom = zoom;
           const crop = cameraWindow(
@@ -196,8 +201,13 @@ export function useLiveDetection(
                 frameAspect - element.clientWidth / element.clientHeight,
               ) < 0.015;
             tracked = fits
-              ? trackLiveBoxes(tracked, data.boxes, () => ++nextId)
+              ? trackLiveBoxes(
+                  tracked,
+                  confirmLiveBoxes(previousBoxes, data.boxes),
+                  () => ++nextId,
+                )
               : [];
+            previousBoxes = fits ? data.boxes : [];
             setResult({ status: "running", boxes: tracked });
             const now = performance.now();
             const elapsed = now - frameStartedAt;

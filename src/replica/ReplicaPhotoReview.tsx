@@ -12,6 +12,7 @@ import "./photo-review.css";
 
 export function ReplicaPhotoReview({
   photo,
+  recognitionInput,
   sample,
   createdAt,
   photoLocation,
@@ -25,6 +26,7 @@ export function ReplicaPhotoReview({
   onConfirm,
 }: {
   photo?: string;
+  recognitionInput?: { full?: string; crop?: string };
   sample: boolean;
   createdAt?: string;
   photoLocation?: string;
@@ -41,7 +43,10 @@ export function ReplicaPhotoReview({
   const [query, setQuery] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const { candidates, message } = usePhotoIdentification(
-    figmaFlow && !sample && !confirmed ? photo : undefined,
+    figmaFlow && !sample && !confirmed
+      ? (recognitionInput?.full ?? photo)
+      : undefined,
+    recognitionInput?.crop,
   );
   const edit = useRef<HTMLButtonElement>(null);
   const optionsId = useId();

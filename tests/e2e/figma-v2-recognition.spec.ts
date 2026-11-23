@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import photoModel from "../../src/recognition/bioclip-model.json" with { type: "json" };
 import { expect, test, type Page } from "./fixtures";
 
 test.skip(process.env.VITE_LEGACY_EDITIONS === "1", "Figma v2の本体専用");
@@ -155,13 +156,10 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   });
   await useMockCamera(page);
   let photoModelRequests = 0;
-  await page.route(
-    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
-    (route) => {
-      photoModelRequests++;
-      return route.abort();
-    },
-  );
+  await page.route(photoModel.url, (route) => {
+    photoModelRequests++;
+    return route.abort();
+  });
   let requests = 0;
   await page.route("**/models/yolox*.onnx", async (route) => {
     if (++requests === 1) await route.abort();
@@ -231,16 +229,13 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
   const download = new Promise<void>((resolve) => {
     releaseDownload = resolve;
   });
-  await page.route(
-    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
-    async (route) => {
-      if (route.request().url().endsWith(".onnx")) await download;
-      await route.fulfill({
-        body: "mock model asset",
-        headers: { "Access-Control-Allow-Origin": "*" },
-      });
-    },
-  );
+  await page.route(photoModel.url, async (route) => {
+    if (route.request().url().endsWith(".onnx")) await download;
+    await route.fulfill({
+      body: "mock model asset",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "connection", {
       configurable: true,
@@ -251,13 +246,14 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
       const hit = await match.call(this, request, options);
       if (
         !hit &&
-        String(request).endsWith("/model_quantized.onnx") &&
+        String(request).endsWith("/bioclip-image-int8.onnx") &&
         document.querySelector(".replica-camera")
       ) {
         document.documentElement.dataset.testCameraCacheMiss = "true";
       }
       return hit;
     };
+    let reviewImages = 0;
     window.Worker = new Proxy(window.Worker, {
       construct(target, args: [string | URL, WorkerOptions?]) {
         if (args[1]?.name === "zooketch-live-detection") {
@@ -294,18 +290,32 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
         return {
           onmessage: undefined as
             ((event: { data: unknown }) => void) | undefined,
-          terminate() {
-            document.documentElement.dataset.testStoppedSpecies = "true";
-          },
+          terminate() {},
           postMessage({ photo }: { photo?: string }) {
             if (!photo) {
-              document.documentElement.dataset.testModelWarm = "true";
+              const root = document.documentElement;
+              root.dataset.testModelWarm = String(
+                Number(root.dataset.testModelWarm ?? 0) + 1,
+              );
               queueMicrotask(() =>
                 this.onmessage?.({
                   data: { type: "result", result: { status: "ready" } },
                 }),
               );
               return;
+            }
+            if (document.querySelector(".design3-photo-review")) {
+              document.documentElement.dataset.testReviewImages = String(
+                ++reviewImages,
+              );
+              if (reviewImages === 1) {
+                queueMicrotask(() =>
+                  this.onmessage?.({
+                    data: { type: "result", result: { status: "unknown" } },
+                  }),
+                );
+                return;
+              }
             }
             queueMicrotask(() =>
               this.onmessage?.({
@@ -330,9 +340,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
     });
   });
   try {
-    const downloading = page.waitForRequest(
-      "https://huggingface.co/**/model_quantized.onnx",
-    );
+    const downloading = page.waitForRequest(photoModel.url);
     await page.goto("./");
     await downloading;
     await button(page, "つづきから").click();
@@ -357,8 +365,12 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
   await expect(page.locator(".replica-camera-tracking")).toBeVisible();
   await button(page, "シャッター").click();
   await expect(page.locator("html")).toHaveAttribute(
-    "data-test-stopped-species",
-    "true",
+    "data-test-review-images",
+    "2",
+  );
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-test-model-warm",
+    "1",
   );
   await expect(
     page.getByRole("heading", { name: "レッサーパンダ" }),
@@ -369,13 +381,11 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   page,
 }) => {
   await useMockCamera(page);
-  await page.route(
-    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
-    (route) =>
-      route.fulfill({
-        body: "mock model asset",
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }),
+  await page.route(photoModel.url, (route) =>
+    route.fulfill({
+      body: "mock model asset",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    }),
   );
   await page.addInitScript(() => {
     window.Worker = new Proxy(window.Worker, {

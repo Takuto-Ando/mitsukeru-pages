@@ -21,6 +21,9 @@ export type LiveBox = {
   bottom: number;
 };
 
+const immediateDetectionScore = 0.3;
+const minimumDetectionScore = 0.15;
+
 function overlap(first: LiveBox, second: LiveBox) {
   const intersection =
     Math.max(
@@ -38,6 +41,17 @@ function overlap(first: LiveBox, second: LiveBox) {
 
 export type TrackedLiveBox = LiveBox & { id: number };
 
+export function confirmLiveBoxes(
+  previous: readonly LiveBox[],
+  boxes: readonly LiveBox[],
+): LiveBox[] {
+  return boxes.filter(
+    (box) =>
+      box.score >= immediateDetectionScore ||
+      previous.some((candidate) => overlap(candidate, box) >= 0.45),
+  );
+}
+
 export function trackLiveBoxes(
   previous: readonly TrackedLiveBox[],
   boxes: readonly LiveBox[],
@@ -48,8 +62,8 @@ export function trackLiveBoxes(
     let best: TrackedLiveBox | undefined;
     let bestOverlap = 0.18;
     for (const candidate of unmatched) {
-      if (candidate.label !== box.label) continue;
       const shared = overlap(candidate, box);
+      if (candidate.label !== box.label && shared < 0.45) continue;
       if (shared > bestOverlap) {
         best = candidate;
         bestOverlap = shared;
@@ -68,7 +82,6 @@ export function decodeLiveBoxes(
   height: number,
 ): LiveBox[] {
   const candidates: LiveBox[] = [];
-  const minimum = 0.3;
   const channels = 85;
   let row = 0;
   for (const stride of [8, 16, 32]) {
@@ -76,14 +89,14 @@ export function decodeLiveBoxes(
     for (let y = 0; y < cells; y++) {
       for (let x = 0; x < cells; x++, row += channels) {
         const objectness = data[row + 4];
-        if (objectness < minimum) continue;
+        if (objectness < minimumDetectionScore) continue;
         let category = 0;
         for (let index = 1; index < 80; index++)
           if (data[row + 5 + index] > data[row + 5 + category])
             category = index;
         const score = objectness * data[row + 5 + category];
         const label = animalLabels[category];
-        if (!label || score < minimum) continue;
+        if (!label || score < minimumDetectionScore) continue;
         const centerX = (data[row] + x) * stride;
         const centerY = (data[row + 1] + y) * stride;
         const halfWidth = (Math.exp(data[row + 2]) * stride) / 2;

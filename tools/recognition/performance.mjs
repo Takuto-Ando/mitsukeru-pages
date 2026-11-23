@@ -4,11 +4,12 @@ import { readFile, readdir } from "node:fs/promises";
 import { extname, resolve, sep } from "node:path";
 import { gzipSync } from "node:zlib";
 import { chromium } from "@playwright/test";
+import photoModel from "../../src/recognition/bioclip-model.json" with { type: "json" };
 
 const [buildArg, mirrorArg] = process.argv.slice(2);
 if (!buildArg)
   throw Error(
-    "Usage: node tools/recognition/performance.mjs BUILD_DIR [CLIP_DIR]",
+    "Usage: node tools/recognition/performance.mjs BUILD_DIR [BIOCLIP_DIR]",
   );
 const build = resolve(buildArg);
 const mirror = mirrorArg && resolve(mirrorArg);
@@ -22,15 +23,7 @@ const modelName = (await readdir(resolve(build, "models")))
   .find((file) => /^yolox-.*\.onnx(?:\.gz)?$/.test(file))
   ?.replace(/\.gz$/, "");
 if (!modelName) throw Error("No YOLOX model in build");
-const clipUrl =
-  "https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/d15189d7028b43f1d3e65039190477f6af591c2a/";
-const clipFiles = [
-  "config.json",
-  "tokenizer.json",
-  "tokenizer_config.json",
-  "preprocessor_config.json",
-  "onnx/model_quantized.onnx",
-];
+const clipFile = new URL(photoModel.url).pathname.split("/").at(-1);
 const mime = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css",
@@ -270,17 +263,11 @@ try {
     try {
       await page.goto(origin + "/__performance__");
       const result = await page.evaluate(
-        async ({ script, clipFiles, clipUrl, photoPath, constrained }) => {
-          const cache = await caches.open("transformers-cache");
-          await Promise.all(
-            clipFiles.map(async (file) => {
-              const response = await fetch("/__clip__/" + file);
-              if (!response.ok)
-                throw Error("Missing pinned CLIP model file: " + file);
-              // A synthetic direct cache response also normalizes the response URL.
-              await cache.put(clipUrl + file, response);
-            }),
-          );
+        async ({ script, model, clipFile, photoPath, constrained }) => {
+          const cache = await caches.open(model.cache);
+          const response = await fetch("/__clip__/" + clipFile);
+          if (!response.ok) throw Error("Missing pinned BioCLIP model");
+          await cache.put(model.url, response);
           const image = await fetch(photoPath);
           if (!image.ok) throw Error("Unavailable benchmark photo");
           const blob = await image.blob();
@@ -299,7 +286,9 @@ try {
             await new Promise((resolve, reject) => {
               const timer = setTimeout(
                 () =>
-                  reject(Error("Constrained CLIP worker failed to initialize")),
+                  reject(
+                    Error("Constrained BioCLIP worker failed to initialize"),
+                  ),
                 30_000,
               );
               worker.onmessage = ({ data }) => {
@@ -311,7 +300,8 @@ try {
                 clearTimeout(timer);
                 reject(
                   Error(
-                    error.message || "Constrained CLIP worker failed to load",
+                    error.message ||
+                      "Constrained BioCLIP worker failed to load",
                   ),
                 );
               };
@@ -321,7 +311,9 @@ try {
               const timer = setTimeout(
                 () =>
                   reject(
-                    Error(`CLIP ${photo ? "inference" : "prepare"} timed out`),
+                    Error(
+                      `BioCLIP ${photo ? "inference" : "prepare"} timed out`,
+                    ),
                   ),
                 90_000,
               );
@@ -334,7 +326,7 @@ try {
               };
               worker.onerror = (error) => {
                 clearTimeout(timer);
-                reject(Error(error.message || "CLIP worker failed to load"));
+                reject(Error(error.message || "BioCLIP worker failed to load"));
               };
               worker.postMessage({ photo });
             });
@@ -358,8 +350,8 @@ try {
         },
         {
           script: worker("species.worker"),
-          clipFiles,
-          clipUrl,
+          clipFile,
+          model: photoModel,
           constrained,
           photoPath: base + "replica-assets/giraffe-example.png",
         },

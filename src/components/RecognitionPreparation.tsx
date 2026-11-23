@@ -72,7 +72,7 @@ export function RecognitionPreparation() {
         >
           {photoReady
             ? "写真の種識別モデル保存済み"
-            : "写真の種識別モデルを保存（約150 MB以上）"}
+            : "写真の種識別モデルを保存（約87 MB）"}
         </button>
       </div>
       <p role="status">{message}</p>

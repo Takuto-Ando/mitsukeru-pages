@@ -531,7 +531,7 @@ export function CameraView({
               </button>
             )}
             <p className="quiet-note">
-              初回は約150MB以上。Wi-Fiで先に準備できます。
+              初回は約87 MB。Wi-Fiで先に準備できます。
             </p>
           </>
         ) : (

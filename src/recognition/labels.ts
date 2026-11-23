@@ -23,13 +23,20 @@ export const animalLabels = [
 export const rejectionLabels = [
   "a person",
   "a dog",
-  "a cat",
-  "a bird",
+  "a domestic cat",
   "a tiger",
   "a lion",
   "an empty zoo enclosure",
-  "a landscape with no animal",
-  "an unclear blurry photograph",
+  "a landscape without animals",
+  "a blurry photograph",
+  "cage bars",
+  "a zoo information board",
+  "pebbles on the ground",
+  "grass and leaves",
+  "a rabbit hutch",
+  "a domestic chicken",
+  "a black crow",
+  "a rock pigeon",
 ];
 export type Candidate = { groupId: string; score: number; speciesId?: string };
 const confirmedPromptIds = new Set(
@@ -111,5 +118,45 @@ export function recognitionFromOutput(
         ? ("identified" as const)
         : ("uncertain" as const),
     modelVersion: speciesModelVersion,
+  };
+}
+
+export function classifyBioClip(output: { label: string; cosine: number }[]) {
+  const ranked = output
+    .filter(({ cosine }) => Number.isFinite(cosine))
+    .sort((a, b) => b.cosine - a.cosine);
+  const [top, second] = ranked;
+  const rejection = ranked.find(({ label }) => !byPrompt.has(label));
+  const candidates: Candidate[] = [];
+  if (
+    top &&
+    byPrompt.has(top.label) &&
+    top.cosine >= 0.24 &&
+    top.cosine - (rejection?.cosine ?? 0) >= 0.008
+  ) {
+    const normalized = ranked.map(({ cosine }) =>
+      Math.exp((cosine - top.cosine) * 100),
+    );
+    const sum = normalized.reduce((total, value) => total + value, 0);
+    for (const [index, entry] of ranked.entries()) {
+      if (top.cosine - entry.cosine > 0.065 || candidates.length === 3) break;
+      const match = byPrompt.get(entry.label);
+      if (match && (!rejection || entry.cosine > rejection.cosine))
+        candidates.push({ ...match, score: normalized[index] / sum });
+    }
+  }
+  const best = candidates[0];
+  return {
+    candidates,
+    recognition: {
+      speciesId: best?.speciesId ?? null,
+      confidence: best?.score ?? 0,
+      status: !best
+        ? ("unknown" as const)
+        : top.cosine - (second?.cosine ?? 0) >= 0.04
+          ? ("identified" as const)
+          : ("uncertain" as const),
+      modelVersion: speciesModelVersion,
+    },
   };
 }

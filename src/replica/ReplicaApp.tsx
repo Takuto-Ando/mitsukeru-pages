@@ -198,6 +198,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const [framedExample, setFramedExample] = useState(false);
   const [groupId, setGroupId] = useState("");
   const [record, setRecord] = useState<ReplicaRecord>();
+  const recognitionInput = useRef<CameraCapture["recognitionInput"]>(undefined);
   const [records, setRecords] = useState<ReplicaRecord[]>([]);
   const [photoSaved, setPhotoSaved] = useState(false);
   const [galleryLoadAttempt, setGalleryLoadAttempt] = useState(0);
@@ -321,6 +322,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   function resetCapture() {
     activeCapture.current = undefined;
     savedDrawing.current = undefined;
+    recognitionInput.current = undefined;
     setFramedExample(false);
     setRecord(undefined);
     setPhotoSaved(false);
@@ -379,7 +381,13 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
       });
   }
 
-  function takePhoto({ photo, sample, animal }: CameraCapture) {
+  function takePhoto({
+    photo,
+    sample,
+    animal,
+    recognitionInput: input,
+  }: CameraCapture) {
+    recognitionInput.current = input;
     const captured = sample
       ? { groupId: "giraffe", name: "キリン", taskId: "giraffe" }
       : animal;
@@ -659,6 +667,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                     <ReplicaPhotoReview
                       key={record?.id}
                       photo={record?.photo}
+                      recognitionInput={recognitionInput.current}
                       sample={!!record?.samplePhoto}
                       createdAt={record?.photo ? record.createdAt : undefined}
                       photoLocation={record?.photoLocation}
@@ -674,11 +683,12 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                       }
                       onSelect={selectCapturedAnimal}
                       onRetake={retakePhoto}
-                      onConfirm={() =>
+                      onConfirm={() => {
+                        recognitionInput.current = undefined;
                         setScreen(
                           legacy ? (tutorial ? "cheer" : "loading") : "easel",
-                        )
-                      }
+                        );
+                      }}
                     />
                   </div>
                   {screen === "cheer" && <PhotoCelebration />}

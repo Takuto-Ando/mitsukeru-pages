@@ -15,8 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      CLIP_REVISION: d15189d7028b43f1d3e65039190477f6af591c2a
-      CLIP_DIR: .performance-clip
+      BIOCLIP_DIR: .performance-bioclip
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,22 +25,21 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - uses: actions/cache@v4
-        id: clip
+        id: bioclip
         with:
-          path: ${{ env.CLIP_DIR }}
-          key: zooketch-clip-q8-${{ env.CLIP_REVISION }}
+          path: ${{ env.BIOCLIP_DIR }}
+          key: zooketch-bioclip-int8-${{ hashFiles('src/recognition/bioclip-model.json') }}
       - name: Download pinned recognition model
-        if: steps.clip.outputs.cache-hit != 'true'
+        if: steps.bioclip.outputs.cache-hit != 'true'
         run: |
-          mkdir -p "$CLIP_DIR/onnx"
-          root="https://huggingface.co/Xenova/clip-vit-base-patch32/resolve/$CLIP_REVISION"
-          for file in config.json tokenizer.json tokenizer_config.json preprocessor_config.json onnx/model_quantized.onnx; do
-            curl --location --fail --silent --show-error --retry 2 --max-time 180               "$root/$file" --output "$CLIP_DIR/$file"
-          done
+          mkdir -p "$BIOCLIP_DIR"
+          url="$(node -p 'require("./src/recognition/bioclip-model.json").url')"
+          curl --location --fail --silent --show-error --retry 2 --max-time 180 \
+            "$url" --output "$BIOCLIP_DIR/${url##*/}"
       - run: npm run build
       - name: Measure and enforce budgets
         run: |
-          node tools/recognition/performance.mjs dist "$CLIP_DIR" > performance.json
+          node tools/recognition/performance.mjs dist "$BIOCLIP_DIR" > performance.json
           cat performance.json
           node tools/recognition/performance-budget.mjs performance.json
       - uses: actions/upload-artifact@v4

@@ -22,7 +22,10 @@ export function usePhotoModelDownloading() {
 type Identification = { candidates?: Candidate[]; message: string };
 const empty: Identification = { message: "" };
 
-export function usePhotoIdentification(photo?: string): Identification {
+export function usePhotoIdentification(
+  photo?: string,
+  crop?: string,
+): Identification {
   // Keep the result bound to the exact captured image. A late inference cannot
   // select a species for a retaken photo.
   const [result, setResult] = useState<{
@@ -51,22 +54,42 @@ export function usePhotoIdentification(photo?: string): Identification {
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
         if (prepared.status !== "ready") throw new Error("unavailable");
-        const outcome = await speciesRecognizer.recognize(image, (message) =>
-          update({ message }),
-        );
+        const reportProgress = (message: string) => update({ message });
+        const focused = crop
+          ? await speciesRecognizer.recognize(crop, reportProgress)
+          : undefined;
+        if (!active) return;
+        const sure =
+          focused?.status === "candidates" &&
+          focused.recognition?.status === "identified";
+        const outcome =
+          focused && sure
+            ? focused
+            : await speciesRecognizer.recognize(image, reportProgress);
         cancelInference = false;
         speciesRecognizer.unload();
-        if (outcome.status === "candidates") {
+        const candidates = new Map<string, Candidate>();
+        for (const result of [outcome, focused]) {
+          if (result?.status !== "candidates") continue;
+          for (const candidate of result.candidates) {
+            const id = candidate.speciesId ?? candidate.groupId;
+            if (!candidates.has(id)) candidates.set(id, candidate);
+          }
+        }
+        if (candidates.size) {
           update({
-            candidates: outcome.candidates,
-            message: outcome.candidates.length
-              ? ""
-              : "写真を見て、動物の名前を選んでください。",
+            candidates: [...candidates.values()].slice(0, 3),
+            message: "",
           });
         } else {
           update({ message: "写真を見て、動物の名前を選んでください。" });
         }
       } catch {
+        if (active && cancelInference) {
+          speciesRecognizer.release();
+          speciesRecognizer.unload();
+          cancelInference = false;
+        }
         update({
           message:
             "画像認識を利用できませんでした。動物の名前を選んでください。",
@@ -79,7 +102,7 @@ export function usePhotoIdentification(photo?: string): Identification {
       active = false;
       if (cancelInference) speciesRecognizer.release();
     };
-  }, [photo]);
+  }, [crop, photo]);
 
   return result && result.photo === photo ? result.value : empty;
 }

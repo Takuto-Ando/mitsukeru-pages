@@ -1,5 +1,5 @@
 export const speciesModelVersion =
-  "clip-vit-base-patch32-q8/d15189d7028b43f1d3e65039190477f6af591c2a/kyoto-catalog-v1";
+  "bioclip-vit-b-16-int8/fa3c062ea31a6e1881b1977fe555b2d481dca730/kyoto-catalog-v2";
 export type SpeciesRecognition = {
   speciesId: string | null;
   confidence: number;

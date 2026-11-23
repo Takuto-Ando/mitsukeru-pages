@@ -1,5 +1,12 @@
 import { test, expect } from "vitest";
-import { chooseCandidates, animalLabels } from "../../src/recognition/labels";
+import {
+  animalLabels,
+  chooseCandidates,
+  classifyBioClip,
+  rejectionLabels,
+  speciesPrompts,
+} from "../../src/recognition/labels";
+import promptBank from "../../src/recognition/bioclip-labels.json";
 import { speciesRecognizer } from "../../src/recognition/species";
 import { individualRecognizer } from "../../src/recognition/individual";
 test("17グループとヒツジ別名を候補へ対応付ける", () => {
@@ -39,6 +46,52 @@ test("ヤギとヒツジは候補を区別して同じ保存グループを使�
     { groupId: "goat", speciesId: "goat" },
     { groupId: "goat", speciesId: "sheep" },
   ]));
+test("BioCLIPの固定ベクトルが全ての種と対象外のラベルに対応する", () => {
+  expect(promptBank.labels).toEqual([...speciesPrompts, ...rejectionLabels]);
+  const vectors = Buffer.from(promptBank.vectors, "base64");
+  expect(vectors).toHaveLength(promptBank.labels.length * 512);
+  for (const [index, label] of promptBank.labels.entries())
+    expect(
+      vectors.subarray(index * 512, (index + 1) * 512).some(Boolean),
+      label,
+    ).toBe(true);
+});
+test("BioCLIPは図鑑の追加種も明瞭なら確定し、近い種は候補として並べる", () => {
+  const redPanda = "a red panda";
+  const blackBear = "a Japanese Asian black bear";
+  const fence = "cage bars";
+  expect(
+    classifyBioClip([
+      { label: redPanda, cosine: 0.36 },
+      { label: blackBear, cosine: 0.3 },
+      { label: fence, cosine: 0.21 },
+    ]),
+  ).toMatchObject({
+    recognition: { speciesId: "kyoto-a-fulgens", status: "identified" },
+  });
+  const uncertain = classifyBioClip([
+    { label: redPanda, cosine: 0.36 },
+    { label: blackBear, cosine: 0.34 },
+    { label: fence, cosine: 0.21 },
+  ]);
+  expect(uncertain.recognition.status).toBe("uncertain");
+  expect(uncertain.candidates.map(({ speciesId }) => speciesId)).toEqual([
+    "kyoto-a-fulgens",
+    "bear",
+  ]);
+  expect(
+    classifyBioClip([
+      { label: redPanda, cosine: 0.36 },
+      { label: fence, cosine: 0.357 },
+    ]).candidates,
+  ).toEqual([]);
+  expect(
+    classifyBioClip([
+      { label: redPanda, cosine: 0.23 },
+      { label: fence, cosine: 0.1 },
+    ]).recognition.status,
+  ).toBe("unknown");
+});
 test("写真なしでは推測せず個体識別も行わない", async () => {
   expect((await speciesRecognizer.recognize("test-photo")).status).toBe(
     "unavailable",
@@ -69,4 +122,21 @@ test("ライブ検出は位置と大きさが変わっても同じ枠を更新�
   expect(after.map((box) => box.id)).toEqual([before[1].id, before[0].id]);
   expect(after[1].bottom).toBe(0.72);
   expect(trackLiveBoxes(after, [], () => ++id)).toEqual([]);
+});
+
+test("低い検出スコアの枠は同じ位置が続いたときだけ表示する", async () => {
+  const { confirmLiveBoxes, decodeLiveBoxes, trackLiveBoxes } =
+    await import("../../src/recognition/liveBoxes");
+  const modelOutput = new Float32Array((52 ** 2 + 26 ** 2 + 13 ** 2) * 85);
+  modelOutput.set([0.5, 0.5, 2.5, 2.5, 0.5], (20 * 52 + 20) * 85);
+  modelOutput[(20 * 52 + 20) * 85 + 5 + 15] = 0.4;
+  const [weak] = decodeLiveBoxes(modelOutput, 416, 416);
+  expect(weak?.score).toBeCloseTo(0.2);
+  const strong = { ...weak, score: 0.8 };
+  const next = { ...weak, label: "鳥", left: weak.left + 0.01 };
+  const elsewhere = { ...next, left: 0.65, right: 0.95 };
+  expect(confirmLiveBoxes([], [weak, strong])).toEqual([strong]);
+  expect(confirmLiveBoxes([weak], [elsewhere])).toEqual([]);
+  expect(confirmLiveBoxes([weak], [next])).toEqual([next]);
+  expect(trackLiveBoxes([{ ...strong, id: 1 }], [next], () => 2)[0].id).toBe(1);
 });
