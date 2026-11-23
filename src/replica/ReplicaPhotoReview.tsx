@@ -1,6 +1,6 @@
 import { ZooCardSummary } from "../components/ZooCardSummary";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
-import { Check, CornerDownLeft, Pencil } from "lucide-react";
+import { Check, CornerDownLeft, Pencil, Search } from "lucide-react";
 import { useId, useRef, useState, type CSSProperties } from "react";
 import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
 import { assetPath } from "../content/artwork";
@@ -93,6 +93,7 @@ export function ReplicaPhotoReview({
         : "写真をアルバムに保存しました。"
       : "撮影した写真を確認する"
     : "観察する動物を選ぶ";
+  const savedHeading = !!(figmaFlow && photo && saved);
   const confirmLabel = figmaFlow ? "描いてもらう" : "ピツネに見せる";
   const file = (name: string) =>
     assetPath("illustrations/pdf-design/camera-review-" + name + ".svg");
@@ -106,9 +107,12 @@ export function ReplicaPhotoReview({
       }
       aria-labelledby="replica-photo-heading"
     >
-      <h1 id="replica-photo-heading">
+      <h1
+        id="replica-photo-heading"
+        data-photo-saved={savedHeading || undefined}
+      >
         <span className="replica-photo-heading-content">
-          {figmaFlow && photo && saved && (
+          {savedHeading && (
             <span className="replica-photo-saved-check" aria-hidden="true">
               <Check size={18} strokeWidth={2} />
             </span>
@@ -173,6 +177,16 @@ export function ReplicaPhotoReview({
                 if (event.key === "Escape") closePicker();
               }}
             >
+              <div className="replica-photo-picker-search">
+                <Search aria-hidden="true" size={17} />
+                <input
+                  type="search"
+                  aria-label="動物の名前で探す"
+                  placeholder="動物の名前で探す"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
               {matchingCandidates.length > 0 && (
                 <ul aria-label="写真から見つけた候補">
                   {matchingCandidates.map(({ groupId, speciesId, name }) => (
@@ -192,13 +206,6 @@ export function ReplicaPhotoReview({
                   ))}
                 </ul>
               )}
-              <input
-                type="search"
-                aria-label="動物の名前で探す"
-                placeholder="動物の名前で探す"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
               <ul aria-label="動物の一覧">
                 {matchingAnimals.map(({ id, name }) => (
                   <li key={id}>

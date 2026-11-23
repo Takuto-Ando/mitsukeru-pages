@@ -246,9 +246,11 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   });
   await expect(title).toBeVisible();
   await expect(title.locator(":scope > span")).toHaveCSS("transform", "none");
-  await expect(
-    resultCard.getByRole("img", { name: "難易度 1 / 3" }),
-  ).toBeVisible();
+  const difficulty = resultCard.getByRole("img", { name: "難易度 1 / 3" });
+  await expect(difficulty).toBeVisible();
+  const difficultyBounds = (await difficulty.boundingBox())!;
+  expect(difficultyBounds.width).toBeCloseTo(153.06, 1);
+  expect(difficultyBounds.height).toBeCloseTo(32.93, 1);
   const stage = resultCard.locator(".comparison-stage");
   await expect(stage).toHaveCSS("aspect-ratio", "310 / 346");
   const cardBounds = (await resultCard.boundingBox())!;

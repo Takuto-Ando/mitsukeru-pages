@@ -109,10 +109,18 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await page.goto("./");
   await button(page, "つづきから").click();
   await button(page, "シャッター").click();
-  await expect(
-    page.getByRole("heading", { name: "写真をギャラリーに保存しました。" }),
-  ).toBeVisible();
+  const savedHeading = page.getByRole("heading", {
+    name: "写真をギャラリーに保存しました。",
+  });
+  await expect(savedHeading).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
+  const savedText = savedHeading.locator(".replica-photo-saved-check + span");
+  await expect(savedText).toHaveCSS("white-space", "nowrap");
+  const headingBox = (await savedHeading.boundingBox())!;
+  const savedTextBox = (await savedText.boundingBox())!;
+  expect(savedTextBox.x + savedTextBox.width).toBeLessThanOrEqual(
+    headingBox.x + headingBox.width + 1,
+  );
 
   const metadata = page.locator(".design3-photo-date");
   const calendar = metadata.locator("img").first();
@@ -135,9 +143,17 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   expect(pickerBox.width).toBeGreaterThan(240);
   expect(pickerBox.x).toBeGreaterThan(0);
   expect(pickerBox.x + pickerBox.width).toBeLessThan(320);
-  const search = page.getByRole("searchbox", { name: "動物の名前で探す" });
+  const searchArea = picker.locator(":scope > :first-child");
+  const search = searchArea.getByRole("searchbox", {
+    name: "動物の名前で探す",
+  });
+  await expect(searchArea.locator("svg")).toBeVisible();
   await search.fill("しろてて");
   await expect(picker.getByRole("button")).toHaveCount(1);
+  await expect(button(page, "シロテテナガザル")).toHaveCSS(
+    "font-weight",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
+  );
   await button(page, "シロテテナガザル").click();
   await expect(picker).toHaveCount(0);
   await expect(button(page, "修正")).toBeFocused();
@@ -200,7 +216,10 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
       ? /^"?dnp-shuei-mgothic-std"?[, ]/
       : /^"?Zen Maru Gothic"?[, ]/,
   );
-  await expect(savedHeading).toHaveCSS("font-weight", "700");
+  await expect(savedHeading).toHaveCSS(
+    "font-weight",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
+  );
   const savedCheck = savedHeading.locator(".replica-photo-saved-check");
   await expect(savedCheck.locator("svg")).toBeVisible();
   await expect(savedCheck).toHaveCSS("border-top-width", "2px");

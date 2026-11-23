@@ -39,6 +39,7 @@ import {
   photoViewQuality,
   type PhotoSource,
 } from "../recognition/speciesViews";
+import { CameraModelDownload } from "./TutorialModelDownload";
 import "./camera-tracking.css";
 
 export const samplePhoto = () =>
@@ -127,6 +128,7 @@ export function ReplicaCamera({
     liveRetry,
   );
   const liveError = (!liveCached && liveFailed) || live.status === "error";
+  const liveDownloadFailed = !liveCached && offerLiveRetry;
   const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
   const [trackedAnimalId, setTrackedAnimalId] = useState<number>();
@@ -540,24 +542,19 @@ export function ReplicaCamera({
     >
       <h1 className="sr-only">動物を撮影しよう</h1>
       <div className="camera-pitsune">
-        {legacy ? (
-          <img
-            alt=""
-            className="camera-pitsune-face"
-            src={assetPath("figma/entry/camera-face.svg")}
-          />
-        ) : (
-          <div
-            className="camera-pitsune-face camera-pitsune-binoculars"
-            aria-hidden="true"
-          >
-            <img alt="" src={assetPath("figma/entry/camera-face.svg")} />
-            <img
-              alt=""
-              src={assetPath("replica-assets/camera-binoculars.svg")}
-            />
-          </div>
-        )}
+        <img
+          alt=""
+          className={
+            legacy
+              ? "camera-pitsune-face"
+              : "camera-pitsune-face camera-pitsune-binoculars"
+          }
+          src={assetPath(
+            legacy
+              ? "figma/entry/camera-face.svg"
+              : "replica-assets/camera-binoculars.svg",
+          )}
+        />
         <p className="pitsune-bubble">
           {sample && sampleVisible ? (
             <CardLettering
@@ -718,24 +715,31 @@ export function ReplicaCamera({
             )}
           </div>
         )}
-        {!legacy && !sample && (livePreparing || photoModelDownloading) && (
-          <p className="replica-camera-model-status" role="status">
-            画像認識モデルをダウンロード中…
-          </p>
-        )}
+        {!legacy &&
+          !sample &&
+          !cameraUnavailable &&
+          !menuOpen &&
+          !suspended &&
+          !message &&
+          (livePreparing || photoModelDownloading || liveDownloadFailed) && (
+            <CameraModelDownload
+              live={livePreparing}
+              photo={photoModelDownloading}
+              onRetry={
+                liveDownloadFailed && !photoModelDownloading
+                  ? toggleLive
+                  : undefined
+              }
+            />
+          )}
         {!legacy &&
           !sample &&
           streamReady &&
           !livePreparing &&
           !photoModelDownloading &&
           !message &&
-          species.modelStatus &&
-          species.modelStatus !== "ready" &&
-          (species.modelStatus === "preparing" ? (
-            <p className="replica-camera-model-status" role="status">
-              動物名を調べるモデルを準備中…
-            </p>
-          ) : (
+          (species.modelStatus === "deferred" ||
+            species.modelStatus === "failed") && (
             <div className="live-camera-control">
               <p role="status">
                 {species.modelStatus === "deferred"
@@ -750,7 +754,7 @@ export function ReplicaCamera({
                 種識別モデルを準備（未保存の場合 約87 MB）
               </button>
             </div>
-          ))}
+          )}
         {!legacy && (streamReady || sample) && message && (
           <p className="replica-camera-model-status" role="status">
             {message}
@@ -774,23 +778,6 @@ export function ReplicaCamera({
                 {cameraSettings?.canOpen
                   ? "端末の設定を開く"
                   : "カメラをもう一度開く"}
-              </button>
-            </div>
-          )}
-        {!legacy &&
-          !sample &&
-          streamReady &&
-          !livePreparing &&
-          !message &&
-          (offerLiveRetry ||
-            (live.status === "error" && retriedWorker.current)) && (
-            <div className="live-camera-control">
-              <button
-                type="button"
-                className="text-button"
-                onClick={toggleLive}
-              >
-                ライブ検出を再準備
               </button>
             </div>
           )}

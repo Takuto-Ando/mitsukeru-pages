@@ -207,13 +207,14 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   await expect(
     sketch.getByRole("heading", { name: "キリンの舌", exact: true }),
   ).toBeVisible();
-  await expect(sketch.getByRole("img", { name: "難易度 1 / 3" })).toHaveCSS(
-    "min-height",
-    "37px",
-  );
+  const difficulty = sketch.getByRole("img", { name: "難易度 1 / 3" });
+  await expect(difficulty).toHaveCSS("min-height", "32.93px");
+  const difficultyBounds = (await difficulty.boundingBox())!;
+  expect(difficultyBounds.width).toBeCloseTo(153.06, 1);
+  expect(difficultyBounds.height).toBeCloseTo(32.93, 1);
   await expect(sketch.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
-    "700",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
   );
   const line = sketch.getByTestId("user-lines").locator('[stroke="#115599"]');
   expect(await line.count()).toBeGreaterThan(0);
@@ -297,7 +298,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   expect(await closePosition(photo)).toEqual(initialClosePosition);
   await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
-    "700",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
   );
   const photoSize = (await photo
     .locator(".replica-gallery-photo-preview")

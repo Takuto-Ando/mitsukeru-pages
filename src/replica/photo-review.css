@@ -5,12 +5,37 @@
   gap: 6px;
 }
 
+.replica-app .design3-photo-review h1[data-photo-saved] {
+  --saved-check-size: 29px;
+  --saved-heading-gap: 8px;
+  container-type: inline-size;
+}
+
+.replica-photo-heading-content:has(.replica-photo-saved-check) {
+  gap: var(--saved-heading-gap);
+}
+
+.replica-photo-heading-content > .replica-photo-saved-check + span {
+  /* Fit the 16 glyphs, including letter spacing, across the 300px reference. */
+  font-size: min(
+    1em,
+    calc(
+      (
+          min(100cqi, 300px) - var(--saved-check-size) -
+            var(--saved-heading-gap)
+        ) /
+        16.24
+    )
+  );
+  white-space: nowrap;
+}
+
 .replica-photo-saved-check {
   display: grid;
   place-items: center;
   flex: none;
   box-sizing: border-box;
-  width: 30px;
+  width: var(--saved-check-size);
   aspect-ratio: 1;
   border: 2px solid currentColor;
   border-radius: 50%;
@@ -73,8 +98,30 @@
   padding: 8px;
 }
 
-.replica-photo-picker input {
+.replica-photo-picker-search {
+  position: sticky;
+  z-index: 1;
+  inset-block-start: 0;
+  background: var(--d3-cream);
+}
+
+.replica-photo-picker-search svg {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 10px;
+  translate: 0 -50%;
+  color: var(--d3-brown);
+  pointer-events: none;
+}
+
+.replica-photo-picker .replica-photo-picker-search input {
+  position: static;
   box-sizing: border-box;
+  padding-inline-start: 33px;
+}
+
+.replica-photo-picker ul button {
+  font-weight: 700;
 }
 
 .replica-photo-picker > p {
@@ -97,7 +144,11 @@
   padding: 2px 9px;
   border-radius: 999px;
   background: var(--d3-orange);
-  color: var(--d3-brown);
+  color: #fff;
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.photo-picker-candidate-tag ruby[data-reading]::after {
+  opacity: 1;
 }

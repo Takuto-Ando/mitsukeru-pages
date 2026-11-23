@@ -74,3 +74,14 @@
 :where(button, input, select, textarea, optgroup, option, output) {
   font-family: inherit;
 }
+
+/* Adobe's kit also includes the regular face. Keep every UI label, native
+   control and generated ruby on the licensed B face once it is available. */
+:root[data-ui-font="dnp"],
+:root[data-ui-font="dnp"] *,
+:root[data-ui-font="dnp"] *::before,
+:root[data-ui-font="dnp"] *::after {
+  font-family: var(--font-body) !important;
+  font-style: normal !important;
+  font-weight: 600 !important;
+}

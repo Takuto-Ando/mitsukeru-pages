@@ -138,6 +138,10 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
     await button(page, step).click();
   const retry = button(page, "カメラをもう一度開く");
   await expect(retry).toBeVisible();
+  await expect(page.locator("img.camera-pitsune-binoculars")).toHaveAttribute(
+    "src",
+    /\/replica-assets\/camera-binoculars\.svg$/,
+  );
   await page.evaluate(() => sessionStorage.removeItem("test:camera-denied"));
   await retry.click();
   await expect(page.getByLabel("動物を映すカメラ")).toBeVisible();
@@ -174,6 +178,9 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   await button(page, "つづきから").click();
   const camera = page.locator(".replica-camera");
   await expect(camera).toHaveAttribute("data-figma-node", "38-1026");
+  await expect(
+    camera.locator("img.camera-pitsune-binoculars"),
+  ).toHaveJSProperty("naturalWidth", 104);
   const shutter = button(page, "シャッター");
   await expect(shutter).toBeInViewport();
   await expect(camera.getByRole("button", { name: /ライブ検出/ })).toHaveCount(
@@ -366,9 +373,12 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
       connection.connection.effectiveType = "3g";
     });
     await button(page, "つづきから").click();
-    await expect(page.locator(".replica-camera-model-status")).toHaveText(
-      "画像認識モデルをダウンロード中…",
-    );
+    await expect(
+      page.getByRole("heading", { name: "Now Loading..." }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("progressbar", { name: "画像認識モデルのダウンロード" }),
+    ).toBeVisible();
     await expect(button(page, "シャッター")).toBeEnabled();
     await expect(page.locator(".replica-camera-tracking")).toBeVisible();
     await expect(page.locator(".pitsune-bubble")).not.toContainText(
@@ -545,6 +555,9 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
     review.getByRole("img", { name: "撮影した動物の写真" }),
   ).toBeVisible();
   await expect(button(page, "修正")).toBeEnabled();
+  await expect(
+    review.getByText(/写真から(?:動物の)?候補を探しています/),
+  ).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-species-pending",
     "true",
@@ -558,12 +571,21 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   await expect(suggestion).toHaveCount(0);
   await button(page, "修正").click();
   await expect(
-    review.locator(".replica-photo-picker").locator(":scope > :first-child"),
+    review
+      .locator(".replica-photo-picker > :first-child")
+      .getByRole("searchbox", { name: "動物の名前で探す" }),
+  ).toBeVisible();
+  await expect(
+    review.locator(".replica-photo-picker").locator(":scope > :nth-child(2)"),
   ).toHaveAttribute("aria-label", "写真から見つけた候補");
   const suggestedBird = suggestion.getByRole("button", {
     name: "フンボルトペンギン 候補",
   });
   await expect(suggestedBird.getByText("候補", { exact: true })).toBeVisible();
+  await expect(suggestedBird.locator(".photo-picker-candidate-tag")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)",
+  );
   await expect(
     review.getByRole("list", { name: "動物の一覧" }).getByRole("button", {
       name: "フンボルトペンギン",
@@ -582,7 +604,7 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   );
 });
 
-test("ライブ認識の自動再試行が尽きてもシャッターと手動再試行が使える", async ({
+test("モデルの再取得にはNow Loadingを使い、シャッターと手動再試行が使える", async ({
   page,
 }) => {
   await useMockCamera(page);
@@ -598,7 +620,10 @@ test("ライブ認識の自動再試行が尽きてもシャッターと手動�
   await page.goto("./");
   await button(page, "つづきから").click();
   await expect(button(page, "シャッター")).toBeEnabled();
-  const retry = button(page, "ライブ検出を再準備");
+  await expect(button(page, "ライブ検出を再準備")).toHaveCount(0);
+  const retry = page
+    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("button", { name: "もう一度試す" });
   await expect(retry).toBeVisible({ timeout: 12_000 });
   expect(downloads).toBeGreaterThanOrEqual(3);
   allowDownload = true;
@@ -787,9 +812,14 @@ test("タイトルからライブ認識を事前準備し、撮影画面でも�
     await page.goto("./");
     await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "つづきから").click();
+    const loading = page.getByRole("region", { name: "Now Loading..." });
     await expect(
-      page.locator(".camera-frame .replica-camera-model-status"),
-    ).toHaveText("画像認識モデルをダウンロード中…");
+      loading.getByText("画像認識モデルをダウンロード中…"),
+    ).toBeVisible();
+    await expect(loading.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "0",
+    );
     await expect(button(page, "シャッター")).toBeEnabled();
   } finally {
     releaseRequest();

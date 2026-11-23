@@ -24,7 +24,10 @@ test("年齢の自動設定・手動変更・チュートリアル再開と難�
   });
   await expect(start).toBeVisible();
   const ageHeading = start.getByRole("heading");
-  await expect(ageHeading).toHaveCSS("font-weight", "700");
+  await expect(ageHeading).toHaveCSS(
+    "font-weight",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
+  );
   await expect(button("難易度 かんたん")).toBeVisible();
   const panel = start.locator(".observation-start-panel");
   await page.setViewportSize({ width: 402, height: 874 });

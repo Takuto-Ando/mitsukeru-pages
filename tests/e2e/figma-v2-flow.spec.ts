@@ -12,6 +12,7 @@ async function expectLicensedTypeface(page: Page, selector: string) {
     "font-family",
     /^"?dnp-shuei-mgothic-std"?[, ]/,
   );
+  await expect(page.locator(selector)).toHaveCSS("font-weight", "600");
   const adobeFace = await page.evaluate(() =>
     [...document.fonts].some(
       (face) =>
@@ -103,6 +104,13 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
       (ruby) => getComputedStyle(ruby, "::after").content,
     ),
   ).toBe('"ゆびさき"');
+  if (process.env.VITE_ADOBE_FONTS_KIT_ID) {
+    expect(
+      await taglineRuby.evaluate(
+        (ruby) => getComputedStyle(ruby, "::after").fontWeight,
+      ),
+    ).toBe("600");
+  }
   await button("はじめから").click();
   await button("決定！").click();
   await expect(button("スキップ")).toHaveCount(0);

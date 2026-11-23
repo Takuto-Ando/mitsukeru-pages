@@ -22,12 +22,28 @@
   outline: none;
 }
 
-.tutorial-model-download h1 {
+.tutorial-model-download :is(h1, h2) {
   margin: 0;
   padding: 0;
   font: inherit;
   font-size: clamp(24px, 7.5vw, 30px);
   line-height: 1.2;
+}
+
+.tutorial-model-download--camera {
+  position: absolute;
+  z-index: 1;
+  inset: 50% auto auto 50%;
+  min-block-size: auto;
+  max-inline-size: calc(100% - 16px);
+  padding-block: 20px;
+  translate: -50% -50%;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 16%);
+  pointer-events: none;
+}
+
+.tutorial-model-download--camera button {
+  pointer-events: auto;
 }
 
 .tutorial-model-meter {

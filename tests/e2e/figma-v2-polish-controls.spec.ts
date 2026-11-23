@@ -69,6 +69,9 @@ test("キリンとヤギでペン色が変わり、太さ変更中だけ画面�
   await openDrawing(page, "ヤギ・ヒツジ");
   const speech = page.locator(".mission-pitsune-row .bubble-line-text");
   await expect(speech).toBeVisible();
+  await button(page, "ヒントを見る").click();
+  await expect(speech).toContainText("もうすこし");
+  await expect(page.locator(".design3-draw > p")).toHaveCount(0);
   expect(
     await speech.evaluate((text) => getComputedStyle(text).fontSize),
   ).not.toBe("0px");
@@ -135,7 +138,7 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
   });
   await button(page, "つづきから").click();
   const accent = page.locator(".pitsune-bubble .pitsune-text-highlight");
-  await expect(accent).toHaveText("動物の写真");
+  await expect(accent).toHaveText("動物");
   await expect(accent).toHaveCSS("color", "rgb(249, 168, 70)");
 
   await expect(page.locator(".camera-frame video")).toBeVisible();
@@ -172,7 +175,7 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
   await button(page, "キリン").click();
   await expect(
     page.locator(".design3-photo-fact .zoo-card-summary-line").first(),
-  ).toHaveCSS("font-weight", "700");
+  ).toHaveCSS("font-weight", process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700");
   await button(page, "描いてもらう").click();
   const titleRuby = page.locator(".design3-challenge h1 ruby").first();
   await expect(titleRuby).toBeVisible();

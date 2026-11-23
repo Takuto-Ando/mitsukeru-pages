@@ -111,9 +111,6 @@ export function ReplicaDraw({
           </>
         }
       />
-      {showHint && task.id !== "giraffe" && (
-        <p className="replica-task-hint">{task.hint}</p>
-      )}
     </section>
   );
 }

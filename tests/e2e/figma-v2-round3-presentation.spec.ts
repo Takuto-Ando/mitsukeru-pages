@@ -40,7 +40,7 @@ test("課題の背景だけが動き、同じ吹き出しのふりがなは高�
     });
   expect(await pattern()).toEqual({
     animation: "sketch-pattern-drift",
-    opacity: "0.2",
+    opacity: "0.11",
     pointer: "none",
     position: "fixed",
     size: ["80px 80px"],

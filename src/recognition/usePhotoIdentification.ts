@@ -59,9 +59,9 @@ export function usePhotoIdentification(
           }
           update({ message: "画像認識モデルをダウンロード中…" });
           await (pending ?? downloadPhotoModel());
+          update(empty);
         }
         if (!active) return;
-        update({ message: "写真から動物の候補を探しています…" });
         cancelInference = true;
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
@@ -69,7 +69,6 @@ export function usePhotoIdentification(
         const { candidates } = await recognizeSpeciesViews(
           photoSpeciesViews(image, crop, tiles),
           () => active,
-          (message) => update({ message }),
         );
         cancelInference = false;
         if (!active) return;

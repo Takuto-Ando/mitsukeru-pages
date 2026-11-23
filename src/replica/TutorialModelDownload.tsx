@@ -14,6 +14,24 @@ import {
 } from "../recognition/photoModel";
 import "./tutorial-model-download.css";
 
+function downloadProgress(live: boolean, photo: boolean) {
+  const liveBytes = live ? liveModelBytes : 0;
+  const photoBytes = photo ? photoModel.bytes : 0;
+  const bytes =
+    Math.min(liveBytes, liveModelDownloadedBytes()) +
+    Math.min(photoBytes, photoModelDownloadedBytes());
+  return Math.min(99, Math.floor((100 * bytes) / (liveBytes + photoBytes)));
+}
+
+function modelProgressEvents(update: () => void) {
+  window.addEventListener(liveModelProgressEvent, update);
+  window.addEventListener(photoModelProgressEvent, update);
+  return () => {
+    window.removeEventListener(liveModelProgressEvent, update);
+    window.removeEventListener(photoModelProgressEvent, update);
+  };
+}
+
 export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -29,20 +47,8 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
   useEffect(() => {
     let active = true;
     let advance = 0;
-    const update = () => {
-      const bytes =
-        Math.min(liveModelBytes, liveModelDownloadedBytes()) +
-        Math.min(photoModel.bytes, photoModelDownloadedBytes());
-      setProgress(
-        Math.min(
-          99,
-          Math.floor((100 * bytes) / (liveModelBytes + photoModel.bytes)),
-        ),
-      );
-    };
-
-    window.addEventListener(liveModelProgressEvent, update);
-    window.addEventListener(photoModelProgressEvent, update);
+    const update = () => setProgress(downloadProgress(true, true));
+    const unsubscribe = modelProgressEvents(update);
     // Keep the meter at its start position for the first paint, even if both
     // files are already cached.
     let start = requestAnimationFrame(() => {
@@ -63,8 +69,7 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
 
     return () => {
       active = false;
-      window.removeEventListener(liveModelProgressEvent, update);
-      window.removeEventListener(photoModelProgressEvent, update);
+      unsubscribe();
       cancelAnimationFrame(start);
       window.clearTimeout(advance);
     };
@@ -78,7 +83,61 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
       onCancel={(event) => event.preventDefault()}
     >
       <h1 id={title}>Now Loading...</h1>
-      {!failed && (
+      <ModelDownloadContent
+        progress={progress}
+        onRetry={
+          failed
+            ? () => {
+                setFailed(false);
+                setProgress(0);
+                setAttempt((previous) => previous + 1);
+              }
+            : undefined
+        }
+      />
+    </dialog>
+  );
+}
+
+export function CameraModelDownload({
+  live,
+  photo,
+  onRetry,
+}: {
+  live: boolean;
+  photo: boolean;
+  onRetry?: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const title = useId();
+  useEffect(() => {
+    if (!(live || photo)) return;
+    const update = () => setProgress(downloadProgress(live, photo));
+    update();
+    return modelProgressEvents(update);
+  }, [live, photo]);
+
+  return (
+    <section
+      className="tutorial-model-download tutorial-model-download--camera"
+      aria-labelledby={title}
+    >
+      <h2 id={title}>Now Loading...</h2>
+      <ModelDownloadContent progress={progress} onRetry={onRetry} />
+    </section>
+  );
+}
+
+function ModelDownloadContent({
+  progress,
+  onRetry,
+}: {
+  progress: number;
+  onRetry?: () => void;
+}) {
+  return (
+    <>
+      {!onRetry && (
         <p className="tutorial-model-caption">
           画像認識モデルをダウンロード中…
         </p>
@@ -104,22 +163,14 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
           />
         </div>
       </div>
-      {failed && (
+      {onRetry && (
         <div className="tutorial-model-retry">
           <p role="alert">通信を確認して、もう一度試してね。</p>
-          <button
-            className="design3-pill"
-            type="button"
-            onClick={() => {
-              setFailed(false);
-              setProgress(0);
-              setAttempt((previous) => previous + 1);
-            }}
-          >
+          <button className="design3-pill" type="button" onClick={onRetry}>
             もう一度試す
           </button>
         </div>
       )}
-    </dialog>
+    </>
   );
 }
