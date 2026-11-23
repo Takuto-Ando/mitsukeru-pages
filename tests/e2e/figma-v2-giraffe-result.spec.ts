@@ -19,8 +19,8 @@ test("長いスケッチ見出しも位置を保ち、難易度と並んで一�
   });
   const button = (name: string) =>
     page.getByRole("button", { name, exact: true });
-  const animal = "ニシアフリカコガタワニ";
-  const task = taskById["kyoto-o-tetraspis"];
+  const animal = "タテガミヤマアラシ";
+  const task = taskById["kyoto-h-cristata"];
   await page.goto("./");
   await button("つづきから").click();
   await button("シャッター").click();

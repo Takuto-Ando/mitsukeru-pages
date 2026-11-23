@@ -1,5 +1,6 @@
 import summaries from "./zoo-animal-summaries.json";
 import { kyotoCatalog, kyotoSpeciesById, zooSource } from "./kyotoCatalog";
+import { adoptedAnimalById, adoptedAnimals } from "./adoptedAnimals";
 
 const linesBySpecies: Record<string, readonly string[]> = summaries;
 const zebraSource =
@@ -13,9 +14,10 @@ function summarySpeciesId(id?: string, taskId?: string) {
   return id === "goat" && taskId === "sheep" ? "sheep" : id;
 }
 
-/** Every displayed animal fact has a corresponding source on the zoo's website. */
 export function zooAnimalSummary(id?: string, taskId?: string) {
   if (id === "giraffe" && taskId === "giraffe") return giraffeTongue.text;
+  const adopted = id ? adoptedAnimalById.get(id) : undefined;
+  if (adopted) return adopted.description;
   const speciesId = summarySpeciesId(id, taskId);
   if (!speciesId || !Object.hasOwn(linesBySpecies, speciesId)) return undefined;
   return linesBySpecies[speciesId].join("\n");
@@ -39,6 +41,7 @@ const previousNames: Record<string, string> = {
 export function zooAnimalIdByName(name?: string) {
   if (!name) return undefined;
   return (
+    adoptedAnimals.find((entry) => entry.name === name)?.id ??
     kyotoCatalog.find((entry) => entry.name === name)?.id ??
     (Object.hasOwn(previousNames, name) ? previousNames[name] : undefined)
   );

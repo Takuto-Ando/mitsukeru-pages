@@ -1,5 +1,6 @@
 import { kyotoDraftTasks } from "./kyotoDrafts";
 import { kyotoSpeciesById } from "./kyotoCatalog";
+import { adoptedAnimals } from "./adoptedAnimals";
 
 export interface ObservationGroup {
   id: string;
@@ -230,5 +231,14 @@ groups.push(
     media: groupPhotos[task.groupId],
   })),
 );
+
+export const adoptedGroups = adoptedAnimals.map(
+  ({ id, name, description }) => ({
+    ...groups.find((group) => group.id === id)!,
+    name,
+    fact: description,
+  }),
+);
+
 export const rosterNote =
   "提供PDFの全30カードを20グループに整理。既存の追加課題も保持。動物の掲載は現地の展示を保証しません。";

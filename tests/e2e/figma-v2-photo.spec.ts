@@ -129,6 +129,11 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await expect(date).toBeVisible();
 
   await chooseAnimal(page, "カバ");
+  const fact = page.locator(".design3-photo-fact .zoo-card-summary-line");
+  await expect(fact).toHaveText([
+    "昼は水の中や水辺でゆっくり休むよ。",
+    "夜になると、陸に上がって草を食べるよ。",
+  ]);
   const before = await Promise.all([
     calendar.boundingBox(),
     date.boundingBox(),
@@ -148,6 +153,16 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
     name: "動物の名前で探す",
   });
   await expect(searchArea.locator("svg")).toBeVisible();
+  const animals = picker.getByRole("list", { name: "動物の一覧" });
+  await expect(animals.getByRole("button")).toHaveCount(30);
+  await expect(
+    animals.getByRole("button", { name: "フラミンゴ", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    animals.getByRole("button", { name: "ヤギ・ヒツジ", exact: true }),
+  ).toHaveCount(1);
+  await search.fill("シマウマ");
+  await expect(animals.getByRole("button")).toHaveCount(0);
   await search.fill("しろてて");
   await expect(picker.getByRole("button")).toHaveCount(1);
   await expect(button(page, "シロテテナガザル")).toHaveCSS(

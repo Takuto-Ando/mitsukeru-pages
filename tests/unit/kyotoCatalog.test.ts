@@ -8,29 +8,52 @@ import {
 import { challengeProvider } from "../../src/domain";
 import { artwork } from "../../src/content/artwork";
 import { tasks } from "../../src/content/tasks";
+import { adoptedGroups } from "../../src/content/groups";
+import {
+  adoptedAnimals,
+  adoptedAnimalById,
+} from "../../src/content/adoptedAnimals";
 import {
   chooseCandidates,
+  classifyBioClip,
   recognitionFromOutput,
   speciesPrompts,
 } from "../../src/recognition/labels";
 
-test("公式図鑑98種すべてを種ID・観察課題・認識候補へ対応付ける", () => {
+test("過去の保存記録は引き続き公式図鑑98種の観察課題を参照できる", () => {
   expect(kyotoCatalog).toHaveLength(98);
   expect(new Set(kyotoCatalog.map((species) => species.slug)).size).toBe(98);
   expect(new Set(kyotoCatalog.map((species) => species.id)).size).toBe(98);
-  const candidates = speciesPrompts.flatMap((label) =>
-    chooseCandidates([{ label, score: 0.75 }]),
-  );
   for (const species of kyotoCatalog) {
     expect(
       challengeProvider.forSpecies(species.id).length,
       species.name,
     ).toBeGreaterThan(0);
-    expect(candidates).toContainEqual({
-      speciesId: species.id,
-      groupId: species.groupId,
-      score: 0.75,
-    });
+  }
+});
+
+test("新規観察は指定の30組のみ選択でき、全組の課題と識別候補がある", () => {
+  expect(adoptedAnimals).toHaveLength(30);
+  expect(new Set(adoptedAnimals.map(({ name }) => name)).size).toBe(30);
+  expect(adoptedGroups.map(({ id, name }) => ({ id, name }))).toEqual(
+    adoptedAnimals.map(({ id, name }) => ({ id, name })),
+  );
+  const expected = [...adoptedAnimalById.keys()].sort();
+  for (const candidates of [
+    speciesPrompts.flatMap((label) =>
+      chooseCandidates([{ label, score: 0.75 }]),
+    ),
+    speciesPrompts.flatMap(
+      (label) => classifyBioClip([{ label, cosine: 0.36 }]).candidates,
+    ),
+  ]) {
+    expect(candidates.map(({ speciesId }) => speciesId).sort()).toEqual(
+      expected,
+    );
+    for (const { groupId, speciesId } of candidates) {
+      expect(groupId).toBe(adoptedAnimalById.get(speciesId!)?.id);
+      expect(challengeProvider.forSpecies(groupId).length).toBeGreaterThan(0);
+    }
   }
   expect(
     recognitionFromOutput([{ label: "a giraffe", score: 0.75 }]),
@@ -69,11 +92,5 @@ test("仮課題78件は固有のSVGと正規化された描画位置を持ち、
       expect(x + width).toBeLessThanOrEqual(1);
       expect(y + height).toBeLessThanOrEqual(1);
     }
-    expect(
-      recognitionFromOutput([{ label: species.prompt!, score: 0.95 }]),
-    ).toMatchObject({
-      status: "uncertain",
-      speciesId: species.id,
-    });
   }
 });

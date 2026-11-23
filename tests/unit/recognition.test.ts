@@ -9,15 +9,39 @@ import {
 import promptBank from "../../src/recognition/bioclip-labels.json";
 import { speciesRecognizer } from "../../src/recognition/species";
 import { individualRecognizer } from "../../src/recognition/individual";
-test("17グループとヒツジ別名を候補へ対応付ける", () => {
-  expect(new Set(animalLabels.map(([id]) => id)).size).toBe(17);
-  for (const [id, label] of animalLabels)
+test("以前からの認識ラベルのうち採用した動物だけを候補へ対応付ける", () => {
+  for (const [id, label] of animalLabels.filter(([id]) => id !== "zebra"))
     expect(
       chooseCandidates([
         { label, score: 0.8 },
         { label: "a dog", score: 0.1 },
       ])[0].groupId,
     ).toBe(id);
+});
+test("対象外の動物を残したまま、採用動物への強制分類を防ぐ", () => {
+  expect(
+    classifyBioClip([
+      { label: "a zebra", cosine: 0.4 },
+      { label: "a giraffe", cosine: 0.32 },
+    ]).recognition.status,
+  ).toBe("unknown");
+  expect(
+    classifyBioClip([
+      { label: "a Chilean flamingo", cosine: 0.4 },
+      { label: "an American flamingo", cosine: 0.38 },
+      { label: "a greater flamingo", cosine: 0.36 },
+    ]).candidates,
+  ).toMatchObject([
+    { groupId: "kyoto-p-chilensis", speciesId: "kyoto-p-chilensis" },
+  ]);
+  const flamingo = classifyBioClip([
+    { label: "a Chilean flamingo", cosine: 0.4 },
+    { label: "an American flamingo", cosine: 0.399 },
+    { label: "a greater flamingo", cosine: 0.398 },
+    { label: "cage bars", cosine: 0.3 },
+  ]);
+  expect(flamingo.recognition.status).toBe("identified");
+  expect(flamingo.candidates[0].score).toBeGreaterThan(0.99);
 });
 test("対象外と曖昧な写真を断定しない", () => {
   expect(

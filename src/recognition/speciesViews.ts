@@ -50,7 +50,7 @@ type Vote = {
   strong: boolean;
   margin: number;
 };
-const key = (candidate: Candidate) => candidate.speciesId ?? candidate.groupId;
+const key = (candidate: Candidate) => candidate.groupId;
 
 function supportedByViews(votes: readonly Vote[]) {
   const pairs = new Map<string, Vote[]>();

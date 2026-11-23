@@ -1,4 +1,5 @@
 import { kyotoCatalog } from "../content/kyotoCatalog";
+import { adoptedAnimalById } from "../content/adoptedAnimals";
 import { speciesModelVersion } from "./contracts";
 export const animalLabels = [
   ["mandrill", "a mandrill monkey"],
@@ -44,19 +45,29 @@ const confirmedPromptIds = new Set(
     label === "a sheep" ? "sheep" : id,
   ),
 );
-const byPrompt = new Map<string, Omit<Candidate, "score">>();
+const catalogPrompts = new Map<string, Omit<Candidate, "score">>();
 for (const [groupId, label] of animalLabels) {
-  byPrompt.set(label, {
+  catalogPrompts.set(label, {
     groupId,
     speciesId: label === "a sheep" ? "sheep" : groupId,
   });
 }
 for (const entry of kyotoCatalog) {
   if (entry.prompt) {
-    byPrompt.set(entry.prompt, { groupId: entry.groupId, speciesId: entry.id });
+    catalogPrompts.set(entry.prompt, {
+      groupId: entry.groupId,
+      speciesId: entry.id,
+    });
   }
 }
-export const speciesPrompts = [...byPrompt.keys()];
+// Retain all model vectors as negatives so an excluded animal can still win
+// and suppress a misleading suggestion from the 30 adoption groups.
+export const speciesPrompts = [...catalogPrompts.keys()];
+const byPrompt = new Map<string, Omit<Candidate, "score">>();
+for (const [label, { groupId, speciesId }] of catalogPrompts) {
+  const animal = adoptedAnimalById.get(speciesId ?? groupId);
+  if (animal) byPrompt.set(label, { groupId: animal.id, speciesId });
+}
 export const recognitionThresholds = { minimum: 0.3, margin: 0.07 };
 const reviewThresholds = { minimum: 0.12, rejectionMargin: 0.025 };
 
@@ -209,23 +220,29 @@ export function classifyBioClip(
     const scores = photoSimilarity
       ? reorderByPhoto(ranked, rejection, photoSimilarity)
       : ranked;
-    const [first, second] = scores;
-    if (first.label === top.label)
+    const [first] = scores;
+    if (first.label === top.label) {
+      const firstGroup = byPrompt.get(first.label)?.groupId;
+      const second = scores.find(
+        ({ label }) => byPrompt.get(label)?.groupId !== firstGroup,
+      );
       confidenceMargin = first.cosine - (second?.cosine ?? 0);
+    }
     const normalized = scores.map(({ cosine }) =>
       Math.exp((cosine - first.cosine) * 100),
     );
     const sum = normalized.reduce((total, value) => total + value, 0);
+    const groups = new Map<string, Candidate>();
     for (const [index, entry] of scores.entries()) {
-      if (
-        first.cosine - entry.cosine > candidateWindow ||
-        candidates.length === 3
-      )
-        break;
+      if (first.cosine - entry.cosine > candidateWindow) break;
       const match = byPrompt.get(entry.label);
-      if (match && (!rejection || entry.cosine > rejection.cosine))
-        candidates.push({ ...match, score: normalized[index] / sum });
+      if (!match || (rejection && entry.cosine <= rejection.cosine)) continue;
+      const score = normalized[index] / sum;
+      const group = groups.get(match.groupId);
+      if (group) group.score += score;
+      else groups.set(match.groupId, { ...match, score });
     }
+    candidates.push(...[...groups.values()].slice(0, 3));
   }
   const best = candidates[0];
   return {

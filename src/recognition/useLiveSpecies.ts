@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { drawPhotoRecognitionFrames } from "../camera/zoom";
-import { kyotoSpeciesById } from "../content/kyotoCatalog";
+import { adoptedAnimalById } from "../content/adoptedAnimals";
 import {
   canAutoDownloadPhotoModel,
   downloadPhotoModel,
@@ -24,11 +24,11 @@ const LIVE_INFERENCE_TIMEOUT_MS = 15_000;
 
 function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
   const id = candidate?.speciesId ?? candidate?.groupId;
-  const species = id && kyotoSpeciesById.get(id);
-  return species
+  const animal = id && adoptedAnimalById.get(id);
+  return animal
     ? {
-        groupId: species.groupId,
-        name: species.name,
+        groupId: animal.id,
+        name: animal.name,
         taskId: id === "sheep" ? "sheep" : undefined,
       }
     : undefined;

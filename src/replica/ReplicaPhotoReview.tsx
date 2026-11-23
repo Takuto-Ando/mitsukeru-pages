@@ -61,8 +61,9 @@ export function ReplicaPhotoReview({
   const matchingCandidates = (candidates ?? []).flatMap(
     ({ groupId, speciesId }) => {
       const choice = choices.find(({ id }) => id === groupId);
-      const name =
-        kyotoSpeciesById.get(speciesId ?? groupId)?.name ?? choice?.name;
+      const name = figmaFlow
+        ? choice?.name
+        : (kyotoSpeciesById.get(speciesId ?? groupId)?.name ?? choice?.name);
       return choice && name && normalizeAnimalSearch(name).includes(search)
         ? [{ groupId, speciesId, name }]
         : [];

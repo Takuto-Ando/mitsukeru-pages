@@ -454,8 +454,8 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
                           status: "candidates",
                           candidates: [
                             {
-                              groupId: "kyoto-s-humboldti",
-                              speciesId: "kyoto-s-humboldti",
+                              groupId: "kyoto-g-eremita",
+                              speciesId: "kyoto-g-eremita",
                               score: 0.64,
                             },
                           ],
@@ -476,7 +476,7 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
   expect(modelRequests).toBe(0);
   await prepare.click();
   await expect(page.locator(".pitsune-bubble")).toHaveText(
-    "フンボルトペンギンかも！",
+    "ホオアカトキかも！",
   );
   expect(modelRequests).toBe(1);
   await expect(page.locator(".replica-camera-tracking")).toHaveCount(0);
@@ -527,8 +527,8 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
                       status: "candidates",
                       candidates: [
                         {
-                          groupId: "kyoto-s-humboldti",
-                          speciesId: "kyoto-s-humboldti",
+                          groupId: "kyoto-g-eremita",
+                          speciesId: "kyoto-g-eremita",
                           score: 0.66,
                         },
                       ],
@@ -579,7 +579,7 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
     review.locator(".replica-photo-picker").locator(":scope > :nth-child(2)"),
   ).toHaveAttribute("aria-label", "写真から見つけた候補");
   const suggestedBird = suggestion.getByRole("button", {
-    name: "フンボルトペンギン 候補",
+    name: "ホオアカトキ 候補",
   });
   await expect(suggestedBird.getByText("候補", { exact: true })).toBeVisible();
   await expect(suggestedBird.locator(".photo-picker-candidate-tag")).toHaveCSS(
@@ -588,19 +588,19 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   );
   await expect(
     review.getByRole("list", { name: "動物の一覧" }).getByRole("button", {
-      name: "フンボルトペンギン",
+      name: "ホオアカトキ",
       exact: true,
     }),
   ).toHaveCount(0);
   await suggestedBird.click();
   await expect(
-    review.getByRole("heading", { name: "フンボルトペンギン" }),
+    review.getByRole("heading", { name: "ホオアカトキ" }),
   ).toBeVisible();
   await expect(button(page, "描いてもらう")).toBeEnabled();
   await button(page, "描いてもらう").click();
   await button(page, "スケッチの準備を確認してつぎへ").click();
   await expect(page.locator(".design3-challenge h1")).toHaveAccessibleName(
-    /^フンボルトペンギン/,
+    /^ホオアカトキ/,
   );
 });
 
@@ -1025,9 +1025,9 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
               const reading = switched ? ++newReadings : ++priorReadings;
               const id = switched
                 ? !moveBox && reading === 1
-                  ? "kyoto-s-humboldti"
+                  ? "kyoto-g-eremita"
                   : "kyoto-a-fulgens"
-                : "kyoto-v-vulpes";
+                : "fennec";
               const finish = () => {
                 const result =
                   weak && reading % 7 !== 1
@@ -1084,7 +1084,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
       "data-test-prior-reading",
       "pending",
     );
-    await expect(bubble).toHaveText("ホンドギツネがいるよ！");
+    await expect(bubble).toHaveText("フェネックがいるよ！");
     const guide = page.locator(".replica-camera-tracking");
     const before = (await guide.boundingBox())!;
     await emit("test:change-species");
@@ -1094,7 +1094,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     await expect(bubble).toHaveText("動物の名前を調べているよ！");
     await emit("test:finish-prior");
   } else {
-    await expect(bubble).toHaveText("ホンドギツネがいるよ！");
+    await expect(bubble).toHaveText("フェネックがいるよ！");
     await emit("test:change-species");
   }
   await expect(page.locator("html")).toHaveAttribute(
@@ -1102,7 +1102,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     "pending",
   );
   await expect(bubble).toHaveText(
-    moveBox ? "動物の名前を調べているよ！" : "ホンドギツネがいるよ！",
+    moveBox ? "動物の名前を調べているよ！" : "フェネックがいるよ！",
   );
   await emit("test:confirm-species");
   await expect(bubble).toHaveText("レッサーパンダがいるよ！");
@@ -1155,7 +1155,7 @@ test("白枠があって候補が割れたときは、判定中と撮影で確�
   await expect(bubble).toHaveText("動物の名前を調べているよ！");
   for (const [index, species] of [
     "kyoto-a-fulgens",
-    "kyoto-v-vulpes",
+    "fennec",
     undefined,
     undefined,
     undefined,

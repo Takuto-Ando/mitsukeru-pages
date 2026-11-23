@@ -23,7 +23,7 @@ import {
   PhotoCelebration,
   SketchCelebration,
 } from "../components/ChallengeIntro";
-import { groups } from "../content/groups";
+import { adoptedGroups, groups } from "../content/groups";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import { taskById } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
@@ -432,7 +432,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   }
 
   function selectCapturedAnimal(id: string, speciesId?: string) {
-    const selected = groups.find((item) => item.id === id);
+    const selected = (legacy ? groups : adoptedGroups).find(
+      (item) => item.id === id,
+    );
     if (!selected) return;
     setGroupId(id);
     if (!record) return;
@@ -443,7 +445,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
         legacy ? undefined : preferences.difficulty,
         speciesId === "sheep" ? speciesId : undefined,
       )?.id,
-      animalName: kyotoSpeciesById.get(speciesId ?? "")?.name ?? selected.name,
+      animalName: legacy
+        ? (kyotoSpeciesById.get(speciesId ?? "")?.name ?? selected.name)
+        : selected.name,
       photoDescription: zooAnimalSummary(id),
     };
     const captureId = record.id;
@@ -692,7 +696,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                       photoLocation={record?.photoLocation}
                       saved={photoSaved}
                       group={chosen}
-                      choices={legacy ? choices : groups}
+                      choices={legacy ? choices : adoptedGroups}
                       figmaFlow={
                         !legacy && screen === "review"
                           ? tutorial

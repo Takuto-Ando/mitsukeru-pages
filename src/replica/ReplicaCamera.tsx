@@ -48,9 +48,8 @@ export const samplePhoto = () =>
 const liveSetting = "zooketch-live-detection-v1";
 
 const recognizedAnimals = new Map([
-  ["キリン", { groupId: "giraffe" }],
-  ["シマウマ", { groupId: "zebra" }],
-  ["ゾウ", { groupId: "elephant" }],
+  ["キリン", { groupId: "giraffe", name: "キリン" }],
+  ["ゾウ", { groupId: "elephant", name: "アジアゾウ" }],
 ]);
 
 export type CameraCapture = {
@@ -143,10 +142,7 @@ export function ReplicaCamera({
     bestMatch && bestMatch.score >= 0.45
       ? recognizedAnimals.get(bestMatch.label)
       : undefined;
-  const boxAnimal =
-    bestMatch && selection
-      ? { ...selection, name: bestMatch.label }
-      : undefined;
+  const boxAnimal = selection;
   const species = useLiveSpecies(
     video,
     !legacy &&
