@@ -111,6 +111,7 @@ export function useLiveSpecies(
   const stop = useRef<() => void>(() => undefined);
   const prepareManually = useRef<() => void>(() => undefined);
   const onFrameReady = useRef<() => void>(() => undefined);
+  const onSubjectChange = useRef<() => void>(() => undefined);
   const hasFrame = useRef(frameReady);
   hasFrame.current = frameReady;
   const view = useRef<CameraView>({ zoom, box });
@@ -127,6 +128,8 @@ export function useLiveSpecies(
     let retried = false;
     let waitingForFrame = false;
     let timer = 0;
+    let coolingView: CameraView | undefined;
+    let quickChecks = 0;
     let lastInteraction = performance.now();
     let previous:
       { snapshot: CameraView; speciesId: string; missed: boolean } | undefined;
@@ -142,6 +145,8 @@ export function useLiveSpecies(
         return;
       }
       const began = performance.now();
+      const snapshot = view.current;
+      let needsConfirmation = false;
       const frame = video.current;
       if (!frame?.videoWidth || !frame.videoHeight) {
         // Safari can briefly report zero dimensions during video startup.
@@ -149,7 +154,6 @@ export function useLiveSpecies(
         return;
       }
       if (!speciesRecognizer.isBusy()) {
-        const snapshot = view.current;
         const source = recognitionViews(frame, snapshot);
         const focusJustArrived = () =>
           !snapshot.box &&
@@ -160,7 +164,10 @@ export function useLiveSpecies(
           const { primary, supported, suggestion, unavailable } =
             await recognizeSpeciesViews(
               source,
-              () => visible() && !focusJustArrived(),
+              () =>
+                visible() &&
+                sameSubject(snapshot, view.current) &&
+                !focusJustArrived(),
               undefined,
               (guess, evidence) => {
                 const candidate = animalFromCandidate(guess);
@@ -170,14 +177,16 @@ export function useLiveSpecies(
                   !sameSubject(snapshot, view.current)
                 )
                   return;
-                setResult((prior) =>
-                  prior &&
-                  sameSubject(prior.snapshot, snapshot) &&
-                  (prior.animal ||
-                    (prior.candidate && evidence !== "agreement"))
-                    ? prior
-                    : { snapshot, candidate },
-                );
+                setResult((prior) => {
+                  if (prior && sameSubject(prior.snapshot, snapshot)) {
+                    if (prior.animal?.name === candidate.name) return prior;
+                    if (!evidence && (prior.animal || prior.candidate))
+                      return prior;
+                  }
+                  // Show the new name as a suggestion. Only the completed
+                  // multi-view check may make it the capture's chosen animal.
+                  return { snapshot, candidate };
+                });
               },
             );
           if (!visible()) return;
@@ -192,6 +201,7 @@ export function useLiveSpecies(
             const confirmed =
               supported ??
               (same && previous?.speciesId === speciesId ? primary : undefined);
+            needsConfirmation = !confirmed && (!!suggestion || !!keep);
             if (speciesId) previous = { snapshot, speciesId, missed: false };
             else if (keep && previous) previous.missed = true;
             else previous = undefined;
@@ -204,7 +214,11 @@ export function useLiveSpecies(
           }
           // The detector can acquire the subject while the full-frame model
           // is running. Use its crop at the next safe point, before cooldown.
-          if (focusJustArrived() && !supported) {
+          if (
+            !sameSubject(snapshot, view.current) ||
+            (focusJustArrived() && !supported)
+          ) {
+            quickChecks = 0;
             timer = window.setTimeout(nextFrame, 0);
             return;
           }
@@ -213,9 +227,13 @@ export function useLiveSpecies(
       // Give the device a break between rounds, especially during long use.
       const now = performance.now();
       const idle = now - lastInteraction >= 25_000;
+      if (!needsConfirmation) quickChecks = 0;
+      const quick = needsConfirmation && !idle && quickChecks < 2;
+      if (quick) quickChecks += 1;
+      coolingView = snapshot;
       timer = window.setTimeout(
         nextFrame,
-        Math.max(idle ? 4000 : 1100, (now - began) * 1.5),
+        quick ? 650 : Math.max(idle ? 4000 : 1100, (now - began) * 1.5),
       );
     }
 
@@ -237,6 +255,7 @@ export function useLiveSpecies(
     }
 
     function nextFrame() {
+      coolingView = undefined;
       void classifyFrame().catch(restart);
     }
 
@@ -286,6 +305,19 @@ export function useLiveSpecies(
       waitingForFrame = false;
       nextFrame();
     };
+    onSubjectChange.current = () => {
+      if (!visible() || !coolingView) return;
+      const current = view.current;
+      if (
+        sameSubject(coolingView, current) &&
+        (coolingView.box || !current.box)
+      )
+        return;
+      window.clearTimeout(timer);
+      updateInteraction();
+      quickChecks = 0;
+      nextFrame();
+    };
     window.addEventListener(photoModelEvent, modelReady);
     window.addEventListener("online", resume);
     window.addEventListener("pointerdown", updateInteraction, {
@@ -304,6 +336,7 @@ export function useLiveSpecies(
       running = false;
       prepareManually.current = () => undefined;
       onFrameReady.current = () => undefined;
+      onSubjectChange.current = () => undefined;
       window.clearTimeout(timer);
       window.removeEventListener(photoModelEvent, modelReady);
       window.removeEventListener("online", resume);
@@ -320,6 +353,11 @@ export function useLiveSpecies(
   useEffect(() => {
     if (frameReady) onFrameReady.current();
   }, [frameReady]);
+
+  const boxId = box?.id;
+  useEffect(() => {
+    onSubjectChange.current();
+  }, [boxId, zoom]);
 
   const checked =
     active && !!result && sameSubject(result.snapshot, view.current);

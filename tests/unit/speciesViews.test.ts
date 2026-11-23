@@ -153,3 +153,28 @@ test("必要な映像だけを画像化し、使わなかった切り出しは�
   expect(recognize).toHaveBeenCalledExactlyOnceWith(blob, undefined, undefined);
   expect(fallback).not.toHaveBeenCalled();
 });
+
+test("別の種を枠内で明瞭に識別したら、先に出した候補を更新する", async () => {
+  const fox = "kyoto-v-vulpes";
+  vi.spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome(fox, 0.62))
+    .mockResolvedValueOnce(outcome("bear", 0.92, true))
+    .mockResolvedValueOnce(outcome(redPanda, 0.91, true));
+
+  const suggest = vi.fn();
+  await recognizeSpeciesViews(
+    [
+      { photo: "focused", source: "focus" },
+      { photo: "whole" },
+      { photo: "focused", source: "focus", fit: "contain" },
+    ],
+    () => true,
+    undefined,
+    suggest,
+  );
+
+  expect(suggest.mock.calls).toEqual([
+    [expect.objectContaining({ speciesId: fox })],
+    [expect.objectContaining({ speciesId: redPanda }), "strong"],
+  ]);
+});

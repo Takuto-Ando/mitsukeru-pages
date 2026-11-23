@@ -11,6 +11,8 @@ export type SpeciesView = {
   source?: "focus" | "tile";
 };
 
+type SuggestionEvidence = "strong" | "agreement";
+
 type Vote = {
   candidate: Candidate;
   view: SpeciesView;
@@ -22,7 +24,7 @@ export async function recognizeSpeciesViews(
   views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
-  onSuggestion?: (candidate: Candidate, evidence?: "agreement") => void,
+  onSuggestion?: (candidate: Candidate, evidence?: SuggestionEvidence) => void,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
@@ -30,6 +32,7 @@ export async function recognizeSpeciesViews(
   let supported: Candidate | undefined;
   let provisional: Candidate | undefined;
   let suggestion: Candidate | undefined;
+  let suggestionEvidence: SuggestionEvidence | undefined;
   let unavailable = false;
 
   for (const view of views) {
@@ -51,6 +54,15 @@ export async function recognizeSpeciesViews(
 
     const [first, runner] = result.candidates;
     const margin = first ? first.score - (runner?.score ?? 0) : 0;
+    const strong = result.recognition?.status === "identified";
+    // A clear direct reading may update a name before the other views finish.
+    // A whole frame is only direct evidence while there is no focused crop.
+    const clearDirectView =
+      strong &&
+      first &&
+      first.score >= 0.8 &&
+      margin >= 0.2 &&
+      (!hasFocus || view.source === "focus");
     const suggestionMinimum = !hasFocus
       ? 0.6
       : view.source === "focus"
@@ -62,14 +74,18 @@ export async function recognizeSpeciesViews(
       view.source !== "tile" &&
       first.score >= suggestionMinimum &&
       margin >= 0.07 &&
-      !suggestion
+      (!suggestion || (clearDirectView && !suggestionEvidence))
     ) {
       suggestion = first;
-      onSuggestion(first);
+      if (clearDirectView) {
+        suggestionEvidence = "strong";
+        onSuggestion(first, suggestionEvidence);
+      } else {
+        onSuggestion(first);
+      }
     }
     const minimum = hasFocus ? 0.4 : 0.6;
     if (!first || first.score < minimum || margin < 0.07) continue;
-    const strong = result.recognition?.status === "identified";
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
     );
@@ -82,6 +98,7 @@ export async function recognizeSpeciesViews(
       hasFocus &&
       view.source === "tile" &&
       first.score >= 0.65 &&
+      suggestionEvidence !== "agreement" &&
       (!suggestion || key(suggestion) !== key(first)) &&
       agree.some(
         ({ view, candidate }) =>
@@ -89,7 +106,8 @@ export async function recognizeSpeciesViews(
       )
     ) {
       suggestion = first;
-      onSuggestion(first, "agreement");
+      suggestionEvidence = "agreement";
+      onSuggestion(first, suggestionEvidence);
     }
 
     // A pair of consistent views of the subject outranks incidental details
