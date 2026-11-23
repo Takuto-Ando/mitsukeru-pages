@@ -95,5 +95,3 @@ export function ReplicaIntro({
     </section>
   );
 }
-
-export { ReplicaPhotoReview } from "./ReplicaPhotoReview";

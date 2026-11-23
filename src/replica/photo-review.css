@@ -79,3 +79,25 @@
 .replica-photo-picker > p {
   margin: 8px;
 }
+.replica-photo-recognition-note,
+.replica-photo-candidates {
+  margin: 4px auto;
+  font-size: 13px;
+  text-align: center;
+}
+
+.replica-photo-candidates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.replica-photo-candidates button {
+  min-height: 44px;
+  padding-inline: 10px;
+  border-radius: 22px;
+  background: var(--d3-cream);
+  color: var(--d3-brown);
+}

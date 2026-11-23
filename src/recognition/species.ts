@@ -84,6 +84,7 @@ async function run(
       if (!worker) {
         worker = new Worker(new URL("./species.worker.ts", import.meta.url), {
           type: "module",
+          name: "zooketch-species-recognition",
         });
         document.addEventListener("visibilitychange", stopInBackground);
         window.addEventListener("pagehide", cancel);

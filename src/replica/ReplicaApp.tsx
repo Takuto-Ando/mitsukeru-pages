@@ -24,6 +24,7 @@ import {
   SketchCelebration,
 } from "../components/ChallengeIntro";
 import { groups } from "../content/groups";
+import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import { taskById } from "../content/tasks";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { drawingHistory, emptyDrawing } from "../drawing/history";
@@ -33,7 +34,7 @@ import { tutorialSurveyUrl } from "../research/tutorialSurvey";
 import type { Evaluation, Stroke } from "../types";
 import type { CameraCapture } from "./ReplicaCamera";
 import type { ReplicaRecord } from "./ReplicaGallery";
-import { ReplicaIntro, ReplicaPhotoReview } from "./ReplicaScreens";
+import { ReplicaIntro } from "./ReplicaScreens";
 import {
   galleryPhotoLocation,
   identifyReplicaPhoto,
@@ -59,6 +60,11 @@ import {
 const ReplicaCamera = lazy(() =>
   import("./ReplicaCamera").then(({ ReplicaCamera }) => ({
     default: ReplicaCamera,
+  })),
+);
+const ReplicaPhotoReview = lazy(() =>
+  import("./ReplicaCamera").then(({ ReplicaPhotoReview }) => ({
+    default: ReplicaPhotoReview,
   })),
 );
 const ReplicaGallery = lazy(() =>
@@ -407,7 +413,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     persistCapturedPhoto(next);
   }
 
-  function selectCapturedAnimal(id: string) {
+  function selectCapturedAnimal(id: string, speciesId?: string) {
     const selected = groups.find((item) => item.id === id);
     if (!selected) return;
     setGroupId(id);
@@ -417,8 +423,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
       taskId: observationTaskFor(
         id,
         legacy ? undefined : preferences.difficulty,
+        speciesId === "sheep" ? speciesId : undefined,
       )?.id,
-      animalName: selected.name,
+      animalName: kyotoSpeciesById.get(speciesId ?? "")?.name ?? selected.name,
       photoDescription: zooAnimalSummary(id),
     };
     const captureId = record.id;
@@ -650,6 +657,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                 <>
                   <div inert={screen === "cheer" ? true : undefined}>
                     <ReplicaPhotoReview
+                      key={record?.id}
                       photo={record?.photo}
                       sample={!!record?.samplePhoto}
                       createdAt={record?.photo ? record.createdAt : undefined}

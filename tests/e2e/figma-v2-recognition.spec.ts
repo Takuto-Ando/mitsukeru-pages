@@ -207,6 +207,7 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   await page.mouse.move(0, 0);
   await page.mouse.up();
 
+  expect(photoModelRequests).toBe(0);
   await shutter.click();
   const review = page.locator(".design3-photo-review");
   await expect(review).toHaveAttribute("data-figma-node", "66-7554");
@@ -214,10 +215,89 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
     review.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
   await expect(button(page, "ピツネに見せる")).toBeEnabled();
-  await expect(page.getByText(/写真から動物の候補を探しています/)).toHaveCount(
-    0,
+  await expect(review.getByRole("status")).toContainText(
+    "動物の名前を選んでください",
   );
-  expect(photoModelRequests).toBe(0);
+  expect(photoModelRequests).toBeGreaterThan(0);
+});
+
+test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.route(
+    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
+    (route) =>
+      route.fulfill({
+        body: "mock model asset",
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }),
+  );
+  await page.addInitScript(() => {
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name !== "zooketch-species-recognition")
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          postMessage() {
+            window.addEventListener(
+              "test:species-ready",
+              () => {
+                this.onmessage?.({
+                  data: {
+                    type: "result",
+                    result: {
+                      status: "candidates",
+                      candidates: [
+                        {
+                          groupId: "kyoto-s-humboldti",
+                          speciesId: "kyoto-s-humboldti",
+                          score: 0.66,
+                        },
+                      ],
+                    },
+                  },
+                });
+              },
+              { once: true },
+            );
+            document.documentElement.dataset.testSpeciesPending = "true";
+          },
+        };
+      },
+    });
+  });
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  await button(page, "シャッター").click();
+  const review = page.locator(".design3-photo-review");
+  await expect(
+    review.getByRole("img", { name: "撮影した動物の写真" }),
+  ).toBeVisible();
+  await expect(button(page, "修正")).toBeEnabled();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-test-species-pending",
+    "true",
+  );
+  await page.evaluate(() =>
+    window.dispatchEvent(new Event("test:species-ready")),
+  );
+  const suggestion = review.getByRole("group", {
+    name: "写真から見つけた候補",
+  });
+  await suggestion.getByRole("button", { name: "フンボルトペンギン" }).click();
+  await expect(
+    review.getByRole("heading", { name: "フンボルトペンギン" }),
+  ).toBeVisible();
+  await expect(button(page, "ピツネに見せる")).toBeEnabled();
+  await button(page, "ピツネに見せる").click();
+  await button(page, "スケッチの準備を確認してつぎへ").click();
+  await expect(page.locator(".design3-challenge h1")).toHaveAccessibleName(
+    /^フンボルトペンギン/,
+  );
 });
 
 test("ライブ認識の自動再試行が尽きてもシャッターと手動再試行が使える", async ({

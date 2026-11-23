@@ -742,3 +742,5 @@ export function ReplicaCamera({
     </section>
   );
 }
+
+export { ReplicaPhotoReview } from "./ReplicaPhotoReview";

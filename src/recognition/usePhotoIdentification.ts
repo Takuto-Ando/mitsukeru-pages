@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { canAutoSelect, type Candidate } from "./labels";
+import type { Candidate } from "./labels";
 import {
   downloadPhotoModel,
   photoModelDownloading,
@@ -19,7 +19,7 @@ export function usePhotoModelDownloading() {
   return downloading;
 }
 
-type Identification = { candidate?: Candidate; message: string };
+type Identification = { candidates?: Candidate[]; message: string };
 const empty: Identification = { message: "" };
 
 export function usePhotoIdentification(photo?: string): Identification {
@@ -55,13 +55,9 @@ export function usePhotoIdentification(photo?: string): Identification {
         cancelInference = false;
         speciesRecognizer.unload();
         if (outcome.status === "candidates") {
-          const [first, second] = outcome.candidates;
-          const identified = outcome.recognition
-            ? outcome.recognition.status === "identified"
-            : canAutoSelect(first, second);
           update({
-            candidate: identified ? first : undefined,
-            message: identified
+            candidates: outcome.candidates,
+            message: outcome.candidates.length
               ? ""
               : "写真を見て、動物の名前を選んでください。",
           });

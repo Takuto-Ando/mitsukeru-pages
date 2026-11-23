@@ -6,6 +6,8 @@ import { PhotoRecognitionGuide } from "../components/ChallengeIntro";
 import { assetPath } from "../content/artwork";
 import type { ObservationGroup } from "../content/groups";
 import { normalizeAnimalSearch } from "../content/animalNameSearch";
+import { kyotoSpeciesById } from "../content/kyotoCatalog";
+import { usePhotoIdentification } from "../recognition/usePhotoIdentification";
 import "./photo-review.css";
 
 export function ReplicaPhotoReview({
@@ -30,13 +32,17 @@ export function ReplicaPhotoReview({
   group?: ObservationGroup;
   choices: ObservationGroup[];
   figmaFlow?: "tutorial" | "regular";
-  onSelect: (id: string) => void;
+  onSelect: (id: string, speciesId?: string) => void;
   onRetake: () => void;
   canRetake?: boolean;
   onConfirm: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const { candidates, message } = usePhotoIdentification(
+    figmaFlow && !sample && !confirmed ? photo : undefined,
+  );
   const edit = useRef<HTMLButtonElement>(null);
   const optionsId = useId();
   const reviewNodes =
@@ -52,6 +58,11 @@ export function ReplicaPhotoReview({
     setEditing(false);
     setQuery("");
     edit.current?.focus();
+  }
+  function select(id: string, speciesId?: string) {
+    setConfirmed(true);
+    onSelect(id, speciesId);
+    closePicker();
   }
   const animalName = group?.name ?? "？？？？？";
   const photoHeading = photo
@@ -151,10 +162,7 @@ export function ReplicaPhotoReview({
                     <button
                       type="button"
                       aria-pressed={group?.id === id}
-                      onClick={() => {
-                        onSelect(id);
-                        closePicker();
-                      }}
+                      onClick={() => select(id)}
                     >
                       {name}
                     </button>
@@ -185,6 +193,36 @@ export function ReplicaPhotoReview({
         </div>
         {fact && <ZooCardSummary className="design3-photo-fact" text={fact} />}
       </article>
+      {message && (
+        <p className="replica-photo-recognition-note" role="status">
+          {message}
+        </p>
+      )}
+      {!!candidates?.length && (
+        <div
+          className="replica-photo-candidates"
+          role="group"
+          aria-label="写真から見つけた候補"
+        >
+          <span>写真の候補</span>
+          {candidates.map(({ groupId, speciesId }) => {
+            const name =
+              kyotoSpeciesById.get(speciesId ?? groupId)?.name ??
+              choices.find(({ id }) => id === groupId)?.name;
+            return (
+              name && (
+                <button
+                  key={speciesId ?? groupId}
+                  type="button"
+                  onClick={() => select(groupId, speciesId)}
+                >
+                  {name}
+                </button>
+              )
+            );
+          })}
+        </div>
+      )}
       <div className="design3-actions">
         <button
           className="design3-pill design3-pill--green"
