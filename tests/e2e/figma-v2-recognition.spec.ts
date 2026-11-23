@@ -220,19 +220,41 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   expect(photoModelRequests).toBeGreaterThan(0);
 });
 
-test("キリン以外の図鑑の動物も撮影前にピツネが名前を表示する", async ({
+test("低速回線でもカメラを開いたままモデルの準備後に名前が出る", async ({
   page,
 }) => {
   await useMockCamera(page);
+  let releaseDownload!: () => void;
+  const download = new Promise<void>((resolve) => {
+    releaseDownload = resolve;
+  });
   await page.route(
     "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
-    (route) =>
-      route.fulfill({
+    async (route) => {
+      if (route.request().url().endsWith(".onnx")) await download;
+      await route.fulfill({
         body: "mock model asset",
         headers: { "Access-Control-Allow-Origin": "*" },
-      }),
+      });
+    },
   );
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, "connection", {
+      configurable: true,
+      value: { effectiveType: "3g", saveData: false },
+    });
+    const match = Cache.prototype.match;
+    Cache.prototype.match = async function (request, options) {
+      const hit = await match.call(this, request, options);
+      if (
+        !hit &&
+        String(request).endsWith("/model_quantized.onnx") &&
+        document.querySelector(".replica-camera")
+      ) {
+        document.documentElement.dataset.testCameraCacheMiss = "true";
+      }
+      return hit;
+    };
     window.Worker = new Proxy(window.Worker, {
       construct(target, args: [string | URL, WorkerOptions?]) {
         if (args[1]?.name !== "zooketch-species-recognition")
@@ -275,12 +297,24 @@ test("キリン以外の図鑑の動物も撮影前にピツネが名前を表�
       },
     });
   });
-  await page.goto("./");
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-test-model-warm",
-    "true",
-  );
-  await button(page, "つづきから").click();
+  try {
+    const downloading = page.waitForRequest(
+      "https://huggingface.co/**/model_quantized.onnx",
+    );
+    await page.goto("./");
+    await downloading;
+    await button(page, "つづきから").click();
+    await expect(page.locator(".replica-camera-model-status")).toHaveText(
+      "画像認識モデルをダウンロード中…",
+    );
+    await expect(button(page, "シャッター")).toBeEnabled();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-test-camera-cache-miss",
+      "true",
+    );
+  } finally {
+    releaseDownload();
+  }
   await expect(page.locator(".pitsune-bubble")).toHaveText(
     "フンボルトペンギンがいるよ！",
   );

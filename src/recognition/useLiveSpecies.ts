@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { drawCameraFrame } from "../camera/zoom";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
-import { downloadPhotoModel, photoModelCached } from "./photoModel";
+import {
+  downloadPhotoModel,
+  photoModelCached,
+  photoModelEvent,
+} from "./photoModel";
 import { speciesRecognizer } from "./species";
 
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
@@ -21,10 +25,14 @@ export function useLiveSpecies(
     if (!active) return;
     let running = true;
     let ownsWorker = false;
+    let preparing = false;
+    let started = false;
+    let retried = false;
     let timer = 0;
 
     async function classifyFrame() {
       if (!running || document.hidden) return;
+      const began = performance.now();
       const frame = video.current;
       if (frame && !speciesRecognizer.isBusy()) {
         const image = drawCameraFrame(frame, 384, currentZoom.current, [4, 5]);
@@ -38,6 +46,8 @@ export function useLiveSpecies(
             speciesRecognizer.unload();
             ownsWorker = false;
             setAnimal(undefined);
+            started = false;
+            retry();
             return;
           }
           const [first, runner] =
@@ -55,11 +65,32 @@ export function useLiveSpecies(
           );
         }
       }
-      // Keep just one frame in flight, with a pause to limit sustained workload.
-      timer = window.setTimeout(classifyFrame, 8000);
+      // Sample again promptly after an empty frame, while limiting the
+      // sustained workload on phones that take longer to infer.
+      timer = window.setTimeout(
+        nextFrame,
+        Math.max(1200, (performance.now() - began) * 3),
+      );
+    }
+
+    function retry() {
+      if (!running || retried) return;
+      retried = true;
+      timer = window.setTimeout(prepare, 1500);
+    }
+
+    function nextFrame() {
+      void classifyFrame().catch(() => {
+        speciesRecognizer.unload();
+        ownsWorker = false;
+        started = false;
+        retry();
+      });
     }
 
     async function prepare() {
+      if (!running || preparing || started || document.hidden) return;
+      preparing = true;
       try {
         if (!(await photoModelCached())) {
           if (!running || !navigator.onLine) return;
@@ -78,15 +109,36 @@ export function useLiveSpecies(
         if (!running) return;
         ownsWorker = true;
         const result = await speciesRecognizer.prepare();
-        if (running && result.status === "ready") void classifyFrame();
+        if (!running) return;
+        if (result.status === "ready") {
+          started = true;
+          nextFrame();
+        } else {
+          retry();
+        }
       } catch {
-        // The fast detector and manual selection are available independently.
+        retry();
+      } finally {
+        preparing = false;
       }
     }
+    function resume() {
+      if (started) return;
+      retried = false;
+      window.clearTimeout(timer);
+      void prepare();
+    }
+    function modelReady() {
+      if (!started) void prepare();
+    }
+    window.addEventListener(photoModelEvent, modelReady);
+    window.addEventListener("online", resume);
     void prepare();
     stop.current = () => {
       running = false;
       window.clearTimeout(timer);
+      window.removeEventListener(photoModelEvent, modelReady);
+      window.removeEventListener("online", resume);
       if (ownsWorker) {
         speciesRecognizer.release();
         speciesRecognizer.unload();
