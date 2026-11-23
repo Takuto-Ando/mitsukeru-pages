@@ -75,12 +75,15 @@ export function useLiveSpecies(
             return;
           await downloadPhotoModel();
         }
-        if (running) void classifyFrame();
+        if (!running) return;
+        ownsWorker = true;
+        const result = await speciesRecognizer.prepare();
+        if (running && result.status === "ready") void classifyFrame();
       } catch {
         // The fast detector and manual selection are available independently.
       }
     }
-    timer = window.setTimeout(prepare, 1500);
+    void prepare();
     stop.current = () => {
       running = false;
       window.clearTimeout(timer);

@@ -47,8 +47,10 @@ export function usePhotoIdentification(photo?: string): Identification {
         }
         if (!active) return;
         update({ message: "写真から動物の候補を探しています…" });
-        if (speciesRecognizer.isBusy()) throw new Error("busy");
         cancelInference = true;
+        const prepared = await speciesRecognizer.prepare();
+        if (!active) return;
+        if (prepared.status !== "ready") throw new Error("unavailable");
         const outcome = await speciesRecognizer.recognize(image, (message) =>
           update({ message }),
         );

@@ -7,6 +7,7 @@ export function useModelPreload({
   photo = true,
   enabled = true,
   allowMetered = false,
+  warmPhoto = false,
 } = {}) {
   useEffect(() => {
     if (!enabled) return;
@@ -46,9 +47,14 @@ export function useModelPreload({
           !speciesRecognizer.isBusy()
         ) {
           startedPhoto = true;
-          return downloadPhotoModel().catch(() => {
-            startedPhoto = false;
-          });
+          return downloadPhotoModel()
+            .then(() => {
+              if (warmPhoto && !disposed && !document.hidden)
+                return speciesRecognizer.prepare();
+            })
+            .catch(() => {
+              startedPhoto = false;
+            });
         }
       });
     }
@@ -61,5 +67,5 @@ export function useModelPreload({
       window.removeEventListener("online", prepare);
       document.removeEventListener("visibilitychange", prepare);
     };
-  }, [allowMetered, enabled, photo]);
+  }, [allowMetered, enabled, photo, warmPhoto]);
 }

@@ -191,9 +191,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const [introPage, setIntroPage] = useState(0);
   const [tutorial, setTutorial] = useState(false);
   useModelPreload({
-    enabled: tutorial && !legacy,
-    photo: false,
+    enabled: !legacy,
     allowMetered: true,
+    warmPhoto: true,
   });
   const [framedExample, setFramedExample] = useState(false);
   const [groupId, setGroupId] = useState("");

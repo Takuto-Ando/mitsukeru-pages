@@ -4,7 +4,9 @@ import {
   CLIPModel,
   AutoTokenizer,
   AutoProcessor,
-  ZeroShotImageClassificationPipeline,
+  RawImage,
+  load_image,
+  softmax,
   env,
 } from "@huggingface/transformers";
 import wasmUrl from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm?url";
@@ -39,6 +41,19 @@ if (env.backends.onnx.wasm) {
 }
 let classifier: ReturnType<typeof createClassifier> | undefined;
 let lastProgress = 0;
+const labels = [...speciesPrompts, ...rejectionLabels];
+
+function dotAt(
+  image: ArrayLike<number>,
+  text: ArrayLike<number>,
+  offset: number,
+) {
+  let sum = 0;
+  for (let index = 0; index < image.length; index++)
+    sum += image[index] * text[offset + index];
+  return sum;
+}
+
 async function createClassifier() {
   const modelId = photoModel.id;
   const options = {
@@ -62,12 +77,42 @@ async function createClassifier() {
     AutoTokenizer.from_pretrained(modelId, options),
     AutoProcessor.from_pretrained(modelId, options),
   ]);
-  return new ZeroShotImageClassificationPipeline({
-    task: "zero-shot-image-classification",
-    model,
-    tokenizer,
-    processor,
+  const prompt = (name: string) => `This is a photo of ${name}.`;
+  const textOptions = { padding: true, truncation: true } as const;
+  const allText = tokenizer(labels.map(prompt), textOptions);
+  // CLIP's text embeddings do not depend on the photo. Compute them once
+  // before the first frame, using the same pinned model and label prompts.
+  const blank = new RawImage(new Uint8Array(224 * 224 * 3), 224, 224, 3);
+  const warm = await model({
+    ...allText,
+    pixel_values: (await processor(blank)).pixel_values,
   });
+  const textEmbeds = warm.text_embeds.data;
+  const warmImage = warm.image_embeds.data;
+  const warmLogits = warm.logits_per_image.data;
+  const dots = labels.map((_, index) =>
+    dotAt(warmImage, textEmbeds, index * warmImage.length),
+  );
+  const norm = dots.reduce((sum, dot) => sum + dot ** 2, 0);
+  const scale =
+    dots.reduce((sum, dot, index) => sum + dot * warmLogits[index], 0) / norm;
+  if (!Number.isFinite(scale) || scale <= 0)
+    throw new Error("CLIP logit scale could not be recovered");
+
+  // This export takes image and text inputs together. One prompt is enough
+  // to obtain the image embedding without encoding the whole catalog again.
+  const singleText = tokenizer([prompt(labels[0])], textOptions);
+  return async (photo: string) => {
+    const { pixel_values } = await processor(await load_image(photo));
+    const result = await model({ ...singleText, pixel_values });
+    const image = result.image_embeds.data;
+    const scores = softmax(
+      labels.map(
+        (_, index) => scale * dotAt(image, textEmbeds, index * image.length),
+      ),
+    );
+    return labels.map((label, index) => ({ label, score: scores[index] }));
+  };
 }
 
 self.onmessage = async (
@@ -80,11 +125,7 @@ self.onmessage = async (
       return;
     }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
-    const output = await ready(
-      event.data.photo,
-      [...speciesPrompts, ...rejectionLabels],
-      { hypothesis_template: "This is a photo of {}." },
-    );
+    const output = await ready(event.data.photo);
     const candidates = chooseCandidates(output);
     postMessage({
       type: "result",

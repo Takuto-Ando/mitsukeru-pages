@@ -21,12 +21,15 @@ export interface SpeciesRecognizer {
   cancel(): void;
 }
 let ready = false;
+let preparation: Promise<SpeciesResult> | undefined;
+let idleWarmTimer: ReturnType<typeof setTimeout> | undefined;
 let worker: Worker | undefined,
   finish: ((r: SpeciesResult) => void) | undefined;
 const stopInBackground = () => {
   if (document.hidden) cancel();
 };
 function stopWorker() {
+  clearTimeout(idleWarmTimer);
   worker?.terminate();
   worker = undefined;
   ready = false;
@@ -52,7 +55,25 @@ export const speciesRecognizer: SpeciesRecognizer = {
     if (finish) return;
     stopWorker();
   },
-  prepare: (progress) => run(undefined, progress),
+  prepare: (progress) => {
+    if (ready) return Promise.resolve({ status: "ready" });
+    if (preparation) return preparation;
+    if (finish)
+      return Promise.resolve({
+        status: "unavailable",
+        reason: "別の写真を確認中です。",
+      });
+    preparation = run(undefined, progress)
+      .then((result) => {
+        if (result.status === "ready")
+          idleWarmTimer = setTimeout(() => speciesRecognizer.unload(), 45_000);
+        return result;
+      })
+      .finally(() => {
+        preparation = undefined;
+      });
+    return preparation;
+  },
   recognize: (photo, progress) => run(photo, progress),
 };
 async function run(
@@ -73,6 +94,7 @@ async function run(
       status: "unavailable",
       reason: "候補の検索を中止しました。手動でも選べます。",
     };
+  if (photo) clearTimeout(idleWarmTimer);
   return new Promise<SpeciesResult>((resolve) => {
     const timer = setTimeout(cancel, 180000);
     finish = (r) => {

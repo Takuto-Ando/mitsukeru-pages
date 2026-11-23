@@ -243,7 +243,16 @@ test("キリン以外の図鑑の動物も撮影前にピツネが名前を表�
           terminate() {
             document.documentElement.dataset.testStoppedSpecies = "true";
           },
-          postMessage() {
+          postMessage({ photo }: { photo?: string }) {
+            if (!photo) {
+              document.documentElement.dataset.testModelWarm = "true";
+              queueMicrotask(() =>
+                this.onmessage?.({
+                  data: { type: "result", result: { status: "ready" } },
+                }),
+              );
+              return;
+            }
             queueMicrotask(() =>
               this.onmessage?.({
                 data: {
@@ -267,6 +276,10 @@ test("キリン以外の図鑑の動物も撮影前にピツネが名前を表�
     });
   });
   await page.goto("./");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-test-model-warm",
+    "true",
+  );
   await button(page, "つづきから").click();
   await expect(page.locator(".pitsune-bubble")).toHaveText(
     "フンボルトペンギンがいるよ！",
@@ -303,7 +316,16 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
           onmessage: undefined as
             ((event: { data: unknown }) => void) | undefined,
           terminate() {},
-          postMessage() {
+          postMessage({ photo }: { photo?: string }) {
+            if (!photo) {
+              queueMicrotask(() =>
+                this.onmessage?.({
+                  data: { type: "result", result: { status: "ready" } },
+                }),
+              );
+              return;
+            }
+            if (!document.querySelector(".design3-photo-review")) return;
             window.addEventListener(
               "test:species-ready",
               () => {
@@ -369,9 +391,10 @@ test("ライブ認識の自動再試行が尽きてもシャッターと手動�
     localStorage.setItem("zooketch-replica-tutorial-v2", "1");
   });
   let downloads = 0;
+  let allowDownload = false;
   await page.route("**/models/yolox*.onnx", (route) => {
     downloads++;
-    return downloads <= 3 ? route.abort() : route.continue();
+    return allowDownload ? route.continue() : route.abort();
   });
   await page.goto("./");
   await button(page, "つづきから").click();
@@ -379,6 +402,7 @@ test("ライブ認識の自動再試行が尽きてもシャッターと手動�
   const retry = button(page, "ライブ検出を再準備");
   await expect(retry).toBeVisible({ timeout: 12_000 });
   expect(downloads).toBeGreaterThanOrEqual(3);
+  allowDownload = true;
   await retry.click();
   await expect(page.locator(".replica-camera-tracking")).toBeVisible({
     timeout: 15_000,
@@ -542,7 +566,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   await expect(button(page, "ピツネに見せる")).toBeEnabled();
 });
 
-test("チュートリアルではライブ認識だけを事前準備し、撮影画面で通信中を表示する", async ({
+test("タイトルからライブ認識を事前準備し、撮影画面でも通信中を表示する", async ({
   page,
 }) => {
   await useMockCamera(page);
@@ -558,9 +582,9 @@ test("チュートリアルではライブ認識だけを事前準備し、撮�
   });
   try {
     await page.goto("./");
+    await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "はじめから").click();
     await button(page, "決定！").click();
-    await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "こんにちは！").click();
     await button(page, "やってみる！").click();
     await button(page, "撮ってみる！").click();
