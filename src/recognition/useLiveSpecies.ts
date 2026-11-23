@@ -32,16 +32,27 @@ function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
     : undefined;
 }
 
-function sameSubject(first: CameraView, second: CameraView) {
+function sameReadingArea(first: CameraView, second: CameraView) {
   if (first.zoom !== second.zoom) return false;
   const a = first.box;
   const b = second.box;
-  // A brief detector miss or a different COCO label must not discard a
-  // fine-grained result computed while the subject was still in view.
-  if (!a || !b || a.id === b.id) return true;
+  if (a === b) return true;
+  if (!a || !b || a.id !== b.id) return false;
+  // Ignore detector jitter, but compare against the crop that was actually
+  // sampled so small movements that accumulate also trigger a new reading.
+  const x = Math.max(
+    0.025,
+    0.18 * Math.min(a.right - a.left, b.right - b.left),
+  );
+  const y = Math.max(
+    0.025,
+    0.18 * Math.min(a.bottom - a.top, b.bottom - b.top),
+  );
   return (
-    Math.min(a.right, b.right) > Math.max(a.left, b.left) &&
-    Math.min(a.bottom, b.bottom) > Math.max(a.top, b.top)
+    Math.abs(a.left - b.left) <= x &&
+    Math.abs(a.right - b.right) <= x &&
+    Math.abs(a.top - b.top) <= y &&
+    Math.abs(a.bottom - b.bottom) <= y
   );
 }
 
@@ -155,30 +166,20 @@ export function useLiveSpecies(
       }
       if (!speciesRecognizer.isBusy()) {
         const source = recognitionViews(frame, snapshot);
-        const focusJustArrived = () =>
-          !snapshot.box &&
-          !!view.current.box &&
-          snapshot.zoom === view.current.zoom;
         if (source.length) {
+          const current = () =>
+            visible() && sameReadingArea(snapshot, view.current);
           ownsWorker = true;
           const { primary, supported, suggestion, unavailable } =
             await recognizeSpeciesViews(
               source,
-              () =>
-                visible() &&
-                sameSubject(snapshot, view.current) &&
-                !focusJustArrived(),
+              current,
               undefined,
               (guess, evidence) => {
                 const candidate = animalFromCandidate(guess);
-                if (
-                  !visible() ||
-                  !candidate ||
-                  !sameSubject(snapshot, view.current)
-                )
-                  return;
+                if (!candidate || !current()) return;
                 setResult((prior) => {
-                  if (prior && sameSubject(prior.snapshot, snapshot)) {
+                  if (prior && sameReadingArea(prior.snapshot, snapshot)) {
                     if (prior.animal?.name === candidate.name) return prior;
                     if (!evidence && (prior.animal || prior.candidate))
                       return prior;
@@ -194,9 +195,10 @@ export function useLiveSpecies(
             restart();
             return;
           }
-          if (sameSubject(snapshot, view.current)) {
+          if (current()) {
             const speciesId = primary?.speciesId ?? primary?.groupId;
-            const same = previous && sameSubject(previous.snapshot, snapshot);
+            const same =
+              previous && sameReadingArea(previous.snapshot, snapshot);
             const keep = !speciesId && !suggestion && same && !previous?.missed;
             const confirmed =
               supported ??
@@ -211,13 +213,12 @@ export function useLiveSpecies(
                 animal: animalFromCandidate(confirmed),
                 candidate: animalFromCandidate(suggestion),
               });
-          }
-          // The detector can acquire the subject while the full-frame model
-          // is running. Use its crop at the next safe point, before cooldown.
-          if (
-            !sameSubject(snapshot, view.current) ||
-            (focusJustArrived() && !supported)
-          ) {
+          } else {
+            // Let the worker finish its current call, then switch to the
+            // latest crop without running more views or entering cooldown.
+            setResult(undefined);
+            previous = undefined;
+            updateInteraction();
             quickChecks = 0;
             timer = window.setTimeout(nextFrame, 0);
             return;
@@ -307,13 +308,10 @@ export function useLiveSpecies(
     };
     onSubjectChange.current = () => {
       if (!visible() || !coolingView) return;
-      const current = view.current;
-      if (
-        sameSubject(coolingView, current) &&
-        (coolingView.box || !current.box)
-      )
-        return;
+      if (sameReadingArea(coolingView, view.current)) return;
       window.clearTimeout(timer);
+      setResult(undefined);
+      previous = undefined;
       updateInteraction();
       quickChecks = 0;
       nextFrame();
@@ -354,13 +352,12 @@ export function useLiveSpecies(
     if (frameReady) onFrameReady.current();
   }, [frameReady]);
 
-  const boxId = box?.id;
   useEffect(() => {
     onSubjectChange.current();
-  }, [boxId, zoom]);
+  }, [box, zoom]);
 
   const checked =
-    active && !!result && sameSubject(result.snapshot, view.current);
+    active && !!result && sameReadingArea(result.snapshot, view.current);
   return {
     animal: checked ? result.animal : undefined,
     candidate: checked ? result.candidate : undefined,

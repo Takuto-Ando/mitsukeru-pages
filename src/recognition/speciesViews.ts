@@ -17,6 +17,7 @@ type Vote = {
   candidate: Candidate;
   view: SpeciesView;
   strong: boolean;
+  margin: number;
 };
 const key = (candidate: Candidate) => candidate.speciesId ?? candidate.groupId;
 
@@ -46,6 +47,7 @@ export async function recognizeSpeciesViews(
       unavailable = true;
       break;
     }
+    if (!active()) break;
     if (result.status !== "candidates") continue;
     for (const candidate of result.candidates) {
       if (!candidates.has(key(candidate)))
@@ -89,7 +91,7 @@ export async function recognizeSpeciesViews(
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
     );
-    votes.push({ candidate: first, view, strong });
+    votes.push({ candidate: first, view, strong, margin });
 
     // Two tighter views in the tracked frame can correct a tentative name
     // while the remaining votes are still running. One tile is insufficient.
@@ -148,7 +150,14 @@ export async function recognizeSpeciesViews(
     // competing name. The camera requires it again before using it as a label.
     if (!supported && !frame.some(({ candidate }) => candidate.score >= 0.55)) {
       const [first, second] = votes
-        .filter(({ view, candidate }) => view.source && candidate.score >= 0.65)
+        .filter(
+          ({ view, candidate, margin }) =>
+            view.source &&
+            (candidate.score >= 0.65 ||
+              (view.source === "focus" &&
+                candidate.score >= 0.5 &&
+                margin >= 0.12)),
+        )
         .sort((a, b) => b.candidate.score - a.candidate.score);
       if (first && (!second || key(first.candidate) === key(second.candidate)))
         provisional = first.candidate;

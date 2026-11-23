@@ -892,6 +892,16 @@ test("低負荷端末では検出間隔を広げ、ズームでWorkerを作り�
 test("誤った種名を表示中でも、次の有力な候補を確認待ちで止めない", async ({
   page,
 }) => {
+  await verifySpeciesSwitch(page, false);
+});
+
+test("同じ追跡IDで白枠が動いたら古い候補を外し、新しい枠内の名前を再推論する", async ({
+  page,
+}) => {
+  await verifySpeciesSwitch(page, true);
+});
+
+async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
   await useMockCamera(page);
   await page.route("**/models/yolox*.onnx", (route) =>
     route.fulfill({ body: Buffer.alloc(3_659_407) }),
@@ -905,81 +915,104 @@ test("誤った種名を表示中でも、次の有力な候補を確認待ち�
       headers: { "Access-Control-Allow-Origin": "*" },
     });
   });
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "connection", {
-      configurable: true,
-      value: { effectiveType: "4g", saveData: false },
-    });
-    let switched = false;
-    let newReadings = 0;
-    let finishConfirmation: (() => void) | undefined;
-    window.addEventListener("test:change-species", () => (switched = true));
-    window.addEventListener("test:confirm-species", () =>
-      finishConfirmation?.(),
-    );
+  await page.addInitScript(
+    ({ moveBox }) => {
+      Object.defineProperty(navigator, "connection", {
+        configurable: true,
+        value: { effectiveType: "4g", saveData: false },
+      });
+      let switched = false;
+      let newReadings = 0;
+      let priorReadings = 0;
+      let finishPrior: (() => void) | undefined;
+      let finishConfirmation: (() => void) | undefined;
+      window.addEventListener("test:change-species", () => (switched = true));
+      window.addEventListener("test:finish-prior", () => finishPrior?.());
+      window.addEventListener("test:confirm-species", () =>
+        finishConfirmation?.(),
+      );
 
-    window.Worker = new Proxy(window.Worker, {
-      construct(target, args: [string | URL, WorkerOptions?]) {
-        const kind = args[1]?.name;
-        if (
-          kind !== "zooketch-species-recognition" &&
-          kind !== "zooketch-live-detection"
-        )
-          return Reflect.construct(target, args);
-        return {
-          onmessage: undefined as
-            ((event: { data: unknown }) => void) | undefined,
-          terminate() {},
-          postMessage({ type, photo }: { type?: string; photo?: Blob }) {
-            const root = document.documentElement;
-            const reply = (data: unknown) =>
-              queueMicrotask(() => this.onmessage?.({ data }));
-            if (kind === "zooketch-live-detection") {
-              if (type === "prepare") {
-                reply({ type: "ready" });
-              } else {
-                root.dataset.testSwitchBox = "ready";
-                reply({
-                  type: "boxes",
-                  boxes: [
-                    {
-                      label: "クマ",
-                      score: 0.9,
-                      left: 0.22,
-                      top: 0.22,
-                      right: 0.76,
-                      bottom: 0.76,
-                    },
-                  ],
-                });
+      window.Worker = new Proxy(window.Worker, {
+        construct(target, args: [string | URL, WorkerOptions?]) {
+          const kind = args[1]?.name;
+          if (
+            kind !== "zooketch-species-recognition" &&
+            kind !== "zooketch-live-detection"
+          )
+            return Reflect.construct(target, args);
+          return {
+            onmessage: undefined as
+              ((event: { data: unknown }) => void) | undefined,
+            terminate() {},
+            postMessage({ type, photo }: { type?: string; photo?: Blob }) {
+              const root = document.documentElement;
+              const reply = (data: unknown) =>
+                queueMicrotask(() => this.onmessage?.({ data }));
+              if (kind === "zooketch-live-detection") {
+                if (type === "prepare") {
+                  reply({ type: "ready" });
+                } else {
+                  root.dataset.testSwitchBox = "ready";
+                  reply({
+                    type: "boxes",
+                    boxes: [
+                      {
+                        label: "クマ",
+                        score: 0.9,
+                        left: moveBox && switched ? 0.42 : 0.22,
+                        top: 0.22,
+                        right: moveBox && switched ? 0.9 : 0.76,
+                        bottom: 0.76,
+                      },
+                    ],
+                  });
+                }
+                return;
               }
-              return;
-            }
-            if (!photo) {
-              reply({ type: "result", result: { status: "ready" } });
-              return;
-            }
-            const id = switched ? "kyoto-a-fulgens" : "kyoto-v-vulpes";
-            const finish = () =>
-              reply({
-                type: "result",
-                result: {
-                  status: "candidates",
-                  candidates: [{ groupId: id, speciesId: id, score: 0.91 }],
-                  recognition: { status: "identified" },
-                },
-              });
-            if (switched && ++newReadings === 2) {
-              root.dataset.testSwitchConfirmation = "pending";
-              finishConfirmation = finish;
-              return;
-            }
-            finish();
-          },
-        };
-      },
-    });
-  });
+              if (!photo) {
+                reply({ type: "result", result: { status: "ready" } });
+                return;
+              }
+              const id = switched ? "kyoto-a-fulgens" : "kyoto-v-vulpes";
+              const weak = moveBox && switched;
+              const reading = switched ? ++newReadings : ++priorReadings;
+              const finish = () => {
+                const result =
+                  weak && reading % 7 !== 1
+                    ? { status: "unknown" }
+                    : {
+                        status: "candidates",
+                        candidates: [
+                          {
+                            groupId: id,
+                            speciesId: id,
+                            score: weak ? 0.57 : 0.91,
+                          },
+                        ],
+                        recognition: {
+                          status: weak ? "uncertain" : "identified",
+                        },
+                      };
+                reply({ type: "result", result });
+              };
+              if (moveBox && !switched && reading === 2) {
+                root.dataset.testPriorReading = "pending";
+                finishPrior = finish;
+                return;
+              }
+              if (switched && reading === 2) {
+                root.dataset.testSwitchConfirmation = "pending";
+                finishConfirmation = finish;
+                return;
+              }
+              finish();
+            },
+          };
+        },
+      });
+    },
+    { moveBox },
+  );
 
   await page.goto("./");
   await button(page, "つづきから").click();
@@ -992,17 +1025,31 @@ test("誤った種名を表示中でも、次の有力な候補を確認待ち�
     releaseDownload();
   }
   const bubble = page.locator(".pitsune-bubble");
-  await expect(bubble).toHaveText("ホンドギツネがいるよ！");
-  await page.evaluate(() =>
-    window.dispatchEvent(new Event("test:change-species")),
-  );
+  const emit = (name: string) =>
+    page.evaluate((type) => window.dispatchEvent(new Event(type)), name);
+  if (moveBox) {
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-test-prior-reading",
+      "pending",
+    );
+    await expect(bubble).toHaveText("ホンドギツネかも！");
+    const guide = page.locator(".replica-camera-tracking");
+    const before = (await guide.boundingBox())!;
+    await emit("test:change-species");
+    await expect
+      .poll(async () => (await guide.boundingBox())?.x)
+      .toBeGreaterThan(before.x + 20);
+    await expect(bubble).toHaveText("動物の写真を撮ろう！");
+    await emit("test:finish-prior");
+  } else {
+    await expect(bubble).toHaveText("ホンドギツネがいるよ！");
+    await emit("test:change-species");
+  }
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-switch-confirmation",
     "pending",
   );
   await expect(bubble).toHaveText("レッサーパンダかも！");
-  await page.evaluate(() =>
-    window.dispatchEvent(new Event("test:confirm-species")),
-  );
+  await emit("test:confirm-species");
   await expect(bubble).toHaveText("レッサーパンダがいるよ！");
-});
+}
