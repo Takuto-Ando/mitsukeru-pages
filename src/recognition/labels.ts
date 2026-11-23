@@ -128,6 +128,8 @@ type PhotoSimilarity = (
 
 const photoReferenceWeight = 0.6;
 const candidateWindow = 0.065;
+const photoReferenceMaximumGap = 0.026;
+const photoReferenceMaximumTextConfidence = 0.78;
 
 function reorderByPhoto(
   ranked: BioClipScore[],
@@ -145,7 +147,17 @@ function reorderByPhoto(
       return [];
     return [{ entry, speciesId }];
   });
-  if (shortlist.length < 2) return ranked;
+  const runner = shortlist[1];
+  if (!runner || top.cosine - runner.entry.cosine > photoReferenceMaximumGap)
+    return ranked;
+  const knownTotal = ranked.reduce(
+    (total, { label, cosine }) =>
+      byPrompt.has(label)
+        ? total + Math.exp((cosine - top.cosine) * 100)
+        : total,
+    0,
+  );
+  if (1 / knownTotal > photoReferenceMaximumTextConfidence) return ranked;
 
   const visual = similarity(shortlist.map(({ speciesId }) => speciesId));
   const firstSpecies = shortlist[0].speciesId;

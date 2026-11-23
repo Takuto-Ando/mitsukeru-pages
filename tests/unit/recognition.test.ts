@@ -144,7 +144,7 @@ test("低い検出スコアの枠は同じ位置が続いたときだけ表示�
 test("見本写真で近い候補を並べ替えても対象外判定を維持する", () => {
   const output = [
     { label: "a Japanese Asian black bear", cosine: 0.34 },
-    { label: "a red panda", cosine: 0.323 },
+    { label: "a red panda", cosine: 0.331 },
     { label: "cage bars", cosine: 0.23 },
     { label: "a goat", cosine: 0.22 },
   ];
@@ -202,4 +202,16 @@ test("見本写真データの破損や対象種の欠落時は元の候補を�
   expect(classifyBioClip(incomplete, () => new Map([["goat", 0.99]]))).toEqual(
     classifyBioClip(incomplete),
   );
+});
+
+test("モデルが明確に識別した種は見本写真で変更しない", () => {
+  const text = [
+    { label: "a sheep", cosine: 0.33 },
+    { label: "a goat", cosine: 0.31 },
+    { label: "cage bars", cosine: 0.21 },
+  ];
+  const match = () => {
+    throw new Error("十分に明確な種では見本を参照しない");
+  };
+  expect(classifyBioClip(text, match)).toEqual(classifyBioClip(text));
 });
