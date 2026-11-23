@@ -142,7 +142,13 @@ export function ReplicaCamera({
       : undefined;
   const species = useLiveSpecies(
     video,
-    !legacy && !sample && streamReady && visible && !menuOpen && !suspended,
+    !legacy &&
+      !sample &&
+      visible &&
+      !menuOpen &&
+      !suspended &&
+      !cameraUnavailable,
+    streamReady,
     cameraZoom.digital,
     bestMatch,
   );

@@ -18,7 +18,7 @@ export async function recognizeSpeciesViews(
   views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
-  onSuggestion?: (candidate: Candidate) => void,
+  onSuggestion?: (candidate: Candidate, evidence?: "agreement") => void,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
@@ -70,6 +70,23 @@ export async function recognizeSpeciesViews(
       ({ candidate }) => key(candidate) === key(first),
     );
     votes.push({ candidate: first, view, strong });
+
+    // Two tighter views in the tracked frame can correct a tentative name
+    // while the remaining votes are still running. One tile is insufficient.
+    if (
+      onSuggestion &&
+      hasFocus &&
+      view.source === "tile" &&
+      first.score >= 0.65 &&
+      (!suggestion || key(suggestion) !== key(first)) &&
+      agree.some(
+        ({ view, candidate }) =>
+          view.source === "tile" && candidate.score >= 0.65,
+      )
+    ) {
+      suggestion = first;
+      onSuggestion(first, "agreement");
+    }
 
     // A pair of consistent views of the subject outranks incidental details
     // elsewhere in the enclosure. Without localization, only whole-frame

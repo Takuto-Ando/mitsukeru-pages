@@ -57,7 +57,7 @@ function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
   const views: SpeciesView[] = [
     { photo: focusPhoto, source: "focus" },
     { photo: focusPhoto, fit: "contain", source: "focus" },
-    ...wholeViews,
+    wholeViews[0],
   ];
   const ratio = [video.clientWidth || 4, video.clientHeight || 5] as const;
   const aspect = ratio[0] / ratio[1];
@@ -77,12 +77,16 @@ function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
         source: "tile",
       });
   }
+  // If the direct views were ambiguous, try a tighter crop before another
+  // whole-frame pass. The recognized name can still use all available votes.
+  views.push(wholeViews[1]);
   return views;
 }
 
 export function useLiveSpecies(
   video: RefObject<HTMLVideoElement | null>,
   active: boolean,
+  frameReady: boolean,
   zoom: number,
   box?: TrackedLiveBox,
 ) {
@@ -96,6 +100,9 @@ export function useLiveSpecies(
   >();
   const stop = useRef<() => void>(() => undefined);
   const prepareManually = useRef<() => void>(() => undefined);
+  const onFrameReady = useRef<() => void>(() => undefined);
+  const hasFrame = useRef(frameReady);
+  hasFrame.current = frameReady;
   const view = useRef<CameraView>({ zoom, box });
   view.current = { zoom, box };
 
@@ -108,6 +115,7 @@ export function useLiveSpecies(
     let preparing = false;
     let started = false;
     let retried = false;
+    let waitingForFrame = false;
     let timer = 0;
     let lastInteraction = performance.now();
     let previous:
@@ -119,30 +127,49 @@ export function useLiveSpecies(
 
     async function classifyFrame() {
       if (!visible()) return;
+      if (!hasFrame.current) {
+        waitingForFrame = true;
+        return;
+      }
       const began = performance.now();
       const frame = video.current;
-      if (frame && !speciesRecognizer.isBusy()) {
+      if (!frame?.videoWidth || !frame.videoHeight) {
+        // Safari can briefly report zero dimensions during video startup.
+        timer = window.setTimeout(nextFrame, 150);
+        return;
+      }
+      if (!speciesRecognizer.isBusy()) {
         const snapshot = view.current;
         const source = recognitionViews(frame, snapshot);
+        const focusJustArrived = () =>
+          !snapshot.box &&
+          !!view.current.box &&
+          snapshot.zoom === view.current.zoom;
         if (source.length) {
           ownsWorker = true;
           const { primary, supported, suggestion, unavailable } =
-            await recognizeSpeciesViews(source, visible, undefined, (guess) => {
-              const candidate = animalFromCandidate(guess);
-              if (
-                !visible() ||
-                !candidate ||
-                !sameSubject(snapshot, view.current)
-              )
-                return;
-              setResult((prior) =>
-                prior &&
-                sameSubject(prior.snapshot, snapshot) &&
-                (prior.animal || prior.candidate)
-                  ? prior
-                  : { snapshot, candidate },
-              );
-            });
+            await recognizeSpeciesViews(
+              source,
+              () => visible() && !focusJustArrived(),
+              undefined,
+              (guess, evidence) => {
+                const candidate = animalFromCandidate(guess);
+                if (
+                  !visible() ||
+                  !candidate ||
+                  !sameSubject(snapshot, view.current)
+                )
+                  return;
+                setResult((prior) =>
+                  prior &&
+                  sameSubject(prior.snapshot, snapshot) &&
+                  (prior.animal ||
+                    (prior.candidate && evidence !== "agreement"))
+                    ? prior
+                    : { snapshot, candidate },
+                );
+              },
+            );
           if (!visible()) return;
           if (unavailable) {
             restart();
@@ -164,6 +191,12 @@ export function useLiveSpecies(
                 animal: animalFromCandidate(confirmed),
                 candidate: animalFromCandidate(suggestion),
               });
+          }
+          // The detector can acquire the subject while the full-frame model
+          // is running. Use its crop at the next safe point, before cooldown.
+          if (focusJustArrived() && !supported) {
+            timer = window.setTimeout(nextFrame, 0);
+            return;
           }
         }
       }
@@ -238,6 +271,11 @@ export function useLiveSpecies(
     function modelReady() {
       if (!started) void prepare();
     }
+    onFrameReady.current = () => {
+      if (!waitingForFrame) return;
+      waitingForFrame = false;
+      nextFrame();
+    };
     window.addEventListener(photoModelEvent, modelReady);
     window.addEventListener("online", resume);
     window.addEventListener("pointerdown", updateInteraction, {
@@ -255,6 +293,7 @@ export function useLiveSpecies(
       if (!running) return;
       running = false;
       prepareManually.current = () => undefined;
+      onFrameReady.current = () => undefined;
       window.clearTimeout(timer);
       window.removeEventListener(photoModelEvent, modelReady);
       window.removeEventListener("online", resume);
@@ -268,6 +307,9 @@ export function useLiveSpecies(
     stop.current = () => close(true);
     return () => close(false);
   }, [active, video]);
+  useEffect(() => {
+    if (frameReady) onFrameReady.current();
+  }, [frameReady]);
 
   const checked =
     active && !!result && sameSubject(result.snapshot, view.current);

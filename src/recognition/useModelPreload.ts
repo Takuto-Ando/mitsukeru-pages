@@ -19,40 +19,34 @@ export function useModelPreload({
     let startedPhoto = false;
 
     function prepare() {
-      if (document.hidden || !navigator.onLine) return;
-      live ??= downloadLiveModel().catch(() => {
-        live = undefined;
-      });
-      void live.then(async () => {
-        if (
-          !disposed &&
-          photo &&
-          !startedPhoto &&
-          !document.hidden &&
-          navigator.onLine &&
-          !speciesRecognizer.isBusy()
-        ) {
-          startedPhoto = true;
-          try {
-            const cached = await photoModelCached();
-            if (disposed || document.hidden) {
+      if (document.hidden) return;
+      if (navigator.onLine)
+        live ??= downloadLiveModel().catch(() => {
+          live = undefined;
+        });
+      // Preparing the name model does not depend on the detector's download.
+      if (!photo || startedPhoto) return;
+      startedPhoto = true;
+      void (async () => {
+        try {
+          const cached = await photoModelCached();
+          if (disposed || document.hidden) {
+            startedPhoto = false;
+            return;
+          }
+          if (!cached) {
+            if (!canAutoDownloadPhotoModel()) {
               startedPhoto = false;
               return;
             }
-            if (!cached) {
-              if (!canAutoDownloadPhotoModel()) {
-                startedPhoto = false;
-                return;
-              }
-              await downloadPhotoModel();
-            }
-            if (warmPhoto && !disposed && !document.hidden)
-              await speciesRecognizer.prepare();
-          } catch {
-            startedPhoto = false;
+            await downloadPhotoModel();
           }
+          if (warmPhoto && !disposed && !document.hidden)
+            await speciesRecognizer.prepare();
+        } catch {
+          startedPhoto = false;
         }
-      });
+      })();
     }
     const initial = window.setTimeout(prepare, 350);
     window.addEventListener("online", prepare);

@@ -102,3 +102,37 @@ test("全体や枠に証拠がない場合は部分拡大だけを初期候補�
   expect(onSuggestion).not.toHaveBeenCalled();
   expect(result.suggestion).toBeUndefined();
 });
+
+test("枠付きの別々の拡大で一致した候補を、確認を待たずに知らせる", async () => {
+  let finish!: (result: SpeciesResult) => void;
+  const fox = "kyoto-v-vulpes";
+  vi.spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome(fox, 0.7))
+    .mockResolvedValueOnce(outcome(redPanda, 0.7))
+    .mockResolvedValueOnce(outcome(redPanda, 0.8))
+    .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+  const suggest = vi.fn();
+  const result = recognizeSpeciesViews(
+    [
+      { photo: "focus", source: "focus" },
+      { photo: "middle", source: "tile" },
+      { photo: "left", source: "tile" },
+      { photo: "whole", fit: "contain" },
+    ],
+    () => true,
+    undefined,
+    suggest,
+  );
+
+  await vi.waitFor(() =>
+    expect(suggest.mock.calls).toEqual([
+      [expect.objectContaining({ speciesId: fox })],
+      [expect.objectContaining({ speciesId: redPanda }), "agreement"],
+    ]),
+  );
+  finish(outcome(fox, 0.75));
+  expect(await result).toMatchObject({
+    supported: undefined,
+    suggestion: { speciesId: redPanda },
+  });
+});
