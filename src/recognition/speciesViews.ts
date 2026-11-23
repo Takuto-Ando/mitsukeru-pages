@@ -5,12 +5,13 @@ import {
 } from "./species";
 import type { Candidate } from "./labels";
 
-type PhotoSource = string | (() => Promise<SpeciesPhoto | undefined>);
-type SpeciesView = {
-  photo: PhotoSource;
+export type SpeciesView = {
+  photo: string | (() => Promise<SpeciesPhoto | undefined>);
   fit?: SpeciesImageFit;
-  source?: "focus";
+  source?: "focus" | "tile";
 };
+
+type SuggestionEvidence = "strong" | "agreement";
 
 type Vote = {
   candidate: Candidate;
@@ -20,26 +21,19 @@ type Vote = {
 };
 const key = (candidate: Candidate) => candidate.speciesId ?? candidate.groupId;
 
-export async function recognizePhotoSpecies(
-  { full, crop }: { full: PhotoSource; crop?: PhotoSource },
+export async function recognizeSpeciesViews(
+  views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
+  onSuggestion?: (candidate: Candidate, evidence?: SuggestionEvidence) => void,
 ) {
-  const views: SpeciesView[] = [
-    ...(crop
-      ? [
-          { photo: crop, source: "focus" as const },
-          { photo: crop, source: "focus" as const, fit: "contain" as const },
-        ]
-      : []),
-    { photo: full },
-    { photo: full, fit: "contain" },
-  ];
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
-  const hasFocus = !!crop;
+  const hasFocus = views.some(({ source }) => source === "focus");
   let supported: Candidate | undefined;
   let provisional: Candidate | undefined;
+  let suggestion: Candidate | undefined;
+  let suggestionEvidence: SuggestionEvidence | undefined;
   let unavailable = false;
 
   for (const view of views) {
@@ -63,12 +57,60 @@ export async function recognizePhotoSpecies(
     const [first, runner] = result.candidates;
     const margin = first ? first.score - (runner?.score ?? 0) : 0;
     const strong = result.recognition?.status === "identified";
+    // A clear direct reading may update a name before the other views finish.
+    // A whole frame is only direct evidence while there is no focused crop.
+    const clearDirectView =
+      strong &&
+      first &&
+      first.score >= 0.8 &&
+      margin >= 0.2 &&
+      (!hasFocus || view.source === "focus");
+    const suggestionMinimum = !hasFocus
+      ? 0.6
+      : view.source === "focus"
+        ? 0.4
+        : 0.45;
+    if (
+      onSuggestion &&
+      first &&
+      view.source !== "tile" &&
+      first.score >= suggestionMinimum &&
+      margin >= 0.07 &&
+      (!suggestion || (clearDirectView && !suggestionEvidence))
+    ) {
+      suggestion = first;
+      if (clearDirectView) {
+        suggestionEvidence = "strong";
+        onSuggestion(first, suggestionEvidence);
+      } else {
+        onSuggestion(first);
+      }
+    }
     const minimum = hasFocus ? 0.4 : 0.6;
     if (!first || first.score < minimum || margin < 0.07) continue;
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
     );
     votes.push({ candidate: first, view, strong, margin });
+
+    // Two tighter views in the tracked frame can correct a tentative name
+    // while the remaining votes are still running. One tile is insufficient.
+    if (
+      onSuggestion &&
+      hasFocus &&
+      view.source === "tile" &&
+      first.score >= 0.65 &&
+      suggestionEvidence !== "agreement" &&
+      (!suggestion || key(suggestion) !== key(first)) &&
+      agree.some(
+        ({ view, candidate }) =>
+          view.source === "tile" && candidate.score >= 0.65,
+      )
+    ) {
+      suggestion = first;
+      suggestionEvidence = "agreement";
+      onSuggestion(first, suggestionEvidence);
+    }
 
     // A pair of consistent views of the subject outranks incidental details
     // elsewhere in the enclosure. Without localization, only whole-frame
@@ -79,7 +121,7 @@ export async function recognizePhotoSpecies(
           earlier.source === "focus" && view.source === "focus",
       ) ||
       (!hasFocus && !view.source && (strong || agree.length > 0)) ||
-      !result.recognition
+      (!result.recognition && view.source !== "tile")
     ) {
       supported = first;
       break;
@@ -131,19 +173,10 @@ export async function recognizePhotoSpecies(
     );
     ranked.unshift(winner);
   }
-  // An undecided reading may be shown as tentative only when its votes agree
-  // and its name is also the first candidate the review would offer.
-  const first = ranked[0];
-  const suggestion =
-    first &&
-    votes.length > 0 &&
-    votes.every(({ candidate }) => key(candidate) === key(first))
-      ? first
-      : undefined;
   return {
     primary: supported ?? provisional,
     supported,
-    suggestion,
+    suggestion: supported ?? suggestion,
     candidates: ranked.slice(0, 3),
     unavailable,
   };

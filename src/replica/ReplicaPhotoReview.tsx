@@ -8,7 +8,6 @@ import type { ObservationGroup } from "../content/groups";
 import { normalizeAnimalSearch } from "../content/animalNameSearch";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import { usePhotoIdentification } from "../recognition/usePhotoIdentification";
-import type { CameraCapture } from "./ReplicaCamera";
 import "./photo-review.css";
 
 export function ReplicaPhotoReview({
@@ -27,7 +26,7 @@ export function ReplicaPhotoReview({
   onConfirm,
 }: {
   photo?: string;
-  recognitionInput?: CameraCapture["recognitionInput"];
+  recognitionInput?: { full?: string; crop?: string };
   sample: boolean;
   createdAt?: string;
   photoLocation?: string;
@@ -43,16 +42,12 @@ export function ReplicaPhotoReview({
   const [editing, setEditing] = useState(false);
   const [query, setQuery] = useState("");
   const [confirmed, setConfirmed] = useState(false);
-  const identification = usePhotoIdentification(
-    figmaFlow && !sample && !confirmed && !recognitionInput?.candidates
+  const { candidates, message } = usePhotoIdentification(
+    figmaFlow && !sample && !confirmed
       ? (recognitionInput?.full ?? photo)
       : undefined,
     recognitionInput?.crop,
   );
-  const candidates = confirmed
-    ? undefined
-    : (recognitionInput?.candidates ?? identification.candidates);
-  const { message } = identification;
   const edit = useRef<HTMLButtonElement>(null);
   const optionsId = useId();
   const reviewNodes =

@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import { drawPhotoRecognitionFrames } from "../camera/zoom";
+import {
+  drawCameraFrame,
+  drawRecognitionFrame,
+  drawTrackedAnimal,
+} from "../camera/zoom";
 import { kyotoSpeciesById } from "../content/kyotoCatalog";
 import {
   canAutoDownloadPhotoModel,
@@ -9,7 +13,7 @@ import {
   photoModelEvent,
 } from "./photoModel";
 import { speciesRecognizer, type SpeciesPhoto } from "./species";
-import { recognizePhotoSpecies } from "./speciesViews";
+import { recognizeSpeciesViews, type SpeciesView } from "./speciesViews";
 import type { TrackedLiveBox } from "./liveBoxes";
 import type { Candidate } from "./labels";
 
@@ -52,56 +56,52 @@ function sameReadingArea(first: CameraView, second: CameraView) {
   );
 }
 
-function cameraViewPhoto(canvas: HTMLCanvasElement, quality: number) {
+function cameraViewPhoto(canvas: HTMLCanvasElement) {
   let image: Promise<SpeciesPhoto | undefined> | undefined;
   // Encode only a crop the recognizer actually requests. Crop and contain
   // share the encoded image, and the live frame never needs a base64 string.
   return () =>
     (image ??= new Promise((resolve) =>
-      canvas.toBlob(
-        (blob) => resolve(blob ?? undefined),
-        "image/jpeg",
-        quality,
-      ),
+      canvas.toBlob((blob) => resolve(blob ?? undefined), "image/jpeg", 0.85),
     ));
 }
 
-type PhotoFrames = NonNullable<ReturnType<typeof drawPhotoRecognitionFrames>>;
-type PhotoFingerprint = { full: Uint8ClampedArray; crop?: Uint8ClampedArray };
+function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
+  const whole = drawRecognitionFrame(video, zoom);
+  if (!whole) return [];
+  const photo = cameraViewPhoto(whole.canvas);
+  const wholeViews: SpeciesView[] = [{ photo }, { photo, fit: "contain" }];
+  const focused = box && drawTrackedAnimal(video, zoom, box);
+  if (!focused) return wholeViews;
 
-function photoFingerprint({
-  full,
-  crop,
-}: PhotoFrames): PhotoFingerprint | undefined {
-  const thumbnail = document.createElement("canvas");
-  thumbnail.width = thumbnail.height = 12;
-  const context = thumbnail.getContext("2d", { willReadFrequently: true });
-  if (!context) return;
-  const read = (image: HTMLCanvasElement) => {
-    context.drawImage(image, 0, 0, thumbnail.width, thumbnail.height);
-    return context.getImageData(0, 0, thumbnail.width, thumbnail.height).data;
-  };
-  return { full: read(full), crop: crop && read(crop) };
-}
-
-function matchesFrame(
-  first: Uint8ClampedArray | undefined,
-  second: Uint8ClampedArray | undefined,
-) {
-  if (!first || !second) return first === second;
-  let total = 0;
-  let changed = 0;
-  for (let index = 0; index < first.length; index += 4) {
-    const difference =
-      Math.abs(first[index] - second[index]) +
-      Math.abs(first[index + 1] - second[index + 1]) +
-      Math.abs(first[index + 2] - second[index + 2]);
-    total += difference;
-    if (difference > 48) changed++;
+  const focusPhoto = cameraViewPhoto(focused.canvas);
+  const views: SpeciesView[] = [
+    { photo: focusPhoto, source: "focus" },
+    { photo: focusPhoto, fit: "contain", source: "focus" },
+    wholeViews[0],
+  ];
+  const ratio = [video.clientWidth || 4, video.clientHeight || 5] as const;
+  const aspect = ratio[0] / ratio[1];
+  const width = 0.68 * Math.min(1, 1 / aspect);
+  const height = 0.68 * Math.min(1, aspect);
+  for (const position of [0.5, 0.26, 0.74]) {
+    const left = Math.max(0, Math.min(1 - width, position - width / 2));
+    const region = drawCameraFrame(video, 384, zoom, ratio, {
+      left,
+      top: (1 - height) / 2,
+      right: left + width,
+      bottom: (1 + height) / 2,
+    });
+    if (region)
+      views.push({
+        photo: cameraViewPhoto(region.canvas),
+        source: "tile",
+      });
   }
-  // Allow small exposure changes and motion while rejecting a different
-  // picture even if both pictures happen to share the same tracking box.
-  return changed <= 12 && total <= (first.length / 4) * 30;
+  // If the direct views were ambiguous, try a tighter crop before another
+  // whole-frame pass. The recognized name can still use all available votes.
+  views.push(wholeViews[1]);
+  return views;
 }
 
 export function useLiveSpecies(
@@ -115,8 +115,6 @@ export function useLiveSpecies(
     snapshot: CameraView;
     animal?: LiveSpecies;
     candidate?: LiveSpecies;
-    candidates?: Candidate[];
-    fingerprint?: PhotoFingerprint;
   }>();
   const [modelStatus, setModelStatus] = useState<
     "preparing" | "deferred" | "ready" | "failed"
@@ -167,22 +165,30 @@ export function useLiveSpecies(
         return;
       }
       if (!speciesRecognizer.isBusy()) {
-        const frames = drawPhotoRecognitionFrames(
-          frame,
-          snapshot.zoom,
-          snapshot.box,
-        );
-        if (frames) {
+        const source = recognitionViews(frame, snapshot);
+        if (source.length) {
           const current = () =>
             visible() && sameReadingArea(snapshot, view.current);
           ownsWorker = true;
-          const { primary, supported, suggestion, candidates, unavailable } =
-            await recognizePhotoSpecies(
-              {
-                full: cameraViewPhoto(frames.full, 0.8),
-                crop: frames.crop && cameraViewPhoto(frames.crop, 0.85),
-              },
+          const { primary, supported, suggestion, unavailable } =
+            await recognizeSpeciesViews(
+              source,
               current,
+              undefined,
+              (guess, evidence) => {
+                const candidate = animalFromCandidate(guess);
+                if (!candidate || !current()) return;
+                setResult((prior) => {
+                  if (prior && sameReadingArea(prior.snapshot, snapshot)) {
+                    if (prior.animal?.name === candidate.name) return prior;
+                    if (!evidence && (prior.animal || prior.candidate))
+                      return prior;
+                  }
+                  // Show the new name as a suggestion. Only the completed
+                  // multi-view check may make it the capture's chosen animal.
+                  return { snapshot, candidate };
+                });
+              },
             );
           if (!visible()) return;
           if (unavailable) {
@@ -196,27 +202,17 @@ export function useLiveSpecies(
             const keep = !speciesId && !suggestion && same && !previous?.missed;
             const confirmed =
               supported ??
-              (same &&
-              previous?.speciesId === speciesId &&
-              primary === suggestion
-                ? primary
-                : undefined);
+              (same && previous?.speciesId === speciesId ? primary : undefined);
             needsConfirmation = !confirmed && (!!suggestion || !!keep);
             if (speciesId) previous = { snapshot, speciesId, missed: false };
             else if (keep && previous) previous.missed = true;
             else previous = undefined;
-            if (!keep) {
-              const animal = animalFromCandidate(confirmed);
-              const candidate = animalFromCandidate(suggestion);
+            if (!keep)
               setResult({
                 snapshot,
-                animal,
-                candidate,
-                candidates,
-                fingerprint:
-                  animal || candidate ? photoFingerprint(frames) : undefined,
+                animal: animalFromCandidate(confirmed),
+                candidate: animalFromCandidate(suggestion),
               });
-            }
           } else {
             // Let the worker finish its current call, then switch to the
             // latest crop without running more views or entering cooldown.
@@ -365,16 +361,7 @@ export function useLiveSpecies(
   return {
     animal: checked ? result.animal : undefined,
     candidate: checked ? result.candidate : undefined,
-    matchCapture(frames: PhotoFrames) {
-      if (!checked || !result.fingerprint) return;
-      const current = photoFingerprint(frames);
-      if (
-        current &&
-        matchesFrame(result.fingerprint.full, current.full) &&
-        matchesFrame(result.fingerprint.crop, current.crop)
-      )
-        return { animal: result.animal, candidates: result.candidates };
-    },
+    checked,
     modelStatus: active ? modelStatus : undefined,
     prepareManually,
     stop,

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { cameraWindow, type LiveBox } from "../recognition/liveBoxes";
 
 type Zoom = 0.5 | 1 | 2;
-export const cameraPhotoRatio = [4, 5] as const;
 type ZoomCapabilities = MediaTrackCapabilities & {
   zoom?: { min: number; max: number };
 };
@@ -113,11 +112,11 @@ export function drawCameraFrame(
 
 // Use the same visible crop as the tracking worker. Give the animal room
 // around its silhouette without giving the enclosure most of the input.
-function drawTrackedAnimal(
+export function drawTrackedAnimal(
   video: HTMLVideoElement,
   zoom: number,
   box: LiveBox,
-  captured: HTMLCanvasElement,
+  captured?: HTMLCanvasElement,
 ) {
   const width = box.right - box.left;
   const height = box.bottom - box.top;
@@ -138,6 +137,8 @@ function drawTrackedAnimal(
   };
   if ((focus.right - focus.left) * (focus.bottom - focus.top) >= 0.8) return;
   const ratio = [video.clientWidth, video.clientHeight] as const;
+  if (!captured) return drawCameraFrame(video, 384, zoom, ratio, focus);
+
   // The saved photo has a fixed aspect ratio while the preview adapts
   // to the screen. Translate the tracked edges into the captured frame.
   const { videoWidth, videoHeight } = video;
@@ -179,17 +180,9 @@ function drawTrackedAnimal(
   return drawCameraFrame(captured, 384, 1, undefined, normalized);
 }
 
-export function drawPhotoRecognitionFrames(
-  video: HTMLVideoElement,
-  zoom: number,
-  box?: LiveBox,
-  captured = drawCameraFrame(video, 1000, zoom, cameraPhotoRatio)?.canvas,
-) {
-  if (!captured) return;
-  const full = drawCameraFrame(captured, 384, 1, cameraPhotoRatio)?.canvas;
-  if (!full) return;
-  return {
-    full,
-    crop: box && drawTrackedAnimal(video, zoom, box, captured)?.canvas,
-  };
+export function drawRecognitionFrame(video: HTMLVideoElement, zoom: number) {
+  return drawCameraFrame(video, 384, zoom, [
+    video.clientWidth || 4,
+    video.clientHeight || 5,
+  ]);
 }
