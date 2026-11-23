@@ -1,6 +1,7 @@
 import { downloadLiveModel, liveModelCached } from "../recognition/liveModel";
 import { useModelPreload } from "../recognition/useModelPreload";
 import { usePhotoModelDownloading } from "../recognition/usePhotoIdentification";
+import { useLiveSpecies } from "../recognition/useLiveSpecies";
 import { LiveAnimalOverlay } from "../components/LiveAnimalOverlay";
 import {
   useLiveDetection,
@@ -124,10 +125,22 @@ export function ReplicaCamera({
         ) ?? live.boxes.find(({ label }) => recognizedAnimals.has(label)))
       : undefined;
   const selection = bestMatch && recognizedAnimals.get(bestMatch.label);
-  const animal =
+  const boxAnimal =
     bestMatch && selection
       ? { ...selection, name: bestMatch.label }
       : undefined;
+  const species = useLiveSpecies(
+    video,
+    !legacy &&
+      !sample &&
+      streamReady &&
+      visible &&
+      !menuOpen &&
+      !suspended &&
+      !boxAnimal,
+    cameraZoom.digital,
+  );
+  const animal = boxAnimal ?? species.animal;
   const recognized = sample
     ? sampleVisible
     : legacy
@@ -400,6 +413,7 @@ export function ReplicaCamera({
     if (captureStarted.current) return;
     captureStarted.current = true;
     try {
+      species.stop.current();
       onCapture(capture);
       stopCaptureStream.current?.();
     } catch (error) {
@@ -607,7 +621,7 @@ export function ReplicaCamera({
             )}
           </div>
         )}
-        {!legacy && !sample && livePreparing && (
+        {!legacy && !sample && (livePreparing || photoModelDownloading) && (
           <p className="replica-camera-model-status" role="status">
             画像認識モデルをダウンロード中…
           </p>

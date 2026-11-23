@@ -207,7 +207,6 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   await page.mouse.move(0, 0);
   await page.mouse.up();
 
-  expect(photoModelRequests).toBe(0);
   await shutter.click();
   const review = page.locator(".design3-photo-review");
   await expect(review).toHaveAttribute("data-figma-node", "66-7554");
@@ -219,6 +218,68 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
     "動物の名前を選んでください",
   );
   expect(photoModelRequests).toBeGreaterThan(0);
+});
+
+test("キリン以外の図鑑の動物も撮影前にピツネが名前を表示する", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.route(
+    "https://huggingface.co/Xenova/clip-vit-base-patch32/**",
+    (route) =>
+      route.fulfill({
+        body: "mock model asset",
+        headers: { "Access-Control-Allow-Origin": "*" },
+      }),
+  );
+  await page.addInitScript(() => {
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name !== "zooketch-species-recognition")
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {
+            document.documentElement.dataset.testStoppedSpecies = "true";
+          },
+          postMessage() {
+            queueMicrotask(() =>
+              this.onmessage?.({
+                data: {
+                  type: "result",
+                  result: {
+                    status: "candidates",
+                    candidates: [
+                      {
+                        groupId: "kyoto-s-humboldti",
+                        speciesId: "kyoto-s-humboldti",
+                        score: 0.66,
+                      },
+                    ],
+                  },
+                },
+              }),
+            );
+          },
+        };
+      },
+    });
+  });
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  await expect(page.locator(".pitsune-bubble")).toHaveText(
+    "フンボルトペンギンがいるよ！",
+  );
+  await expect(page.locator(".replica-camera-tracking")).toHaveCount(0);
+  await button(page, "シャッター").click();
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-test-stopped-species",
+    "true",
+  );
+  await expect(
+    page.getByRole("heading", { name: "フンボルトペンギン" }),
+  ).toBeVisible();
 });
 
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
