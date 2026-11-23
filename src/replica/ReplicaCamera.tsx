@@ -147,11 +147,12 @@ export function ReplicaCamera({
     bestMatch,
   );
   const animal = species.animal ?? (species.checked ? undefined : boxAnimal);
+  const candidate = animal ? undefined : species.candidate;
   const recognized = sample
     ? sampleVisible
     : legacy
       ? liveActive && live.boxes.length > 0
-      : !!animal;
+      : !!(animal || candidate);
   const figmaNode = tutorial
     ? recognized
       ? "43-1745"
@@ -541,6 +542,11 @@ export function ReplicaCamera({
               text={`${animal.name}がいるよ！`}
               highlights={[animal.name]}
             />
+          ) : candidate ? (
+            <BubbleLine
+              text={`${candidate.name}かも！`}
+              highlights={[candidate.name]}
+            />
           ) : (
             <CardLettering
               className="camera-prompt-art"
@@ -685,15 +691,27 @@ export function ReplicaCamera({
           !photoModelDownloading &&
           !message &&
           species.modelStatus &&
-          species.modelStatus !== "ready" && (
+          species.modelStatus !== "ready" &&
+          (species.modelStatus === "preparing" ? (
             <p className="replica-camera-model-status" role="status">
-              {species.modelStatus === "deferred"
-                ? "未準備の認識モデルは、Wi-Fi接続時かマイページから保存できます。"
-                : species.modelStatus === "failed"
-                  ? "動物名を調べるモデルを準備できませんでした。"
-                  : "動物名を調べるモデルを準備中…"}
+              動物名を調べるモデルを準備中…
             </p>
-          )}
+          ) : (
+            <div className="live-camera-control">
+              <p role="status">
+                {species.modelStatus === "deferred"
+                  ? "動物名を調べるにはモデルの準備が必要です。Wi-Fiをおすすめします。"
+                  : "動物名を調べるモデルを準備できませんでした。"}
+              </p>
+              <button
+                className="text-button"
+                type="button"
+                onClick={() => species.prepareManually.current()}
+              >
+                種識別モデルを準備（未保存の場合 約87 MB）
+              </button>
+            </div>
+          ))}
         {!legacy && (streamReady || sample) && message && (
           <p className="replica-camera-model-status" role="status">
             {message}

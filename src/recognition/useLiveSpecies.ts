@@ -15,9 +15,22 @@ import {
 import { speciesRecognizer } from "./species";
 import { recognizeSpeciesViews, type SpeciesView } from "./speciesViews";
 import type { TrackedLiveBox } from "./liveBoxes";
+import type { Candidate } from "./labels";
 
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
 type CameraView = { zoom: number; box?: TrackedLiveBox };
+
+function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
+  const id = candidate?.speciesId ?? candidate?.groupId;
+  const species = id && kyotoSpeciesById.get(id);
+  return species
+    ? {
+        groupId: species.groupId,
+        name: species.name,
+        taskId: id === "sheep" ? "sheep" : undefined,
+      }
+    : undefined;
+}
 
 function sameSubject(first: CameraView, second: CameraView) {
   if (first.zoom !== second.zoom) return false;
@@ -76,11 +89,13 @@ export function useLiveSpecies(
   const [result, setResult] = useState<{
     snapshot: CameraView;
     animal?: LiveSpecies;
+    candidate?: LiveSpecies;
   }>();
   const [modelStatus, setModelStatus] = useState<
     "preparing" | "deferred" | "ready" | "failed"
   >();
   const stop = useRef<() => void>(() => undefined);
+  const prepareManually = useRef<() => void>(() => undefined);
   const view = useRef<CameraView>({ zoom, box });
   view.current = { zoom, box };
 
@@ -111,8 +126,23 @@ export function useLiveSpecies(
         const source = recognitionViews(frame, snapshot);
         if (source.length) {
           ownsWorker = true;
-          const { primary, supported, unavailable } =
-            await recognizeSpeciesViews(source, visible);
+          const { primary, supported, suggestion, unavailable } =
+            await recognizeSpeciesViews(source, visible, undefined, (guess) => {
+              const candidate = animalFromCandidate(guess);
+              if (
+                !visible() ||
+                !candidate ||
+                !sameSubject(snapshot, view.current)
+              )
+                return;
+              setResult((prior) =>
+                prior &&
+                sameSubject(prior.snapshot, snapshot) &&
+                (prior.animal || prior.candidate)
+                  ? prior
+                  : { snapshot, candidate },
+              );
+            });
           if (!visible()) return;
           if (unavailable) {
             restart();
@@ -121,23 +151,18 @@ export function useLiveSpecies(
           if (sameSubject(snapshot, view.current)) {
             const speciesId = primary?.speciesId ?? primary?.groupId;
             const same = previous && sameSubject(previous.snapshot, snapshot);
-            const keep = !speciesId && same && !previous?.missed;
-            const species =
-              speciesId &&
-              (supported || (same && previous?.speciesId === speciesId))
-                ? kyotoSpeciesById.get(speciesId)
-                : undefined;
+            const keep = !speciesId && !suggestion && same && !previous?.missed;
+            const confirmed =
+              supported ??
+              (same && previous?.speciesId === speciesId ? primary : undefined);
             if (speciesId) previous = { snapshot, speciesId, missed: false };
             else if (keep && previous) previous.missed = true;
             else previous = undefined;
             if (!keep)
               setResult({
                 snapshot,
-                animal: species && {
-                  groupId: species.groupId,
-                  name: species.name,
-                  taskId: species.id === "sheep" ? "sheep" : undefined,
-                },
+                animal: animalFromCandidate(confirmed),
+                candidate: animalFromCandidate(suggestion),
               });
           }
         }
@@ -154,7 +179,7 @@ export function useLiveSpecies(
     function retry() {
       if (!running || retried) return;
       retried = true;
-      timer = window.setTimeout(prepare, 1500);
+      timer = window.setTimeout(() => void prepare(), 1500);
     }
 
     function restart() {
@@ -172,14 +197,14 @@ export function useLiveSpecies(
       void classifyFrame().catch(restart);
     }
 
-    async function prepare() {
+    async function prepare(manual = false) {
       if (!visible() || preparing || started) return;
       preparing = true;
       try {
         if (!(await photoModelCached())) {
           if (!visible()) return;
           const pending = photoDownloadInProgress();
-          if (!pending && !canAutoDownloadPhotoModel()) {
+          if (!pending && !manual && !canAutoDownloadPhotoModel()) {
             setModelStatus("deferred");
             return;
           }
@@ -220,9 +245,16 @@ export function useLiveSpecies(
     });
     window.addEventListener("keydown", updateInteraction);
     void prepare();
+    prepareManually.current = () => {
+      if (started || preparing) return;
+      retried = false;
+      window.clearTimeout(timer);
+      void prepare(true);
+    };
     const close = (handoff: boolean) => {
       if (!running) return;
       running = false;
+      prepareManually.current = () => undefined;
       window.clearTimeout(timer);
       window.removeEventListener(photoModelEvent, modelReady);
       window.removeEventListener("online", resume);
@@ -241,8 +273,10 @@ export function useLiveSpecies(
     active && !!result && sameSubject(result.snapshot, view.current);
   return {
     animal: checked ? result.animal : undefined,
+    candidate: checked ? result.candidate : undefined,
     checked,
     modelStatus: active ? modelStatus : undefined,
+    prepareManually,
     stop,
   };
 }

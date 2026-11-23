@@ -402,6 +402,82 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
   ).toBeVisible();
 });
 
+test("白枠がなくても撮影中の有力候補を見せ、撮影時は名前を確定しない", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await page.route("**/models/yolox*.onnx", (route) => route.abort());
+  let modelRequests = 0;
+  await page.route(photoModel.url, (route) => {
+    modelRequests++;
+    return route.fulfill({
+      body: "mock model asset",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "connection", {
+      configurable: true,
+      value: { effectiveType: "3g", saveData: false },
+    });
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name !== "zooketch-species-recognition")
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          postMessage({ photo, fit }: { photo?: string; fit?: string }) {
+            if (
+              fit === "contain" ||
+              (photo && document.querySelector(".design3-photo-review"))
+            )
+              return;
+            queueMicrotask(() =>
+              this.onmessage?.({
+                data: {
+                  type: "result",
+                  result: !photo
+                    ? { status: "ready" }
+                    : {
+                        status: "candidates",
+                        candidates: [
+                          {
+                            groupId: "kyoto-s-humboldti",
+                            speciesId: "kyoto-s-humboldti",
+                            score: 0.64,
+                          },
+                        ],
+                        recognition: { status: "uncertain" },
+                      },
+                },
+              }),
+            );
+          },
+        };
+      },
+    });
+  });
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  const prepare = page.getByRole("button", { name: /種識別モデルを準備/ });
+  await expect(prepare).toBeVisible();
+  expect(modelRequests).toBe(0);
+  await prepare.click();
+  await expect(page.locator(".pitsune-bubble")).toHaveText(
+    "フンボルトペンギンかも！",
+  );
+  expect(modelRequests).toBe(1);
+  await expect(page.locator(".replica-camera-tracking")).toHaveCount(0);
+  await button(page, "シャッター").click();
+  await expect(page.locator(".design3-photo-review")).toHaveAttribute(
+    "data-figma-node",
+    "66-7655",
+  );
+  await expect(button(page, "ピツネに見せる")).toBeDisabled();
+});
+
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
   page,
 }) => {

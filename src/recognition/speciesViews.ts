@@ -18,12 +18,14 @@ export async function recognizeSpeciesViews(
   views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
+  onSuggestion?: (candidate: Candidate) => void,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
   const hasFocus = views.some(({ source }) => source === "focus");
   let supported: Candidate | undefined;
   let provisional: Candidate | undefined;
+  let suggestion: Candidate | undefined;
   let unavailable = false;
 
   for (const view of views) {
@@ -44,13 +46,25 @@ export async function recognizeSpeciesViews(
     }
 
     const [first, runner] = result.candidates;
-    const minimum = hasFocus ? 0.4 : 0.6;
+    const margin = first ? first.score - (runner?.score ?? 0) : 0;
+    const suggestionMinimum = !hasFocus
+      ? 0.6
+      : view.source === "focus"
+        ? 0.4
+        : 0.45;
     if (
-      !first ||
-      first.score < minimum ||
-      first.score - (runner?.score ?? 0) < 0.07
-    )
-      continue;
+      onSuggestion &&
+      first &&
+      view.source !== "tile" &&
+      first.score >= suggestionMinimum &&
+      margin >= 0.07 &&
+      !suggestion
+    ) {
+      suggestion = first;
+      onSuggestion(first);
+    }
+    const minimum = hasFocus ? 0.4 : 0.6;
+    if (!first || first.score < minimum || margin < 0.07) continue;
     const strong = result.recognition?.status === "identified";
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
@@ -65,8 +79,8 @@ export async function recognizeSpeciesViews(
         ({ view: earlier }) =>
           earlier.source === "focus" && view.source === "focus",
       ) ||
-      (!hasFocus && (strong || agree.length > 0)) ||
-      !result.recognition
+      (!hasFocus && !view.source && (strong || agree.length > 0)) ||
+      (!result.recognition && view.source !== "tile")
     ) {
       supported = first;
       break;
@@ -114,6 +128,7 @@ export async function recognizeSpeciesViews(
   return {
     primary: supported ?? provisional,
     supported,
+    suggestion: supported ?? suggestion,
     candidates: ranked.slice(0, 3),
     unavailable,
   };

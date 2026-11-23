@@ -62,3 +62,43 @@ test("枠がないときも信頼性の高い写真全体の判定は使える",
   const result = await recognizeSpeciesViews([{ photo: "whole" }], () => true);
   expect(result.supported?.speciesId).toBe(redPanda);
 });
+
+test("全体に有力な候補が出た時点で知らせ、確定とは区別する", async () => {
+  let resolveLast!: (result: SpeciesResult) => void;
+  vi.spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome(redPanda, 0.64))
+    .mockImplementationOnce(
+      () => new Promise((resolve) => (resolveLast = resolve)),
+    );
+  const onSuggestion = vi.fn();
+  const pending = recognizeSpeciesViews(
+    [{ photo: "whole" }, { photo: "whole", fit: "contain" }],
+    () => true,
+    undefined,
+    onSuggestion,
+  );
+  await vi.waitFor(() =>
+    expect(onSuggestion).toHaveBeenCalledWith(
+      expect.objectContaining({ speciesId: redPanda }),
+    ),
+  );
+  resolveLast({ status: "unknown", reason: "ambiguous" });
+  const result = await pending;
+  expect(result.suggestion?.speciesId).toBe(redPanda);
+  expect(result.supported).toBeUndefined();
+});
+
+test("全体や枠に証拠がない場合は部分拡大だけを初期候補に使わない", async () => {
+  vi.spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce({ status: "unknown", reason: "empty" })
+    .mockResolvedValueOnce(outcome(redPanda, 0.92, true));
+  const onSuggestion = vi.fn();
+  const result = await recognizeSpeciesViews(
+    [{ photo: "whole" }, { photo: "corner", source: "tile" }],
+    () => true,
+    undefined,
+    onSuggestion,
+  );
+  expect(onSuggestion).not.toHaveBeenCalled();
+  expect(result.suggestion).toBeUndefined();
+});
