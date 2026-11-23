@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from "vitest";
-import { recognizeSpeciesViews } from "../../src/recognition/speciesViews";
+import { recognizePhotoSpecies } from "../../src/recognition/speciesViews";
 import {
   speciesRecognizer,
   type SpeciesResult,
@@ -28,153 +28,87 @@ test("枠の2つの見え方が一致したら全体の推論を追加せず名�
     .spyOn(speciesRecognizer, "recognize")
     .mockResolvedValueOnce(outcome(redPanda, 0.49))
     .mockResolvedValueOnce(outcome(redPanda, 0.61));
-  const result = await recognizeSpeciesViews(
-    [
-      { photo: "masked", source: "focus" },
-      { photo: "masked", source: "focus", fit: "contain" },
-      { photo: "whole" },
-    ],
+  const result = await recognizePhotoSpecies(
+    { full: "whole", crop: "masked" },
     () => true,
   );
   expect(result.supported?.speciesId).toBe(redPanda);
   expect(recognize).toHaveBeenCalledTimes(2);
 });
 
-test("囲いの全体と枠内で別の動物が出た場合は名前を断定しない", async () => {
+test("写真全体と枠内で別の動物が出た場合は名前を断定しない", async () => {
   vi.spyOn(speciesRecognizer, "recognize")
     .mockResolvedValueOnce(outcome(redPanda, 0.63))
-    .mockResolvedValueOnce(outcome("kyoto-v-vulpes", 0.9, true));
-  const result = await recognizeSpeciesViews(
-    [{ photo: "masked", source: "focus" }, { photo: "whole" }],
+    .mockResolvedValueOnce({ status: "unknown", reason: "ambiguous" })
+    .mockResolvedValueOnce(outcome("kyoto-v-vulpes", 0.9, true))
+    .mockResolvedValueOnce({ status: "unknown", reason: "ambiguous" });
+  const result = await recognizePhotoSpecies(
+    { full: "whole", crop: "masked" },
     () => true,
   );
   expect(result.supported).toBeUndefined();
   expect(result.primary).toBeUndefined();
-  expect(result.candidates.map(({ speciesId }) => speciesId)).toContain(
+  expect(result.suggestion).toBeUndefined();
+  expect(result.candidates.map(({ speciesId }) => speciesId)).toEqual([
     redPanda,
-  );
+    "kyoto-v-vulpes",
+  ]);
 });
 
 test("枠がないときも信頼性の高い写真全体の判定は使える", async () => {
   vi.spyOn(speciesRecognizer, "recognize").mockResolvedValue(
     outcome(redPanda, 0.88, true),
   );
-  const result = await recognizeSpeciesViews([{ photo: "whole" }], () => true);
+  const result = await recognizePhotoSpecies({ full: "whole" }, () => true);
   expect(result.supported?.speciesId).toBe(redPanda);
 });
 
-test("全体に有力な候補が出た時点で知らせ、確定とは区別する", async () => {
-  let resolveLast!: (result: SpeciesResult) => void;
+test("写真の候補が1つでも確認できないときは確定と区別する", async () => {
   vi.spyOn(speciesRecognizer, "recognize")
     .mockResolvedValueOnce(outcome(redPanda, 0.64))
-    .mockImplementationOnce(
-      () => new Promise((resolve) => (resolveLast = resolve)),
-    );
-  const onSuggestion = vi.fn();
-  const pending = recognizeSpeciesViews(
-    [{ photo: "whole" }, { photo: "whole", fit: "contain" }],
-    () => true,
-    undefined,
-    onSuggestion,
-  );
-  await vi.waitFor(() =>
-    expect(onSuggestion).toHaveBeenCalledWith(
-      expect.objectContaining({ speciesId: redPanda }),
-    ),
-  );
-  resolveLast({ status: "unknown", reason: "ambiguous" });
-  const result = await pending;
+    .mockResolvedValueOnce({ status: "unknown", reason: "ambiguous" });
+  const result = await recognizePhotoSpecies({ full: "whole" }, () => true);
   expect(result.suggestion?.speciesId).toBe(redPanda);
   expect(result.supported).toBeUndefined();
 });
 
-test("全体や枠に証拠がない場合は部分拡大だけを初期候補に使わない", async () => {
-  vi.spyOn(speciesRecognizer, "recognize")
-    .mockResolvedValueOnce({ status: "unknown", reason: "empty" })
-    .mockResolvedValueOnce(outcome(redPanda, 0.92, true));
-  const onSuggestion = vi.fn();
-  const result = await recognizeSpeciesViews(
-    [{ photo: "whole" }, { photo: "corner", source: "tile" }],
-    () => true,
-    undefined,
-    onSuggestion,
-  );
-  expect(onSuggestion).not.toHaveBeenCalled();
-  expect(result.suggestion).toBeUndefined();
-});
-
-test("枠付きの別々の拡大で一致した候補を、確認を待たずに知らせる", async () => {
-  let finish!: (result: SpeciesResult) => void;
-  const fox = "kyoto-v-vulpes";
-  vi.spyOn(speciesRecognizer, "recognize")
-    .mockResolvedValueOnce(outcome(fox, 0.7))
-    .mockResolvedValueOnce(outcome(redPanda, 0.7))
-    .mockResolvedValueOnce(outcome(redPanda, 0.8))
-    .mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
-  const suggest = vi.fn();
-  const result = recognizeSpeciesViews(
-    [
-      { photo: "focus", source: "focus" },
-      { photo: "middle", source: "tile" },
-      { photo: "left", source: "tile" },
-      { photo: "whole", fit: "contain" },
-    ],
-    () => true,
-    undefined,
-    suggest,
-  );
-
-  await vi.waitFor(() =>
-    expect(suggest.mock.calls).toEqual([
-      [expect.objectContaining({ speciesId: fox })],
-      [expect.objectContaining({ speciesId: redPanda }), "agreement"],
-    ]),
-  );
-  finish(outcome(fox, 0.75));
-  expect(await result).toMatchObject({
-    supported: undefined,
-    suggestion: { speciesId: redPanda },
-  });
-});
-
-test("必要な映像だけを画像化し、使わなかった切り出しは作らない", async () => {
+test("必要な映像だけを画像化し、使わなかった全体画像は作らない", async () => {
   const blob = new Blob(["frame"], { type: "image/jpeg" });
-  const first = vi.fn().mockResolvedValue(blob);
-  const fallback = vi.fn().mockResolvedValue(blob);
+  const crop = vi.fn().mockResolvedValue(blob);
+  const full = vi.fn().mockResolvedValue(blob);
   const recognize = vi
     .spyOn(speciesRecognizer, "recognize")
     .mockResolvedValue(outcome(redPanda, 0.9, true));
-  const result = await recognizeSpeciesViews(
-    [{ photo: first }, { photo: fallback, fit: "contain" }],
+  const result = await recognizePhotoSpecies({ full, crop }, () => true);
+  expect(result.supported?.speciesId).toBe(redPanda);
+  expect(crop).toHaveBeenCalledTimes(2);
+  expect(recognize).toHaveBeenNthCalledWith(1, blob, undefined, undefined);
+  expect(recognize).toHaveBeenNthCalledWith(2, blob, undefined, "contain");
+  expect(full).not.toHaveBeenCalled();
+});
+
+test("枠だけの最初の読み違いは、枠と写真全体が一致した候補を優先する", async () => {
+  const fox = "kyoto-v-vulpes";
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome(fox, 0.92, true))
+    .mockResolvedValueOnce(outcome(redPanda, 0.71))
+    .mockResolvedValueOnce(outcome(redPanda, 0.83, true))
+    .mockResolvedValueOnce(outcome(redPanda, 0.79, true));
+
+  const result = await recognizePhotoSpecies(
+    { full: "whole", crop: "focused" },
     () => true,
   );
   expect(result.supported?.speciesId).toBe(redPanda);
-  expect(first).toHaveBeenCalledOnce();
-  expect(recognize).toHaveBeenCalledExactlyOnceWith(blob, undefined, undefined);
-  expect(fallback).not.toHaveBeenCalled();
-});
-
-test("別の種を枠内で明瞭に識別したら、先に出した候補を更新する", async () => {
-  const fox = "kyoto-v-vulpes";
-  vi.spyOn(speciesRecognizer, "recognize")
-    .mockResolvedValueOnce(outcome(fox, 0.62))
-    .mockResolvedValueOnce(outcome("bear", 0.92, true))
-    .mockResolvedValueOnce(outcome(redPanda, 0.91, true));
-
-  const suggest = vi.fn();
-  await recognizeSpeciesViews(
-    [
-      { photo: "focused", source: "focus" },
-      { photo: "whole" },
-      { photo: "focused", source: "focus", fit: "contain" },
-    ],
-    () => true,
-    undefined,
-    suggest,
-  );
-
-  expect(suggest.mock.calls).toEqual([
-    [expect.objectContaining({ speciesId: fox })],
-    [expect.objectContaining({ speciesId: redPanda }), "strong"],
+  expect(result.candidates.map(({ speciesId }) => speciesId)).toEqual([
+    redPanda,
+    fox,
+  ]);
+  expect(recognize.mock.calls.map(([photo, , fit]) => [photo, fit])).toEqual([
+    ["focused", undefined],
+    ["focused", "contain"],
+    ["whole", undefined],
+    ["whole", "contain"],
   ]);
 });

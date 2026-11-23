@@ -146,7 +146,7 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
   ).toBeVisible();
 });
 
-test("ライブ認識を再試行し、白い枠とセリフを表示して撮影時の動物名を引き継ぐ", async ({
+test("白枠の再試行と撮影ができ、写真モデルを使えないときは手動で選べる", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 667 });
@@ -183,11 +183,11 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   await expect(guide).toBeVisible({ timeout: 15_000 });
   await expect(guide.locator("svg")).toHaveCount(4);
   await expect(camera.locator(".pitsune-bubble")).toHaveText(
-    "キリンがいるよ！",
+    "動物の写真を撮ろう！",
   );
   await expect(camera.locator(".live-animal-overlay")).toHaveCount(0);
   await expect(camera.getByText(/の候補/)).toHaveCount(0);
-  await expect(camera).toHaveAttribute("data-figma-node", "43-1494");
+  await expect(camera).toHaveAttribute("data-figma-node", "38-1026");
   expect(requests).toBeGreaterThanOrEqual(2);
 
   const middle = shutter.locator(".shutter-center");
@@ -207,14 +207,16 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
 
   await shutter.click();
   const review = page.locator(".design3-photo-review");
-  await expect(review).toHaveAttribute("data-figma-node", "66-7554");
+  await expect(review).toHaveAttribute("data-figma-node", "66-7655");
+  await expect(review.getByRole("status")).toContainText(
+    "動物の名前を選んでください",
+  );
+  await button(page, "修正").click();
+  await review.getByRole("button", { name: "キリン", exact: true }).click();
   await expect(
     review.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
   await expect(button(page, "ピツネに見せる")).toBeEnabled();
-  await expect(review.getByRole("status")).toContainText(
-    "動物の名前を選んでください",
-  );
   expect(photoModelRequests).toBeGreaterThan(0);
 });
 
@@ -389,10 +391,12 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
     "2",
   );
   await button(page, "シャッター").click();
-  await expect(page.locator("html")).toHaveAttribute(
+  await expect(page.locator("html")).not.toHaveAttribute(
     "data-test-review-images",
-    "3",
   );
+  await expect(
+    page.getByRole("group", { name: "写真から見つけた候補" }),
+  ).toContainText("レッサーパンダ");
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-model-warm",
     "1",
@@ -402,7 +406,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
   ).toBeVisible();
 });
 
-test("白枠がなくても撮影中の有力候補を見せ、撮影時は名前を確定しない", async ({
+test("白枠がなくても写真推論の候補を撮影前から表示し、撮影後も同じ名前を残す", async ({
   page,
 }) => {
   await useMockCamera(page);
@@ -429,28 +433,29 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
             ((event: { data: unknown }) => void) | undefined,
           terminate() {},
           postMessage({ photo, fit }: { photo?: string; fit?: string }) {
-            if (
-              fit === "contain" ||
-              (photo && document.querySelector(".design3-photo-review"))
-            )
+            if (photo && document.querySelector(".design3-photo-review")) {
+              document.documentElement.dataset.testLateSpecies = "true";
               return;
+            }
             queueMicrotask(() =>
               this.onmessage?.({
                 data: {
                   type: "result",
                   result: !photo
                     ? { status: "ready" }
-                    : {
-                        status: "candidates",
-                        candidates: [
-                          {
-                            groupId: "kyoto-s-humboldti",
-                            speciesId: "kyoto-s-humboldti",
-                            score: 0.64,
-                          },
-                        ],
-                        recognition: { status: "uncertain" },
-                      },
+                    : fit === "contain"
+                      ? { status: "unknown" }
+                      : {
+                          status: "candidates",
+                          candidates: [
+                            {
+                              groupId: "kyoto-s-humboldti",
+                              speciesId: "kyoto-s-humboldti",
+                              score: 0.64,
+                            },
+                          ],
+                          recognition: { status: "uncertain" },
+                        },
                 },
               }),
             );
@@ -476,6 +481,13 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
     "66-7655",
   );
   await expect(button(page, "ピツネに見せる")).toBeDisabled();
+  const suggestion = page.getByRole("group", { name: "写真から見つけた候補" });
+  await expect(
+    suggestion.getByRole("button", { name: "フンボルトペンギン" }),
+  ).toBeVisible();
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-test-late-species",
+  );
 });
 
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
@@ -595,6 +607,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   page,
 }) => {
   await useMockCamera(page, true);
+  await page.route(photoModel.url, (route) => route.abort());
   await page.addInitScript(() => {
     localStorage.setItem("zooketch-replica-tutorial-v1", "1");
     window.Worker = new Proxy(window.Worker, {
@@ -661,7 +674,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   );
   const guide = camera.locator(".replica-camera-tracking");
   await expect(guide).toBeVisible();
-  await expect(camera).toHaveAttribute("data-figma-node", "43-1745");
+  await expect(camera).toHaveAttribute("data-figma-node", "43-1681");
   const corners = guide.locator("svg");
   const cornerGeometry = () =>
     corners.evaluateAll((elements) =>
@@ -729,7 +742,7 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   expect(farSpacing.horizontal).toBeGreaterThanOrEqual(5);
   expect(farSpacing.vertical).toBeGreaterThanOrEqual(5);
   await expect(camera.locator(".pitsune-bubble")).toHaveText(
-    "キリンがいるよ！",
+    "動物の写真を撮ろう！",
   );
   await expect(camera.locator(".live-animal-overlay")).toHaveCount(0);
   await expect(
@@ -738,8 +751,10 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   await shutter.click();
   await expect(page.locator(".design3-photo-review")).toHaveAttribute(
     "data-figma-node",
-    "43-1815",
+    "52-5265",
   );
+  await button(page, "修正").click();
+  await button(page, "キリン").click();
   await expect(
     page.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
@@ -889,7 +904,7 @@ test("低負荷端末では検出間隔を広げ、ズームでWorkerを作り�
     .toBeGreaterThan(framesWhenHidden);
 });
 
-test("誤った種名を表示中でも、次の有力な候補を確認待ちで止めない", async ({
+test("枠内で先に誤認識しても、写真推論が終わった名前だけを撮影前後に表示する", async ({
   page,
 }) => {
   await verifySpeciesSwitch(page, false);
@@ -973,12 +988,16 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                 reply({ type: "result", result: { status: "ready" } });
                 return;
               }
-              const id = switched ? "kyoto-a-fulgens" : "kyoto-v-vulpes";
-              const weak = moveBox && switched;
               const reading = switched ? ++newReadings : ++priorReadings;
+              const readingOldArea = moveBox && !switched;
+              const id = switched
+                ? reading >= 2
+                  ? "kyoto-a-fulgens"
+                  : "kyoto-s-humboldti"
+                : "kyoto-v-vulpes";
               const finish = () => {
                 const result =
-                  weak && reading % 7 !== 1
+                  readingOldArea && reading >= 2 && reading <= 4
                     ? { status: "unknown" }
                     : {
                         status: "candidates",
@@ -986,16 +1005,16 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                           {
                             groupId: id,
                             speciesId: id,
-                            score: weak ? 0.57 : 0.91,
+                            score: readingOldArea ? 0.57 : 0.91,
                           },
                         ],
                         recognition: {
-                          status: weak ? "uncertain" : "identified",
+                          status: readingOldArea ? "uncertain" : "identified",
                         },
                       };
                 reply({ type: "result", result });
               };
-              if (moveBox && !switched && reading === 2) {
+              if (readingOldArea && reading === 5) {
                 root.dataset.testPriorReading = "pending";
                 finishPrior = finish;
                 return;
@@ -1049,7 +1068,20 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
     "data-test-switch-confirmation",
     "pending",
   );
-  await expect(bubble).toHaveText("レッサーパンダかも！");
+  await expect(bubble).toHaveText(
+    moveBox ? "動物の写真を撮ろう！" : "ホンドギツネがいるよ！",
+  );
   await emit("test:confirm-species");
   await expect(bubble).toHaveText("レッサーパンダがいるよ！");
+  await button(page, "シャッター").click();
+  const review = page.locator(".design3-photo-review");
+  await expect(
+    review.getByRole("heading", { name: "レッサーパンダ" }),
+  ).toBeVisible();
+  await expect(
+    review
+      .getByRole("group", { name: "写真から見つけた候補" })
+      .getByRole("button")
+      .first(),
+  ).toHaveText("レッサーパンダ");
 }

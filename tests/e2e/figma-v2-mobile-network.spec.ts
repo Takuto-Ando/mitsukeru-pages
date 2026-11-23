@@ -1,6 +1,7 @@
 import { devices } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { taskById } from "../../src/content/tasks";
+import photoModel from "../../src/recognition/bioclip-model.json" with { type: "json" };
 import { expect, test, type Page } from "./fixtures";
 
 const sample =
@@ -109,12 +110,49 @@ for (const device of ["iPhone SE", "Galaxy S9+"] as const) {
         "対応するブラウザの組み合わせのみ",
       );
       await useStillCamera(page);
+      await page.route(photoModel.url, (route) =>
+        route.fulfill({
+          body: "mock model asset",
+          headers: { "Access-Control-Allow-Origin": "*" },
+        }),
+      );
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, "connection", {
+          value: { effectiveType: "4g", saveData: false },
+        });
+        window.Worker = new Proxy(window.Worker, {
+          construct(target, args: [string | URL, WorkerOptions?]) {
+            if (args[1]?.name !== "zooketch-species-recognition")
+              return Reflect.construct(target, args);
+            return {
+              onmessage: undefined as
+                ((event: { data: unknown }) => void) | undefined,
+              terminate() {},
+              postMessage({ photo }: { photo?: Blob }) {
+                const result = photo
+                  ? {
+                      status: "candidates",
+                      candidates: [{ groupId: "giraffe", score: 0.9 }],
+                      recognition: { status: "identified" },
+                    }
+                  : { status: "ready" };
+                queueMicrotask(() =>
+                  this.onmessage?.({ data: { type: "result", result } }),
+                );
+              },
+            };
+          },
+        });
+      });
       await page.goto("./");
       await expectNoHorizontalOverflow(page);
       await action(page, "つづきから").tap();
       await expect(page.locator(".replica-camera-tracking")).toBeVisible({
         timeout: 30_000,
       });
+      await expect(page.locator(".pitsune-bubble")).toHaveText(
+        "キリンがいるよ！",
+      );
       await expectNoHorizontalOverflow(page);
       await action(page, "シャッター").tap();
       await expect(
@@ -234,6 +272,8 @@ test.describe("3G相当", () => {
       });
     const trackingMs = Math.round(performance.now() - cameraOpened);
     await action(page, "シャッター").tap();
+    await action(page, "修正").tap();
+    await action(page, "キリン").tap();
     await drawTongue(page);
     const html = page.locator("html");
     await expect(html).toHaveAttribute("data-share-timed-out", "1", {

@@ -19,8 +19,9 @@ import { BubbleLine } from "../components/BubbleLine";
 import { assetPath } from "../content/artwork";
 import { CameraShutter, CameraZoom } from "../components/CameraControls";
 import {
+  cameraPhotoRatio,
   drawCameraFrame,
-  drawTrackedAnimal,
+  drawPhotoRecognitionFrames,
   useCameraZoom,
 } from "../camera/zoom";
 import {
@@ -33,23 +34,16 @@ import {
   cameraSettingsReturnedEvent,
   openCameraPermissionSettings,
 } from "../camera/permission";
+import type { Candidate } from "../recognition/labels";
 import "./camera-tracking.css";
 
 export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
 
 const liveSetting = "zooketch-live-detection-v1";
-const photoRatio = [4, 5] as const;
-
-const recognizedAnimals = new Map([
-  ["キリン", { groupId: "giraffe" }],
-  ["シマウマ", { groupId: "zebra" }],
-  ["ゾウ", { groupId: "elephant" }],
-]);
-
 export type CameraCapture = {
   photo?: string;
-  recognitionInput?: { full?: string; crop?: string };
+  recognitionInput?: { full?: string; crop?: string; candidates?: Candidate[] };
   sample: boolean;
   animal?: { groupId: string; name: string; taskId?: string };
 };
@@ -130,16 +124,6 @@ export function ReplicaCamera({
     !legacy && liveActive
       ? (live.boxes.find(({ id }) => id === trackedAnimalId) ?? live.boxes[0])
       : undefined;
-  // Keep a provisional name only for distinctive detector labels. Broad
-  // labels such as bear, sheep and bird can still localize the subject.
-  const selection =
-    bestMatch && bestMatch.score >= 0.45
-      ? recognizedAnimals.get(bestMatch.label)
-      : undefined;
-  const boxAnimal =
-    bestMatch && selection
-      ? { ...selection, name: bestMatch.label }
-      : undefined;
   const species = useLiveSpecies(
     video,
     !legacy &&
@@ -152,7 +136,7 @@ export function ReplicaCamera({
     cameraZoom.digital,
     bestMatch,
   );
-  const animal = species.animal ?? (species.checked ? undefined : boxAnimal);
+  const animal = species.animal;
   const candidate = animal ? undefined : species.candidate;
   const recognized = sample
     ? sampleVisible
@@ -483,35 +467,44 @@ export function ReplicaCamera({
     }
 
     const frame = sample ? example.current : video.current;
-    const ratio = legacy ? undefined : photoRatio;
+    const ratio = legacy ? undefined : cameraPhotoRatio;
     try {
       const shot =
         frame && drawCameraFrame(frame, 1000, cameraZoom.digital, ratio);
       if (shot) {
         const photo = shot.canvas.toDataURL("image/jpeg", 0.82);
         let recognitionInput: CameraCapture["recognitionInput"];
+        let capturedAnimal: CameraCapture["animal"];
         if (!legacy && !sample && video.current) {
           try {
-            recognitionInput = {
-              full: drawCameraFrame(
-                shot.canvas,
-                384,
-                1,
-                photoRatio,
-              )?.canvas.toDataURL("image/jpeg", 0.8),
-            };
-            if (bestMatch)
-              recognitionInput.crop = drawTrackedAnimal(
-                video.current,
-                cameraZoom.digital,
-                bestMatch,
-                shot.canvas,
-              )?.canvas.toDataURL("image/jpeg", 0.85);
+            const frames = drawPhotoRecognitionFrames(
+              video.current,
+              cameraZoom.digital,
+              bestMatch,
+              shot.canvas,
+            );
+            if (frames) {
+              const prediction = species.matchCapture(frames);
+              if (prediction?.candidates?.length) {
+                capturedAnimal = prediction.animal;
+                recognitionInput = { candidates: prediction.candidates };
+              } else {
+                recognitionInput = {
+                  full: frames.full.toDataURL("image/jpeg", 0.8),
+                  crop: frames.crop?.toDataURL("image/jpeg", 0.85),
+                };
+              }
+            }
           } catch {
             // The full photo is still available for recognition.
           }
         }
-        submitCapture({ photo, sample, animal, recognitionInput });
+        submitCapture({
+          photo,
+          sample,
+          animal: capturedAnimal,
+          recognitionInput,
+        });
       } else if (legacy && sample) {
         submitCapture({ photo: samplePhoto(), sample: true });
       } else {

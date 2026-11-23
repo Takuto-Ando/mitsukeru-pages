@@ -9,7 +9,7 @@ import {
   photoModelDownloadEvent,
 } from "./photoModel";
 import { speciesRecognizer } from "./species";
-import { recognizeSpeciesViews } from "./speciesViews";
+import { recognizePhotoSpecies } from "./speciesViews";
 
 export function usePhotoModelDownloading() {
   const [downloading, setDownloading] = useState(photoModelDownloading);
@@ -61,22 +61,8 @@ export function usePhotoIdentification(
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
         if (prepared.status !== "ready") throw new Error("unavailable");
-        const views = [
-          ...(crop
-            ? [
-                { photo: crop, source: "focus" as const },
-                {
-                  photo: crop,
-                  fit: "contain" as const,
-                  source: "focus" as const,
-                },
-              ]
-            : []),
-          { photo: image },
-          { photo: image, fit: "contain" as const },
-        ];
-        const { candidates } = await recognizeSpeciesViews(
-          views,
+        const { candidates } = await recognizePhotoSpecies(
+          { full: image, crop },
           () => active,
           (message) => update({ message }),
         );
