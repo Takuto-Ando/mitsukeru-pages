@@ -220,10 +220,13 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   expect(photoModelRequests).toBeGreaterThan(0);
 });
 
-test("低速回線でもカメラを開いたままモデルの準備後に名前が出る", async ({
+test("クマの白枠を維持しながら、種識別の準備後にレッサーパンダと表示する", async ({
   page,
 }) => {
   await useMockCamera(page);
+  await page.route("**/models/yolox*.onnx", (route) =>
+    route.fulfill({ body: Buffer.alloc(3_659_407) }),
+  );
   let releaseDownload!: () => void;
   const download = new Promise<void>((resolve) => {
     releaseDownload = resolve;
@@ -257,6 +260,35 @@ test("低速回線でもカメラを開いたままモデルの準備後に名�
     };
     window.Worker = new Proxy(window.Worker, {
       construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name === "zooketch-live-detection") {
+          return {
+            onmessage: undefined as
+              ((event: { data: unknown }) => void) | undefined,
+            terminate() {},
+            postMessage({ type }: { type: string }) {
+              queueMicrotask(() =>
+                this.onmessage?.({
+                  data:
+                    type === "prepare"
+                      ? { type: "ready" }
+                      : {
+                          type: "boxes",
+                          boxes: [
+                            {
+                              label: "クマ",
+                              score: 0.9,
+                              left: 0.2,
+                              top: 0.2,
+                              right: 0.8,
+                              bottom: 0.8,
+                            },
+                          ],
+                        },
+                }),
+              );
+            },
+          };
+        }
         if (args[1]?.name !== "zooketch-species-recognition")
           return Reflect.construct(target, args);
         return {
@@ -283,8 +315,8 @@ test("低速回線でもカメラを開いたままモデルの準備後に名�
                     status: "candidates",
                     candidates: [
                       {
-                        groupId: "kyoto-s-humboldti",
-                        speciesId: "kyoto-s-humboldti",
+                        groupId: "kyoto-a-fulgens",
+                        speciesId: "kyoto-a-fulgens",
                         score: 0.66,
                       },
                     ],
@@ -308,6 +340,10 @@ test("低速回線でもカメラを開いたままモデルの準備後に名�
       "画像認識モデルをダウンロード中…",
     );
     await expect(button(page, "シャッター")).toBeEnabled();
+    await expect(page.locator(".replica-camera-tracking")).toBeVisible();
+    await expect(page.locator(".pitsune-bubble")).not.toContainText(
+      "クマがいるよ！",
+    );
     await expect(page.locator("html")).toHaveAttribute(
       "data-test-camera-cache-miss",
       "true",
@@ -316,16 +352,16 @@ test("低速回線でもカメラを開いたままモデルの準備後に名�
     releaseDownload();
   }
   await expect(page.locator(".pitsune-bubble")).toHaveText(
-    "フンボルトペンギンがいるよ！",
+    "レッサーパンダがいるよ！",
   );
-  await expect(page.locator(".replica-camera-tracking")).toHaveCount(0);
+  await expect(page.locator(".replica-camera-tracking")).toBeVisible();
   await button(page, "シャッター").click();
   await expect(page.locator("html")).toHaveAttribute(
     "data-test-stopped-species",
     "true",
   );
   await expect(
-    page.getByRole("heading", { name: "フンボルトペンギン" }),
+    page.getByRole("heading", { name: "レッサーパンダ" }),
   ).toBeVisible();
 });
 

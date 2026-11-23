@@ -125,8 +125,10 @@ export function ReplicaCamera({
         ) ?? live.boxes.find(({ label }) => recognizedAnimals.has(label)))
       : undefined;
   const selection = bestMatch && recognizedAnimals.get(bestMatch.label);
+  // The COCO bear label localizes the animal but cannot distinguish the
+  // zoo's black bear from lookalikes such as a red panda.
   const boxAnimal =
-    bestMatch && selection
+    bestMatch && selection && selection.groupId !== "bear"
       ? { ...selection, name: bestMatch.label }
       : undefined;
   const species = useLiveSpecies(
