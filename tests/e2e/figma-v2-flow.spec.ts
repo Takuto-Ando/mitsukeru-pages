@@ -25,9 +25,23 @@ async function expectLicensedTypeface(page: Page, selector: string) {
   expect(adobeFace).toBe(true);
 }
 
-async function expectPitsuneFace(button: Locator) {
-  const icon = button.locator("img");
+async function expectPitsuneFace(button: Locator, addedGap: number) {
+  const icon = button.locator(".pitsune-cta-icon");
   await expect(icon).toBeVisible();
+  const position = await icon.evaluate((image) => {
+    const iconBounds = image.getBoundingClientRect();
+    const label = image.nextElementSibling!.getBoundingClientRect();
+    const buttonGap = parseFloat(
+      getComputedStyle(image.parentElement!).columnGap,
+    );
+    return {
+      centerOffset:
+        iconBounds.y + iconBounds.height / 2 - (label.y + label.height / 2),
+      addedGap: label.x - iconBounds.right - buttonGap,
+    };
+  });
+  expect(position.centerOffset).toBeCloseTo(-1, 1);
+  expect(position.addedGap).toBeCloseTo(addedGap, 1);
   const colors = await icon.evaluate(async (image: HTMLImageElement) => {
     await image.decode();
     const canvas = document.createElement("canvas");
@@ -172,7 +186,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(node("43-1745")).toBeVisible();
   await button("シャッター").click();
   await expect(node("43-1815")).toBeVisible();
-  await expectPitsuneFace(button("描いてもらう"));
+  await expectPitsuneFace(button("描いてもらう"), 2);
   await button("描いてもらう").click();
   await expect(node("52-5335")).toHaveCount(0);
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
@@ -232,7 +246,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
   if (production) expect(payload).not.toHaveProperty("token");
-  await expectPitsuneFace(button("つぎへ"));
+  await expectPitsuneFace(button("つぎへ"), 0);
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
   await expect(

@@ -268,6 +268,7 @@ export function ReplicaPhotoReview({
         >
           <img
             alt=""
+            className="pitsune-cta-icon"
             src={assetPath("figma/entry/confirm.svg")}
             width={18.5146}
             height={17}

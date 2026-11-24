@@ -381,3 +381,11 @@
   > :is(img, svg) {
   flex: none;
 }
+
+.replica-app[data-variant="product"] .pitsune-cta-icon {
+  translate: 0 -1px;
+}
+
+.replica-app[data-variant="product"] .design3-photo-review .pitsune-cta-icon {
+  translate: -2px -1px;
+}
