@@ -4,9 +4,9 @@ import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 
 test.skip(process.env.VITE_LEGACY_EDITIONS === "1", "Figma v2の本体専用");
 test.use({ serviceWorkers: "block" });
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ context }) => {
   // A controlling worker can bypass Playwright routes in WebKit.
-  await page.addInitScript(() => {
+  await context.addInitScript(() => {
     if (navigator.serviceWorker) {
       Object.defineProperty(navigator.serviceWorker, "register", {
         configurable: true,
@@ -474,7 +474,9 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
   });
   await page.goto("./");
   await button(page, "つづきから").click();
-  const prepare = page.getByRole("button", { name: /種識別モデルを準備/ });
+  const prepare = page
+    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("button", { name: "ダウンロード", exact: true });
   await expect(prepare).toBeVisible();
   expect(modelRequests).toBe(0);
   await prepare.click();
@@ -489,6 +491,107 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
     "66-7655",
   );
   await expect(button(page, "描いてもらう")).toBeDisabled();
+  await expect(button(page, "描いてもらう")).toHaveCSS("opacity", "0.25");
+});
+
+test("タブを開き直してモデルを使えないときはNow Loadingから更新できる", async ({
+  page,
+  context,
+}) => {
+  await page.goto("./");
+  const url = page.url();
+  await page.evaluate(async ({ cache, url }) => {
+    localStorage.setItem("zooketch-replica-tutorial-v2", "1");
+    await (await caches.open(cache)).put(url, new Response("stale"));
+  }, photoModel);
+  await page.close();
+
+  const reopened = await context.newPage();
+  await useMockCamera(reopened);
+  await mockTutorialModels(reopened, { photo: false });
+  await reopened.addInitScript(({ cache, url, cachePath }) => {
+    const network = window.fetch.bind(window);
+    window.fetch = async (input, init) => {
+      if (String(input) !== url) return network(input, init);
+      const root = document.documentElement;
+      root.dataset.modelDownloads = String(
+        Number(root.dataset.modelDownloads ?? 0) + 1,
+      );
+      return root.dataset.modelDownloadAvailable
+        ? new Response("working")
+        : new Response(null, { status: 503 });
+    };
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        const name = args[1]?.name;
+        if (
+          name !== "zooketch-live-detection" &&
+          name !== "zooketch-species-recognition"
+        )
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          async postMessage(message: { type?: string; photo?: string }) {
+            if (name === "zooketch-live-detection") {
+              queueMicrotask(() =>
+                this.onmessage?.({
+                  data:
+                    message.type === "prepare"
+                      ? { type: "ready" }
+                      : { type: "boxes", boxes: [] },
+                }),
+              );
+              return;
+            }
+            const modelCache = await caches.open(cache);
+            const model =
+              (await modelCache.match(new URL(cachePath, location.origin))) ??
+              (await modelCache.match(url));
+            this.onmessage?.({
+              data: {
+                type: "result",
+                result:
+                  (await model?.text()) !== "working"
+                    ? { status: "unavailable" }
+                    : !message.photo
+                      ? { status: "ready" }
+                      : {
+                          status: "candidates",
+                          candidates: [{ groupId: "giraffe", score: 0.99 }],
+                        },
+              },
+            });
+          },
+        };
+      },
+    });
+  }, photoModel);
+  await reopened.goto(url);
+  await button(reopened, "つづきから").click();
+  const loading = reopened.getByRole("region", { name: "Now Loading..." });
+  const retry = loading.getByRole("button", { name: "もう一度試す" });
+  await expect(retry).toBeVisible();
+  await expect(button(reopened, "シャッター")).toBeEnabled();
+  const failedDownloads = await reopened.evaluate(() => {
+    const root = document.documentElement;
+    root.dataset.modelDownloadAvailable = "1";
+    return Number(root.dataset.modelDownloads ?? 0);
+  });
+  await retry.click();
+  await expect(reopened.locator(".pitsune-bubble")).toHaveText(
+    "キリンがいるよ！",
+  );
+  await expect(loading).toHaveCount(0);
+  await expect(reopened.locator("html")).toHaveAttribute(
+    "data-model-downloads",
+    String(failedDownloads + 1),
+  );
+  await button(reopened, "シャッター").click();
+  await expect(
+    reopened.getByRole("heading", { name: "キリン", exact: true }),
+  ).toBeVisible();
 });
 
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
@@ -611,8 +714,30 @@ test("モデルの再取得にはNow Loadingを使い、シャッターと手動
   page,
 }) => {
   await useMockCamera(page);
+  await mockTutorialModels(page, { detector: false });
   await page.addInitScript(() => {
     localStorage.setItem("zooketch-replica-tutorial-v2", "1");
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        if (args[1]?.name !== "zooketch-species-recognition")
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          postMessage({ photo }: { photo?: string }) {
+            queueMicrotask(() =>
+              this.onmessage?.({
+                data: {
+                  type: "result",
+                  result: { status: photo ? "unknown" : "ready" },
+                },
+              }),
+            );
+          },
+        };
+      },
+    });
   });
   let downloads = 0;
   let allowDownload = false;

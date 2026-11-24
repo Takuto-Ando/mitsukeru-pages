@@ -112,6 +112,8 @@ export function ReplicaCamera({
   const [liveFailed, setLiveFailed] = useState(false);
   const [offerLiveRetry, setOfferLiveRetry] = useState(false);
   const [liveRetry, setLiveRetry] = useState(0);
+  const [refreshingLive, setRefreshingLive] = useState(false);
+  const retriedWorker = useRef(false);
   const liveActive =
     !sample &&
     streamReady &&
@@ -127,7 +129,9 @@ export function ReplicaCamera({
     liveRetry,
   );
   const liveError = (!liveCached && liveFailed) || live.status === "error";
-  const liveDownloadFailed = !liveCached && offerLiveRetry;
+  const liveDownloadFailed =
+    offerLiveRetry || (live.status === "error" && retriedWorker.current);
+  const liveDownloading = livePreparing || refreshingLive;
   const realCamera = !sample && visible;
   const example = useRef<HTMLImageElement>(null);
   const [trackedAnimalId, setTrackedAnimalId] = useState<number>();
@@ -155,6 +159,12 @@ export function ReplicaCamera({
     cameraZoom.digital,
     bestMatch,
   );
+  const speciesNeedsRetry =
+    species.modelStatus === "deferred" || species.modelStatus === "failed";
+  const canRetryModels =
+    !liveDownloading &&
+    !photoModelDownloading &&
+    (liveDownloadFailed || speciesNeedsRetry);
   const animal = species.animal ?? (species.checked ? undefined : boxAnimal);
   const candidate = animal ? undefined : species.candidate;
   const recognized = sample
@@ -185,7 +195,11 @@ export function ReplicaCamera({
     let attempt = 0;
     let timer = 0;
     const prepare = async () => {
-      if (!active || pending || !navigator.onLine) return;
+      if (!active || pending) return;
+      if (!navigator.onLine) {
+        if (!legacy) setOfferLiveRetry(true);
+        return;
+      }
       pending = true;
       try {
         if ((await liveModelCached()) || !active) return;
@@ -220,7 +234,6 @@ export function ReplicaCamera({
     };
   }, [legacy, liveCached, liveEnabled, liveRetry, realCamera]);
 
-  const retriedWorker = useRef(false);
   useEffect(() => {
     if (!liveActive) retriedWorker.current = false;
     if (
@@ -449,6 +462,26 @@ export function ReplicaCamera({
         // The switch still works for this camera when storage is unavailable.
       }
     }
+  }
+
+  async function retryLiveModel() {
+    setOfferLiveRetry(false);
+    setRefreshingLive(true);
+    try {
+      await downloadLiveModel({ replace: liveCached });
+      retriedWorker.current = false;
+      setLiveRetry((attempt) => attempt + 1);
+    } catch {
+      setOfferLiveRetry(true);
+    } finally {
+      setRefreshingLive(false);
+    }
+  }
+
+  function retryModels() {
+    if (!canRetryModels) return;
+    if (liveDownloadFailed) void retryLiveModel();
+    if (speciesNeedsRetry) species.prepareManually.current();
   }
 
   function submitCapture(capture: CameraCapture) {
@@ -717,39 +750,15 @@ export function ReplicaCamera({
           !menuOpen &&
           !suspended &&
           !message &&
-          (livePreparing || photoModelDownloading || liveDownloadFailed) && (
+          (liveDownloading ||
+            photoModelDownloading ||
+            (streamReady && canRetryModels)) && (
             <CameraModelDownload
-              live={livePreparing}
+              live={liveDownloading}
               photo={photoModelDownloading}
-              onRetry={
-                liveDownloadFailed && !photoModelDownloading
-                  ? toggleLive
-                  : undefined
-              }
+              deferred={species.modelStatus === "deferred"}
+              onRetry={canRetryModels ? retryModels : undefined}
             />
-          )}
-        {!legacy &&
-          !sample &&
-          streamReady &&
-          !livePreparing &&
-          !photoModelDownloading &&
-          !message &&
-          (species.modelStatus === "deferred" ||
-            species.modelStatus === "failed") && (
-            <div className="live-camera-control">
-              <p role="status">
-                {species.modelStatus === "deferred"
-                  ? "動物名を調べるにはモデルの準備が必要です。Wi-Fiをおすすめします。"
-                  : "動物名を調べるモデルを準備できませんでした。"}
-              </p>
-              <button
-                className="text-button"
-                type="button"
-                onClick={() => species.prepareManually.current()}
-              >
-                種識別モデルを準備（未保存の場合 約87 MB）
-              </button>
-            </div>
           )}
         {!legacy && (streamReady || sample) && message && (
           <p className="replica-camera-model-status" role="status">

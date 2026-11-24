@@ -10,6 +10,8 @@ import {
 } from "../../src/recognition/photoModel";
 
 afterEach(() => vi.unstubAllGlobals());
+const origin = "https://zooketch.test";
+const localKey = new URL(photoModel.cachePath, origin).href;
 
 test.each([
   [{ onLine: false }, false],
@@ -30,22 +32,20 @@ test.each([
 );
 
 function cacheStub() {
-  let stored: Response | undefined;
+  const entries = new Map<string, Response>();
   const cache = {
-    match: vi.fn(async () => stored),
-    put: vi.fn(async (_url: string, response: Response) => {
+    match: vi.fn(async (key: string) => entries.get(key)?.clone()),
+    put: vi.fn(async (key: string, response: Response) => {
       // Model readiness must wait for CacheStorage to finish reading the body.
       await response.clone().arrayBuffer();
-      stored = response;
+      entries.set(key, response);
     }),
-    delete: vi.fn(async () => {
-      stored = undefined;
-      return true;
-    }),
+    delete: vi.fn(async (key: string) => entries.delete(key)),
   };
   vi.stubGlobal("caches", { open: vi.fn(async () => cache) });
   vi.stubGlobal("navigator", { onLine: true });
   vi.stubGlobal("window", new EventTarget());
+  vi.stubGlobal("location", { origin });
   return cache;
 }
 
@@ -69,9 +69,7 @@ test("モデルの途中で画面が変わっても同じ取得を待ち、完�
   );
   vi.stubGlobal("fetch", download);
   const first = downloadPhotoModel();
-  await Promise.resolve();
-  await Promise.resolve();
-  expect(photoModelDownloading()).toBe(true);
+  await vi.waitFor(() => expect(photoModelDownloading()).toBe(true));
   expect(await photoModelCached()).toBe(false);
   expect(downloadPhotoModel()).toBe(first);
   completeBody();
@@ -107,5 +105,21 @@ test("エラーページは保存せず、読み込めないサイズのモデ�
     "Unexpected species model size",
   );
   expect(await photoModelCached()).toBe(false);
-  expect(cache.delete).toHaveBeenCalledWith(photoModel.url);
+  expect(cache.delete).toHaveBeenCalledWith(localKey);
+});
+
+test("旧キャッシュを再利用し、明示的な再取得で同じオリジンの保存先に更新する", async () => {
+  const cache = cacheStub();
+  await cache.put(photoModel.url, new Response("old model"));
+  const download = vi.fn(async () => new Response("updated model"));
+  vi.stubGlobal("fetch", download);
+  await downloadPhotoModel();
+  expect(download).not.toHaveBeenCalled();
+  await downloadPhotoModel({ replace: true });
+  expect(download).toHaveBeenCalledWith(
+    photoModel.url,
+    expect.objectContaining({ cache: "reload" }),
+  );
+  expect(await (await cache.match(localKey))?.text()).toBe("updated model");
+  expect(await cache.match(photoModel.url)).toBeUndefined();
 });

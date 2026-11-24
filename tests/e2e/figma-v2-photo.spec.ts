@@ -440,7 +440,10 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
   await expect(button(page, "撮りなおす")).toBeEnabled();
   await expect(button(page, "修正")).toBeEnabled();
   await expect(button(page, "描いてもらう")).toBeDisabled();
-  await expect(button(page, "描いてもらう")).toHaveCSS("opacity", "1");
+  await expect(button(page, "描いてもらう")).toHaveCSS("opacity", "0.25");
+  await expect(
+    button(page, "描いてもらう").locator(".pitsune-cta-icon"),
+  ).toHaveCSS("opacity", "1");
   await expect(
     button(page, "描いてもらう").locator(".pitsune-cta-icon"),
   ).toHaveAttribute("src", /\/figma\/entry\/sketch-confirm\.svg$/);

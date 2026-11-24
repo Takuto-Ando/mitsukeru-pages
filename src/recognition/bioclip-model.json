@@ -1,5 +1,6 @@
 {
   "url": "https://huggingface.co/Virien/naturdex-bioclip-onnx/resolve/fa3c062ea31a6e1881b1977fe555b2d481dca730/bioclip-image-int8.onnx",
   "cache": "zooketch-bioclip-v1",
+  "cachePath": "/__zooketch-model-cache/bioclip-image-int8.onnx",
   "bytes": 87384964
 }

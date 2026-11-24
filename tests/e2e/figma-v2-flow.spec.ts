@@ -250,7 +250,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
   if (production) expect(payload).not.toHaveProperty("token");
-  await expectPitsuneFace(button("つぎへ"), 0, [121, 91, 66, 255]);
+  await expectPitsuneFace(button("つぎへ"), 0, [249, 168, 70, 255]);
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
   await expect(

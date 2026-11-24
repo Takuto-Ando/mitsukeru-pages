@@ -102,10 +102,12 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
 export function CameraModelDownload({
   live,
   photo,
+  deferred,
   onRetry,
 }: {
   live: boolean;
   photo: boolean;
+  deferred: boolean;
   onRetry?: () => void;
 }) {
   const [progress, setProgress] = useState(0);
@@ -123,7 +125,11 @@ export function CameraModelDownload({
       aria-labelledby={title}
     >
       <h2 id={title}>Now Loading...</h2>
-      <ModelDownloadContent progress={progress} onRetry={onRetry} />
+      <ModelDownloadContent
+        progress={live || photo ? progress : 0}
+        onRetry={onRetry}
+        deferred={deferred}
+      />
     </section>
   );
 }
@@ -131,9 +137,11 @@ export function CameraModelDownload({
 function ModelDownloadContent({
   progress,
   onRetry,
+  deferred,
 }: {
   progress: number;
   onRetry?: () => void;
+  deferred?: boolean;
 }) {
   return (
     <>
@@ -165,9 +173,13 @@ function ModelDownloadContent({
       </div>
       {onRetry && (
         <div className="tutorial-model-retry">
-          <p role="alert">通信を確認して、もう一度試してね。</p>
+          {deferred ? (
+            <p>画像認識モデルは約87 MBです。Wi-Fiをおすすめします。</p>
+          ) : (
+            <p role="alert">通信を確認して、もう一度試してね。</p>
+          )}
           <button className="design3-pill" type="button" onClick={onRetry}>
-            もう一度試す
+            {deferred ? "ダウンロード" : "もう一度試す"}
           </button>
         </div>
       )}

@@ -116,7 +116,7 @@ test("チュートリアルでは実際の受信量を表示し、両方のモ�
   await expect(camera).toBeVisible();
   await expect(loader).toHaveCount(0);
   const cachedModels = await page.evaluate(
-    async ({ name, url }) => {
+    async ({ name, cachePath }) => {
       const detector = await caches.open(
         "zooketch-detection-yolox-nano-coco-0.1.1rc0",
       );
@@ -125,10 +125,10 @@ test("チュートリアルでは実際の受信量を表示し、両方のモ�
         detector: (await detector.keys()).some(({ url }) =>
           url.endsWith(".onnx"),
         ),
-        species: !!(await species.match(url)),
+        species: !!(await species.match(new URL(cachePath, location.origin))),
       };
     },
-    { name: photoModel.cache, url: photoModel.url },
+    { name: photoModel.cache, cachePath: photoModel.cachePath },
   );
   expect(cachedModels).toEqual({ detector: true, species: true });
 

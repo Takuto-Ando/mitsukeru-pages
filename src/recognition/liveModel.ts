@@ -36,14 +36,17 @@ export function liveModelDownloadedBytes() {
   return downloadedBytes;
 }
 
-export function downloadLiveModel() {
+export function downloadLiveModel({ replace = false } = {}) {
   return (downloading ??= (async () => {
     const cache = await caches.open(cacheName);
     const url = modelUrl();
-    if (!(await cache.match(url))) {
+    if (replace || !(await cache.match(url))) {
       updateProgress(0);
       const bytes = await withDownloadDeadline(60_000, async (signal) => {
-        const response = await fetch(url, { signal });
+        const response = await fetch(url, {
+          cache: replace ? "reload" : "default",
+          signal,
+        });
         if (!response.ok) throw new Error("Detection model download failed");
         return trackDownloadedBytes(response, updateProgress).arrayBuffer();
       });

@@ -144,6 +144,11 @@
   transform-origin: center;
 }
 
+.replica-app[data-variant="product"] .replica-photo-confirm:disabled {
+  background: var(--d3-orange);
+  opacity: 0.25;
+}
+
 .photo-picker-candidate {
   display: inline-flex;
   align-items: center;

@@ -271,7 +271,7 @@ export function ReplicaPhotoReview({
           <span>撮りなおす</span>
         </button>
         <button
-          className="design3-pill"
+          className="design3-pill replica-photo-confirm"
           aria-label={confirmLabel}
           disabled={!group}
           onClick={onConfirm}
