@@ -1,3 +1,4 @@
+import type { Locator } from "@playwright/test";
 import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 import { taskById } from "../../src/content/tasks";
 
@@ -22,6 +23,26 @@ async function expectLicensedTypeface(page: Page, selector: string) {
     ),
   );
   expect(adobeFace).toBe(true);
+}
+
+async function expectPitsuneFace(button: Locator) {
+  const icon = button.locator("img");
+  await expect(icon).toBeVisible();
+  const colors = await icon.evaluate(async (image: HTMLImageElement) => {
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = 74;
+    canvas.height = 68;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    // Sample the centers of the left eye, right eye, and nose.
+    return [
+      [26, 46],
+      [48, 46],
+      [37, 49],
+    ].map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data]);
+  });
+  expect(colors).toEqual(Array(3).fill([121, 91, 66, 255]));
 }
 
 async function drawGiraffeTongue(page: Page) {
@@ -151,6 +172,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(node("43-1745")).toBeVisible();
   await button("シャッター").click();
   await expect(node("43-1815")).toBeVisible();
+  await expectPitsuneFace(button("描いてもらう"));
   await button("描いてもらう").click();
   await expect(node("52-5335")).toHaveCount(0);
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
@@ -210,6 +232,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
   if (production) expect(payload).not.toHaveProperty("token");
+  await expectPitsuneFace(button("つぎへ"));
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
   await expect(
