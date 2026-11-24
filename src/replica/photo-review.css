@@ -133,6 +133,17 @@
   text-align: center;
 }
 
+.replica-photo-selection-prompt .zoo-card-summary-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  min-height: 2lh;
+}
+
+.replica-photo-selection-prompt .zoo-card-summary-line-text {
+  transform-origin: center;
+}
+
 .photo-picker-candidate {
   display: inline-flex;
   align-items: center;

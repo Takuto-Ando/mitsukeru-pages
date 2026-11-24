@@ -110,7 +110,9 @@ body:has(
     animation-delay: 130ms;
   }
 
-  .collection-card[data-photo-sparkle="true"] .collection-open {
+  .replica-app[data-variant="replica"]
+    .collection-card[data-photo-sparkle="true"]
+    .collection-open {
     position: relative;
     overflow: hidden;
   }

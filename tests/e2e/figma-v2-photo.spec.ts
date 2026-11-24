@@ -416,6 +416,7 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
 test("チュートリアルで未検出なら撮影直後に動物を修正でき、写真を保存する", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
   await mockTutorialModels(page);
   await useTestCamera(page, false);
   await page.goto("./");
@@ -444,7 +445,31 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
     button(page, "描いてもらう").locator(".pitsune-cta-icon"),
   ).toHaveAttribute("src", /\/figma\/entry\/sketch-confirm\.svg$/);
   await expect(page.locator(".replica-recognition-status")).toHaveCount(0);
+  const prompt = page.locator(
+    ".design3-photo-card .replica-photo-selection-prompt",
+  );
+  const promptLine = prompt.locator(".zoo-card-summary-line-text");
+  await expect(promptLine).toHaveText(
+    "写真を見て、動物の名前を選んでください。",
+  );
+  await expect(promptLine).toHaveCSS("white-space", "nowrap");
+  await expect
+    .poll(() =>
+      promptLine.evaluate((line) => {
+        const text = line.getBoundingClientRect();
+        const area = line.closest("p")!.getBoundingClientRect();
+        return (
+          Math.abs(text.left + text.width / 2 - (area.left + area.width / 2)) <
+            1 &&
+          Math.abs(text.top + text.height / 2 - (area.top + area.height / 2)) <
+            1 &&
+          text.width <= area.width + 0.5
+        );
+      }),
+    )
+    .toBe(true);
   await chooseAnimal(page, "キリン");
+  await expect(prompt).toHaveCount(0);
   await expect
     .poll(() => savedObservations(page))
     .toMatchObject([

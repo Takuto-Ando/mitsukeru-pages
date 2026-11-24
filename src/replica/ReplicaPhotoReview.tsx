@@ -60,6 +60,7 @@ export function ReplicaPhotoReview({
   const fact = figmaFlow
     ? photoReviewSummary(group?.id)
     : zooAnimalSummary(group?.id);
+  const selectionPrompt = figmaFlow && photo && !group;
   const search = normalizeAnimalSearch(query);
   const matchingCandidates = (candidates ?? []).flatMap(
     ({ groupId, speciesId }) => {
@@ -246,10 +247,10 @@ export function ReplicaPhotoReview({
             </div>
           )}
         </div>
-        {fact && (
+        {(fact || selectionPrompt) && (
           <ZooCardSummary
-            className="design3-photo-fact"
-            text={fact}
+            className={`design3-photo-fact${selectionPrompt ? " replica-photo-selection-prompt" : ""}`}
+            text={fact ?? "写真を見て、動物の名前を選んでください。"}
             fitLines={!!figmaFlow}
           />
         )}

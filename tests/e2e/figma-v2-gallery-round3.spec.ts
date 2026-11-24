@@ -1,3 +1,4 @@
+import { taskById } from "../../src/content/tasks";
 import { expect, test, type Page } from "./fixtures";
 
 const button = (page: Page, name: string) =>
@@ -18,7 +19,8 @@ async function savedGallery(page: Page, oldPaper = false) {
     });
   });
   await page.goto("./");
-  await page.evaluate(async (oldPaper) => {
+  const seed = { oldPaper, region: taskById.giraffe.scene.regions[0] };
+  await page.evaluate(async ({ oldPaper, region }) => {
     const image = new URL("replica-assets/giraffe-example.png", location.href)
       .href;
     const blob = await (await fetch(image)).blob();
@@ -34,6 +36,13 @@ async function savedGallery(page: Page, oldPaper = false) {
       const context = canvas.getContext("2d")!;
       context.fillStyle = color;
       context.fillRect(0, 0, 600, 600);
+      context.fillStyle = color === "#fffef8" ? "#faf7ec" : "#fffef8";
+      context.fillRect(
+        region.x * 600,
+        region.y * 600,
+        region.width * 600,
+        region.height * 600,
+      );
       context.fillStyle = "#115599";
       context.fillRect(170, 175, 50, 75);
       return canvas.toDataURL();
@@ -83,7 +92,7 @@ async function savedGallery(page: Page, oldPaper = false) {
     } finally {
       database.close();
     }
-  }, oldPaper);
+  }, seed);
   await button(page, "つづきから").click();
   await button(page, "ギャラリー").click();
   await expect(
@@ -149,29 +158,23 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
   await expect(button(page, "シャッター")).toBeVisible();
 });
 
-test("保存済みスケッチの紙色だけを一覧で白にする", async ({ page }) => {
+test("描いた範囲を含めて保存済みスケッチの紙色を白にする", async ({ page }) => {
   await savedGallery(page, true);
   const previews = page
     .getByRole("tabpanel")
     .locator(".collection-card .replica-sketch-image");
-  for (const [index, paper] of [
-    [0, [255, 254, 248]],
-    [1, [250, 247, 236]],
-  ] as const) {
+  for (const index of [0, 1]) {
     const preview = previews.nth(index);
-    const preserved = await preview.evaluate((element) => {
+    const featureCenter = await preview.evaluate((element, region) => {
       const view = (element as SVGSVGElement).viewBox.baseVal;
-      const area = element.querySelector("clipPath rect")!;
-      const center = (axis: "x" | "y", length: "width" | "height") =>
-        (Number(area.getAttribute(axis)) +
-          Number(area.getAttribute(length)) / 2 -
-          view[axis]) /
-        view[length];
-      return [center("x", "width"), center("y", "height")];
-    });
+      return [
+        ((region.x + region.width / 2) * 600 - view.x) / view.width,
+        ((region.y + region.height / 2) * 600 - view.y) / view.height,
+      ];
+    }, taskById.giraffe.scene.regions[0]);
     const screenshot = await preview.screenshot({ animations: "disabled" });
     const colors = await page.evaluate(
-      async ({ png, preserved }) => {
+      async ({ png, featureCenter }) => {
         const bitmap = new Image();
         bitmap.src = `data:image/png;base64,${png}`;
         await bitmap.decode();
@@ -180,21 +183,44 @@ test("保存済みスケッチの紙色だけを一覧で白にする", async ({
         canvas.height = bitmap.height;
         const context = canvas.getContext("2d")!;
         context.drawImage(bitmap, 0, 0);
-        return [[0.2, 0.15], [0.2, 0.38], preserved].map(([x, y]) =>
+        return [[0.2, 0.15], [0.2, 0.38], featureCenter].map(([x, y]) =>
           [
             ...context.getImageData(x * canvas.width, y * canvas.height, 1, 1)
               .data,
           ].slice(0, 3),
         );
       },
-      { png: screenshot.toString("base64"), preserved },
+      { png: screenshot.toString("base64"), featureCenter },
     );
     expect(colors[0]).toEqual([255, 255, 255]);
-    expect(colors[2]).toEqual(paper);
+    expect(colors[2]).toEqual([255, 255, 255]);
     // WebKit can round colors of rendered SVG filter layers.
     colors[1].forEach((value, channel) =>
       expect(Math.abs(value - [17, 85, 153][channel])).toBeLessThanOrEqual(4),
     );
+  }
+});
+
+test("写真一覧ではスクロールで現れた写真も同じ演出で光る", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await savedGallery(page);
+  const cards = page.getByRole("tabpanel").locator(".collection-card");
+  await expect(cards.first()).not.toHaveAttribute("data-photo-sparkle", "true");
+  await page.getByRole("tab", { name: "写真", exact: true }).click();
+  const first = cards.first();
+  const last = cards.last();
+  await expect(first).toHaveAttribute("data-photo-sparkle", "true");
+  await expect(last).not.toHaveAttribute("data-photo-sparkle", "true");
+  for (const card of [first, last]) {
+    await card.scrollIntoViewIfNeeded();
+    await expect(card).toHaveAttribute("data-photo-sparkle", "true");
+    expect(
+      await card
+        .locator("button")
+        .evaluate(
+          (button) => getComputedStyle(button, "::after").animationName,
+        ),
+    ).toBe("gallery-photo-shine");
   }
 });
 

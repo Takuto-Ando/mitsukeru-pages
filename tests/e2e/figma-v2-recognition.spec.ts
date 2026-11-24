@@ -220,8 +220,11 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
     review.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
   await expect(button(page, "描いてもらう")).toBeEnabled();
-  await expect(review.getByRole("status")).toContainText(
-    "動物の名前を選んでください",
+  await expect(review.getByRole("status")).toHaveText(
+    "画像認識を利用できませんでした。",
+  );
+  await expect(review.locator(".replica-photo-selection-prompt")).toHaveCount(
+    0,
   );
   expect(photoModelRequests).toBeGreaterThan(0);
 });

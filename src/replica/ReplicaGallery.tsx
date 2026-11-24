@@ -15,7 +15,6 @@ import { penColorsFor } from "../content/sketchPresentation";
 import { applyStyles } from "../drawing/styles";
 import { designCardViewport } from "../drawing/viewport";
 import { DifficultyPill } from "../components/DifficultyPill";
-import { SceneRegions } from "../components/ObservationScene";
 import { SketchComparison } from "../components/SketchComparison";
 import { SketchResultCardFooter } from "../components/SketchResultCardFooter";
 import { galleryPhotoLocation } from "./storage";
@@ -153,7 +152,6 @@ function Sketch({
   entry: ReplicaRecord;
   paperFilterId?: string;
 }) {
-  const preservedAreaId = useId();
   const scene = entry.taskId ? taskById[entry.taskId]?.scene : undefined;
   const viewport = scene && designCardViewport(scene);
   const paperFilter = paperFilterId ? `url("#${paperFilterId}")` : undefined;
@@ -175,9 +173,6 @@ function Sketch({
   const height = Math.min(viewport?.height ?? sceneHeight, sceneHeight);
   const x = Math.max(0, Math.min(viewport?.x ?? 0, sceneWidth - width));
   const y = Math.max(0, Math.min(viewport?.y ?? 0, sceneHeight - height));
-  const artwork = (
-    <image href={entry.sketch} width={sceneWidth} height={sceneHeight} />
-  );
   return (
     <svg
       className="replica-sketch-image"
@@ -185,19 +180,12 @@ function Sketch({
       preserveAspectRatio={viewport ? "none" : "xMidYMid slice"}
       aria-hidden="true"
     >
-      {paperFilter ? (
-        <>
-          <defs>
-            <clipPath id={preservedAreaId}>
-              <SceneRegions scene={scene} />
-            </clipPath>
-          </defs>
-          <g filter={paperFilter}>{artwork}</g>
-          <g clipPath={`url(#${preservedAreaId})`}>{artwork}</g>
-        </>
-      ) : (
-        artwork
-      )}
+      <image
+        href={entry.sketch}
+        width={sceneWidth}
+        height={sceneHeight}
+        filter={paperFilter}
+      />
     </svg>
   );
 }
@@ -397,6 +385,7 @@ export function ReplicaGallery({
 }) {
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
   const sketchTab = useRef<HTMLButtonElement>(null);
   const photoTab = useRef<HTMLButtonElement>(null);
   const [tab, setTab] = useState<GalleryTab>("sketch");
@@ -420,6 +409,32 @@ export function ReplicaGallery({
     preparedShare?.entry === activeEntry && preparedShare?.tab === tab
       ? preparedShare
       : undefined;
+
+  useEffect(() => {
+    const list = panel.current;
+    if (
+      legacy ||
+      tab !== "photo" ||
+      !list ||
+      !window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+    )
+      return;
+
+    const observer = new IntersectionObserver(
+      (items) => {
+        for (const item of items) {
+          if (item.intersectionRatio < 0.2) continue;
+          item.target.setAttribute("data-photo-sparkle", "true");
+          observer.unobserve(item.target);
+        }
+      },
+      { root: list, threshold: 0.2 },
+    );
+    list
+      .querySelectorAll(".collection-card:not([data-photo-sparkle])")
+      .forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [legacy, records, tab]);
 
   useEffect(() => {
     const modal = dialog.current;
@@ -576,6 +591,7 @@ export function ReplicaGallery({
         </div>
         <div
           className="replica-gallery-panel"
+          ref={panel}
           id={`${id}-${tab}-panel`}
           role="tabpanel"
           aria-labelledby={`${id}-${tab}-tab`}
@@ -586,7 +602,7 @@ export function ReplicaGallery({
                 <article
                   className="collection-card"
                   data-photo-sparkle={
-                    tab === "photo" && entry.animalName === "キリン"
+                    legacy && tab === "photo" && entry.animalName === "キリン"
                       ? true
                       : undefined
                   }

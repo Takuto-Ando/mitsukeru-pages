@@ -53,10 +53,7 @@ export function usePhotoIdentification(
         if (!(await photoModelCached())) {
           if (!active) return;
           const pending = photoDownloadInProgress();
-          if (!pending && !canAutoDownloadPhotoModel()) {
-            update({ message: "写真を見て、動物の名前を選んでください。" });
-            return;
-          }
+          if (!pending && !canAutoDownloadPhotoModel()) return;
           update({ message: "画像認識モデルをダウンロード中…" });
           await (pending ?? downloadPhotoModel());
           update(empty);
@@ -78,19 +75,14 @@ export function usePhotoIdentification(
             candidates,
             message: "",
           });
-        } else {
-          update({ message: "写真を見て、動物の名前を選んでください。" });
-        }
+        } else update(empty);
       } catch {
         if (active && cancelInference) {
           speciesRecognizer.release();
           speciesRecognizer.unload();
           cancelInference = false;
         }
-        update({
-          message:
-            "画像認識を利用できませんでした。動物の名前を選んでください。",
-        });
+        update({ message: "画像認識を利用できませんでした。" });
       }
     }
 
