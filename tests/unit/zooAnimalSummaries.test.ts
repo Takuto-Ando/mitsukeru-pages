@@ -5,6 +5,7 @@ import {
   adoptedAnimals,
 } from "../../src/content/adoptedAnimals";
 import { uncoveredWords } from "../../src/furigana/coverage";
+import { photoReviewSummary } from "../../src/content/photoReviewSummaries";
 import {
   zooAnimalSummary,
   zooAnimalSummarySource,
@@ -17,6 +18,20 @@ test("公式図鑑の各種に2文の説明と種別参照先がある", () => {
     expect(lines.every((line) => line.length > 0)).toBe(true);
     expect(zooAnimalSummarySource(species.id)).toBe(zooSource(species.slug));
   }
+});
+
+test("写真確認で採用30組と別種IDのすべてにふりがな付きの敬体を二文用意する", () => {
+  const summaries = adoptedAnimals.map(({ id }) => photoReviewSummary(id)!);
+  for (const summary of summaries) {
+    const lines = summary.split("\n");
+    expect(lines).toHaveLength(2);
+    expect(lines.every((line) => /(?:です|ます)。$/.test(line))).toBe(true);
+  }
+  expect(uncoveredWords(summaries)).toEqual([]);
+  for (const [id, animal] of adoptedAnimalById)
+    expect(photoReviewSummary(id)).toBe(photoReviewSummary(animal.id));
+  expect(photoReviewSummary(undefined)).toBeUndefined();
+  expect(photoReviewSummary("zebra")).toBeUndefined();
 });
 
 test("採用した動物とその別種IDに、指定の説明を改行も含めて使う", () => {

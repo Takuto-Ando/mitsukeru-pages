@@ -1,4 +1,5 @@
 import { ZooCardSummary } from "../components/ZooCardSummary";
+import { photoReviewSummary } from "../content/photoReviewSummaries";
 import { zooAnimalSummary } from "../content/zooAnimalSummaries";
 import { Check, CornerDownLeft, Pencil, Search } from "lucide-react";
 import { useId, useRef, useState, type CSSProperties } from "react";
@@ -56,7 +57,9 @@ export function ReplicaPhotoReview({
     figmaFlow === "tutorial"
       ? { success: "43-1815", unknown: "52-5265", edit: "63-6420" }
       : { success: "66-7554", unknown: "66-7655", edit: "66-7604" };
-  const fact = zooAnimalSummary(group?.id);
+  const fact = figmaFlow
+    ? photoReviewSummary(group?.id)
+    : zooAnimalSummary(group?.id);
   const search = normalizeAnimalSearch(query);
   const matchingCandidates = (candidates ?? []).flatMap(
     ({ groupId, speciesId }) => {
@@ -243,7 +246,13 @@ export function ReplicaPhotoReview({
             </div>
           )}
         </div>
-        {fact && <ZooCardSummary className="design3-photo-fact" text={fact} />}
+        {fact && (
+          <ZooCardSummary
+            className="design3-photo-fact"
+            text={fact}
+            fitLines={!!figmaFlow}
+          />
+        )}
       </article>
       {message && (
         <p className="replica-photo-recognition-note" role="status">
@@ -269,7 +278,11 @@ export function ReplicaPhotoReview({
           <img
             alt=""
             className="pitsune-cta-icon"
-            src={assetPath("figma/entry/confirm.svg")}
+            src={assetPath(
+              figmaFlow
+                ? "figma/entry/sketch-confirm.svg"
+                : "figma/entry/confirm.svg",
+            )}
             width={18.5146}
             height={17}
           />

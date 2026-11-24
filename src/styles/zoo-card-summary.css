@@ -9,3 +9,9 @@
   font-weight: 700;
   line-height: 1.65;
 }
+
+.zoo-card-summary-line-text {
+  display: inline-block;
+  transform-origin: left center;
+  white-space: nowrap;
+}

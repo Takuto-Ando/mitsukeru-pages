@@ -1,3 +1,4 @@
+import { adoptedAnimals } from "../../src/content/adoptedAnimals";
 import { taskById } from "../../src/content/tasks";
 import { expect, mockTutorialModels, test, type Page } from "./fixtures";
 
@@ -131,8 +132,8 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await chooseAnimal(page, "カバ");
   const fact = page.locator(".design3-photo-fact .zoo-card-summary-line");
   await expect(fact).toHaveText([
-    "昼は水の中や水辺でゆっくり休むよ。",
-    "夜になると、陸に上がって草を食べるよ。",
+    "昼は水の中や水辺でゆっくり休みます。",
+    "夜になると、陸に上がって草を食べます。",
   ]);
   const before = await Promise.all([
     calendar.boundingBox(),
@@ -174,7 +175,9 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   await expect(button(page, "修正")).toBeFocused();
   await expect(name).toHaveText("シロテテナガザル");
   const after = await Promise.all([calendar.boundingBox(), date.boundingBox()]);
-  expect(after).toEqual(before);
+  const positions = (boxes: typeof before) =>
+    boxes.map((box) => box && { x: box.x, y: box.y });
+  expect(positions(after)).toEqual(positions(before));
   const longSize = await name.evaluate((node) =>
     parseFloat(getComputedStyle(node).fontSize),
   );
@@ -436,6 +439,10 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
   await expect(button(page, "撮りなおす")).toBeEnabled();
   await expect(button(page, "修正")).toBeEnabled();
   await expect(button(page, "描いてもらう")).toBeDisabled();
+  await expect(button(page, "描いてもらう")).toHaveCSS("opacity", "1");
+  await expect(
+    button(page, "描いてもらう").locator(".pitsune-cta-icon"),
+  ).toHaveAttribute("src", /\/figma\/entry\/sketch-confirm\.svg$/);
   await expect(page.locator(".replica-recognition-status")).toHaveCount(0);
   await chooseAnimal(page, "キリン");
   await expect
@@ -445,6 +452,41 @@ test("チュートリアルで未検出なら撮影直後に動物を修正で�
     ]);
   await expect(page.locator("[data-screen=review]")).toBeVisible();
   await expect(button(page, "描いてもらう")).toBeEnabled();
+});
+
+test("撮影後の写真カードは全30組の説明を小型画面でも二行に収める", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.setViewportSize({ width: 320, height: 740 });
+  await useTestCamera(page, true);
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  await button(page, "シャッター").click();
+  const facts = page.locator(".design3-photo-fact .zoo-card-summary-line-text");
+  for (const { name } of adoptedAnimals) {
+    await chooseAnimal(page, name);
+    await expect(facts, name).toHaveCount(2);
+    await expect(facts.nth(0), name).toHaveText(/(?:です|ます)。$/);
+    await expect(facts.nth(1), name).toHaveText(/(?:です|ます)。$/);
+    await expect
+      .poll(
+        () =>
+          facts.evaluateAll((lines) =>
+            lines.flatMap((text) => {
+              const overflow =
+                text.getBoundingClientRect().right -
+                text.parentElement!.getBoundingClientRect().right;
+              const { whiteSpace } = getComputedStyle(text);
+              return whiteSpace === "nowrap" && overflow <= 0.5
+                ? []
+                : [{ text: text.textContent, overflow, whiteSpace }];
+            }),
+          ),
+        { message: name },
+      )
+      .toEqual([]);
+  }
 });
 
 test("カメラ権限が得られなくても下部の追加ボタンを使わず動物選択へ進める", async ({

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { DifficultyPill } from "./DifficultyPill";
+import { fitTextLine } from "./fitTextLine";
 import { ZooCardSummary } from "./ZooCardSummary";
 import "./sketch-result-card.css";
 
@@ -22,24 +23,8 @@ export function SketchResultCardFooter({
     const text = titleRef.current;
     if (!heading || !text) return;
 
-    const fitTitle = () => {
-      text.style.letterSpacing = "";
-      text.style.transform = "";
-      text.style.fontSize = "";
-
-      const available = heading.getBoundingClientRect().width;
-      if (!available || text.getBoundingClientRect().width <= available) return;
-
-      // Preserve the original font size as long as tracking and width can fit.
-      text.style.letterSpacing = "-0.045em";
-      const required = text.getBoundingClientRect().width;
-      if (required <= available) return;
-
-      const scale = Math.max(0.82, available / required);
-      text.style.transform = `scaleX(${scale})`;
-      if (required * scale > available)
-        text.style.fontSize = `${(available - 0.5) / (required * scale)}em`;
-    };
+    const fitTitle = () =>
+      fitTextLine(text, heading.getBoundingClientRect().width);
 
     fitTitle();
     let frame = 0;

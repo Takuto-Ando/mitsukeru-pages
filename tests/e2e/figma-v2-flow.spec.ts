@@ -25,7 +25,11 @@ async function expectLicensedTypeface(page: Page, selector: string) {
   expect(adobeFace).toBe(true);
 }
 
-async function expectPitsuneFace(button: Locator, addedGap: number) {
+async function expectPitsuneFace(
+  button: Locator,
+  addedGap: number,
+  faceColor: number[],
+) {
   const icon = button.locator(".pitsune-cta-icon");
   await expect(icon).toBeVisible();
   const position = await icon.evaluate((image) => {
@@ -56,7 +60,7 @@ async function expectPitsuneFace(button: Locator, addedGap: number) {
       [37, 49],
     ].map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data]);
   });
-  expect(colors).toEqual(Array(3).fill([121, 91, 66, 255]));
+  expect(colors).toEqual(Array(3).fill(faceColor));
 }
 
 async function drawGiraffeTongue(page: Page) {
@@ -186,7 +190,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(node("43-1745")).toBeVisible();
   await button("シャッター").click();
   await expect(node("43-1815")).toBeVisible();
-  await expectPitsuneFace(button("描いてもらう"), 2);
+  await expectPitsuneFace(button("描いてもらう"), 2, [249, 168, 70, 255]);
   await button("描いてもらう").click();
   await expect(node("52-5335")).toHaveCount(0);
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
@@ -246,7 +250,7 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   expect(payload.strokes.length).toBeGreaterThan(0);
   expect(payload).not.toHaveProperty("photo");
   if (production) expect(payload).not.toHaveProperty("token");
-  await expectPitsuneFace(button("つぎへ"), 0);
+  await expectPitsuneFace(button("つぎへ"), 0, [121, 91, 66, 255]);
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
   await expect(
