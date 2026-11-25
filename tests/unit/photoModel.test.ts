@@ -108,17 +108,20 @@ test("エラーページは保存せず、読み込めないサイズのモデ�
   expect(cache.delete).toHaveBeenCalledWith(localKey);
 });
 
-test("旧キャッシュを再利用し、明示的な再取得で同じオリジンの保存先に更新する", async () => {
+test("旧キャッシュは再利用し、壊れたファイルを除去した後だけ再取得する", async () => {
   const cache = cacheStub();
   await cache.put(photoModel.url, new Response("old model"));
   const download = vi.fn(async () => new Response("updated model"));
   vi.stubGlobal("fetch", download);
   await downloadPhotoModel();
   expect(download).not.toHaveBeenCalled();
-  await downloadPhotoModel({ replace: true });
+  await expect(readPhotoModel()).rejects.toThrow(
+    "Unexpected species model size",
+  );
+  await downloadPhotoModel();
   expect(download).toHaveBeenCalledWith(
     photoModel.url,
-    expect.objectContaining({ cache: "reload" }),
+    expect.objectContaining({ priority: "low" }),
   );
   expect(await (await cache.match(localKey))?.text()).toBe("updated model");
   expect(await cache.match(photoModel.url)).toBeUndefined();

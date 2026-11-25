@@ -45,17 +45,15 @@ export async function photoModelCached() {
 }
 
 async function storePhotoModel({
-  replace = false,
   onDownload,
   onBytes,
 }: {
-  replace?: boolean;
   onDownload?: () => void;
   onBytes?: (downloaded: number) => void;
 } = {}) {
   const download = async () => {
     const cache = await caches.open(photoModel.cache);
-    if (!replace && (await cachedModel(cache))) return;
+    if (await cachedModel(cache)) return;
     if (!navigator.onLine) throw new Error("No offline species model");
     onDownload?.();
     // Give a transfer on a slower connection time to finish without
@@ -63,7 +61,6 @@ async function storePhotoModel({
     await withDownloadDeadline(300_000, async (signal) => {
       const response = await fetch(photoModel.url, {
         priority: "low",
-        cache: replace ? "reload" : "default",
         signal,
       });
       if (
@@ -109,9 +106,8 @@ export function photoDownloadInProgress() {
   return pending;
 }
 
-export function downloadPhotoModel({ replace = false } = {}) {
+export function downloadPhotoModel() {
   return (pending ??= storePhotoModel({
-    replace,
     onDownload: () => {
       fetching = true;
       updateProgress(0);
@@ -133,9 +129,12 @@ export function downloadPhotoModel({ replace = false } = {}) {
 }
 
 export async function readPhotoModel() {
-  await storePhotoModel();
   const cache = await caches.open(photoModel.cache);
-  const cached = await cachedModel(cache);
+  let cached = await cachedModel(cache);
+  if (!cached) {
+    await storePhotoModel();
+    cached = await cachedModel(cache);
+  }
   if (!cached) throw new Error("Species model cache miss");
   const bytes = await cached.response.arrayBuffer();
   if (bytes.byteLength !== photoModel.bytes) {

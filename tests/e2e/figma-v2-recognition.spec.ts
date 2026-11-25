@@ -546,14 +546,18 @@ test("タブを開き直してモデルを使えないときはNow Loadingから
               return;
             }
             const modelCache = await caches.open(cache);
-            const model =
-              (await modelCache.match(new URL(cachePath, location.origin))) ??
-              (await modelCache.match(url));
+            const key = new URL(cachePath, location.origin).href;
+            const current = await modelCache.match(key);
+            const model = current ?? (await modelCache.match(url));
+            const contents = await model?.text();
+            // The real worker removes only files that fail its size check.
+            if (contents === "stale")
+              await modelCache.delete(current ? key : url);
             this.onmessage?.({
               data: {
                 type: "result",
                 result:
-                  (await model?.text()) !== "working"
+                  contents !== "working"
                     ? { status: "unavailable" }
                     : !message.photo
                       ? { status: "ready" }
@@ -592,6 +596,67 @@ test("タブを開き直してモデルを使えないときはNow Loadingから
   await expect(
     reopened.getByRole("heading", { name: "キリン", exact: true }),
   ).toBeVisible();
+});
+
+test("保存済みのモデルはワーカー起動に失敗しても再ダウンロードせず復旧する", async ({
+  page,
+}) => {
+  await useMockCamera(page);
+  await mockTutorialModels(page, { photo: false });
+  let requests = 0;
+  await page.route(photoModel.url, (route) => {
+    requests++;
+    return route.fulfill({
+      body: "saved test model",
+      headers: { "Access-Control-Allow-Origin": "*" },
+    });
+  });
+  await page.addInitScript(() => {
+    window.Worker = new Proxy(window.Worker, {
+      construct(target, args: [string | URL, WorkerOptions?]) {
+        const detector = args[1]?.name === "zooketch-live-detection";
+        if (!detector && args[1]?.name !== "zooketch-species-recognition")
+          return Reflect.construct(target, args);
+        return {
+          onmessage: undefined as
+            ((event: { data: unknown }) => void) | undefined,
+          terminate() {},
+          postMessage(request: { type?: string; photo?: string }) {
+            const recovered = !!document.documentElement.dataset.retryWorker;
+            const data = detector
+              ? request.type === "prepare"
+                ? { type: "ready" }
+                : { type: "boxes", boxes: [] }
+              : {
+                  type: "result",
+                  result: !recovered
+                    ? { status: "unavailable" }
+                    : request.photo
+                      ? {
+                          status: "candidates",
+                          candidates: [{ groupId: "giraffe", score: 0.99 }],
+                        }
+                      : { status: "ready" },
+                };
+            queueMicrotask(() => this.onmessage?.({ data }));
+          },
+        };
+      },
+    });
+  });
+  await page.goto("./");
+  await button(page, "つづきから").click();
+  const retry = page
+    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("button", { name: "もう一度試す" });
+  await expect(retry).toBeVisible();
+  expect(requests).toBe(1);
+  await page.evaluate(
+    () => (document.documentElement.dataset.retryWorker = "1"),
+  );
+  await retry.click();
+  await expect(page.locator(".pitsune-bubble")).toHaveText("キリンがいるよ！");
+  expect(requests).toBe(1);
 });
 
 test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({

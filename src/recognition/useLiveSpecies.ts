@@ -105,7 +105,6 @@ export function useLiveSpecies(
     let preparing = false;
     let started = false;
     let retried = false;
-    let workerFailed = false;
     let waitingForFrame = false;
     let timer = 0;
     let coolingView: CameraView | undefined;
@@ -238,7 +237,6 @@ export function useLiveSpecies(
 
     function restart() {
       if (!running) return;
-      workerFailed ||= ownsWorker;
       speciesRecognizer.unload();
       ownsWorker = false;
       started = false;
@@ -256,8 +254,7 @@ export function useLiveSpecies(
       if (!visible() || preparing || started) return;
       preparing = true;
       try {
-        const replace = manual && workerFailed;
-        if (replace || !(await photoModelCached())) {
+        if (!(await photoModelCached())) {
           if (!visible()) return;
           const pending = photoDownloadInProgress();
           if (!pending && !manual && !canAutoDownloadPhotoModel()) {
@@ -265,8 +262,7 @@ export function useLiveSpecies(
             return;
           }
           setModelStatus("preparing");
-          await (pending ?? downloadPhotoModel({ replace }));
-          workerFailed = false;
+          await (pending ?? downloadPhotoModel());
         }
         if (!visible()) return;
         setModelStatus("preparing");

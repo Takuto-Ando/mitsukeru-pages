@@ -113,6 +113,7 @@ export function ReplicaCamera({
   const [offerLiveRetry, setOfferLiveRetry] = useState(false);
   const [liveRetry, setLiveRetry] = useState(0);
   const [refreshingLive, setRefreshingLive] = useState(false);
+  const retryingLive = useRef(false);
   const retriedWorker = useRef(false);
   const liveActive =
     !sample &&
@@ -465,15 +466,20 @@ export function ReplicaCamera({
   }
 
   async function retryLiveModel() {
+    if (retryingLive.current) return;
+    retryingLive.current = true;
     setOfferLiveRetry(false);
-    setRefreshingLive(true);
     try {
-      await downloadLiveModel({ replace: liveCached });
+      if (!(await liveModelCached())) {
+        setRefreshingLive(true);
+        await downloadLiveModel();
+      }
       retriedWorker.current = false;
       setLiveRetry((attempt) => attempt + 1);
     } catch {
       setOfferLiveRetry(true);
     } finally {
+      retryingLive.current = false;
       setRefreshingLive(false);
     }
   }
