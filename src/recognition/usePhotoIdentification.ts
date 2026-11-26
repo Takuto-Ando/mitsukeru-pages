@@ -26,7 +26,10 @@ export function usePhotoModelDownloading() {
   return downloading;
 }
 
-type Identification = { candidates?: Candidate[]; message: string };
+type Identification = {
+  candidates?: Pick<Candidate, "groupId" | "speciesId">[];
+  message: string;
+};
 const empty: Identification = { message: "" };
 
 export function usePhotoIdentification(
@@ -63,16 +66,18 @@ export function usePhotoIdentification(
         const prepared = await speciesRecognizer.prepare();
         if (!active) return;
         if (prepared.status !== "ready") throw new Error("unavailable");
-        const { candidates } = await recognizeSpeciesViews(
+        const { candidates, referenceGroupId } = await recognizeSpeciesViews(
           photoSpeciesViews(image, crop, tiles),
           () => active,
         );
         cancelInference = false;
         if (!active) return;
         speciesRecognizer.unload();
-        if (candidates.length) {
+        if (candidates.length || referenceGroupId) {
           update({
-            candidates,
+            candidates: referenceGroupId
+              ? [{ groupId: referenceGroupId }]
+              : candidates,
             message: "",
           });
         } else update(empty);

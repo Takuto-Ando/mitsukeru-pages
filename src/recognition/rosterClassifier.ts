@@ -1,5 +1,8 @@
 import { adoptedAnimals } from "../content/adoptedAnimals";
-import { speciesModelVersion } from "./contracts";
+import {
+  speciesModelVersion,
+  type PhotoReferenceSuggestion,
+} from "./contracts";
 import type { Candidate } from "./labels";
 
 export const nonAnimalRejections = [
@@ -15,7 +18,8 @@ export const nonAnimalRejections = [
 ] as const;
 
 const rejectedLabels = new Set<string>(nonAnimalRejections);
-const rosterIds = new Set(adoptedAnimals.map(({ id }) => id));
+const referenceGroupIds = adoptedAnimals.map(({ id }) => id);
+const rosterIds = new Set(referenceGroupIds);
 type Score = { label: string; cosine: number };
 type MatchPhoto = (
   speciesIds: readonly string[],
@@ -26,6 +30,7 @@ type Policy = {
   referenceWeight: number;
   referenceGap: number;
   candidateMargin: number;
+  allowReferenceSuggestion: boolean;
 };
 const defaults: Policy = {
   minimum: 0.26,
@@ -33,10 +38,43 @@ const defaults: Policy = {
   referenceWeight: 0.6,
   referenceGap: 0.04,
   candidateMargin: 0,
+  allowReferenceSuggestion: false,
 };
 const candidateWindow = 0.065;
 const rejectionMargin = 0.008;
 const temperature = 100;
+
+function photoReferenceSuggestion(
+  known: Score[],
+  rejection: number,
+  match: MatchPhoto,
+): PhotoReferenceSuggestion | undefined {
+  const [top] = known;
+  const minimum = Math.max(0.2, rejection + 0.012);
+  if (!top || top.cosine < minimum) return;
+
+  const referenceScores = [...match(referenceGroupIds)]
+    .filter(([id, score]) => rosterIds.has(id) && Number.isFinite(score))
+    .sort((a, b) => b[1] - a[1]);
+  const [best, runner] = referenceScores;
+  if (!best || !runner) return;
+  const [groupId, similarity] = best;
+  const referenceMargin = similarity - runner[1];
+  if (similarity < 0.4 || referenceMargin < 0.03) return;
+
+  const text = known.find(({ label }) => label === groupId);
+  if (!text || text.cosine < minimum || top.cosine - text.cosine > 0.055)
+    return;
+  return {
+    groupId,
+    similarity,
+    clear:
+      groupId === top.label &&
+      top.cosine >= 0.22 &&
+      similarity >= 0.5 &&
+      referenceMargin >= 0.07,
+  };
+}
 
 function rerank(
   known: Score[],
@@ -140,6 +178,10 @@ export function classifyRosterBioClip(
   const best = candidates[0];
   return {
     candidates,
+    referenceSuggestion:
+      !best && matchPhoto && policy.allowReferenceSuggestion
+        ? photoReferenceSuggestion(known, rejection, matchPhoto)
+        : undefined,
     recognition: {
       speciesId: best?.speciesId ?? null,
       confidence: best?.score ?? 0,

@@ -120,6 +120,9 @@ async function createClassifier() {
           matchPhoto
             ? (groupIds) => groupPhotoReferences(matchPhoto, features, groupIds)
             : undefined,
+          // Live video and tiles use blobs. Only saved photos need the manual
+          // suggestion, and only when standard recognition has no candidates.
+          { allowReferenceSuggestion: typeof photo === "string" },
         );
         if (pixels) recent.write(pixels, result);
         return result;
@@ -143,7 +146,7 @@ self.onmessage = async (
       return;
     }
     postMessage({ type: "progress", text: "写真から候補を探しています…" });
-    const { candidates, recognition } = await recognize(
+    const { candidates, recognition, referenceSuggestion } = await recognize(
       event.data.photo,
       event.data.fit,
     );
@@ -154,6 +157,7 @@ self.onmessage = async (
         : {
             status: "unknown",
             recognition,
+            referenceSuggestion,
             reason:
               "はっきり識別できませんでした。下から動物を選んでください。",
           },

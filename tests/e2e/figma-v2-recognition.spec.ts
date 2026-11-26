@@ -659,9 +659,7 @@ test("保存済みのモデルはワーカー起動に失敗しても再ダウ�
   expect(requests).toBe(1);
 });
 
-test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", async ({
-  page,
-}) => {
+async function checkReviewCandidate(page: Page, photoReferenceOnly: boolean) {
   await useMockCamera(page);
   await page.route(photoModel.url, (route) =>
     route.fulfill({
@@ -669,7 +667,8 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
       headers: { "Access-Control-Allow-Origin": "*" },
     }),
   );
-  await page.addInitScript(() => {
+  await page.addInitScript((photoReferenceOnly) => {
+    let released = false;
     window.Worker = new Proxy(window.Worker, {
       construct(target, args: [string | URL, WorkerOptions?]) {
         if (args[1]?.name !== "zooketch-species-recognition")
@@ -688,33 +687,45 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
               return;
             }
             if (!document.querySelector(".design3-photo-review")) return;
-            window.addEventListener(
-              "test:species-ready",
-              () => {
-                this.onmessage?.({
-                  data: {
-                    type: "result",
-                    result: {
-                      status: "candidates",
-                      candidates: [
-                        {
+            const reply = () => {
+              released = true;
+              this.onmessage?.({
+                data: {
+                  type: "result",
+                  result: photoReferenceOnly
+                    ? {
+                        status: "unknown",
+                        reason: "ambiguous",
+                        referenceSuggestion: {
                           groupId: "kyoto-g-eremita",
-                          speciesId: "kyoto-g-eremita",
-                          score: 0.66,
+                          similarity: 0.62,
+                          clear: true,
                         },
-                      ],
-                    },
-                  },
-                });
-              },
-              { once: true },
-            );
+                      }
+                    : {
+                        status: "candidates",
+                        candidates: [
+                          {
+                            groupId: "kyoto-g-eremita",
+                            speciesId: "kyoto-g-eremita",
+                            score: 0.66,
+                          },
+                        ],
+                      },
+                },
+              });
+            };
+            if (released) queueMicrotask(reply);
+            else
+              window.addEventListener("test:species-ready", reply, {
+                once: true,
+              });
             document.documentElement.dataset.testSpeciesPending = "true";
           },
         };
       },
     });
-  });
+  }, photoReferenceOnly);
   await page.goto("./");
   await button(page, "つづきから").click();
   await expect(page.locator(".pitsune-bubble")).toHaveText(
@@ -753,6 +764,7 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
     name: "ホオアカトキ 候補",
   });
   await expect(suggestedBird.getByText("候補", { exact: true })).toBeVisible();
+  await expect(button(page, "描いてもらう")).toBeDisabled();
   await expect(suggestedBird.locator(".photo-picker-candidate-tag")).toHaveCSS(
     "color",
     "rgb(255, 255, 255)",
@@ -773,7 +785,13 @@ test("撮影直後に確認画面を開き、図鑑の種候補から課題を�
   await expect(page.locator(".design3-challenge h1")).toHaveAccessibleName(
     /^ホオアカトキ/,
   );
-});
+}
+
+test("撮影直後に確認画面を開き、図鑑の種候補から課題を選べる", ({ page }) =>
+  checkReviewCandidate(page, false));
+
+test("通常候補がないときは写真参照の候補を修正から選べる", ({ page }) =>
+  checkReviewCandidate(page, true));
 
 test("モデルの再取得にはNow Loadingを使い、シャッターと手動再試行が使える", async ({
   page,

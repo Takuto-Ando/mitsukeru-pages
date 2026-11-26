@@ -267,3 +267,44 @@ test("写真参照バンクは採用グループの種に限り、別名の見�
     ["kyoto-p-chilensis", 0.7],
   ]);
 });
+
+test("保存写真の予備候補は名前と写真の両方に根拠があるときだけ返す", () => {
+  const scores = [
+    { label: "kyoto-g-senegalensis", cosine: 0.23 },
+    { label: "gibbon", cosine: 0.2 },
+    { label: "cage bars", cosine: 0.19 },
+  ];
+  const references = () =>
+    new Map([
+      ["kyoto-g-senegalensis", 0.56],
+      ["gibbon", 0.47],
+    ]);
+  const settings = { allowReferenceSuggestion: true };
+  expect(classifyRosterBioClip(scores, references)).toMatchObject({
+    candidates: [],
+    referenceSuggestion: undefined,
+  });
+  expect(classifyRosterBioClip(scores, references, settings)).toMatchObject({
+    candidates: [],
+    recognition: { status: "unknown" },
+    referenceSuggestion: { groupId: "kyoto-g-senegalensis", clear: true },
+  });
+  expect(
+    classifyRosterBioClip(
+      [{ label: "cage bars", cosine: 0.225 }, ...scores],
+      references,
+      settings,
+    ).referenceSuggestion,
+  ).toBeUndefined();
+  expect(
+    classifyRosterBioClip(
+      scores,
+      () =>
+        new Map([
+          ["kyoto-g-senegalensis", 0.56],
+          ["gibbon", 0.54],
+        ]),
+      settings,
+    ).referenceSuggestion,
+  ).toBeUndefined();
+});

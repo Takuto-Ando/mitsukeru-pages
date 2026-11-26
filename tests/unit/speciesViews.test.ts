@@ -207,3 +207,39 @@ test("写真全体と枠の候補が分かれたら、追加の2視点で一致�
     expect.objectContaining({ speciesId: redPanda }),
   );
 });
+
+test("写真参照の一致は手動選択用に返し、ライブ表示と自動確定には使わない", async () => {
+  const reference = (groupId: string, similarity: number): SpeciesResult => ({
+    status: "unknown",
+    reason: "ambiguous",
+    referenceSuggestion: { groupId, similarity, clear: false },
+  });
+  const cases: [SpeciesResult, string | undefined][] = [
+    [reference(redPanda, 0.4), redPanda],
+    [reference("bear", 0.53), undefined],
+    [{ status: "unknown", reason: "ambiguous" }, undefined],
+    [outcome("bear", 0.95, true), undefined],
+  ];
+  for (const [second, expected] of cases) {
+    const recognize = vi
+      .fn()
+      .mockResolvedValueOnce(reference(redPanda, 0.54))
+      .mockResolvedValueOnce(second);
+    const suggest = vi.fn();
+    const result = await recognizeSpeciesViews(
+      photoSpeciesViews("whole"),
+      () => true,
+      undefined,
+      suggest,
+      recognize,
+    );
+    expect(result.referenceGroupId).toBe(expected);
+    expect(suggest).not.toHaveBeenCalled();
+    if (expected) {
+      expect(result.primary).toBeUndefined();
+      expect(result.supported).toBeUndefined();
+      expect(result.suggestion).toBeUndefined();
+      expect(result.candidates).toEqual([]);
+    }
+  }
+});

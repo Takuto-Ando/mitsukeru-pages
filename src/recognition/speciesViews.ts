@@ -4,6 +4,7 @@ import {
   type SpeciesPhoto,
 } from "./species";
 import type { Candidate } from "./labels";
+import type { PhotoReferenceSuggestion } from "./contracts";
 
 export type PhotoSource = string | (() => Promise<SpeciesPhoto | undefined>);
 export type SpeciesView = {
@@ -52,6 +53,20 @@ type Vote = {
 };
 const key = (candidate: Candidate) => candidate.groupId;
 
+function matchingPhotoReference(
+  suggestions: readonly PhotoReferenceSuggestion[],
+) {
+  const [first] = suggestions;
+  if (!first || !suggestions.every(({ groupId }) => groupId === first.groupId))
+    return;
+  if (
+    suggestions.some(({ clear }) => clear) ||
+    (suggestions.length >= 2 &&
+      suggestions.some(({ similarity }) => similarity >= 0.5))
+  )
+    return first.groupId;
+}
+
 function supportedByViews(votes: readonly Vote[]) {
   const pairs = new Map<string, Vote[]>();
   for (const vote of votes) {
@@ -84,6 +99,7 @@ export async function recognizeSpeciesViews(
   let supported: Candidate | undefined;
   let provisional: Candidate | undefined;
   let suggestion: Candidate | undefined;
+  const photoReferences: PhotoReferenceSuggestion[] = [];
 
   let unavailable = false;
 
@@ -106,6 +122,12 @@ export async function recognizeSpeciesViews(
       break;
     }
     if (!active()) break;
+    if (
+      result.status === "unknown" &&
+      result.referenceSuggestion &&
+      !view.source
+    )
+      photoReferences.push(result.referenceSuggestion);
     if (result.status !== "candidates") continue;
     for (const candidate of result.candidates) {
       if (!candidates.has(key(candidate)))
@@ -195,6 +217,10 @@ export async function recognizeSpeciesViews(
     supported,
     suggestion: supported ?? suggestion ?? tentative,
     candidates: ranked.slice(0, 3),
+    referenceGroupId:
+      !ranked.length && !unavailable && active()
+        ? matchingPhotoReference(photoReferences)
+        : undefined,
     unavailable,
   };
 }

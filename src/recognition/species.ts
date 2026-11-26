@@ -1,4 +1,4 @@
-import type { SpeciesRecognition } from "./contracts";
+import type { PhotoReferenceSuggestion, SpeciesRecognition } from "./contracts";
 import type { Candidate } from "./labels";
 export type SpeciesImageFit = "crop" | "contain";
 export type SpeciesPhoto = string | Blob;
@@ -9,7 +9,12 @@ export type SpeciesResult =
       candidates: Candidate[];
       recognition?: SpeciesRecognition;
     }
-  | { status: "unknown" | "unavailable"; reason: string };
+  | {
+      status: "unknown";
+      reason: string;
+      referenceSuggestion?: PhotoReferenceSuggestion;
+    }
+  | { status: "unavailable"; reason: string };
 export interface SpeciesRecognizer {
   recognize(
     photo: SpeciesPhoto,

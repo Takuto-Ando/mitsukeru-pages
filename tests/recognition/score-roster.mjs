@@ -189,13 +189,23 @@ try {
         "crop+contain",
         "contain+crop",
         "wide+contain",
+        ...(!usesBaseline ? ["photo-review"] : []),
       ]) {
         const outcomes = [];
-        const [firstMode, secondMode] = mode.split("+");
+        const photoReview = mode === "photo-review";
+        const [firstMode, secondMode] = (
+          photoReview ? "crop+contain" : mode
+        ).split("+");
         for (const photo of ranked) {
           const classifyView = (key) => {
             const { output, match } = photo.views[key];
-            return classify(output, match, policy ?? undefined);
+            return classify(
+              output,
+              match,
+              photoReview
+                ? { ...policy, allowReferenceSuggestion: true }
+                : (policy ?? undefined),
+            );
           };
           let result, automatic;
           if (secondMode) {
@@ -215,7 +225,10 @@ try {
                 };
               },
             );
-            result = decision.candidates;
+            result =
+              photoReview && decision.referenceGroupId
+                ? [{ groupId: decision.referenceGroupId }]
+                : decision.candidates;
             automatic = decision.supported?.groupId;
           } else {
             const decision = classifyView(firstMode);

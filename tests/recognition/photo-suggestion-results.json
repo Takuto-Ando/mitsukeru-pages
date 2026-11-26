@@ -1,0 +1,779 @@
+{
+  "baselineCommit": "05e6389",
+  "datasets": {
+    "validation": {
+      "before": {
+        "n": 92,
+        "top1": 74,
+        "top3": 78,
+        "wrong": 10,
+        "noCandidate": 8,
+        "autoCorrect": 66,
+        "autoWrong": 2
+      },
+      "after": {
+        "n": 92,
+        "top1": 74,
+        "top3": 78,
+        "wrong": 10,
+        "noCandidate": 8,
+        "autoCorrect": 66,
+        "autoWrong": 2
+      },
+      "byGroupChanges": []
+    },
+    "regression": {
+      "before": {
+        "n": 122,
+        "top1": 104,
+        "top3": 109,
+        "wrong": 9,
+        "noCandidate": 9,
+        "autoCorrect": 90,
+        "autoWrong": 5
+      },
+      "after": {
+        "n": 122,
+        "top1": 106,
+        "top3": 111,
+        "wrong": 9,
+        "noCandidate": 7,
+        "autoCorrect": 90,
+        "autoWrong": 5
+      },
+      "byGroupChanges": [
+        {
+          "id": "kyoto-g-senegalensis",
+          "before": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "fennec": 1,
+              "no-candidate": 1
+            }
+          },
+          "after": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "fennec": 1
+            }
+          }
+        },
+        {
+          "id": "kyoto-p-giganteus",
+          "before": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "after": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        }
+      ]
+    },
+    "kyotoCatalogue": {
+      "before": {
+        "n": 33,
+        "top1": 31,
+        "top3": 33,
+        "wrong": 2,
+        "noCandidate": 0,
+        "autoCorrect": 30,
+        "autoWrong": 1
+      },
+      "after": {
+        "n": 33,
+        "top1": 31,
+        "top3": 33,
+        "wrong": 2,
+        "noCandidate": 0,
+        "autoCorrect": 30,
+        "autoWrong": 1
+      },
+      "byGroupChanges": []
+    },
+    "additionalPhotos": {
+      "before": {
+        "n": 70,
+        "top1": 59,
+        "top3": 61,
+        "wrong": 7,
+        "noCandidate": 4,
+        "autoCorrect": 50,
+        "autoWrong": 2
+      },
+      "after": {
+        "n": 70,
+        "top1": 60,
+        "top3": 62,
+        "wrong": 7,
+        "noCandidate": 3,
+        "autoCorrect": 50,
+        "autoWrong": 2
+      },
+      "byGroupChanges": [
+        {
+          "id": "kyoto-p-chilensis",
+          "before": {
+            "n": 7,
+            "top1": 6,
+            "top3": 6,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "after": {
+            "n": 7,
+            "top1": 7,
+            "top3": 7,
+            "confusions": {}
+          }
+        }
+      ],
+      "manifest": [
+        {
+          "id": "commons-34802921",
+          "source": "https://commons.wikimedia.org/wiki/File:Phoenicopterus_ruber_in_S%C3%A3o_Paulo_Zoo.jpg",
+          "file": "photos/commons-34802921.jpg",
+          "sha256": "45aa75a301c3d472fb15468ee953b25dddd043ddf41b286cf51dc2f554224544",
+          "species": "kyoto-p-ruber",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-47801648",
+          "source": "https://www.inaturalist.org/observations/30591595",
+          "file": "photos/inat-47801648.jpg",
+          "sha256": "f61d3b4dafb4a5fe51f22894aaec486f775e9ecbaa438538806488e2d7f453fd",
+          "species": "kyoto-c-didactylus",
+          "group": "kyoto-c-didactylus",
+          "split": "test"
+        },
+        {
+          "id": "inat-345157735",
+          "source": "https://www.inaturalist.org/observations/196098764",
+          "file": "photos/inat-345157735.jpg",
+          "sha256": "8e51e7bcab089b9806b674d1a34dbdad02485361c5d76c6e2bdacfb71e39cb8d",
+          "species": "kyoto-p-bengalensis",
+          "group": "kyoto-p-bengalensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-16208709",
+          "source": "https://www.inaturalist.org/observations/11375217",
+          "file": "photos/inat-16208709.jpg",
+          "sha256": "f77183e41ae11edd0361c24decf3e6d63136e2ea3b8ac0c50fffd390f2061127",
+          "species": "lemur",
+          "group": "lemur",
+          "split": "test"
+        },
+        {
+          "id": "inat-71163457",
+          "source": "https://www.inaturalist.org/observations/44890065",
+          "file": "photos/inat-71163457.jpg",
+          "sha256": "3da6305a7683f52dd9a9dba1cc20966d484c219078ee14e7c48f47619da16698",
+          "species": "lemur",
+          "group": "lemur",
+          "split": "test"
+        },
+        {
+          "id": "inat-583226723",
+          "source": "https://www.inaturalist.org/observations/322401068",
+          "file": "photos/inat-583226723.jpg",
+          "sha256": "4f15177a1f04cd8f29c2d50b4fc020fde60aa3ad077246e759bee1622f674148",
+          "species": "lemur",
+          "group": "lemur",
+          "split": "test"
+        },
+        {
+          "id": "inat-90235384",
+          "source": "https://www.inaturalist.org/observations/56615871",
+          "file": "photos/inat-90235384.jpg",
+          "sha256": "ced6c1b625a477ca78a15c7188c44ef1be53e7e00975356d698c6183dac5aa69",
+          "species": "kyoto-h-cristata",
+          "group": "kyoto-h-cristata",
+          "split": "test"
+        },
+        {
+          "id": "inat-267844824",
+          "source": "https://www.inaturalist.org/observations/154982220",
+          "file": "photos/inat-267844824.jpg",
+          "sha256": "20cd2997f5099f1bbe599806574defd48d9855f266b3a4d1682a9376aa9498d1",
+          "species": "kyoto-h-cristata",
+          "group": "kyoto-h-cristata",
+          "split": "test"
+        },
+        {
+          "id": "inat-715955719",
+          "source": "https://www.inaturalist.org/observations/390771862",
+          "file": "photos/inat-715955719.jpg",
+          "sha256": "a7ce9f99de78b207ddf37150e977e167163322dba8345fc562c93496a3753ec7",
+          "species": "kyoto-h-cristata",
+          "group": "kyoto-h-cristata",
+          "split": "test"
+        },
+        {
+          "id": "inat-630163456",
+          "source": "https://www.inaturalist.org/observations/345758876",
+          "file": "photos/inat-630163456.jpg",
+          "sha256": "99873238fce49dd8ede3f29d4ed61665ad2d3bc418655a9975fd58421b15f6c2",
+          "species": "kyoto-g-eremita",
+          "group": "kyoto-g-eremita",
+          "split": "test"
+        },
+        {
+          "id": "inat-476303035",
+          "source": "https://www.inaturalist.org/observations/265195025",
+          "file": "photos/inat-476303035.jpg",
+          "sha256": "09493f92d1378a0ba40afad36896d93e3d6c8dabe1147e86332abda9b8540f24",
+          "species": "kyoto-g-eremita",
+          "group": "kyoto-g-eremita",
+          "split": "test"
+        },
+        {
+          "id": "inat-601476812",
+          "source": "https://www.inaturalist.org/observations/331543848",
+          "file": "photos/inat-601476812.jpg",
+          "sha256": "ca13b9e3b970598766aabfc6fe24c42f54a6e31991940479c11d332e2ebed1fc",
+          "species": "kyoto-g-eremita",
+          "group": "kyoto-g-eremita",
+          "split": "test"
+        },
+        {
+          "id": "inat-623015251",
+          "source": "https://www.inaturalist.org/observations/342152237",
+          "file": "photos/inat-623015251.jpg",
+          "sha256": "5af05cb00a7d7ab979c4d56ab3d115c2c495e3ff71e71652e5fd2448dab5f87a",
+          "species": "gibbon",
+          "group": "gibbon",
+          "split": "test"
+        },
+        {
+          "id": "inat-65288805",
+          "source": "https://www.inaturalist.org/observations/41170564",
+          "file": "photos/inat-65288805.jpg",
+          "sha256": "9c84b94b5e446202ffebf7c34db95ef257d8856c127fd9f3fa4040224b1e77d5",
+          "species": "gibbon",
+          "group": "gibbon",
+          "split": "test"
+        },
+        {
+          "id": "inat-339315664",
+          "source": "https://www.inaturalist.org/observations/193182774",
+          "file": "photos/inat-339315664.jpg",
+          "sha256": "205afa61fce8d7daa009ac5581ec46a02d12148fd93cde870ef76131e40bcee4",
+          "species": "gibbon",
+          "group": "gibbon",
+          "split": "test"
+        },
+        {
+          "id": "inat-479017939",
+          "source": "https://www.inaturalist.org/observations/266600268",
+          "file": "photos/inat-479017939.jpg",
+          "sha256": "617aeaae0376271544c5a18513d8e20f94c76fb0e511a2643198da35c6988bf6",
+          "species": "kyoto-p-chilensis",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-473939727",
+          "source": "https://www.inaturalist.org/observations/263788731",
+          "file": "photos/inat-473939727.jpg",
+          "sha256": "456c0d45e490e667f5747025c829f17f30ff5b17310f8c868b80f6a28d00f42c",
+          "species": "kyoto-p-chilensis",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-344536372",
+          "source": "https://www.inaturalist.org/observations/195790468",
+          "file": "photos/inat-344536372.jpg",
+          "sha256": "a65697cffa8ba6c30623e6a27f04a9feae8db30136ff1974b02fed0ae468412c",
+          "species": "kyoto-p-chilensis",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-340288067",
+          "source": "https://www.inaturalist.org/observations/193698246",
+          "file": "photos/inat-340288067.jpg",
+          "sha256": "a8ec96a1e4a19030dc66e2f1c1434be6fd0a1c5c8a674d8bb67d140de42289b7",
+          "species": "kyoto-p-roseus",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-754392969",
+          "source": "https://www.inaturalist.org/observations/410217509",
+          "file": "photos/inat-754392969.jpg",
+          "sha256": "ee4ed4f20d7bfde104126f894a25a86b1f39ed3f0e42d3b4d4fb271f6e2681e3",
+          "species": "kyoto-p-roseus",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-57216535",
+          "source": "https://www.inaturalist.org/observations/36213035",
+          "file": "photos/inat-57216535.jpg",
+          "sha256": "a73a6a31ac2104a0c71e63e52a5c0e799dd2c4afa18ef7861a573a770347df3e",
+          "species": "kyoto-p-roseus",
+          "group": "kyoto-p-chilensis",
+          "split": "test"
+        },
+        {
+          "id": "inat-57945649",
+          "source": "https://www.inaturalist.org/observations/36640748",
+          "file": "photos/inat-57945649.jpg",
+          "sha256": "28f1cc2e915f140af2fb125d5ba59578387a1134eca56a6d6cea46f9d0a2ba35",
+          "species": "meerkat",
+          "group": "meerkat",
+          "split": "test"
+        },
+        {
+          "id": "inat-54469010",
+          "source": "https://www.inaturalist.org/observations/34600090",
+          "file": "photos/inat-54469010.jpg",
+          "sha256": "4215a9ce182b9a8a82f02191f297440fa16e2a6e6834e70ff2c2a7165ab32cc9",
+          "species": "meerkat",
+          "group": "meerkat",
+          "split": "test"
+        },
+        {
+          "id": "inat-15903129",
+          "source": "https://www.inaturalist.org/observations/11212558",
+          "file": "photos/inat-15903129.jpg",
+          "sha256": "e3eb7ae140d1b7467ec6c76a9a82fc7ab0cadaec445588b34927850c69d46163",
+          "species": "meerkat",
+          "group": "meerkat",
+          "split": "test"
+        },
+        {
+          "id": "inat-300198851",
+          "source": "https://www.inaturalist.org/observations/172897234",
+          "file": "photos/inat-300198851.jpg",
+          "sha256": "5388f3e5b73d088986837fd006b00a6a9cd9849319452752bc8836cc40c92ab7",
+          "species": "capuchin",
+          "group": "capuchin",
+          "split": "test"
+        },
+        {
+          "id": "inat-29917546",
+          "source": "https://www.inaturalist.org/observations/19447330",
+          "file": "photos/inat-29917546.jpg",
+          "sha256": "20eaa82d7b9024e297ec60d5c1e591b2b1e305eda1bd5718335138a43890e362",
+          "species": "capuchin",
+          "group": "capuchin",
+          "split": "test"
+        },
+        {
+          "id": "inat-97066620",
+          "source": "https://www.inaturalist.org/observations/60691829",
+          "file": "photos/inat-97066620.jpg",
+          "sha256": "54e87457416e52110f85c53b2a334857d649444a31e91dacf218f1f04ebb0ac9",
+          "species": "capuchin",
+          "group": "capuchin",
+          "split": "test"
+        },
+        {
+          "id": "inat-268340290",
+          "source": "https://www.inaturalist.org/observations/155253044",
+          "file": "photos/inat-268340290.jpg",
+          "sha256": "d990d37fad9702c6a9258e5777769756d1687a0832ac8d77d3f6607f6700d890",
+          "species": "kyoto-serval",
+          "group": "kyoto-serval",
+          "split": "test"
+        },
+        {
+          "id": "inat-565579343",
+          "source": "https://www.inaturalist.org/observations/313205644",
+          "file": "photos/inat-565579343.jpg",
+          "sha256": "d55fdec57f89469d5cd7a3d4532500a4f3a321a993251db8bba08b7af1bad964",
+          "species": "kyoto-serval",
+          "group": "kyoto-serval",
+          "split": "test"
+        },
+        {
+          "id": "inat-728308926",
+          "source": "https://www.inaturalist.org/observations/397109633",
+          "file": "photos/inat-728308926.jpg",
+          "sha256": "4cdfc8771931f01106d52e70ba1da3857cdb56ce9357a62488f608069d3fb88c",
+          "species": "kyoto-serval",
+          "group": "kyoto-serval",
+          "split": "test"
+        },
+        {
+          "id": "inat-37530618",
+          "source": "https://www.inaturalist.org/observations/24269528",
+          "file": "photos/inat-37530618.jpg",
+          "sha256": "f42d78ced34e12d52c670e89546192ad30e7ff4d442f8931bf7f8885e722e4d0",
+          "species": "hyrax",
+          "group": "hyrax",
+          "split": "test"
+        },
+        {
+          "id": "inat-690273866",
+          "source": "https://www.inaturalist.org/observations/377470244",
+          "file": "photos/inat-690273866.jpg",
+          "sha256": "2a575168e52cc15168e5b34745a4a318f1cfa2b604ea76553ec514a5ed3e1c17",
+          "species": "hyrax",
+          "group": "hyrax",
+          "split": "test"
+        },
+        {
+          "id": "inat-733945646",
+          "source": "https://www.inaturalist.org/observations/400003309",
+          "file": "photos/inat-733945646.jpg",
+          "sha256": "f47cd41b9fd7707f9c961f250d02923fb117f794731652103f711edb96a95787",
+          "species": "hyrax",
+          "group": "hyrax",
+          "split": "test"
+        },
+        {
+          "id": "inat-299731073",
+          "source": "https://www.inaturalist.org/observations/172643362",
+          "file": "photos/inat-299731073.jpg",
+          "sha256": "29843fb266ce96af461c46c718b4297da635bc2fa597b9768010bb645973983d",
+          "species": "kyoto-p-giganteus",
+          "group": "kyoto-p-giganteus",
+          "split": "test"
+        },
+        {
+          "id": "inat-386376158",
+          "source": "https://www.inaturalist.org/observations/218351605",
+          "file": "photos/inat-386376158.jpg",
+          "sha256": "ff92698f8dcc58bfc206e8b2b8d05273c4ccc017f1e8fc6eb94bd96c367405c4",
+          "species": "kyoto-p-giganteus",
+          "group": "kyoto-p-giganteus",
+          "split": "test"
+        },
+        {
+          "id": "inat-709748666",
+          "source": "https://www.inaturalist.org/observations/387597865",
+          "file": "photos/inat-709748666.jpg",
+          "sha256": "3935846d80eb57e7343250bd85852ed4417bc29c1b8de3d391217a24765f7a20",
+          "species": "kyoto-p-giganteus",
+          "group": "kyoto-p-giganteus",
+          "split": "test"
+        },
+        {
+          "id": "inat-255432144",
+          "source": "https://www.inaturalist.org/observations/148341802",
+          "file": "photos/inat-255432144.jpg",
+          "sha256": "21385c51ac3e8c0a6c6839aaf930ae70ccd609705c0d59aada61c5acc8af0e1c",
+          "species": "tapir",
+          "group": "tapir",
+          "split": "test"
+        },
+        {
+          "id": "inat-763949656",
+          "source": "https://www.inaturalist.org/observations/414933816",
+          "file": "photos/inat-763949656.jpg",
+          "sha256": "404492c165845837290ba5d31890f64abb36d0ba714a939631287f4355c87fc1",
+          "species": "tapir",
+          "group": "tapir",
+          "split": "test"
+        },
+        {
+          "id": "inat-498082287",
+          "source": "https://www.inaturalist.org/observations/277390989",
+          "file": "photos/inat-498082287.jpg",
+          "sha256": "03d2ee958c2ad72bbe688a0daa11a31521e86d0d10aba2f5302ff65a304a1d51",
+          "species": "tapir",
+          "group": "tapir",
+          "split": "test"
+        },
+        {
+          "id": "inat-93157883",
+          "source": "https://www.inaturalist.org/observations/58354552",
+          "file": "photos/inat-93157883.jpg",
+          "sha256": "702293f70d25e55409365fc3332d7f6f723bc9e8fe3b9b38c6925033a7693082",
+          "species": "macaque",
+          "group": "macaque",
+          "split": "test"
+        },
+        {
+          "id": "inat-25607474",
+          "source": "https://www.inaturalist.org/observations/16943088",
+          "file": "photos/inat-25607474.jpg",
+          "sha256": "9d487d42bcc153fbb131eccbb5a8886e3b75ada0a73de332ff40e49f9acf6d26",
+          "species": "macaque",
+          "group": "macaque",
+          "split": "test"
+        },
+        {
+          "id": "inat-529685353",
+          "source": "https://www.inaturalist.org/observations/294283053",
+          "file": "photos/inat-529685353.jpg",
+          "sha256": "00e67af90b1672008ec817b273b772a2570a257eaca37cf5158881dcc61f9a56",
+          "species": "macaque",
+          "group": "macaque",
+          "split": "test"
+        },
+        {
+          "id": "inat-22710342",
+          "source": "https://www.inaturalist.org/observations/15187331",
+          "file": "photos/inat-22710342.jpg",
+          "sha256": "dc600aab652a7232a4d48094cb19427962344a1be9e3593151f635e7201942e2",
+          "species": "giraffe",
+          "group": "giraffe",
+          "split": "test"
+        },
+        {
+          "id": "inat-513415196",
+          "source": "https://www.inaturalist.org/observations/285630775",
+          "file": "photos/inat-513415196.jpg",
+          "sha256": "6b4ad1a2033d42bc59993854abcacaa654c960aca868ddbb5e1de20160303dc7",
+          "species": "giraffe",
+          "group": "giraffe",
+          "split": "test"
+        },
+        {
+          "id": "inat-329297262",
+          "source": "https://www.inaturalist.org/observations/188191295",
+          "file": "photos/inat-329297262.jpg",
+          "sha256": "106f1ac7847c565399febabf5139188a05b0edf22d0fd6ff824df6d24e72ead6",
+          "species": "giraffe",
+          "group": "giraffe",
+          "split": "test"
+        },
+        {
+          "id": "inat-766453454",
+          "source": "https://www.inaturalist.org/observations/416197379",
+          "file": "photos/inat-766453454.jpg",
+          "sha256": "e21e97b1e0fdbd7af84639eebd45ae75549d6bc3e6282b7fae6621747aca6a26",
+          "species": "hippo",
+          "group": "hippo",
+          "split": "test"
+        },
+        {
+          "id": "inat-83450298",
+          "source": "https://www.inaturalist.org/observations/52494327",
+          "file": "photos/inat-83450298.jpg",
+          "sha256": "2a9e0f5d581536fea7e4665c805dbc9a3523e909ab9fb5a4adfb35afc86a1567",
+          "species": "hippo",
+          "group": "hippo",
+          "split": "test"
+        },
+        {
+          "id": "inat-172687398",
+          "source": "https://www.inaturalist.org/observations/103210726",
+          "file": "photos/inat-172687398.jpg",
+          "sha256": "40da3c338bf9068a9f639de46e6df11c1735fb93468750065bd5e755af234616",
+          "species": "hippo",
+          "group": "hippo",
+          "split": "test"
+        },
+        {
+          "id": "inat-424542816",
+          "source": "https://www.inaturalist.org/observations/238461751",
+          "file": "photos/inat-424542816.jpg",
+          "sha256": "92fa9438fc01cc1e69384d806e1fdecf17bc60d5fd70d9bfb83dd5f6ec7d8264",
+          "species": "deer",
+          "group": "deer",
+          "split": "test"
+        },
+        {
+          "id": "inat-382559527",
+          "source": "https://www.inaturalist.org/observations/216318763",
+          "file": "photos/inat-382559527.jpg",
+          "sha256": "5a01b3ff467963bcb6818c8023cf60caee85331d774b1961af47bf1fd3d45296",
+          "species": "deer",
+          "group": "deer",
+          "split": "test"
+        },
+        {
+          "id": "inat-252084726",
+          "source": "https://www.inaturalist.org/observations/146603376",
+          "file": "photos/inat-252084726.jpg",
+          "sha256": "3d63f153519d2199fd15fd531276cb0289208d474034ce2db2bb09d04a391472",
+          "species": "deer",
+          "group": "deer",
+          "split": "test"
+        },
+        {
+          "id": "inat-50028339",
+          "source": "https://www.inaturalist.org/observations/31931929",
+          "file": "photos/inat-50028339.jpg",
+          "sha256": "6d0ad839101abd900f7bed70b6e8fdc3f809dcf600db39e0920df50262a722e5",
+          "species": "elephant",
+          "group": "elephant",
+          "split": "test"
+        },
+        {
+          "id": "inat-365977727",
+          "source": "https://www.inaturalist.org/observations/206933883",
+          "file": "photos/inat-365977727.jpg",
+          "sha256": "d228651776b51094945f0b0e5efc36d045ec649d527298ac0f786e77753b8b92",
+          "species": "elephant",
+          "group": "elephant",
+          "split": "test"
+        },
+        {
+          "id": "inat-53562101",
+          "source": "https://www.inaturalist.org/observations/34062372",
+          "file": "photos/inat-53562101.jpg",
+          "sha256": "7f31853086ef92cf9f49912c16ba0c076ee4a0a79169b3e9a842eaef8961ed7a",
+          "species": "elephant",
+          "group": "elephant",
+          "split": "test"
+        },
+        {
+          "id": "inat-369126256",
+          "source": "https://www.inaturalist.org/observations/208618417",
+          "file": "photos/inat-369126256.jpg",
+          "sha256": "efceb4ad6da7c8301b855a8f2578818687d8d20bdf4e4c8de6d91717da6e93e2",
+          "species": "donkey",
+          "group": "donkey",
+          "split": "test"
+        },
+        {
+          "id": "inat-428015936",
+          "source": "https://www.inaturalist.org/observations/240258662",
+          "file": "photos/inat-428015936.jpg",
+          "sha256": "ff8a6d05ac7466877149950e7c22ee83af037f9e856ef11e9536984a5ba92233",
+          "species": "donkey",
+          "group": "donkey",
+          "split": "test"
+        },
+        {
+          "id": "inat-170917610",
+          "source": "https://www.inaturalist.org/observations/102270766",
+          "file": "photos/inat-170917610.jpg",
+          "sha256": "f04c9740bf52cf4bec268e47f469a2c92738f39ccec1fb0e23a2f3d07f0e21f1",
+          "species": "donkey",
+          "group": "donkey",
+          "split": "test"
+        },
+        {
+          "id": "inat-65134612",
+          "source": "https://www.inaturalist.org/observations/41080241",
+          "file": "photos/inat-65134612.jpg",
+          "sha256": "83e3b3a82d5e8a5758c32a92e6fc7b702a642a1ba79c8fbd9aa993d2b3a504b4",
+          "species": "kyoto-n-meleagris",
+          "group": "kyoto-n-meleagris",
+          "split": "test"
+        },
+        {
+          "id": "inat-566380386",
+          "source": "https://www.inaturalist.org/observations/313625367",
+          "file": "photos/inat-566380386.jpg",
+          "sha256": "4b0fc8ef527bb6ecef43df52a2f5724bc6e8c70365b0b420f17103301964bd5d",
+          "species": "kyoto-n-meleagris",
+          "group": "kyoto-n-meleagris",
+          "split": "test"
+        },
+        {
+          "id": "inat-467999688",
+          "source": "https://www.inaturalist.org/observations/260584804",
+          "file": "photos/inat-467999688.jpg",
+          "sha256": "2e54d8cb9ce1602842fe30867eaaa547a10cb7d7f4cc5b17ea3c27a6970fc3a8",
+          "species": "kyoto-n-meleagris",
+          "group": "kyoto-n-meleagris",
+          "split": "test"
+        },
+        {
+          "id": "inat-4638717",
+          "source": "https://www.inaturalist.org/observations/3938831",
+          "file": "photos/inat-4638717.jpg",
+          "sha256": "553c1f3f50da458bffb383adeb0b0d84f3808c90862e6cbd8c8ead66733dd7ea",
+          "species": "goat",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-358126543",
+          "source": "https://www.inaturalist.org/observations/202625915",
+          "file": "photos/inat-358126543.jpg",
+          "sha256": "be21737bf80b0bd6337db4769af227714274ec80b605f8b69cf2e987ef502da0",
+          "species": "goat",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-406308485",
+          "source": "https://www.inaturalist.org/observations/228927315",
+          "file": "photos/inat-406308485.jpg",
+          "sha256": "d4dc672680fcb7f8207589bcd502952950a9e4d2fea9c19105e90d7f939eec06",
+          "species": "goat",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-360475400",
+          "source": "https://www.inaturalist.org/observations/203979195",
+          "file": "photos/inat-360475400.jpg",
+          "sha256": "27868309ca9c1e523a066026e211eba4b017d94660a711856beca5ceed86789f",
+          "species": "sheep",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-738350524",
+          "source": "https://www.inaturalist.org/observations/402217944",
+          "file": "photos/inat-738350524.jpg",
+          "sha256": "70cb0611e7f37aa8d4109baf5d213b2a015e486f8486e149725a71ce7b7b0e39",
+          "species": "sheep",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-619780888",
+          "source": "https://www.inaturalist.org/observations/340563523",
+          "file": "photos/inat-619780888.jpg",
+          "sha256": "23034b457511f9a2749d8cc6a4ef6181d4622aae3c33e70862a1798cc9f5035d",
+          "species": "sheep",
+          "group": "goat",
+          "split": "test"
+        },
+        {
+          "id": "inat-328399478",
+          "source": "https://www.inaturalist.org/observations/187742887",
+          "file": "photos/inat-328399478.jpg",
+          "sha256": "e1f9b21c79948b634b7c4539678b75fc752d89ebaf62488c2a265806957f66a9",
+          "species": "kyoto-a-fulgens",
+          "group": "kyoto-a-fulgens",
+          "split": "test"
+        },
+        {
+          "id": "inat-649531926",
+          "source": "https://www.inaturalist.org/observations/356179222",
+          "file": "photos/inat-649531926.jpg",
+          "sha256": "ad5feae2f50fdee045fdfdc90d18d39be5e32873463493eed705ba335ffb308c",
+          "species": "kyoto-a-fulgens",
+          "group": "kyoto-a-fulgens",
+          "split": "test"
+        },
+        {
+          "id": "inat-84760621",
+          "source": "https://www.inaturalist.org/observations/53297476",
+          "file": "photos/inat-84760621.jpg",
+          "sha256": "df074e13bed2569269fc95fab6bd1ba3bd27a5e604e2f00d510370bd8bd8bf51",
+          "species": "kyoto-a-fulgens",
+          "group": "kyoto-a-fulgens",
+          "split": "test"
+        },
+        {
+          "id": "inat-263240455",
+          "source": "https://www.inaturalist.org/observations/152484270",
+          "file": "photos/inat-263240455.jpg",
+          "sha256": "96974a2771e12fbca95cfb80cab0c0a07a4f1b588b22da5897750458e5000853",
+          "species": "kyoto-a-fulgens",
+          "group": "kyoto-a-fulgens",
+          "split": "test"
+        }
+      ]
+    }
+  }
+}
