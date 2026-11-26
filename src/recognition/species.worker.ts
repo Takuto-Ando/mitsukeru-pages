@@ -2,12 +2,13 @@ import { env, InferenceSession, Tensor } from "onnxruntime-web/wasm";
 import wasm from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm?url";
 import runtime from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs?url";
 import { readPhotoModel } from "./photoModel";
-import { classifyBioClip } from "./labels";
+import { classifyRosterBioClip } from "./rosterClassifier";
+import { groupPhotoReferences } from "./rosterPhotoReferences";
 import { createPhotoReferenceMatcher } from "./photoReferenceMatcher";
-import photoReferences from "./bioclip-photo-references.json";
+import photoReferences from "./bioclip-photo-references-30.json";
 import type { SpeciesImageFit, SpeciesPhoto } from "./species";
 import { createRecentFrameResults } from "./recentFrameResults";
-import promptBank from "./bioclip-labels.json";
+import promptBank from "./bioclip-labels-30.json";
 
 env.wasm.numThreads = 1;
 env.wasm.proxy = false;
@@ -46,7 +47,8 @@ async function createClassifier() {
     executionProviders: ["wasm"],
   });
 
-  const recent = createRecentFrameResults<ReturnType<typeof classifyBioClip>>();
+  const recent =
+    createRecentFrameResults<ReturnType<typeof classifyRosterBioClip>>();
   const recognize = async (
     photo: SpeciesPhoto,
     fit: SpeciesImageFit = "crop",
@@ -113,10 +115,10 @@ async function createClassifier() {
             dot += features[index] * vector[index];
           return { label, cosine: dot / norm };
         });
-        const result = classifyBioClip(
+        const result = classifyRosterBioClip(
           output,
           matchPhoto
-            ? (speciesIds) => matchPhoto(features, speciesIds)
+            ? (groupIds) => groupPhotoReferences(matchPhoto, features, groupIds)
             : undefined,
         );
         if (pixels) recent.write(pixels, result);

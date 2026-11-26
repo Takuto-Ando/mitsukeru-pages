@@ -15,10 +15,10 @@ import {
 } from "../../src/content/adoptedAnimals";
 import {
   chooseCandidates,
-  classifyBioClip,
   recognitionFromOutput,
   speciesPrompts,
 } from "../../src/recognition/labels";
+import { classifyRosterBioClip } from "../../src/recognition/rosterClassifier";
 
 test("過去の保存記録は引き続き公式図鑑98種の観察課題を参照できる", () => {
   expect(kyotoCatalog).toHaveLength(98);
@@ -38,22 +38,17 @@ test("新規観察は指定の30組のみ選択でき、全組の課題と識別
   expect(adoptedGroups.map(({ id, name }) => ({ id, name }))).toEqual(
     adoptedAnimals.map(({ id, name }) => ({ id, name })),
   );
-  const expected = [...adoptedAnimalById.keys()].sort();
-  for (const candidates of [
-    speciesPrompts.flatMap((label) =>
-      chooseCandidates([{ label, score: 0.75 }]),
-    ),
-    speciesPrompts.flatMap(
-      (label) => classifyBioClip([{ label, cosine: 0.36 }]).candidates,
-    ),
-  ]) {
-    expect(candidates.map(({ speciesId }) => speciesId).sort()).toEqual(
-      expected,
-    );
-    for (const { groupId, speciesId } of candidates) {
-      expect(groupId).toBe(adoptedAnimalById.get(speciesId!)?.id);
-      expect(challengeProvider.forSpecies(groupId).length).toBeGreaterThan(0);
-    }
+  const legacyCandidates = speciesPrompts.flatMap((label) =>
+    chooseCandidates([{ label, score: 0.75 }]),
+  );
+  expect(legacyCandidates.map(({ speciesId }) => speciesId).sort()).toEqual(
+    [...adoptedAnimalById.keys()].sort(),
+  );
+  for (const { id } of adoptedAnimals) {
+    expect(
+      classifyRosterBioClip([{ label: id, cosine: 0.36 }]).candidates,
+    ).toMatchObject([{ groupId: id, speciesId: id }]);
+    expect(challengeProvider.forSpecies(id).length).toBeGreaterThan(0);
   }
   expect(
     recognitionFromOutput([{ label: "a giraffe", score: 0.75 }]),

@@ -1,12 +1,17 @@
 import { test, expect } from "vitest";
+import { animalLabels, chooseCandidates } from "../../src/recognition/labels";
 import {
-  animalLabels,
-  chooseCandidates,
-  classifyBioClip,
-  rejectionLabels,
-  speciesPrompts,
-} from "../../src/recognition/labels";
-import promptBank from "../../src/recognition/bioclip-labels.json";
+  adoptedAnimalById,
+  adoptedAnimals,
+} from "../../src/content/adoptedAnimals";
+import oldBank from "../../src/recognition/bioclip-labels.json";
+import promptBank from "../../src/recognition/bioclip-labels-30.json";
+import referenceBank from "../../src/recognition/bioclip-photo-references-30.json";
+import { groupPhotoReferences } from "../../src/recognition/rosterPhotoReferences";
+import {
+  classifyRosterBioClip,
+  nonAnimalRejections,
+} from "../../src/recognition/rosterClassifier";
 import { speciesRecognizer } from "../../src/recognition/species";
 import { individualRecognizer } from "../../src/recognition/individual";
 test("以前からの認識ラベルのうち採用した動物だけを候補へ対応付ける", () => {
@@ -18,30 +23,17 @@ test("以前からの認識ラベルのうち採用した動物だけを候補�
       ])[0].groupId,
     ).toBe(id);
 });
-test("対象外の動物を残したまま、採用動物への強制分類を防ぐ", () => {
+test("BioCLIPは対象外の動物を無視し、非動物の棄却候補を維持する", () => {
+  const known = { label: "giraffe", cosine: 0.32 };
+  const ignored = { label: "zebra", cosine: 0.4 };
+  expect(classifyRosterBioClip([ignored])).toMatchObject({ candidates: [] });
+  expect(classifyRosterBioClip([ignored, known])).toEqual(
+    classifyRosterBioClip([known]),
+  );
   expect(
-    classifyBioClip([
-      { label: "a zebra", cosine: 0.4 },
-      { label: "a giraffe", cosine: 0.32 },
-    ]).recognition.status,
-  ).toBe("unknown");
-  expect(
-    classifyBioClip([
-      { label: "a Chilean flamingo", cosine: 0.4 },
-      { label: "an American flamingo", cosine: 0.38 },
-      { label: "a greater flamingo", cosine: 0.36 },
-    ]).candidates,
-  ).toMatchObject([
-    { groupId: "kyoto-p-chilensis", speciesId: "kyoto-p-chilensis" },
-  ]);
-  const flamingo = classifyBioClip([
-    { label: "a Chilean flamingo", cosine: 0.4 },
-    { label: "an American flamingo", cosine: 0.399 },
-    { label: "a greater flamingo", cosine: 0.398 },
-    { label: "cage bars", cosine: 0.3 },
-  ]);
-  expect(flamingo.recognition.status).toBe("identified");
-  expect(flamingo.candidates[0].score).toBeGreaterThan(0.99);
+    classifyRosterBioClip([known, { label: "cage bars", cosine: 0.318 }])
+      .candidates,
+  ).toEqual([]);
 });
 test("対象外と曖昧な写真を断定しない", () => {
   expect(
@@ -70,8 +62,12 @@ test("ヤギとヒツジは候補を区別して同じ保存グループを使�
     { groupId: "goat", speciesId: "goat" },
     { groupId: "goat", speciesId: "sheep" },
   ]));
-test("BioCLIPの固定ベクトルが全ての種と対象外のラベルに対応する", () => {
-  expect(promptBank.labels).toEqual([...speciesPrompts, ...rejectionLabels]);
+test("新旧バンクを維持し、新しいベクトルは30組と非動物ラベルだけを持つ", () => {
+  expect(oldBank.labels).toHaveLength(115);
+  expect(promptBank.labels).toEqual([
+    ...adoptedAnimals.map(({ id }) => id),
+    ...nonAnimalRejections,
+  ]);
   const vectors = Buffer.from(promptBank.vectors, "base64");
   expect(vectors).toHaveLength(promptBank.labels.length * 512);
   for (const [index, label] of promptBank.labels.entries())
@@ -81,11 +77,11 @@ test("BioCLIPの固定ベクトルが全ての種と対象外のラベルに対�
     ).toBe(true);
 });
 test("BioCLIPは図鑑の追加種も明瞭なら確定し、近い種は候補として並べる", () => {
-  const redPanda = "a red panda";
-  const blackBear = "a Japanese Asian black bear";
+  const redPanda = "kyoto-a-fulgens";
+  const blackBear = "bear";
   const fence = "cage bars";
   expect(
-    classifyBioClip([
+    classifyRosterBioClip([
       { label: redPanda, cosine: 0.36 },
       { label: blackBear, cosine: 0.3 },
       { label: fence, cosine: 0.21 },
@@ -93,7 +89,7 @@ test("BioCLIPは図鑑の追加種も明瞭なら確定し、近い種は候補�
   ).toMatchObject({
     recognition: { speciesId: "kyoto-a-fulgens", status: "identified" },
   });
-  const uncertain = classifyBioClip([
+  const uncertain = classifyRosterBioClip([
     { label: redPanda, cosine: 0.36 },
     { label: blackBear, cosine: 0.34 },
     { label: fence, cosine: 0.21 },
@@ -104,13 +100,13 @@ test("BioCLIPは図鑑の追加種も明瞭なら確定し、近い種は候補�
     "bear",
   ]);
   expect(
-    classifyBioClip([
+    classifyRosterBioClip([
       { label: redPanda, cosine: 0.36 },
       { label: fence, cosine: 0.357 },
     ]).candidates,
   ).toEqual([]);
   expect(
-    classifyBioClip([
+    classifyRosterBioClip([
       { label: redPanda, cosine: 0.23 },
       { label: fence, cosine: 0.1 },
     ]).recognition.status,
@@ -165,12 +161,12 @@ test("低い検出スコアの枠は同じ位置が続いたときだけ表示�
   expect(trackLiveBoxes([{ ...strong, id: 1 }], [next], () => 2)[0].id).toBe(1);
 });
 
-test("見本写真で近い候補を並べ替えても対象外判定を維持する", () => {
+test("見本写真で近い候補を並べ替えても非動物判定を維持する", () => {
   const output = [
-    { label: "a Japanese Asian black bear", cosine: 0.34 },
-    { label: "a red panda", cosine: 0.331 },
+    { label: "bear", cosine: 0.34 },
+    { label: "kyoto-a-fulgens", cosine: 0.331 },
     { label: "cage bars", cosine: 0.23 },
-    { label: "a goat", cosine: 0.22 },
+    { label: "goat", cosine: 0.22 },
   ];
   const requests: (readonly string[])[] = [];
   const match = (ids: readonly string[]) => {
@@ -181,7 +177,7 @@ test("見本写真で近い候補を並べ替えても対象外判定を維持�
       ["goat", 0.98],
     ]);
   };
-  const corrected = classifyBioClip(output, match);
+  const corrected = classifyRosterBioClip(output, match);
   expect(corrected.recognition).toMatchObject({
     speciesId: "kyoto-a-fulgens",
     status: "uncertain",
@@ -189,7 +185,7 @@ test("見本写真で近い候補を並べ替えても対象外判定を維持�
   expect(corrected.candidates[0].score).toBeGreaterThan(0.6);
   expect(requests).toEqual([["bear", "kyoto-a-fulgens"]]);
   expect(
-    classifyBioClip(
+    classifyRosterBioClip(
       [{ label: "cage bars", cosine: 0.39 }, ...output.slice(0, 2)],
       match,
     ).candidates,
@@ -219,23 +215,55 @@ test("見本写真データの破損や対象種の欠落時は元の候補を�
     match?.(firstTemplate, [bank.speciesIds[0]]).get(bank.speciesIds[0]),
   ).toBeCloseTo(1);
   const incomplete = [
-    { label: "a giraffe", cosine: 0.34 },
-    { label: "a goat", cosine: 0.33 },
+    { label: "giraffe", cosine: 0.34 },
+    { label: "goat", cosine: 0.33 },
     { label: "a dog", cosine: 0.21 },
   ];
-  expect(classifyBioClip(incomplete, () => new Map([["goat", 0.99]]))).toEqual(
-    classifyBioClip(incomplete),
-  );
+  expect(
+    classifyRosterBioClip(incomplete, () => new Map([["goat", 0.99]])),
+  ).toEqual(classifyRosterBioClip(incomplete));
 });
 
 test("モデルが明確に識別した種は見本写真で変更しない", () => {
   const text = [
-    { label: "a sheep", cosine: 0.33 },
-    { label: "a goat", cosine: 0.31 },
+    { label: "giraffe", cosine: 0.36 },
+    { label: "goat", cosine: 0.31 },
     { label: "cage bars", cosine: 0.21 },
   ];
   const match = () => {
     throw new Error("十分に明確な種では見本を参照しない");
   };
-  expect(classifyBioClip(text, match)).toEqual(classifyBioClip(text));
+  expect(classifyRosterBioClip(text, match)).toEqual(
+    classifyRosterBioClip(text),
+  );
+});
+
+test("写真参照バンクは採用グループの種に限り、別名の見本を同じグループに照合する", () => {
+  expect(new Set(referenceBank.speciesIds)).toEqual(
+    new Set(adoptedAnimalById.keys()),
+  );
+  expect(Buffer.from(referenceBank.vectors, "base64")).toHaveLength(
+    referenceBank.speciesIds.length * 512,
+  );
+  const requested: (readonly string[])[] = [];
+  const matched = groupPhotoReferences(
+    (_features, speciesIds) => {
+      requested.push(speciesIds);
+      return new Map([
+        ["goat", 0.4],
+        ["sheep", 0.8],
+        ["kyoto-p-roseus", 0.7],
+        ["zebra", 0.95],
+      ]);
+    },
+    new Float32Array(512),
+    ["goat", "kyoto-p-chilensis", "zebra"],
+  );
+  expect(requested).toEqual([
+    ["goat", "sheep", "kyoto-p-chilensis", "kyoto-p-ruber", "kyoto-p-roseus"],
+  ]);
+  expect([...matched]).toEqual([
+    ["goat", 0.8],
+    ["kyoto-p-chilensis", 0.7],
+  ]);
 });

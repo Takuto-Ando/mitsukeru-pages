@@ -1,0 +1,89 @@
+# ズーケッチ第12弾の認識評価
+
+2026年11月26日。比較元は main の `835816f`。採用動物30グループを対象に、公開中の BioCLIP INT8 画像エンコーダーをそのまま使った。新しいラベルは1グループ1本で、30本の動物ベクトルと9本の非動物棄却ベクトル。ヤギ・ヒツジとフラミンゴは、アプリの採用グループ単位で採点する。
+
+## 評価セット
+
+既存の `work/zoo-reference-v1/dataset-release.json` の validation 92枚で設定を選び、test 122枚で固定した設定を確認した。どちらにも採用30グループすべてが含まれる。参照バンク用の train、他の動物、対象外・不明の写真は対象外とした。元の分割における撮影者グループの交差とファイルの重複を検査した。
+
+[写真の固定一覧](roster-fixtures.json)に出典、条件、ファイルの SHA-256 を記録した。画像は同梱していない。一部の写真の種ラベルは公開元の記載に基づく。公開済みの参照バンクが以前にも比較された写真セットなので、初見の写真による独立検証や京都市動物園での実機検証は別途必要。
+
+## 正答率と誤認
+
+全体画像の crop → contain を撮影後の既存コードで判定した。Top-1 は最初の候補、Top-3 は表示候補のいずれかに正解が入った写真の数。候補なしも分母に含めた。自動確定は既存の複数ビューの判定を通過した件数。
+
+| 122枚の test | 変更前 | 30グループ版 |
+| --- | ---: | ---: |
+| Top-1 | 93/122（76.2%） | 101/122（82.8%） |
+| Top-3 | 97/122（79.5%） | 108/122（88.5%） |
+| 先頭候補が誤り | 14 | 11 |
+| 候補なし | 15 | 10 |
+| 自動確定 | 83（68.0%） | 94（77.0%） |
+| 自動確定で正解／誤り | 77／6 | 88／6 |
+
+| 混同が見られたグループ | 変更前の Top-1 | 変更後の Top-1 | 混同の変化 |
+| --- | ---: | ---: | --- |
+| シロテテナガザル・ナマケモノ | 3/8 | 5/8 | テナガザル→ナマケモノ 3→1 |
+| ロバ・ヤギ／ヒツジ | 6/12 | 10/12 | ロバ→ヤギ／ヒツジ 2→1 |
+| フサオマキザル・マンドリル | 4/6 | 4/6 | フサオマキザル→マンドリル 1→0。マンドリル→アカゲザル 0→1 |
+| オオヤマネコ・ツシマヤマネコ・サーバル | 5/9 | 6/9 | ツシマヤマネコの保留 3→1、サーバルとの混同 0→1 |
+
+レッサーパンダは4/4を維持。ヤギの写真は4/4→4/4、ヒツジの写真は2/4→3/4。どちらも「ヤギ・ヒツジ」を正解とした。ヤブイヌ、マンドリル、ナマケモノは各1枚分悪化。オオヤマネコは1枚のみで両版とも正答なし。全グループの内訳と誤認先は [集計](roster-results.json) の `compare` に収録した。
+
+## 採用した設定
+
+- プロンプトは英語名、写真の言い回し、学名、学名と英語名の組み合わせ。混同しやすいサル、クマとレッサーパンダ、ネコ類には見た目の特徴の文も試した。同じ重み0.60、再比較する点差0.040で、validation の Top-1／Top-3 は1文が70／77、複数文が74／79、特徴を加えた複数文が75／80。各文の正規化済みベクトルを平均し、1本に量子化した最後の構成を採用した。
+- 写真参照の重みは0・0.20・0.40・0.60・0.80・1.00などを比較した。特徴を加えたバンクで標準の再比較範囲を使った場合、重み0の Top-1／Top-3 は71／77。採用構成の重み0.60と再比較範囲0.040で75／80。旧版で使っていた参照を採用動物分に限定し、写真自体の追加は行っていない。
+- 写真参照が無いグループは0。各グループで代表ベクトルが1本のものは、キリン、タテガミヤマアラシ、ホオアカトキ、ホロホロチョウ、カバ、アジアゾウ、ケープハイラックス、マンドリル、シロテテナガザル、ワオキツネザル、ニシゴリラ、フサオマキザル、ニホンアナグマ、ニホンジカ、ヤブイヌ、ショウガラゴ、オオヤマネコ、ツシマヤマネコ、インドオオコウモリ。ベクトルの本数は表現の幅の目安で、元写真の枚数や参照の精度ではない。
+- 前処理は crop、contain、横または縦の辺を1.25倍まで残す wide と、それぞれの順番を比較した。validation で採用構成の crop 単体は71／77（正しい自動確定48枚）、crop → contain は73／77（同63枚）。test のwide → containは89／94、crop → containは101／108。既存の順番を維持した。YOLOXの白枠および切り出した枠を使うライブ認識の精度は今回の集計に含めていない。
+- 現行 Worker の候補下限はコサイン0.24、明瞭と扱う点差は0.040。0.30／0.07と0.12は旧スコアの候補関数にも残る別の設定である。候補下限0.20／0.22／0.24／0.25では validation の自動誤確定が3件、0.26で2件。点差を0.030に下げても3件に増え、0.035では正しい自動確定が増えなかった。そこで候補下限0.26、点差0.040とした。撮影フロー側の複数ビューの判定は既存どおり。
+
+## 再現手順
+
+Node.js 24、Python環境に NumPy・Pillow・onnxruntime・tokenizers、Chromium/WebKit実行時は Playwright のブラウザーを使用する。測定環境は Apple M2。Python は onnxruntime 1.31.1、Pillow 12.3.0、NumPy 2.5.4、tokenizers 0.23.3。CPU 1スレッド。全画像をピン留めしたINT8 ONNXで実推論し、得られた512次元特徴をNodeからアプリのスコア計算と複数ビューの判定へ渡した。Pythonのリサイズにはbicubicを使用するため、ブラウザーCanvasとピクセル単位では差があり得る。配信用ブラウザーWorkerは別計測とした。
+
+下記はリポジトリルートで実行する。元の写真セットを利用できる場合は `work/zoo-reference-v1/dataset-release.json` を指定する。固定一覧を使う場合は各 `downloadUrl` の元画像を `file` の相対パスに置き、SHA-256が一致することを確認する。
+
+```sh
+git worktree add --detach /tmp/zooketch-baseline 835816f
+ln -s "$PWD/node_modules" /tmp/zooketch-baseline/node_modules
+mkdir -p /tmp/zooketch-roster
+python tests/recognition/embed_roster_photos.py \
+  /path/bioclip-image-int8.onnx work/zoo-reference-v1/dataset-release.json \
+  /tmp/zooketch-roster/features.jsonl
+python tests/recognition/export_roster_bank.py \
+  /path/text_encoder_fp16.onnx /path/tokenizer.json /tmp/zooketch-roster
+cmp /tmp/zooketch-roster/bioclip-labels-30-distinct.json src/recognition/bioclip-labels-30.json
+cmp /tmp/zooketch-roster/bioclip-photo-references-30.json src/recognition/bioclip-photo-references-30.json
+ZOOKETCH_ROSTER_BASELINE=/tmp/zooketch-baseline \
+  node tests/recognition/score-roster.mjs /tmp/zooketch-roster/features.jsonl \
+  /tmp/zooketch-roster/report.json src/recognition/bioclip-labels-30.json
+```
+
+設定を再比較する場合は `score-roster.mjs` に生成した全バンクを渡し、比較する設定を `ZOOKETCH_ROSTER_CASES` で JSON 配列として指定できる。ビルド済みの2版を比較する場合は次を実行する。
+
+```sh
+node tests/recognition/bench-roster-worker.mjs \
+  /path/baseline-dist /path/roster-dist /path/bioclip-image-int8.onnx \
+  work/zoo-reference-v1/dataset-release.json /tmp/zooketch-roster/report.json \
+  /tmp/zooketch-roster/worker.json chromium
+```
+
+モデルと名称の出典。 [BioCLIP](https://huggingface.co/imageomics/bioclip)・[公開版の固定INT8画像エンコーダー](https://huggingface.co/Virien/naturdex-bioclip-onnx/tree/fa3c062ea31a6e1881b1977fe555b2d481dca730)・[生成用の固定テキストエンコーダーとトークナイザー](https://huggingface.co/jsteinshouer/trail-bingo-bioclip-onnx/tree/25d50dd481d6a748ce78c8bc513a420bf7d3d279)・[京都市動物園の動物図鑑](https://zoo.city.kyoto.lg.jp/zoo/animals/)。
+
+## サイズと処理時間
+
+実際の配信用 Worker を Apple M2 上で実行した。test から1グループ1枚で計30枚を使用し、2版の実行順を写真ごとに交互にした。ブラウザー測定はキャッシュ済みの同じモデルを使用し、画像取得後からWorkerの応答までを計測した。
+
+| 指標 | 変更前 | 30グループ版 |
+| --- | ---: | ---: |
+| テキスト埋め込みバンク | 80,980 B | 27,220 B |
+| 写真参照バンク | 97,359 B | 29,926 B |
+| テキストバンクのJSON解析・復号・ノルム計算の中央値 | 2.88 ms | 0.91 ms |
+| テキストとの照合1回の中央値 | 0.054 ms | 0.018 ms |
+| Worker本体のgzipサイズ | 151,630 B | 69,332 B |
+| Chromiumの1回の中央値／p95 | 849.6／867.9 ms | 847.7／912.8 ms |
+| WebKitの1回の中央値／p95 | 854／876 ms | 837／890 ms |
+| 画像エンコーダー | 87,384,964 B | 87,384,964 B |
+
+ブラウザーでのTop-1／Top-3は Chromium 20／21→22／23、WebKit 20／21→23／23（各30枚）。1回あたりの中央値はほぼ同程度。p95は両ブラウザーで延びた。30枚の試行でばらつきの原因は確定していない。スマートフォン実機の時間は未測定。
