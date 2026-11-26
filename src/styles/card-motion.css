@@ -177,20 +177,6 @@ body:has(
     animation-delay: 0ms, 550ms;
   }
 
-  .replica-app[data-variant="product"]
-    .design3-intro[data-tutorial-step]
-    .design3-intro-original {
-    animation-name: tutorial-pitsune-in, pitsune-breathe;
-    animation-duration: 900ms, 3.5s;
-    animation-delay: 0ms, 920ms;
-  }
-
-  .replica-app[data-variant="product"]
-    .design3-intro[data-tutorial-step][data-figma-art="easel"]
-    .design3-intro-original {
-    animation-name: tutorial-pitsune-in;
-  }
-
   .replica-app[data-variant="product"] .design3-challenge h1 {
     animation-duration: 490ms, 350ms;
   }
@@ -230,27 +216,6 @@ body:has(
   66% {
     opacity: 1;
     transform: translateY(-2px) scale(1.025);
-  }
-  100% {
-    transform: none;
-  }
-}
-
-@keyframes tutorial-pitsune-in {
-  0% {
-    opacity: 0;
-    transform: translateY(16px) scale(0.94, 0.84);
-  }
-  35% {
-    opacity: 1;
-    transform: translateY(3px) scale(0.99, 0.97);
-  }
-  65% {
-    opacity: 1;
-    transform: translateY(-5px) scale(1.02, 1.04);
-  }
-  85% {
-    transform: translateY(1px) scale(1.005, 0.985);
   }
   100% {
     transform: none;

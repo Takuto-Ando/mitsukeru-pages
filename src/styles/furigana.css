@@ -105,11 +105,11 @@ button .card-lettering-text {
   letter-spacing: normal;
 }
 
-.replica-app[data-variant="product"]
-  .design3-intro[data-entry-lettering="easel"]
-  .design3-intro-message {
-  /* Start the third-line caption at the same height as the other steps. */
-  translate: 0 1.85em;
+.design3-intro[data-entry-lettering="easel"] .entry-caption-line:nth-child(2) {
+  /* Allow sixteen full-width characters and their tracking. */
+  font-size: min(1em, calc(100cqw / 17));
+  line-height: 1lh;
+  white-space: nowrap;
 }
 
 .design3-intro-message .card-lettering > img {

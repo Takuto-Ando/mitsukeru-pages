@@ -68,7 +68,7 @@ async function expectPitsuneFace(
   expect(colors).toEqual(Array(3).fill(faceColor));
 }
 
-test("ピツネがゆっくり登場し、Now Loadingは文字とバーを縦の中央に置く", async ({
+test("ピツネが元の動きで登場し、Now Loadingは文字とバーを縦の中央に置く", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 402, height: 730 });
@@ -93,8 +93,11 @@ test("ピツネがゆっくり登場し、Now Loadingは文字とバーを縦の
     await button("はじめから").click();
     await button("決定！").click();
     const mascot = page.locator(".design3-intro-original");
-    await expect(mascot).toHaveCSS("animation-name", /^tutorial-pitsune-in/);
-    await expect(mascot).toHaveCSS("animation-duration", /^0\.9s[, ]/);
+    await expect(mascot).toHaveCSS(
+      "animation-name",
+      /^card-mascot-in,\s*pitsune-breathe$/,
+    );
+    await expect(mascot).toHaveCSS("animation-duration", /^0\.53s[, ]/);
     await button("こんにちは！").click();
     await button("やってみる！").click();
     await button("撮ってみる！").press("Enter");
@@ -253,19 +256,32 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
   await expect(node("276-3499")).toBeVisible();
-  await expect(node("276-3499").locator(".entry-caption-line")).toHaveText([
+  const tutorialLines = node("276-3499").locator(".entry-caption-line");
+  await expect(tutorialLines).toHaveText([
     "動物を よーく観察 して、",
-    "ぼくのスケッチを",
-    "完成させてみて！",
+    "ぼくのスケッチを完成させてみて！",
   ]);
-  const firstLine = (await node("276-3499")
-    .locator(".entry-caption-line")
-    .first()
-    .boundingBox())!;
+  const viewport = page.viewportSize()!;
+  await page.setViewportSize({ width: 320, height: 568 });
+  await expect(tutorialLines.nth(1)).toBeVisible();
+  const fitsOneLine = await tutorialLines.nth(1).evaluate(async (line) => {
+    await document.fonts.ready;
+    const range = document.createRange();
+    range.selectNodeContents(line);
+    const text = range.getBoundingClientRect();
+    return (
+      text.height <= line.getBoundingClientRect().height &&
+      text.left >= 0 &&
+      text.right <= window.innerWidth
+    );
+  });
+  expect(fitsOneLine).toBe(true);
+  const firstLine = (await tutorialLines.first().boundingBox())!;
   const dots = (await node("276-3499")
     .getByRole("img", { name: "チュートリアル 4 / 5" })
     .boundingBox())!;
   expect(firstLine.y).toBeGreaterThan(dots.y + dots.height);
+  await page.setViewportSize(viewport);
   await expect(
     page.getByRole("img", { name: "チュートリアル 4 / 5" }),
   ).toBeVisible();
@@ -275,8 +291,8 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await button("描いてみる！").click();
   await expect(node("52-5984")).toBeVisible();
   await expect(
-    node("52-5984").getByText("＼ 次は君の番だよ！／"),
-  ).toBeVisible();
+    node("52-5984").getByText("次は君の番だよ", { exact: false }),
+  ).toHaveCount(0);
   await expectLicensedTypeface(
     page,
     ".design3-challenge-prompt .card-lettering-text",
