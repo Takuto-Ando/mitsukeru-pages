@@ -203,14 +203,14 @@ try {
     await canvas.waitFor({ timeout: 15_000 });
     const box = await canvas.boundingBox();
     if (!box) throw Error("Missing canvas");
+    const tonguePoint = (t) => [
+      box.x + ((315 + 245 * (0.2 + 0.6 * t)) / 600) * box.width,
+      box.y +
+        ((255 + 125 * (0.25 + 0.5 * Math.sin(t * Math.PI))) / 600) * box.height,
+    ];
+    for (const t of [0, 1]) await page.mouse.click(...tonguePoint(t));
     for (let k = 0; k < 20; k++) {
-      const t = k / 19;
-      await page.mouse.move(
-        box.x + ((315 + 245 * (0.2 + 0.6 * t)) / 600) * box.width,
-        box.y +
-          ((255 + 125 * (0.25 + 0.5 * Math.sin(t * Math.PI))) / 600) *
-            box.height,
-      );
+      await page.mouse.move(...tonguePoint(k / 19));
       if (k === 0) await page.mouse.down();
     }
     await page.mouse.up();

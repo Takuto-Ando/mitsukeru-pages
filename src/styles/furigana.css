@@ -40,18 +40,6 @@ ruby[data-reading]::after {
     scaleX(min(var(--ruby-aspect, 1), calc(var(--ruby-fit, 1) / 0.58)));
 }
 
-/* The photo detail reserves room below these rows inside its fixed card. */
-.replica-app[data-variant="product"] .replica-gallery-photo-metadata p + p {
-  translate: 0 4px;
-}
-
-.replica-app[data-variant="product"]
-  .replica-gallery-photo-fact
-  .zoo-card-summary-line
-  + .zoo-card-summary-line {
-  translate: 0 2px;
-}
-
 /* ふりがなが付く行は、ルビの分だけ行間を少し広げて読みやすくする。 */
 .result-fact,
 .gallery-detail-fact p,
@@ -111,6 +99,19 @@ button .card-lettering-text {
 .design3-intro-message .card-lettering-text {
   line-height: 1.85;
 }
+.replica-app[data-variant="product"]
+  .design3-intro[data-entry-lettering="wave"]
+  .design3-intro-message {
+  letter-spacing: normal;
+}
+
+.replica-app[data-variant="product"]
+  .design3-intro[data-entry-lettering="easel"]
+  .design3-intro-message {
+  /* Start the third-line caption at the same height as the other steps. */
+  translate: 0 1.85em;
+}
+
 .design3-intro-message .card-lettering > img {
   width: 100%;
 }
@@ -172,8 +173,9 @@ button .card-lettering-text {
 .replica-app[data-variant="product"]
   .design3-title-tagline
   .card-lettering-text {
-  font-size: clamp(14px, 4.74cqw, 19.05px);
+  font-size: clamp(14px, 4.86cqw, 18.18px);
   letter-spacing: 0.1em;
+  translate: 0 2px;
   white-space: nowrap;
 }
 

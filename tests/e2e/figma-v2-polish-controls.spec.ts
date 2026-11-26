@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "./fixtures";
+import { drawGiraffeTongue, expect, test, type Page } from "./fixtures";
 import { penColorsFor } from "../../src/content/sketchPresentation";
 
 const button = (page: Page, name: string) =>
@@ -27,6 +27,38 @@ async function openDrawing(page: Page, animal: string) {
   await page.getByTestId("canvas").waitFor();
   await page.evaluate(() => document.fonts.ready);
 }
+
+test("描画3回で完了が有効になり、形が離れていれば同じ画面でヒントが出る", async ({
+  page,
+}) => {
+  await openDrawing(page, "キリン");
+  const canvas = page.getByTestId("canvas");
+  const done = button(page, "できた！");
+  await expect(done).toBeDisabled();
+  const bounds = (await canvas.boundingBox())!;
+  for (const [index, x] of [0.23, 0.34, 0.45].entries()) {
+    await page.mouse.move(bounds.x + x * bounds.width, bounds.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(bounds.x + x * bounds.width + 6, bounds.y + 20);
+    await page.mouse.up();
+    if (index < 2) await expect(done).toBeDisabled();
+  }
+  await expect(done).toBeEnabled();
+  await done.click();
+  await expect(canvas).toBeVisible();
+  const speech = page.locator(".mission-pitsune-row .bubble-line-text");
+  await expect(speech).toHaveText("もうすこし観察してみて！");
+  await expect(button(page, "ヒントを見る")).toBeDisabled();
+  const spacing = await speech.evaluate((element) => {
+    const styles = getComputedStyle(element);
+    return parseFloat(styles.letterSpacing) / parseFloat(styles.fontSize);
+  });
+  expect(spacing).toBeCloseTo(-0.05, 3);
+
+  await drawGiraffeTongue(page);
+  await done.click();
+  await expect(page.locator(".design3-result")).toBeVisible();
+});
 
 test("ふりがなを切り替えても描画カードとボタンの位置・大きさが変わらない", async ({
   page,
@@ -175,7 +207,10 @@ test("撮影・描画のセリフを強調し、京都市動物園と修正の�
   await button(page, "キリン").click();
   await expect(
     page.locator(".design3-photo-fact .zoo-card-summary-line").first(),
-  ).toHaveCSS("font-weight", process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700");
+  ).toHaveCSS(
+    "font-weight",
+    process.env.VITE_ADOBE_FONTS_KIT_ID ? "600" : "700",
+  );
   await button(page, "描いてもらう").click();
   const titleRuby = page.locator(".design3-challenge h1 ruby").first();
   await expect(titleRuby).toBeVisible();

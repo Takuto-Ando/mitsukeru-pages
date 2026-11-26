@@ -28,6 +28,7 @@ export function ReplicaDraw({
   showHint,
   onHint,
   onDone,
+  canComplete,
   observationTools,
   unrestrictedDrawing,
   ...drawing
@@ -36,6 +37,7 @@ export function ReplicaDraw({
   showHint: boolean;
   onHint: () => void;
   onDone: () => void;
+  canComplete: boolean;
   observationTools?: boolean;
   unrestrictedDrawing?: boolean;
 }) {
@@ -91,7 +93,7 @@ export function ReplicaDraw({
               onClick={() => {
                 if (!activeStroke.current) onDone();
               }}
-              disabled={!drawing.strokes.length}
+              disabled={!canComplete}
             >
               <img
                 className="drawing-pitsune-icon"

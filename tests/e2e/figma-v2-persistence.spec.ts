@@ -1,5 +1,4 @@
-import { taskById } from "../../src/content/tasks";
-import { expect, test, type Page } from "./fixtures";
+import { drawGiraffeTongue, expect, test, type Page } from "./fixtures";
 
 const relayUrl = (base: string) =>
   new URL(
@@ -25,19 +24,7 @@ async function openDrawing(page: Page) {
   const canvas = page.getByTestId("canvas");
   // The first sketch screen waits for its separate production bundle.
   await expect(canvas).toBeVisible({ timeout: 15_000 });
-  const bounds = (await canvas.boundingBox())!;
-  const region = taskById.giraffe.scene.regions[0];
-  for (let index = 0; index <= 20; index++) {
-    const t = index / 20;
-    await page.mouse.move(
-      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
-      bounds.y +
-        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
-          bounds.height,
-    );
-    if (!index) await page.mouse.down();
-  }
-  await page.mouse.up();
+  await drawGiraffeTongue(page);
 }
 
 async function storedSketchRows(page: Page) {
@@ -119,7 +106,7 @@ test("描画中の完了操作で最後の線が失われず、連打しても�
     .poll(async () =>
       (await storedSketchRows(page)).map(({ strokeCount }) => strokeCount),
     )
-    .toEqual([2]);
+    .toEqual([4]);
 });
 
 test("保存時の容量不足を表示し、空きができたら描いた絵を再試行して保存できる", async ({

@@ -11,25 +11,21 @@ import { assetPath } from "../content/artwork";
 const pages = [
   {
     pose: "wave",
-    message: "やあ、ぼくはピツネ。絵を描くのが大好きなんだ！",
     action: "こんにちは！",
     color: "green",
   },
   {
     pose: "book",
-    message: "ねえ、一緒にスケッチしない？ うまくなくても大丈夫！",
     action: "やってみる！",
     color: "green",
   },
   {
     pose: "camera",
-    message: "まずは、動物の写真を撮ってぼくに見せてね！",
     action: "撮ってみる！",
     color: "orange",
   },
   {
     pose: "easel",
-    message: "ぼくが途中までスケッチしたから、きみの手で完成させてみて！",
     action: "描いてみる！",
     color: "orange",
   },
@@ -145,7 +141,7 @@ export function IntroFlow({
   return (
     <IntroPanel
       label="ピツネのあいさつ"
-      message={current.message}
+      message={tutorialLines[current.pose].join(" ")}
       pose={current.pose}
       artwork={current.pose}
       lettering={current.pose}
@@ -236,23 +232,10 @@ export function TutorialEndScreen({
   return (
     <IntroPanel
       label="チュートリアル終了"
-      message={
-        surveyUrl ? (
-          <>
-            <span className="entry-caption-line">
-              チュートリアルはこれでおしまい！
-            </span>
-            <span className="entry-caption-line">
-              Googleフォームで感想を聞かせてね。
-            </span>
-          </>
-        ) : (
-          "チュートリアルはこれでおしまい！ いろんな動物を描きにいこう！"
-        )
-      }
+      message={tutorialLines.finish.join(" ")}
       pose="wave"
       artwork="wave"
-      lettering={surveyUrl ? undefined : "finish"}
+      lettering="finish"
       progress={showProgress ? 5 : undefined}
     >
       {surveyUrl ? (

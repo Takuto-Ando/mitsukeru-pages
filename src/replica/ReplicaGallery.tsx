@@ -1,4 +1,5 @@
 import { ZooCardSummary } from "../components/ZooCardSummary";
+import { photoReviewSummary } from "../content/photoReviewSummaries";
 import {
   zooAnimalIdByName,
   zooAnimalSummary,
@@ -190,15 +191,15 @@ function Sketch({
   );
 }
 
-function entrySummary(entry: ReplicaRecord, tab: GalleryTab) {
+function entrySummary(entry: ReplicaRecord, tab: GalleryTab, legacy = false) {
   const task = entry.taskId ? taskById[entry.taskId] : undefined;
-  return zooAnimalSummary(
+  const groupId =
     entry.groupId ??
-      task?.groupId ??
-      zooAnimalIdByName(entry.animalName) ??
-      (entry.samplePhoto ? "giraffe" : undefined),
-    tab === "sketch" ? task?.id : undefined,
-  );
+    task?.groupId ??
+    zooAnimalIdByName(entry.animalName) ??
+    (entry.samplePhoto ? "giraffe" : undefined);
+  if (tab === "photo" && !legacy) return photoReviewSummary(groupId);
+  return zooAnimalSummary(groupId, tab === "sketch" ? task?.id : undefined);
 }
 
 function SketchReplay({
@@ -296,7 +297,7 @@ function EntryCard({
   legacy: boolean;
 }) {
   const summary =
-    entrySummary(entry, tab) ??
+    entrySummary(entry, tab, legacy) ??
     (tab === "sketch" ? entry.description : entry.photoDescription);
   if (tab === "sketch") {
     const regionCount = entry.taskId
@@ -361,6 +362,7 @@ function EntryCard({
           <ZooCardSummary
             className="replica-gallery-photo-fact"
             text={summary}
+            fitLines={!legacy}
           />
         )}
       </article>

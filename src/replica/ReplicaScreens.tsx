@@ -8,26 +8,10 @@ import { assetPath } from "../content/artwork";
 import { TutorialProgress } from "../components/IntroFlow";
 
 const backgrounds = {
-  wave: [
-    "やあ､ぼくは ピツネ。絵を描くのが大好きなんだ！",
-    "こんにちは！",
-    "green",
-  ],
-  book: [
-    "ねえ､一緒に スケッチ しない？ うまくなくても大丈夫！",
-    "やってみる！",
-    "green",
-  ],
-  camera: [
-    "まずは､ 動物の写真 を撮ってぼくに見せてね！",
-    "撮ってみる！",
-    "orange",
-  ],
-  easel: [
-    "ぼくが 途中まで スケッチしたからきみの手で完成させてみて！",
-    "描いてみる！",
-    "orange",
-  ],
+  wave: ["こんにちは！", "green"],
+  book: ["やってみる！", "green"],
+  camera: ["撮ってみる！", "orange"],
+  easel: ["描いてみる！", "orange"],
 } as const;
 
 export function ReplicaIntro({
@@ -35,13 +19,16 @@ export function ReplicaIntro({
   onNext,
   onSkip,
   progress,
+  modelDownload = false,
 }: {
   pose: keyof typeof backgrounds;
   onNext: () => void;
   onSkip?: () => void;
   progress?: number;
+  modelDownload?: boolean;
 }) {
-  const [message, action, color] = backgrounds[pose];
+  const [action, color] = backgrounds[pose];
+  const lines = tutorialLines[modelDownload ? "cameraLoading" : pose];
   const folder = "illustrations/pdf-design/";
   const ActionIcon =
     pose === "camera" ? Camera : pose === "easel" ? Pencil : ChevronRight;
@@ -56,8 +43,8 @@ export function ReplicaIntro({
     >
       <p className="design3-intro-message" key={pose}>
         <CardLettering
-          text={message}
-          lines={tutorialLines[pose]}
+          text={lines.join(" ")}
+          lines={lines}
           highlights={tutorialHighlights[pose]}
           src={assetPath(folder + "entry-" + pose + "-message.svg")}
         />

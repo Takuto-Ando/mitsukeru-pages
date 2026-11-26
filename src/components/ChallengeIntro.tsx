@@ -129,6 +129,11 @@ export function ChallengeIntro({
 
   return (
     <section className="design3-challenge">
+      {import.meta.env.VITE_LEGACY_EDITIONS !== "1" && (
+        <p className="design3-challenge-lead">
+          <Furi text="＼ 次は君の番だよ！／" />
+        </p>
+      )}
       <h1
         data-auto-advance={autoAdvance || undefined}
         aria-label={`${title}を描いてみよう！`}

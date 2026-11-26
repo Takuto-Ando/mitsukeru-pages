@@ -18,14 +18,14 @@
   src: url("/fonts/ZenMaruGothic-Medium-Title.woff2") format("woff2");
   font-weight: 500;
   font-display: swap;
-  unicode-range: U+0020, U+3002, U+3046, U+304B, U+304C, U+304D, U+304F, U+3055, U+3058, U+305D, U+3061, U+3064, U+3065, U+306E, U+306F, U+3073, U+3080, U+3081, U+3085, U+3086, U+3089, U+308B, U+3092, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307;
+  unicode-range: U+0020, U+3002, U+3044, U+3046, U+304A, U+304B, U+304C, U+304D, U+304F, U+3053, U+3055, U+3057, U+3058, U+305D, U+3061, U+3063, U+3064, U+3065, U+3066, U+306A, U+306B, U+306E, U+306F, U+3073, U+3080, U+3081, U+3082, U+3085, U+3086, U+3089, U+308B, U+308D, U+3092, U+3093, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307, U+63CF, U+767D, U+9762, U+FF01;
 }
 @font-face {
   font-family: "Zen Maru Gothic";
   src: url("/fonts/ZenMaruGothic-Bold-Title.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
-  unicode-range: U+0020, U+3002, U+3046, U+304B, U+304C, U+304D, U+304F, U+3055, U+3058, U+305D, U+3061, U+3064, U+3065, U+306E, U+306F, U+3073, U+3080, U+3081, U+3085, U+3086, U+3089, U+308B, U+3092, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307;
+  unicode-range: U+0020, U+3002, U+3044, U+3046, U+304A, U+304B, U+304C, U+304D, U+304F, U+3053, U+3055, U+3057, U+3058, U+305D, U+3061, U+3063, U+3064, U+3065, U+3066, U+306A, U+306B, U+306E, U+306F, U+3073, U+3080, U+3081, U+3082, U+3085, U+3086, U+3089, U+308B, U+308D, U+3092, U+3093, U+30B1, U+30BA, U+30C1, U+30C3, U+30FC, U+4E2D, U+5148, U+5922, U+6307, U+63CF, U+767D, U+9762, U+FF01;
 }
 :root {
   --color-teal: #74bbb0;
@@ -69,6 +69,19 @@
 
 :root[data-ui-font="dnp"] {
   --licensed-font-family: dnp-shuei-mgothic-std, "Zen Maru Gothic", sans-serif;
+}
+
+/* Keep the first paint stable while Adobe builds the Japanese subset. The
+   app remains in the document for subsetting, including its ruby text. */
+:root[data-ui-font="loading"] #root > .replica-app[data-variant="product"] {
+  visibility: hidden;
+}
+
+:root[data-ui-font="loading"]
+  .replica-app[data-variant="product"]
+  .design3-title
+  :is(.design3-title-tail, .design3-title-curve, .design3-title-trail, h1) {
+  visibility: visible;
 }
 
 :where(button, input, select, textarea, optgroup, option, output) {

@@ -1,6 +1,11 @@
 import type { Locator } from "@playwright/test";
-import { expect, mockTutorialModels, test, type Page } from "./fixtures";
-import { taskById } from "../../src/content/tasks";
+import {
+  drawGiraffeTongue,
+  expect,
+  mockTutorialModels,
+  test,
+  type Page,
+} from "./fixtures";
 
 function usesProductionShare(baseURL: string): boolean {
   return process.env.E2E_PREVIEW === "1" || baseURL.startsWith("https://");
@@ -63,22 +68,57 @@ async function expectPitsuneFace(
   expect(colors).toEqual(Array(3).fill(faceColor));
 }
 
-async function drawGiraffeTongue(page: Page) {
-  const canvas = page.getByTestId("canvas");
-  const bounds = (await canvas.boundingBox())!;
-  const region = taskById.giraffe.scene.regions[0];
-  for (let index = 0; index <= 20; index++) {
-    const t = index / 20;
-    await page.mouse.move(
-      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
-      bounds.y +
-        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
-          bounds.height,
+test("ピツネがゆっくり登場し、Now Loadingは文字とバーを縦の中央に置く", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 402, height: 730 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    if (navigator.serviceWorker)
+      navigator.serviceWorker.register = () => Promise.reject();
+  });
+  await mockTutorialModels(page, { detector: false });
+  let finishDownload!: () => void;
+  const pauseDownload = new Promise<void>(
+    (resolve) => (finishDownload = resolve),
+  );
+  await page.route("**/models/yolox*.onnx", async (route) => {
+    await pauseDownload;
+    await route.fulfill({ body: Buffer.alloc(3_659_407) });
+  });
+  const button = (name: string) =>
+    page.getByRole("button", { name, exact: true });
+  try {
+    await page.goto("./");
+    await button("はじめから").click();
+    await button("決定！").click();
+    const mascot = page.locator(".design3-intro-original");
+    await expect(mascot).toHaveCSS("animation-name", /^tutorial-pitsune-in/);
+    await expect(mascot).toHaveCSS("animation-duration", /^0\.9s[, ]/);
+    await button("こんにちは！").click();
+    await button("やってみる！").click();
+    await button("撮ってみる！").press("Enter");
+    const loading = page.getByRole("dialog", { name: "Now Loading…" });
+    await expect(loading).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator(".replica-app")).toHaveAttribute(
+      "data-figma-node",
+      "276-3421",
     );
-    if (!index) await page.mouse.down();
+    await expect(
+      loading.getByText("画像識別モデルをダウンロード中…"),
+    ).toBeVisible();
+    const panel = (await loading.boundingBox())!;
+    const heading = (await loading.getByRole("heading").boundingBox())!;
+    const meter = (await loading.getByRole("progressbar").boundingBox())!;
+    expect(panel.y + panel.height / 2).toBeCloseTo(358, 0);
+    expect(heading.y - panel.y).toBeCloseTo(
+      panel.y + panel.height - meter.y - meter.height,
+      0,
+    );
+  } finally {
+    finishDownload();
   }
-  await page.mouse.up();
-}
+});
 
 test("フローAは付録のノード順に進み、描いた絵だけを送信して撮影へ合流する", async ({
   page,
@@ -123,6 +163,10 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   const shell = page.locator(".replica-app");
   const node = (id: string) => page.locator(`[data-figma-node="${id}"]`);
   await expect(shell).toHaveAttribute("data-figma-node", "28-100");
+  await expect(page).toHaveTitle("ズーケッチ");
+  await expect(page.locator(".design3-title-tagline")).toHaveText(
+    "描くってこんなに面白い！",
+  );
   await expectLicensedTypeface(page, ".design3-title-tagline");
   await expect(button("つづきから")).toBeEnabled();
   await expect(
@@ -135,14 +179,14 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
     page.getByRole("link", { name: /ドパガキ版|機能拡張版/ }),
   ).toHaveCount(0);
   const taglineRuby = page.locator(
-    ".design3-title-tagline ruby[data-reading=ゆびさき]",
+    ".design3-title-tagline ruby[data-reading=おもしろ]",
   );
   await expect(taglineRuby).toBeVisible();
   expect(
     await taglineRuby.evaluate(
       (ruby) => getComputedStyle(ruby, "::after").content,
     ),
-  ).toBe('"ゆびさき"');
+  ).toBe('"おもしろ"');
   if (process.env.VITE_ADOBE_FONTS_KIT_ID) {
     expect(
       await taglineRuby.evaluate(
@@ -153,12 +197,25 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await button("はじめから").click();
   await button("決定！").click();
   await expect(button("スキップ")).toHaveCount(0);
-  for (const [index, [id, choice]] of [
-    ["29-683", "こんにちは！"],
-    ["36-778", "やってみる！"],
-    ["38-898", "撮ってみる！"],
+  for (const [index, [id, choice, lines]] of [
+    [
+      "29-683",
+      "こんにちは！",
+      ["やあ､ぼくは ピツネ。", "しっぽを使って絵を描くんだ！"],
+    ],
+    [
+      "36-778",
+      "やってみる！",
+      ["ねえ､一緒に スケッチ しない？", "描いた部分が動きだすよ！"],
+    ],
+    [
+      "276-3310",
+      "撮ってみる！",
+      ["まずは 動物の写真 を撮ってきて！", "ぼくが､途中まで描いてあげる！"],
+    ],
   ].entries()) {
     await expect(node(id)).toBeVisible();
+    await expect(node(id).locator(".entry-caption-line")).toHaveText(lines);
     const progress = page.getByRole("img", {
       name: `チュートリアル ${index + 1} / 5`,
     });
@@ -195,7 +252,20 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expect(node("52-5335")).toHaveCount(0);
   await expect(page.locator(".design3-photo-celebration")).toHaveCount(0);
   await expect(page.locator(".photo-animal-bubble")).toHaveCount(0);
-  await expect(node("38-1056")).toBeVisible();
+  await expect(node("276-3499")).toBeVisible();
+  await expect(node("276-3499").locator(".entry-caption-line")).toHaveText([
+    "動物を よーく観察 して、",
+    "ぼくのスケッチを",
+    "完成させてみて！",
+  ]);
+  const firstLine = (await node("276-3499")
+    .locator(".entry-caption-line")
+    .first()
+    .boundingBox())!;
+  const dots = (await node("276-3499")
+    .getByRole("img", { name: "チュートリアル 4 / 5" })
+    .boundingBox())!;
+  expect(firstLine.y).toBeGreaterThan(dots.y + dots.height);
   await expect(
     page.getByRole("img", { name: "チュートリアル 4 / 5" }),
   ).toBeVisible();
@@ -204,6 +274,9 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   ).toBeVisible();
   await button("描いてみる！").click();
   await expect(node("52-5984")).toBeVisible();
+  await expect(
+    node("52-5984").getByText("＼ 次は君の番だよ！／"),
+  ).toBeVisible();
   await expectLicensedTypeface(
     page,
     ".design3-challenge-prompt .card-lettering-text",
@@ -253,6 +326,10 @@ test("フローAは付録のノード順に進み、描いた絵だけを送信�
   await expectPitsuneFace(button("つぎへ"), 0, [249, 168, 70, 255]);
   await button("つぎへ").click();
   await expect(node("43-1269")).toBeVisible();
+  await expect(node("43-1269").locator(".entry-caption-line")).toHaveText([
+    "チュートリアルはこれでおしまい！",
+    "さあ､動物たちを描きにいこう！",
+  ]);
   await expect(
     page.getByRole("img", { name: "チュートリアル 5 / 5" }),
   ).toBeVisible();
@@ -326,15 +403,7 @@ test("フローBは写真確認から通常の難易度選択と描画を通っ�
   await expect(preview).toHaveCSS("--preview-ink", "#6b5c7a");
   await expect(preview).toHaveCount(0);
 
-  // A short stroke is enough to complete the flow without a self-check screen.
-  const bounds = (await page.getByTestId("canvas").boundingBox())!;
-  const region = taskById.giraffe.scene.regions[0];
-  const x = bounds.x + (region.x + region.width / 2) * bounds.width;
-  const y = bounds.y + (region.y + region.height / 2) * bounds.height;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x + 12, y, { steps: 4 });
-  await page.mouse.up();
+  await drawGiraffeTongue(page);
   await button("できた！").click();
   await expect(page.locator('[data-purpose="sketch"]')).toBeVisible();
   await expect(node("66-10524")).toBeVisible();

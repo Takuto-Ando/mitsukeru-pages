@@ -1,7 +1,6 @@
 import { devices } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { taskById } from "../../src/content/tasks";
-import { expect, test, type Page } from "./fixtures";
+import { expect, giraffeTongueStrokes, test, type Page } from "./fixtures";
 
 const sample =
   "data:image/png;base64," +
@@ -65,36 +64,34 @@ async function drawTongue(page: Page) {
   await expect(canvas).toBeVisible();
   await expect(canvas).toHaveCSS("touch-action", "none");
 
-  await canvas.evaluate((element, region) => {
+  await canvas.evaluate((element, strokes) => {
     const rect = element.getBoundingClientRect();
-    for (let index = 0; index <= 21; index++) {
-      const progress = Math.min(1, index / 20);
-      const event =
-        index === 0
-          ? "pointerdown"
-          : index === 21
-            ? "pointerup"
-            : "pointermove";
+    for (const points of strokes) {
+      for (const [index, point] of points.entries()) {
+        const event = index === 0 ? "pointerdown" : "pointermove";
+        element.dispatchEvent(
+          new PointerEvent(event, {
+            pointerId: 1,
+            pointerType: "touch",
+            isPrimary: true,
+            button: 0,
+            clientX: rect.left + rect.width * point.x,
+            clientY: rect.top + rect.height * point.y,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
       element.dispatchEvent(
-        new PointerEvent(event, {
+        new PointerEvent("pointerup", {
           pointerId: 1,
           pointerType: "touch",
           isPrimary: true,
-          button: 0,
-          clientX:
-            rect.left +
-            rect.width * (region.x + region.width * (0.2 + 0.6 * progress)),
-          clientY:
-            rect.top +
-            rect.height *
-              (region.y +
-                region.height * (0.25 + Math.sin(progress * Math.PI) * 0.5)),
           bubbles: true,
-          cancelable: true,
         }),
       );
     }
-  }, taskById.giraffe.scene.regions[0]);
+  }, giraffeTongueStrokes());
   await action(page, "できた！").tap();
   await expect(page.locator(".design3-result")).toBeVisible();
 }

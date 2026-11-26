@@ -29,7 +29,7 @@ test("長いスケッチ見出しも位置を保ち、難易度と並んで一�
   await button("描いてもらう").click();
   const canvas = page.getByTestId("canvas");
   await expect(canvas).toBeVisible({ timeout: 10_000 });
-  await canvas.click({ position: { x: 20, y: 20 } });
+  for (const x of [20, 35, 50]) await canvas.click({ position: { x, y: 20 } });
   await button("できた！").click();
   await button("スケッチの結果を見る").click();
 
@@ -199,7 +199,7 @@ test("通常スケッチはズームと消しゴムの説明を省き、キリ�
   await page.mouse.down();
   await page.mouse.move(...position(520, 144), { steps: 8 });
   await page.mouse.up();
-  await expect(button("できた！")).toBeEnabled();
+  await expect(button("できた！")).toBeDisabled();
   await expect
     .poll(() =>
       canvas.evaluate((element, height) => {

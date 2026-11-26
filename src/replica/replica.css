@@ -348,11 +348,19 @@
   white-space: nowrap;
 }
 
-.replica-app[data-variant="product"] .design3-photo-date {
-  grid-template-rows: repeat(2, 1.9em);
-  row-gap: 6px;
-  line-height: 1.9;
+.replica-app[data-variant="product"]
+  :is(.design3-photo-date, .replica-gallery-photo-metadata > div) {
+  display: grid;
+  align-content: center;
+  grid-auto-rows: 16px;
+  row-gap: 2px;
+  line-height: 16px;
   white-space: nowrap;
+}
+
+.replica-app[data-variant="product"] .design3-photo-date {
+  /* Keep the existing photo metadata bar and edit button in place. */
+  min-block-size: calc(3.8em + 6px);
 }
 
 .replica-app[data-variant="product"] .design3-photo-date > span {
@@ -363,8 +371,9 @@
   flex: none;
 }
 
-.replica-app[data-variant="product"] .design3-photo-fact .zoo-card-summary-line,
-.replica-app[data-variant="product"] .result-fact .zoo-card-summary-line {
+.replica-app[data-variant="product"]
+  :is(.design3-photo-fact, .replica-gallery-photo-fact, .result-fact)
+  .zoo-card-summary-line {
   line-height: 1.9;
 }
 

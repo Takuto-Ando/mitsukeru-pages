@@ -34,6 +34,7 @@ export function HomeScreen({
   onScanQr?: () => void;
 }) {
   const dopaMode = edition === "dopa";
+  const legacy = import.meta.env.VITE_LEGACY_EDITIONS === "1";
   const lettering = dopaMode ? "" : "-brown";
   const googleLogo = assetPath("figma/entry/google-g.svg");
   const resumeButton = useRef<HTMLButtonElement>(null);
@@ -73,10 +74,16 @@ export function HomeScreen({
       <div className="design3-title-heading">
         <p className="design3-title-tagline">
           <CardLettering
-            text="その指先が夢中をつくる。"
-            src={assetPath(
-              `illustrations/pdf-design/entry-title-tagline${lettering}.svg`,
-            )}
+            text={
+              legacy ? "その指先が夢中をつくる。" : "描くってこんなに面白い！"
+            }
+            src={
+              legacy
+                ? assetPath(
+                    `illustrations/pdf-design/entry-title-tagline${lettering}.svg`,
+                  )
+                : undefined
+            }
           />
         </p>
         <h1>

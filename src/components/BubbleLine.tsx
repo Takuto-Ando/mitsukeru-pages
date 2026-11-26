@@ -10,13 +10,15 @@ export function BubbleLine({
   children?: ReactNode;
   highlights?: readonly string[];
 }) {
+  const characters = Array.from(text).length;
   return (
     <span className="bubble-line">
       <span
         className="bubble-line-text"
+        data-tight={characters >= 10 || undefined}
         style={
           {
-            "--bubble-characters": Array.from(text).length || 1,
+            "--bubble-characters": characters || 1,
           } as CSSProperties
         }
       >

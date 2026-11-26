@@ -53,7 +53,7 @@ test("機能拡張版の入口からFigma再現版を別のURLで開ける", asy
   baseURL,
 }) => {
   await page.goto("plus/");
-  await expect(page).toHaveTitle("ズーケッチ — その指先が夢中をつくる。");
+  await expect(page).toHaveTitle("ズーケッチ");
   const link = page.getByRole("link", { name: "Figma再現版を開く" });
   await expect(link).toBeVisible();
   const titleScreen = page.getByRole("region", {

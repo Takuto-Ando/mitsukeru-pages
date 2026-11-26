@@ -124,8 +124,9 @@ type Screen =
 const introSteps = [
   { pose: "wave", node: "29-683" },
   { pose: "book", node: "36-778" },
-  { pose: "camera", node: "38-898" },
+  { pose: "camera", node: "276-3310" },
 ] as const;
+const minimumDrawingActions = 3;
 const choiceIds = ["giraffe", "hippo", "meerkat", "fennec", "elephant"];
 const choices = choiceIds.map((id) => groups.find((group) => group.id === id)!);
 
@@ -221,6 +222,10 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
     undefined,
     emptyDrawing,
   );
+  const [drawingActions, setDrawingActions] = useState(0);
+  const canFinishDrawing =
+    drawing.present.length > 0 &&
+    (legacy || drawingActions >= minimumDrawingActions);
   const [showHint, setShowHint] = useState(false);
   const [error, setError] = useState("");
   const [photoWriteFailed, setPhotoWriteFailed] = useState(false);
@@ -469,6 +474,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
 
   function startDrawing() {
     dispatchDrawing({ type: "reset" });
+    setDrawingActions(0);
     setFeedback(undefined);
     setSketchCelebrating(false);
     setShowHint(false);
@@ -554,8 +560,9 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
   const figmaNodes: Partial<Record<Screen, string>> = {
     title: "28-100",
     intro: introSteps[introPage].node,
+    "tutorial-models": "276-3421",
     cheer: "52-5335",
-    easel: tutorial ? "38-1056" : "43-1903",
+    easel: tutorial ? "276-3499" : "43-1903",
     challenge: tutorial ? "52-5984" : "66-8272",
     draw: tutorial
       ? showHint
@@ -643,6 +650,7 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
               {(screen === "intro" || screen === "tutorial-models") && (
                 <ReplicaIntro
                   pose={introSteps[introPage].pose}
+                  modelDownload={screen === "tutorial-models"}
                   progress={legacy ? undefined : introPage + 1}
                   onSkip={
                     legacy
@@ -752,23 +760,27 @@ function ReplicaAppContent({ legacy }: { legacy: boolean }) {
                       strokes={drawing.present}
                       canUndo={drawing.past.length > 0}
                       canRedo={drawing.future.length > 0}
+                      canComplete={canFinishDrawing}
                       onUndo={() => dispatchDrawing({ type: "undo" })}
                       onRedo={() => dispatchDrawing({ type: "redo" })}
-                      onChange={(strokes) =>
-                        dispatchDrawing({ type: "commit", strokes })
-                      }
+                      onChange={(strokes, action) => {
+                        dispatchDrawing({ type: "commit", strokes });
+                        if (legacy) return;
+                        if (action === "draw")
+                          setDrawingActions((count) =>
+                            Math.min(minimumDrawingActions, count + 1),
+                          );
+                        else if (action === "clear") setDrawingActions(0);
+                      }}
                       showHint={showHint}
                       onHint={() => setShowHint(true)}
                       onDone={() => {
+                        if (!canFinishDrawing) return;
                         const evaluation = drawingEvaluator.evaluate(
                           task,
                           drawing.present,
                         );
-                        if (
-                          !legacy &&
-                          (!drawing.present.length ||
-                            evaluation.status === "retry")
-                        ) {
+                        if (!legacy && task.automatic && !evaluation.passed) {
                           setShowHint(true);
                           return;
                         }

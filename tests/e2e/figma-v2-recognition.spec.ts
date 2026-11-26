@@ -370,7 +370,7 @@ test("クマの白枠を維持しながら、種識別の準備後にレッサ�
     });
     await button(page, "つづきから").click();
     await expect(
-      page.getByRole("heading", { name: "Now Loading..." }),
+      page.getByRole("heading", { name: "Now Loading…" }),
     ).toBeVisible();
     await expect(
       page.getByRole("progressbar", { name: "画像認識モデルのダウンロード" }),
@@ -468,7 +468,7 @@ test("白枠がなくても撮影中の有力候補を見せ、撮影時は名�
   await page.goto("./");
   await button(page, "つづきから").click();
   const prepare = page
-    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("region", { name: "Now Loading…" })
     .getByRole("button", { name: "ダウンロード", exact: true });
   await expect(prepare).toBeVisible();
   expect(modelRequests).toBe(0);
@@ -567,7 +567,7 @@ test("タブを開き直してモデルを使えないときはNow Loadingから
   }, photoModel);
   await reopened.goto(url);
   await button(reopened, "つづきから").click();
-  const loading = reopened.getByRole("region", { name: "Now Loading..." });
+  const loading = reopened.getByRole("region", { name: "Now Loading…" });
   const retry = loading.getByRole("button", { name: "もう一度試す" });
   await expect(retry).toBeVisible();
   await expect(button(reopened, "シャッター")).toBeEnabled();
@@ -640,7 +640,7 @@ test("保存済みのモデルはワーカー起動に失敗しても再ダウ�
   await page.goto("./");
   await button(page, "つづきから").click();
   const retry = page
-    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("region", { name: "Now Loading…" })
     .getByRole("button", { name: "もう一度試す" });
   await expect(retry).toBeVisible();
   expect(requests).toBe(1);
@@ -826,7 +826,7 @@ test("モデルの再取得にはNow Loadingを使い、シャッターと手動
   await expect(button(page, "シャッター")).toBeEnabled();
   await expect(button(page, "ライブ検出を再準備")).toHaveCount(0);
   const retry = page
-    .getByRole("region", { name: "Now Loading..." })
+    .getByRole("region", { name: "Now Loading…" })
     .getByRole("button", { name: "もう一度試す" });
   await expect(retry).toBeVisible({ timeout: 12_000 });
   expect(downloads).toBeGreaterThanOrEqual(3);
@@ -1020,9 +1020,9 @@ test("タイトルからライブ認識を事前準備し、撮影画面でも�
     await page.goto("./");
     await expect.poll(() => requestArrived, { timeout: 15_000 }).toBe(true);
     await button(page, "つづきから").click();
-    const loading = page.getByRole("region", { name: "Now Loading..." });
+    const loading = page.getByRole("region", { name: "Now Loading…" });
     await expect(
-      loading.getByText("画像認識モデルをダウンロード中…"),
+      loading.getByText("画像識別モデルをダウンロード中…"),
     ).toBeVisible();
     await expect(loading.getByRole("progressbar")).toHaveAttribute(
       "aria-valuenow",

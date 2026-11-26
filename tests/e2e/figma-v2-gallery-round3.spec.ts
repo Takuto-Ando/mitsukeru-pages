@@ -128,6 +128,7 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
     0,
   );
   expect((await tabs.boundingBox())!.y).toBeCloseTo(tabTop, 0);
+  const scrolledPosition = (await firstSketch.boundingBox())!;
   await page.getByRole("tab", { name: "写真", exact: true }).click();
   const firstPhoto = page
     .getByRole("tabpanel")
@@ -137,6 +138,8 @@ test("ギャラリーのタブとマイページを固定し、写真とスケ�
   expect(await firstPhoto.getAttribute("data-record-id")).toBe(initialRole);
   expect(photoSize.width).toBeCloseTo(sketchSize.width, 0);
   expect(photoSize.height).toBeCloseTo(sketchSize.height, 0);
+  expect(photoSize.x).toBeCloseTo(scrolledPosition.x, 0);
+  expect(photoSize.y).toBeCloseTo(scrolledPosition.y, 0);
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
 
   await button(page, "マイページ").click();
@@ -294,6 +297,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
     expect(bounds[1]!.x + bounds[1]!.width).toBeLessThanOrEqual(bounds[2]!.x);
   }
   await checkDetailControls(sketch, ".sketch-result-card", 138, 0, 14);
+  const sketchCard = await sketch.locator(".sketch-result-card").boundingBox();
   const initialClosePosition = await closePosition(sketch);
   await page.evaluate(() => {
     Object.defineProperty(navigator, "canShare", {
@@ -320,7 +324,10 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
 
   await sketch.getByRole("button", { name: "写真を見る", exact: true }).click();
   const photo = page.getByRole("dialog", { name: "アミメキリンの写真" });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 23);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 14);
+  expect(
+    await photo.locator(".replica-gallery-photo-card").boundingBox(),
+  ).toEqual(sketchCard);
   expect(await closePosition(photo)).toEqual(initialClosePosition);
   await expect(photo.locator(".zoo-card-summary-line").first()).toHaveCSS(
     "font-weight",
@@ -345,7 +352,7 @@ test("同じ記録の写真とスケッチを1回の操作で共有し、非対�
   ]);
   expect(original.suggestedFilename()).toBe("zooketch-photo-2026-11-20.png");
   await page.setViewportSize({ width: 320, height: 568 });
-  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 23);
+  await checkDetailControls(photo, ".replica-gallery-photo-card", 156, 0, 14);
   const narrowClosePosition = await closePosition(photo);
   await photo
     .getByRole("button", { name: "スケッチを見る", exact: true })

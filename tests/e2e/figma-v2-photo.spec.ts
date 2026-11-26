@@ -1,6 +1,11 @@
 import { adoptedAnimals } from "../../src/content/adoptedAnimals";
-import { taskById } from "../../src/content/tasks";
-import { expect, mockTutorialModels, test, type Page } from "./fixtures";
+import {
+  drawGiraffeTongue,
+  expect,
+  mockTutorialModels,
+  test,
+  type Page,
+} from "./fixtures";
 
 const galleryDatabase = "zooketch-figma-replica";
 
@@ -84,24 +89,6 @@ async function chooseAnimal(page: Page, name: string) {
   await button(page, name).click();
 }
 
-async function drawGiraffeTongue(page: Page) {
-  const canvas = page.getByTestId("canvas");
-  await expect(canvas).toBeVisible();
-  const bounds = (await canvas.boundingBox())!;
-  const region = taskById.giraffe.scene.regions[0];
-  for (let index = 0; index <= 20; index++) {
-    const t = index / 20;
-    await page.mouse.move(
-      bounds.x + (region.x + region.width * (0.2 + 0.6 * t)) * bounds.width,
-      bounds.y +
-        (region.y + region.height * (0.25 + Math.sin(t * Math.PI) * 0.5)) *
-          bounds.height,
-    );
-    if (!index) await page.mouse.down();
-  }
-  await page.mouse.up();
-}
-
 test("写真確認の日付とカレンダーは長い動物名でも同じ位置に留まる", async ({
   page,
 }) => {
@@ -128,6 +115,7 @@ test("写真確認の日付とカレンダーは長い動物名でも同じ位�
   const date = metadata.locator("time");
   const name = page.locator(".design3-photo-animal h2");
   await expect(date).toBeVisible();
+  await expect(metadata).toHaveCSS("row-gap", "2px");
 
   await chooseAnimal(page, "カバ");
   const fact = page.locator(".design3-photo-fact .zoo-card-summary-line");
@@ -284,6 +272,10 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await button(page, "写真を撮る").click();
   await button(page, "シャッター").click();
   await chooseAnimal(page, "キリン");
+  const photoNotes = await page
+    .locator(".design3-photo-fact .zoo-card-summary-line-text")
+    .allTextContents();
+  expect(photoNotes).toHaveLength(2);
   await button(page, "描いてもらう").click();
   const preparation = page.locator("[data-screen=easel]");
   await expect(preparation).toHaveAttribute("data-figma-node", "43-1903");
@@ -409,7 +401,12 @@ test("写真は撮影直後に端末へ保存し、スケッチ完了時に同�
   await expect(detail.getByRole("heading", { name: "キリン" })).toBeVisible();
   await expect(detail.locator("time")).toHaveAttribute("datetime", /^\d{4}-/);
   await expect(detail.getByText("京都市動物園", { exact: true })).toBeVisible();
-  await expect(detail.locator(".replica-gallery-photo-fact")).not.toBeEmpty();
+  await expect(
+    detail.locator(".replica-gallery-photo-fact .zoo-card-summary-line-text"),
+  ).toHaveText(photoNotes);
+  await expect(
+    detail.locator(".replica-gallery-photo-metadata > div"),
+  ).toHaveCSS("row-gap", "2px");
   expect(uploads).toBe(0);
 });
 

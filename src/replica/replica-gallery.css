@@ -339,12 +339,6 @@
 }
 
 .replica-app[data-variant="product"]
-  .replica-gallery-detail--photo
-  .gallery-detail-scroll {
-  padding-top: 17px;
-}
-
-.replica-app[data-variant="product"]
   .replica-gallery-detail
   .replica-gallery-close {
   top: 0;

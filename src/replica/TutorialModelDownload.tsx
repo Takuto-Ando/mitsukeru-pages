@@ -82,7 +82,7 @@ export function TutorialModelDownload({ onReady }: { onReady: () => void }) {
       aria-labelledby={title}
       onCancel={(event) => event.preventDefault()}
     >
-      <h1 id={title}>Now Loading...</h1>
+      <h1 id={title}>Now Loading…</h1>
       <ModelDownloadContent
         progress={progress}
         onRetry={
@@ -124,7 +124,7 @@ export function CameraModelDownload({
       className="tutorial-model-download tutorial-model-download--camera"
       aria-labelledby={title}
     >
-      <h2 id={title}>Now Loading...</h2>
+      <h2 id={title}>Now Loading…</h2>
       <ModelDownloadContent
         progress={live || photo ? progress : 0}
         onRetry={onRetry}
@@ -147,7 +147,7 @@ function ModelDownloadContent({
     <>
       {!onRetry && (
         <p className="tutorial-model-caption">
-          画像認識モデルをダウンロード中…
+          画像識別モデルをダウンロード中…
         </p>
       )}
       <div

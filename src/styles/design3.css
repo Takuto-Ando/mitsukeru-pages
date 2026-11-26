@@ -383,14 +383,31 @@ body:has(.design3-shell) {
 }
 
 .design3-challenge {
+  --challenge-heading-top: clamp(70px, calc(50dvh - 113px), 340px);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100dvh;
-  padding: clamp(70px, calc(50dvh - 113px), 340px) 16px 24px;
+  padding: var(--challenge-heading-top) 16px 24px;
   background: var(--d3-orange);
   color: #fff;
   text-align: center;
+}
+
+.design3-challenge-lead {
+  position: absolute;
+  inset-block-start: calc(
+    var(--challenge-heading-top) - clamp(42px, 14.43vw, 58px)
+  );
+  inset-inline: 0;
+  margin: 0;
+  color: inherit;
+  font-size: clamp(17px, 5.47vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.022em;
+  line-height: clamp(28px, 9.45vw, 38px);
+  text-align: center;
+  white-space: nowrap;
 }
 
 body:has(.design3-shell[data-screen="challenge"]) {
@@ -1003,4 +1020,8 @@ body:has(.design3-shell) {
 .bubble-line-text {
   font-size: min(1em, calc(100cqi / var(--bubble-characters)));
   white-space: nowrap;
+}
+
+.bubble-line-text[data-tight] {
+  letter-spacing: -0.05em;
 }
