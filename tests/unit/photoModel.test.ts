@@ -126,3 +126,60 @@ test("旧キャッシュは再利用し、壊れたファイルを除去した�
   expect(await (await cache.match(localKey))?.text()).toBe("updated model");
   expect(await cache.match(photoModel.url)).toBeUndefined();
 });
+
+test("保存が成功を返してもキャッシュから読み出せない場合は完了にせず再取得できる", async () => {
+  const cache = cacheStub();
+  cache.put.mockResolvedValueOnce(undefined);
+  const fetchModel = vi.fn(async () => new Response("test model"));
+  vi.stubGlobal("fetch", fetchModel);
+  const ready = vi.fn();
+  window.addEventListener(photoModelEvent, ready);
+
+  await expect(downloadPhotoModel()).rejects.toThrow();
+  expect(ready).not.toHaveBeenCalled();
+  await expect(downloadPhotoModel()).resolves.toBeUndefined();
+  expect(fetchModel).toHaveBeenCalledTimes(2);
+  expect(await photoModelCached()).toBe(true);
+});
+
+test("現在のキャッシュが壊れていても正常な旧キーのモデルをオフラインで読める", async () => {
+  const cache = cacheStub();
+  const model = new ArrayBuffer(photoModel.bytes);
+  cache.match
+    .mockResolvedValueOnce(new Response("truncated"))
+    .mockResolvedValueOnce({ arrayBuffer: async () => model } as Response);
+  const download = vi.fn();
+  vi.stubGlobal("navigator", { onLine: false });
+  vi.stubGlobal("fetch", download);
+
+  await expect(readPhotoModel()).resolves.toBe(model);
+  expect(cache.delete).toHaveBeenCalledWith(localKey);
+  expect(download).not.toHaveBeenCalled();
+});
+
+test("ダウンロード用ロックが取れない場合も期限で失敗し、再試行できる", async () => {
+  cacheStub();
+  vi.useFakeTimers();
+  const outcome = vi.fn();
+  const request = vi
+    .fn()
+    .mockImplementationOnce(() => new Promise(() => undefined))
+    .mockImplementation(async (_name, _options, callback) => callback());
+  vi.stubGlobal("navigator", { onLine: true, locks: { request } });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => new Response("test model")),
+  );
+  try {
+    void downloadPhotoModel().then(
+      () => outcome("success"),
+      () => outcome("timeout"),
+    );
+    await vi.advanceTimersByTimeAsync(300_000);
+    expect(outcome).toHaveBeenCalledWith("timeout");
+    await expect(downloadPhotoModel()).resolves.toBeUndefined();
+    expect(request).toHaveBeenCalledTimes(2);
+  } finally {
+    vi.useRealTimers();
+  }
+});

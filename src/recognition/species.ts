@@ -140,7 +140,8 @@ async function run(
         if (worker !== requestWorker) return;
         if (e.data.type === "progress") progress?.(e.data.text);
         else if (e.data.type === "result") {
-          ready = e.data.result.status !== "unavailable";
+          if (e.data.result.status === "unavailable") stopWorker();
+          else ready = true;
           finish?.(e.data.result);
         }
       };

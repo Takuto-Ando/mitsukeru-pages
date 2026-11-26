@@ -37,28 +37,34 @@ export function liveModelDownloadedBytes() {
 }
 
 export function downloadLiveModel() {
-  return (downloading ??= (async () => {
+  return (downloading ??= withDownloadDeadline(60_000, async (signal) => {
     const cache = await caches.open(cacheName);
     const url = modelUrl();
     if (!(await cache.match(url))) {
+      signal.throwIfAborted();
       updateProgress(0);
-      const bytes = await withDownloadDeadline(60_000, async (signal) => {
-        const response = await fetch(url, { signal });
-        if (!response.ok) throw new Error("Detection model download failed");
-        return trackDownloadedBytes(response, updateProgress).arrayBuffer();
-      });
+      const response = await fetch(url, { signal });
+      if (!response.ok) throw new Error("Detection model download failed");
+      const bytes = await trackDownloadedBytes(response, (loaded) => {
+        if (!signal.aborted) updateProgress(loaded);
+      }).arrayBuffer();
       if (bytes.byteLength !== liveModelBytes)
         throw new Error("Unexpected detection model size");
+      signal.throwIfAborted();
       await cache.put(
         url,
         new Response(bytes, {
           headers: { "Content-Type": "application/octet-stream" },
         }),
       );
+      signal.throwIfAborted();
+      if (!(await cache.match(url)))
+        throw new Error("Detection model was not saved");
     }
+    signal.throwIfAborted();
     updateProgress(liveModelBytes);
     window.dispatchEvent(new Event(liveModelEvent));
-  })().finally(() => {
+  }).finally(() => {
     downloading = undefined;
   }));
 }

@@ -1,23 +1,37 @@
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { chromium, webkit } from "playwright";
+import { createServer as createViteServer } from "vite";
 
-const [before, after, model, data, audit, output, engine = "chromium"] =
+const [before, after, model, data, audit, output, engine = "chromium", mode] =
   process.argv.slice(2);
+const coverage = mode === "--coverage";
 if (!output || !["chromium", "webkit"].includes(engine))
   throw new Error(
-    "Usage: node tests/recognition/bench-roster-worker.mjs BASELINE_DIST ROSTER_DIST MODEL DATASET.json AUDIT.json REPORT.json [chromium|webkit]",
+    "Usage: node tests/recognition/bench-roster-worker.mjs BASELINE_DIST ROSTER_DIST MODEL DATASET.json AUDIT.json REPORT.json [chromium|webkit] [--coverage]",
   );
 const modelSpec = JSON.parse(
   await readFile("src/recognition/bioclip-model.json"),
 );
-const { manifest } = JSON.parse(await readFile(audit));
-const available = manifest.filter(({ split }) => split === "test");
-const files = [...new Map(available.map((row) => [row.group, row])).values()];
+const { manifest, samples } = JSON.parse(await readFile(audit));
+const available = (manifest ?? samples).filter(({ split }) => split === "test");
+const files = coverage
+  ? available
+  : [...new Map(available.map((row) => [row.group, row])).values()];
 const base = dirname(resolve(data));
-const directories = [before, after];
+if (coverage) {
+  for (const { file, downloadSha256 } of files) {
+    const digest = createHash("sha256")
+      .update(await readFile(join(base, file)))
+      .digest("hex");
+    if (digest !== downloadSha256)
+      throw new Error(`Photo fixture differs: ${file}`);
+  }
+}
+const directories = coverage && before === after ? [after] : [before, after];
 const assets = await Promise.all(
   directories.map((directory) => readdir(join(directory, "assets"))),
 );
@@ -64,7 +78,7 @@ try {
   await page.goto("http://127.0.0.1:" + server.address().port);
   const paths = workers.map((worker, index) => `/${index}/assets/${worker}`);
   const { ready, records } = await page.evaluate(
-    async ({ paths, modelSpec, count }) => {
+    async ({ paths, modelSpec, count, coverage }) => {
       const cache = await caches.open(modelSpec.cache);
       await cache.put(modelSpec.cachePath, await fetch("/model"));
       const workers = paths.map((path) => new Worker(path, { type: "module" }));
@@ -95,50 +109,141 @@ try {
       for (let i = 0; i < count; i++) {
         const photo = await (await fetch("/photo/" + i)).blob();
         const timings = [];
-        const order = i % 2 ? [1, 0] : [0, 1];
-        for (const index of order)
-          timings[index] = await ask(workers[index], { photo, fit: "crop" });
+        const order = workers.map((_, index) => index);
+        if (i % 2) order.reverse();
+        if (coverage) {
+          const dataURL = await new Promise((accept, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => accept(reader.result);
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(photo);
+          });
+          for (const index of order) {
+            timings[index] = [];
+            for (const fit of ["crop", "contain"])
+              timings[index].push(
+                await ask(workers[index], { photo: dataURL, fit }),
+              );
+          }
+        } else {
+          for (const index of order)
+            timings[index] = await ask(workers[index], { photo, fit: "crop" });
+        }
         records.push(timings);
       }
       workers.forEach((worker) => worker.terminate());
       return { ready, records };
     },
-    { paths, modelSpec, count: files.length },
+    { paths, modelSpec, count: files.length, coverage },
   );
-  const percentile = (numbers, fraction) =>
-    [...numbers].sort((a, b) => a - b)[
-      Math.ceil(numbers.length * fraction) - 1
-    ];
-  const versions = workers.map((worker, index) => {
-    const samples = records.map((record) => record[index]);
-    const times = samples.map(({ ms }) => ms);
-    return {
-      worker,
-      readyMs: ready[index].ms,
-      medianMs: percentile(times, 0.5),
-      p95Ms: percentile(times, 0.95),
-      top1: samples.filter(
-        ({ result }, n) => result.candidates?.[0]?.groupId === files[n].group,
-      ).length,
-      top3: samples.filter(({ result }, n) =>
-        result.candidates?.some(({ groupId }) => groupId === files[n].group),
-      ).length,
+  if (coverage) {
+    const vite = await createViteServer({
+      optimizeDeps: { noDiscovery: true, include: [] },
+      server: { middlewareMode: true, ws: false },
+    });
+    try {
+      const { photoSpeciesViews, recognizeSpeciesViews } =
+        await vite.ssrLoadModule("/src/recognition/speciesViews.ts");
+      const { adoptedAnimals } = await vite.ssrLoadModule(
+        "/src/content/adoptedAnimals.ts",
+      );
+      const reports = [];
+      for (const [version, worker] of workers.entries()) {
+        const outcomes = [];
+        for (const [index, { group, id, file }] of files.entries()) {
+          const [crop, contain] = records[index][version];
+          const result = await recognizeSpeciesViews(
+            photoSpeciesViews(file),
+            () => true,
+            undefined,
+            undefined,
+            async (_photo, _progress, fit) =>
+              (fit === "contain" ? contain : crop).result,
+          );
+          outcomes.push({
+            id,
+            group,
+            file,
+            candidates: result.referenceGroupId
+              ? [result.referenceGroupId]
+              : result.candidates.map(({ groupId }) => groupId),
+            automatic: result.supported?.groupId,
+            views: [crop.result, contain.result],
+          });
+        }
+        const groups = adoptedAnimals.map(({ id, name }) => {
+          const group = outcomes.filter((row) => row.group === id);
+          const correct = group.filter(({ candidates }) =>
+            candidates.includes(id),
+          );
+          return {
+            id,
+            name,
+            photos: group.length,
+            correct: correct.length,
+            noCandidate: group.filter(({ candidates }) => !candidates.length)
+              .length,
+            example: correct[0],
+          };
+        });
+        reports.push({ worker, groups, outcomes });
+      }
+      const { writeFile } = await import("node:fs/promises");
+      await writeFile(
+        output,
+        JSON.stringify({ engine, samples: files.length, reports }, null, 2),
+      );
+      for (const { worker, groups } of reports) {
+        const missing = groups
+          .filter(({ correct }) => correct === 0)
+          .map(({ name }) => name);
+        console.log({
+          worker,
+          groups: groups.length,
+          photos: files.length,
+          missing,
+        });
+        if (missing.length) process.exitCode = 1;
+      }
+    } finally {
+      await vite.close();
+    }
+  } else {
+    const percentile = (numbers, fraction) =>
+      [...numbers].sort((a, b) => a - b)[
+        Math.ceil(numbers.length * fraction) - 1
+      ];
+    const versions = workers.map((worker, index) => {
+      const samples = records.map((record) => record[index]);
+      const times = samples.map(({ ms }) => ms);
+      return {
+        worker,
+        readyMs: ready[index].ms,
+        medianMs: percentile(times, 0.5),
+        p95Ms: percentile(times, 0.95),
+        top1: samples.filter(
+          ({ result }, n) => result.candidates?.[0]?.groupId === files[n].group,
+        ).length,
+        top3: samples.filter(({ result }, n) =>
+          result.candidates?.some(({ groupId }) => groupId === files[n].group),
+        ).length,
+      };
+    });
+    const report = {
+      engine,
+      browser: browser.version(),
+      samples: files.length,
+      versions,
+      records: records.map((record, index) => ({
+        id: files[index].id,
+        group: files[index].group,
+        versions: record,
+      })),
     };
-  });
-  const report = {
-    engine,
-    browser: browser.version(),
-    samples: files.length,
-    versions,
-    records: records.map((record, index) => ({
-      id: files[index].id,
-      group: files[index].group,
-      versions: record,
-    })),
-  };
-  const { writeFile } = await import("node:fs/promises");
-  await writeFile(output, JSON.stringify(report, null, 2));
-  console.log({ ...report, records: undefined });
+    const { writeFile } = await import("node:fs/promises");
+    await writeFile(output, JSON.stringify(report, null, 2));
+    console.log({ ...report, records: undefined });
+  }
 } finally {
   await browser.close();
   server.close();

@@ -56,11 +56,14 @@ GitHub Actionsでは同一オリジンの初回転送185,000 B、開始ボタン
 公開用ビルドをローカルで起動し、公開URLのパスに合わせて試験する。見本画像をカメラ映像として与え、実YOLOXのライブ検出をしばらく動かした後、撮影、動物名の確認、描画、保存、撮影画面への復帰を繰り返す。送信はローカルで捕捉する。macOSで途中のスリープを防ぐ場合は node の手前に `caffeinate -i` を付ける。
 
 ```sh
-npm run build
-npm run preview -- --host 127.0.0.1 --port 4175 --strictPort
+npm run build -- --outDir /tmp/zooketch-soak-dist
+ln -s /path/bioclip-image-int8.onnx /tmp/zooketch-soak-dist/__soak-model.onnx
+python3 -m http.server 4175 --bind 127.0.0.1 --directory /tmp/zooketch-soak-dist
 # 別のターミナルで実行
-node tools/performance/mobile-soak.mjs http://127.0.0.1:4175/ soak.jsonl 30 50
+node tools/performance/mobile-soak.mjs http://127.0.0.1:4175/ soak.jsonl 30 50 /__soak-model.onnx
 ```
+
+現行の試験スクリプトは、固定したBioCLIPをローカルでキャッシュし、撮影前に名前の表示も検査する。モデルを置いた試験用ディレクトリは公開用に使わない。
 
 記録するのはガベージコレクション後のChromiumページのJSヒープ、バッキングストレージ、DOMノード、Worker・映像トラックの作成・解放数、模擬送信とギャラリーの件数。OSから見たプロセス全体のメモリ、iPhoneでの発熱や温度を表す数値には使えない。
 

@@ -51,14 +51,15 @@ async function storePhotoModel({
   onDownload?: () => void;
   onBytes?: (downloaded: number) => void;
 } = {}) {
-  const download = async () => {
-    const cache = await caches.open(photoModel.cache);
-    if (await cachedModel(cache)) return;
-    if (!navigator.onLine) throw new Error("No offline species model");
-    onDownload?.();
-    // Give a transfer on a slower connection time to finish without
-    // discarding the response partway through and starting over.
-    await withDownloadDeadline(300_000, async (signal) => {
+  // Bound both the cross-tab lock and cache I/O. A stuck browser operation
+  // must release the UI's in-flight download so another attempt is possible.
+  return withDownloadDeadline(300_000, (signal) => {
+    const download = async () => {
+      const cache = await caches.open(photoModel.cache);
+      if (await cachedModel(cache)) return;
+      signal.throwIfAborted();
+      if (!navigator.onLine) throw new Error("No offline species model");
+      onDownload?.();
       const response = await fetch(photoModel.url, {
         priority: "low",
         signal,
@@ -68,18 +69,30 @@ async function storePhotoModel({
         response.headers.get("Content-Type")?.includes("text/html")
       )
         throw new Error("Species model download failed");
+      const body = onBytes
+        ? trackDownloadedBytes(response, (bytes) => {
+            if (!signal.aborted) onBytes(bytes);
+          })
+        : response;
       await cache.put(
         // WebKit can drop a cross-origin cache entry when its last tab closes
         // and then silently ignore writes to that same key after reopening.
         cacheKey(),
-        onBytes ? trackDownloadedBytes(response, onBytes) : response,
+        body,
       );
+      signal.throwIfAborted();
+      if (!(await cache.match(cacheKey())))
+        throw new Error("Species model was not saved");
       await cache.delete(photoModel.url).catch(() => undefined);
-    });
-  };
-  return navigator.locks
-    ? navigator.locks.request("zooketch-photo-model-download", download)
-    : download();
+    };
+    return navigator.locks
+      ? navigator.locks.request(
+          "zooketch-photo-model-download",
+          { signal },
+          download,
+        )
+      : download();
+  });
 }
 
 let pending: Promise<void> | undefined;
@@ -130,16 +143,29 @@ export function downloadPhotoModel() {
 
 export async function readPhotoModel() {
   const cache = await caches.open(photoModel.cache);
-  let cached = await cachedModel(cache);
-  if (!cached) {
-    await storePhotoModel();
-    cached = await cachedModel(cache);
+  async function readCache() {
+    let failure: unknown;
+    for (const key of [cacheKey(), photoModel.url]) {
+      const response = await cache.match(key);
+      if (!response) continue;
+      try {
+        const bytes = await response.arrayBuffer();
+        if (bytes.byteLength === photoModel.bytes) return bytes;
+        await cache.delete(key);
+        failure = new Error("Unexpected species model size");
+      } catch (error) {
+        // A cache read can fail temporarily. Try the other key without
+        // deleting a response whose contents could not be checked.
+        failure = error;
+      }
+    }
+    if (failure) throw failure;
   }
-  if (!cached) throw new Error("Species model cache miss");
-  const bytes = await cached.response.arrayBuffer();
-  if (bytes.byteLength !== photoModel.bytes) {
-    await cache.delete(cached.key);
-    throw new Error("Unexpected species model size");
-  }
-  return bytes;
+
+  const cached = await readCache();
+  if (cached) return cached;
+  await storePhotoModel();
+  const downloaded = await readCache();
+  if (!downloaded) throw new Error("Species model cache miss");
+  return downloaded;
 }

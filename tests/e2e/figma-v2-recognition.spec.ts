@@ -1524,3 +1524,68 @@ async function startControlledRecognition(page: Page) {
       ),
   };
 }
+
+for (const recover of [true, false]) {
+  test(`写真の推論ワーカーが停止したら再作成し、${recover ? "同じ写真の候補を表示する" : "手動選択できる案内を出す"}`, async ({
+    page,
+  }) => {
+    await useMockCamera(page);
+    await mockTutorialModels(page, { detector: false });
+    await page.addInitScript((recover) => {
+      let photoRequests = 0;
+      let failedWorker: object | undefined;
+      window.Worker = new Proxy(window.Worker, {
+        construct(target, args: [string | URL, WorkerOptions?]) {
+          if (args[1]?.name !== "zooketch-species-recognition")
+            return Reflect.construct(target, args);
+          return {
+            onmessage: undefined as
+              ((event: { data: unknown }) => void) | undefined,
+            terminate() {},
+            postMessage({ photo }: { photo?: Blob }) {
+              let result: unknown = { status: "ready" };
+              if (photo) {
+                if (document.querySelector(".design3-photo-review")) {
+                  document.documentElement.dataset.photoRequests = String(
+                    ++photoRequests,
+                  );
+                  failedWorker ??= this;
+                  result =
+                    !recover || failedWorker === this
+                      ? { status: "unavailable", reason: "ONNX failed" }
+                      : {
+                          status: "candidates",
+                          candidates: [{ groupId: "giraffe", score: 0.99 }],
+                        };
+                } else result = { status: "unknown" };
+              }
+              queueMicrotask(() =>
+                this.onmessage?.({ data: { type: "result", result } }),
+              );
+            },
+          };
+        },
+      });
+    }, recover);
+    await page.goto("./");
+    await button(page, "つづきから").click();
+    await button(page, "シャッター").click();
+    await expect(page.locator("html")).toHaveAttribute(
+      "data-photo-requests",
+      "2",
+    );
+    await button(page, "修正").click();
+    if (recover) {
+      await expect(
+        page.getByRole("list", { name: "写真から見つけた候補" }),
+      ).toContainText("キリン");
+    } else {
+      await expect(page.getByRole("status")).toHaveText(
+        "画像認識を利用できませんでした。",
+      );
+      await expect(
+        page.getByRole("list", { name: "動物の一覧" }),
+      ).toBeVisible();
+    }
+  });
+}

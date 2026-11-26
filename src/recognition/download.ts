@@ -5,9 +5,15 @@ export async function withDownloadDeadline<T>(
   download: (signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), milliseconds);
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timeout = setTimeout(() => {
+      reject(new DOMException("Model download timed out", "TimeoutError"));
+      controller.abort();
+    }, milliseconds);
+  });
   try {
-    return await download(controller.signal);
+    return await Promise.race([download(controller.signal), expired]);
   } finally {
     clearTimeout(timeout);
   }

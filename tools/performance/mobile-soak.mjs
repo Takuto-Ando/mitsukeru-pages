@@ -1,12 +1,13 @@
 import { appendFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { performance } from "node:perf_hooks";
 import { chromium } from "@playwright/test";
 
-const [rawBase, output, rawMinutes = "30", rawLiveSeconds = "50"] =
+const [rawBase, output, rawMinutes = "30", rawLiveSeconds = "50", modelPath] =
   process.argv.slice(2);
-if (!rawBase || !output)
+if (!rawBase || !output || !modelPath)
   throw Error(
-    "Usage: node tools/performance/mobile-soak.mjs URL OUTPUT.jsonl [minutes] [live seconds per cycle]",
+    "Usage: node tools/performance/mobile-soak.mjs URL OUTPUT.jsonl MINUTES LIVE_SECONDS /LOCAL-BIOCLIP.onnx",
   );
 const base = new URL(rawBase);
 if (!["127.0.0.1", "localhost", "[::1]"].includes(base.hostname))
@@ -15,7 +16,14 @@ const duration = Number(rawMinutes) * 60_000;
 const liveDuration = Number(rawLiveSeconds) * 1000;
 if (!(duration > 0 && liveDuration >= 0)) throw Error("Invalid duration");
 
+const model = JSON.parse(
+  await readFile("src/recognition/bioclip-model.json", "utf8"),
+);
+const modelUrl = new URL(modelPath, base);
+if (modelUrl.origin !== base.origin)
+  throw Error("Serve the model from the same local origin as the app");
 const browser = await chromium.launch();
+
 let page;
 let passed = false;
 const started = performance.now();
@@ -41,6 +49,11 @@ try {
     const request = route.request();
     const url = new URL(request.url());
     if (url.origin !== base.origin) return route.abort();
+    if (url.pathname === "/__soak/prime")
+      return route.fulfill({
+        contentType: "text/html",
+        body: "<title>Local model fixture</title>",
+      });
     if (request.method() === "GET") return route.continue();
     if (!url.pathname.endsWith("/__zooketch-share")) return route.abort();
     const { id } = request.postDataJSON();
@@ -52,19 +65,41 @@ try {
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.addInitScript(() => {
     localStorage.setItem("zooketch-replica-tutorial-v2", "1");
-    window.soak = { created: 0, closed: 0, frames: 0, tracks: 0, stopped: 0 };
+    window.soak = {
+      created: 0,
+      closed: 0,
+      frames: 0,
+      tracks: 0,
+      stopped: 0,
+      speciesCreated: 0,
+      speciesClosed: 0,
+      speciesResults: 0,
+    };
     window.Worker = new Proxy(window.Worker, {
       construct(target, args) {
         const worker = Reflect.construct(target, args);
-        if (args[1]?.name !== "zooketch-live-detection") return worker;
-        window.soak.created++;
+        const detector = args[1]?.name === "zooketch-live-detection";
+        const species = args[1]?.name === "zooketch-species-recognition";
+        if (!detector && !species) return worker;
+        if (detector) window.soak.created++;
+        else window.soak.speciesCreated++;
+        let closed = false;
         const terminate = worker.terminate.bind(worker);
         worker.terminate = () => {
-          window.soak.closed++;
+          if (closed) return;
+          closed = true;
+          if (detector) window.soak.closed++;
+          else window.soak.speciesClosed++;
           terminate();
         };
         worker.addEventListener("message", ({ data }) => {
-          if (data.type === "boxes") window.soak.frames++;
+          if (detector && data.type === "boxes") window.soak.frames++;
+          if (
+            species &&
+            data.type === "result" &&
+            data.result.status !== "ready"
+          )
+            window.soak.speciesResults++;
         });
         return worker;
       },
@@ -107,11 +142,23 @@ try {
   const button = (name) => page.getByRole("button", { name, exact: true });
   const wait = (name) => button(name).waitFor({ timeout: 20_000 });
   const screen = (name) => page.locator(`.replica-app[data-screen="${name}"]`);
+  await page.goto(new URL("/__soak/prime", base).href);
+  await page.evaluate(
+    async ({ cache, cachePath, bytes, modelUrl }) => {
+      const response = await fetch(modelUrl);
+      if (
+        !response.ok ||
+        Number(response.headers.get("Content-Length")) !== bytes
+      )
+        throw Error("Could not prime the model fixture");
+      await (await caches.open(cache)).put(cachePath, response);
+    },
+    { ...model, modelUrl: modelUrl.href },
+  );
   await page.goto(base.href, { waitUntil: "domcontentloaded" });
   const resume = button("つづきから");
   await resume.waitFor({ timeout: 20_000 });
-  const usesLogin = (await resume.getAttribute("aria-haspopup")) === "dialog";
-  await (usesLogin ? button("はじめから") : resume).tap({ timeout: 20_000 });
+  await resume.tap({ timeout: 20_000 });
   let cycles = 0;
   const monitor = async (label) => {
     await cdp.send("HeapProfiler.collectGarbage");
@@ -131,12 +178,16 @@ try {
   };
   do {
     await page.locator(".replica-camera-tracking").waitFor({ timeout: 60_000 });
+    await page
+      .getByText("キリンがいるよ！", { exact: true })
+      .first()
+      .waitFor({ timeout: 45_000 });
     if (!cycles) await monitor("live");
     if (liveDuration)
       await new Promise((resolve) => setTimeout(resolve, liveDuration));
     await button("シャッター").tap();
     await page.getByRole("heading", { name: "キリン", exact: true }).waitFor();
-    await button("ピツネに見せる").tap();
+    await button("描いてもらう").tap();
     // Explicit steps keep the run independent of animation-timer scheduling.
     await screen("easel").or(screen("challenge")).or(screen("draw")).waitFor();
     if (await screen("easel").count())
@@ -185,6 +236,8 @@ try {
     acceptedIds.size !== cycles ||
     accepted !== cycles ||
     resources.created !== resources.closed ||
+    resources.speciesCreated !== resources.speciesClosed ||
+    resources.speciesResults < cycles ||
     resources.tracks !== resources.stopped
   )
     throw Error(

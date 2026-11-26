@@ -135,3 +135,23 @@ node tests/recognition/score-roster.mjs /tmp/zooketch-roster/features.jsonl \
 同じ画像特徴を `score-roster.mjs` に渡し、`crop+contain` と `photo-review` を比較すると再集計できる。前者は通常候補、後者は撮影後の「修正」に表示される候補を含む。
 
 Chromiumの配信用Workerにも、集計で候補が増えた3枚を入力した。ショウガラゴは新しく候補に出た。インドオオコウモリは両版でテナガザル、フラミンゴは両版でフラミンゴになった。ブラウザーCanvasと評価用のbicubicリサイズで結果が異なる写真があり、122枚と70枚の集計は固定したオフライン前処理の結果である。
+
+## 堅牢化第3弾の再現手順
+
+Node.js 24、Playwright Chromium、ffmpeg を使用する。固定写真の SHA-256 を検査し、配信用Workerの実推論を全画像に対して実行する。撮影後と同じように、全体の crop と contain をアプリの複数ビュー判定へ渡す。JSONには各ビューの結果、候補、確定名を残し、正しい候補が一度も返らなかったグループがあれば終了コード1とする。
+
+```sh
+node tests/recognition/bench-roster-worker.mjs \
+  /path/baseline-dist /path/current-dist /path/bioclip-image-int8.onnx \
+  work/zoo-reference-v1/dataset-release.json tests/recognition/roster-fixtures.json \
+  /tmp/zooketch-photo-coverage.json chromium --coverage
+python3 tests/recognition/make-roster-replay.py \
+  /tmp/zooketch-photo-coverage.json work/zoo-reference-v1 /tmp/zooketch-photo-replay
+node tests/recognition/bench-live-replay.mjs \
+  /path/current-dist /tmp/zooketch-photo-replay/manifest.json \
+  /path/bioclip-image-int8.onnx /tmp/zooketch-camera-coverage.json
+```
+
+固定写真セットのオオヤマネコ `commons-148284553` は記念硬貨の画像である。過去の集計と照合できるよう元の固定一覧を保持した。調整用に含まれていた実際の個体の写真 `commons-57002898` は、両ビルドで「ヤギ・ヒツジ」に誤確定した。結果は既知の不合格として扱う。
+
+写真から作った映像で確かめられるのは、撮影前のアプリの表示経路である。動く個体、遮蔽物、別の個体への切り替えは、既存の実映像で別に再生する。各映像の出典と取得方法は [実映像の一覧](live-replay-fixtures.json) を参照。

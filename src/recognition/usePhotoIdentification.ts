@@ -62,25 +62,31 @@ export function usePhotoIdentification(
           update(empty);
         }
         if (!active) return;
-        cancelInference = true;
-        const prepared = await speciesRecognizer.prepare();
-        if (!active) return;
-        if (prepared.status !== "ready") throw new Error("unavailable");
-        const { candidates, referenceGroupId } = await recognizeSpeciesViews(
-          photoSpeciesViews(image, crop, tiles),
-          () => active,
-        );
-        cancelInference = false;
-        if (!active) return;
-        speciesRecognizer.unload();
-        if (candidates.length || referenceGroupId) {
-          update({
-            candidates: referenceGroupId
-              ? [{ groupId: referenceGroupId }]
-              : candidates,
-            message: "",
-          });
-        } else update(empty);
+        const views = photoSpeciesViews(image, crop, tiles);
+        for (let attempt = 0; attempt < 2; attempt++) {
+          cancelInference = true;
+          const prepared = await speciesRecognizer.prepare();
+          if (!active) return;
+          const result =
+            prepared.status === "ready"
+              ? await recognizeSpeciesViews(views, () => active)
+              : undefined;
+          if (!active) return;
+          cancelInference = false;
+          speciesRecognizer.unload();
+          if (!result || result.unavailable) continue;
+          const { candidates, referenceGroupId } = result;
+          if (candidates.length || referenceGroupId) {
+            update({
+              candidates: referenceGroupId
+                ? [{ groupId: referenceGroupId }]
+                : candidates,
+              message: "",
+            });
+          } else update(empty);
+          return;
+        }
+        update({ message: "画像認識を利用できませんでした。" });
       } catch {
         if (active && cancelInference) {
           speciesRecognizer.release();
@@ -94,7 +100,10 @@ export function usePhotoIdentification(
     void identify(photo);
     return () => {
       active = false;
-      if (cancelInference) speciesRecognizer.release();
+      if (cancelInference) {
+        speciesRecognizer.release();
+        speciesRecognizer.unload();
+      }
     };
   }, [crop, photo, tiles]);
 
