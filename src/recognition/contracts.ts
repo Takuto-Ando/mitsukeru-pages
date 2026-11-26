@@ -10,6 +10,12 @@ export type SpeciesRecognition = {
   confidence: number;
   status: "identified" | "uncertain" | "unknown";
   modelVersion: string;
+  cameraEvidence?: {
+    groupId: string;
+    similarity: number;
+    lead: number;
+    referenceAgrees: boolean;
+  };
 };
 export type IndividualRecognition = {
   individualId: string | null;

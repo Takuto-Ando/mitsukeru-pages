@@ -50,6 +50,8 @@ type Vote = {
   view: SpeciesView;
   strong: boolean;
   margin: number;
+  textGroup?: string;
+  referenceAgrees?: boolean;
 };
 const key = (candidate: Candidate) => candidate.groupId;
 
@@ -90,8 +92,9 @@ export type LiveViewPolicy = {
   detectorHint?: { groupId: string; score: number };
 };
 
-const liveVoteMinimum = 0.52;
-const liveVoteMargin = 0.05;
+const liveVoteMinimum = 0.46;
+const liveVoteMargin = 0.035;
+const corroboratedScore = 0.69;
 
 const detectorConflictScore = 0.8;
 
@@ -128,16 +131,39 @@ function liveDecision(votes: readonly Vote[], policy: LiveViewPolicy) {
   );
   for (const vote of votes.slice(0, -1)) {
     if (vote.view.source === "tile" || !matches(vote)) continue;
-    if (
-      !liveVoteCompatible(vote, policy) &&
-      !liveVoteCompatible(latest, policy)
-    )
-      continue;
     const clear = vote.strong || latest.strong;
     if (
       !clear &&
       (conflictingStrongVote ||
-        (vote.view.source === "focus" && latest.view.source === "focus"))
+        [vote, latest].some(
+          ({ textGroup, candidate }) =>
+            textGroup && textGroup !== key(candidate),
+        ))
+    )
+      continue;
+
+    const crossesFrameAndFocus =
+      vote.view.source !== latest.view.source && latest.view.source !== "tile";
+    const jointScore = (vote.candidate.score + latest.candidate.score) / 2;
+    const consistentAcrossRegions =
+      crossesFrameAndFocus && jointScore >= corroboratedScore;
+    if (
+      !liveVoteCompatible(vote, policy) &&
+      !liveVoteCompatible(latest, policy)
+    ) {
+      // YOLOX proposes where to look. Even a strong detector label can be
+      // wrong, so agreement between the frame and crop can outweigh it.
+      if (
+        !consistentAcrossRegions ||
+        conflictingStrongVote ||
+        (!vote.referenceAgrees && !latest.referenceAgrees)
+      )
+        continue;
+    }
+    if (
+      !clear &&
+      vote.view.source === "focus" &&
+      latest.view.source === "focus"
     )
       continue;
     if (
@@ -198,6 +224,29 @@ export async function recognizeSpeciesViews(
         candidates.set(key(candidate), candidate);
     }
 
+    const evidence = live && result.recognition?.cameraEvidence;
+    const detector = live?.detectorHint;
+    if (
+      evidence &&
+      view.source !== "tile" &&
+      ((detector &&
+        detector.score >= 0.8 &&
+        evidence.lead >= 0.009 &&
+        detector.groupId === evidence.groupId) ||
+        (evidence.referenceAgrees &&
+          (!view.source ||
+            detector?.groupId === evidence.groupId ||
+            !detector)))
+    ) {
+      const existing = candidates.get(evidence.groupId);
+      supported = existing ?? {
+        groupId: evidence.groupId,
+        speciesId: evidence.groupId,
+        score: evidence.similarity,
+      };
+      candidates.set(evidence.groupId, supported);
+      break;
+    }
     const [first, runner] = result.candidates;
     const margin = first ? first.score - (runner?.score ?? 0) : 0;
     const strong = result.recognition?.status === "identified";
@@ -211,7 +260,17 @@ export async function recognizeSpeciesViews(
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
     );
-    votes.push({ candidate: first, view, strong, margin });
+    votes.push({
+      candidate: first,
+      view,
+      strong,
+      margin,
+      textGroup: evidence ? evidence.groupId : undefined,
+      referenceAgrees:
+        !!evidence &&
+        evidence.groupId === key(first) &&
+        evidence.referenceAgrees,
+    });
 
     if (live && result.recognition) {
       const vote = votes[votes.length - 1];

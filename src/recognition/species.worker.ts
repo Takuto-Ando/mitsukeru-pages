@@ -1,6 +1,8 @@
 import { env, InferenceSession, Tensor } from "onnxruntime-web/wasm";
 import wasm from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm?url";
 import runtime from "../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.mjs?url";
+import { adoptedAnimalById } from "../content/adoptedAnimals";
+import type { SpeciesRecognition } from "./contracts";
 import { readPhotoModel } from "./photoModel";
 import { classifyRosterBioClip } from "./rosterClassifier";
 import { groupPhotoReferences } from "./rosterPhotoReferences";
@@ -43,6 +45,7 @@ async function createClassifier() {
     return { label, vector, norm: Math.sqrt(squareSum) };
   });
   const matchPhoto = createPhotoReferenceMatcher(photoReferences);
+  const groupIds = [...adoptedAnimalById.keys()];
   const session = await InferenceSession.create(await readPhotoModel(), {
     executionProviders: ["wasm"],
   });
@@ -124,7 +127,31 @@ async function createClassifier() {
           // suggestion, and only when standard recognition has no candidates.
           { allowReferenceSuggestion: typeof photo === "string" },
         );
-        if (pixels) recent.write(pixels, result);
+        const recognition: SpeciesRecognition = result.recognition;
+        if (pixels) {
+          const [top, second] = output.sort((a, b) => b.cosine - a.cosine);
+          const lead = top.cosine - (second?.cosine ?? 0);
+          if (adoptedAnimalById.has(top.label) && top.cosine >= 0.26) {
+            const [match, runner] =
+              matchPhoto && top.cosine >= 0.28 && lead >= 0.02
+                ? [
+                    ...groupPhotoReferences(matchPhoto, features, groupIds),
+                  ].sort((a, b) => b[1] - a[1])
+                : [];
+            recognition.cameraEvidence = {
+              groupId: top.label,
+              similarity: top.cosine,
+              lead,
+              referenceAgrees:
+                top.cosine >= 0.28 &&
+                lead >= 0.02 &&
+                match?.[0] === top.label &&
+                match[1] >= 0.6 &&
+                match[1] - (runner?.[1] ?? 1) >= 0.035,
+            };
+          }
+          recent.write(pixels, result);
+        }
         return result;
       } finally {
         embedding.dispose();

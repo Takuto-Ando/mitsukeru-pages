@@ -24,7 +24,7 @@ export type LiveBox = {
 const immediateDetectionScore = 0.3;
 const minimumDetectionScore = 0.15;
 
-function overlap(first: LiveBox, second: LiveBox) {
+export function liveBoxOverlap(first: LiveBox, second: LiveBox) {
   const intersection =
     Math.max(
       0,
@@ -48,7 +48,7 @@ export function confirmLiveBoxes(
   return boxes.filter(
     (box) =>
       box.score >= immediateDetectionScore ||
-      previous.some((candidate) => overlap(candidate, box) >= 0.45),
+      previous.some((candidate) => liveBoxOverlap(candidate, box) >= 0.45),
   );
 }
 
@@ -62,7 +62,7 @@ export function trackLiveBoxes(
     let best: TrackedLiveBox | undefined;
     let bestOverlap = 0.18;
     for (const candidate of unmatched) {
-      const shared = overlap(candidate, box);
+      const shared = liveBoxOverlap(candidate, box);
       if (candidate.label !== box.label && shared < 0.45) continue;
       if (shared > bestOverlap) {
         best = candidate;
@@ -116,7 +116,7 @@ export function decodeLiveBoxes(
   }
   const result: LiveBox[] = [];
   for (const box of candidates.sort((a, b) => b.score - a.score)) {
-    if (result.some((prior) => overlap(prior, box) > 0.45)) continue;
+    if (result.some((prior) => liveBoxOverlap(prior, box) > 0.45)) continue;
     result.push(box);
     if (result.length === 3) break;
   }

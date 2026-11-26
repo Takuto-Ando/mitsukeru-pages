@@ -370,3 +370,108 @@ test("白枠の確度が下がっても新しい候補と違う古い票を復�
   expect(result.supported).toBeUndefined();
   expect(result.suggestion?.groupId).toBe("elephant");
 });
+
+test("画面全体で種識別と参照写真が一致したら白枠と異なる動物も確定できる", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("goat", 0.76))
+    .mockResolvedValueOnce({
+      ...outcome("hippo", 0.89),
+      recognition: {
+        speciesId: "hippo",
+        confidence: 0.89,
+        status: "uncertain",
+        modelVersion: "test",
+        cameraEvidence: {
+          groupId: "hippo",
+          similarity: 0.313,
+          lead: 0.026,
+          referenceAgrees: true,
+        },
+      },
+    });
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: { groupId: "elephant", score: 0.91 } },
+  );
+  expect(result.supported?.groupId).toBe("hippo");
+  expect(recognize).toHaveBeenCalledTimes(2);
+});
+
+test("カメラでは枠内と画面全体が中程度の点で一致しても確定できる", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("hippo", 0.48))
+    .mockResolvedValueOnce(outcome("hippo", 0.51));
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    {},
+  );
+  expect(result.supported?.groupId).toBe("hippo");
+});
+
+test("テキスト側の判定と白枠が一致したら参照写真による候補の逆転を解消する", async () => {
+  const recognize = vi.spyOn(speciesRecognizer, "recognize").mockResolvedValue({
+    ...outcome("donkey", 0.9),
+    recognition: {
+      speciesId: "donkey",
+      confidence: 0.9,
+      status: "uncertain",
+      modelVersion: "test",
+      cameraEvidence: {
+        groupId: "elephant",
+        similarity: 0.311,
+        lead: 0.01,
+        referenceAgrees: false,
+      },
+    },
+  });
+  const result = await recognizeSpeciesViews(
+    [{ photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: { groupId: "elephant", score: 0.92 } },
+  );
+  expect(result.supported?.groupId).toBe("elephant");
+  expect(result.candidates[0]?.groupId).toBe("elephant");
+});
+
+test("参照写真で順位が逆転した弱い候補だけが続いても確定しない", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("donkey", 0.89))
+    .mockResolvedValueOnce({
+      ...outcome("donkey", 0.98),
+      recognition: {
+        speciesId: "donkey",
+        confidence: 0.98,
+        status: "uncertain",
+        modelVersion: "test",
+        cameraEvidence: {
+          groupId: "goat",
+          similarity: 0.287,
+          lead: 0.007,
+          referenceAgrees: false,
+        },
+      },
+    });
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    {},
+  );
+  expect(result.supported).toBeUndefined();
+});

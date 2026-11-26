@@ -15,7 +15,7 @@ import {
   photoViewQuality,
   recognizeSpeciesViews,
 } from "./speciesViews";
-import type { TrackedLiveBox } from "./liveBoxes";
+import { liveBoxOverlap, type TrackedLiveBox } from "./liveBoxes";
 import type { Candidate } from "./labels";
 
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
@@ -74,17 +74,30 @@ function sameReadingArea(first: CameraView, second: CameraView) {
 }
 
 function sameTarget(first: CameraView, second: CameraView) {
-  return first.zoom === second.zoom && first.box?.id === second.box?.id;
+  if (first.zoom !== second.zoom) return false;
+  if (first.box?.id === second.box?.id) return true;
+  // Detector categories can change on the same animal. Keep a reading only
+  // while the old and new tracks still share a substantial part of the frame.
+  return (
+    !!first.box && !!second.box && liveBoxOverlap(first.box, second.box) >= 0.38
+  );
 }
 
 function recognitionViews(video: HTMLVideoElement, { zoom, box }: CameraView) {
   const frames = drawPhotoRecognitionFrames(video, zoom, box);
   if (!frames) return [];
-  return photoSpeciesViews(
+  const views = photoSpeciesViews(
     photoFromCanvas(frames.full, photoViewQuality.full),
     frames.crop && photoFromCanvas(frames.crop, photoViewQuality.crop),
     frames.tiles.map((tile) => photoFromCanvas(tile, photoViewQuality.crop)),
   );
+  if (frames.crop && liveDetectorHint(box)) {
+    // Compare a whole frame before another fit of the same crop when the
+    // detector proposes a name. The classifier can then catch a disagreement.
+    const [focus, focusContain, whole, ...remaining] = views;
+    return [focus, whole, focusContain, ...remaining];
+  }
+  return views;
 }
 
 export function useLiveSpecies(
