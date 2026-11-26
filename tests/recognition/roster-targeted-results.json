@@ -1,0 +1,2923 @@
+{
+  "baselineCommit": "fa9c13d",
+  "fixture": "roster-fixtures.json",
+  "tests": {
+    "validation": {
+      "before": {
+        "n": 92,
+        "top1": 73,
+        "top3": 77,
+        "wrong": 11,
+        "noCandidate": 8,
+        "autoCorrect": 63,
+        "autoWrong": 2,
+        "byGroup": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "badger": 1,
+              "elephant": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {}
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "giraffe": 1
+            }
+          },
+          "badger": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "fennec": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "kyoto-g-senegalensis": 1,
+              "goat": 1
+            }
+          },
+          "kyoto-a-fulgens": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 9,
+            "top1": 9,
+            "top3": 9,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-bengalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "gibbon": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1,
+              "macaque": 1
+            }
+          },
+          "kyoto-serval": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "kyoto-p-bengalensis": 1
+            }
+          },
+          "hyrax": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "tapir": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "macaque": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1,
+              "goat": 1
+            }
+          },
+          "giraffe": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-n-meleagris": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 6,
+            "top1": 4,
+            "top3": 5,
+            "confusions": {
+              "bush-dog": 1,
+              "no-candidate": 1
+            }
+          }
+        },
+        "byTaxon": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "badger": 1,
+              "elephant": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {}
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "giraffe": 1
+            }
+          },
+          "badger": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "fennec": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "kyoto-g-senegalensis": 1,
+              "goat": 1
+            }
+          },
+          "kyoto-a-fulgens": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "kyoto-p-ruber": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-bengalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "gibbon": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-chilensis": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-roseus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1,
+              "macaque": 1
+            }
+          },
+          "kyoto-serval": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "kyoto-p-bengalensis": 1
+            }
+          },
+          "hyrax": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "tapir": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "macaque": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1,
+              "goat": 1
+            }
+          },
+          "giraffe": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-n-meleagris": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "bush-dog": 1
+            }
+          },
+          "sheep": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        }
+      },
+      "after": {
+        "n": 92,
+        "top1": 74,
+        "top3": 78,
+        "wrong": 10,
+        "noCandidate": 8,
+        "autoCorrect": 66,
+        "autoWrong": 2,
+        "byGroup": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "elephant": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {}
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "giraffe": 1
+            }
+          },
+          "badger": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "fennec": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "kyoto-g-senegalensis": 1,
+              "goat": 1
+            }
+          },
+          "kyoto-a-fulgens": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 9,
+            "top1": 9,
+            "top3": 9,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-bengalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "gibbon": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1,
+              "macaque": 1
+            }
+          },
+          "kyoto-serval": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "kyoto-p-bengalensis": 1
+            }
+          },
+          "hyrax": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "tapir": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "macaque": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1,
+              "goat": 1
+            }
+          },
+          "giraffe": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-n-meleagris": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 6,
+            "top1": 4,
+            "top3": 5,
+            "confusions": {
+              "bush-dog": 1,
+              "no-candidate": 1
+            }
+          }
+        },
+        "byTaxon": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "elephant": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {}
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "giraffe": 1
+            }
+          },
+          "badger": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "fennec": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "kyoto-g-senegalensis": 1,
+              "goat": 1
+            }
+          },
+          "kyoto-a-fulgens": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "kyoto-p-ruber": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-bengalensis": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "gibbon": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-chilensis": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-roseus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 3,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1,
+              "macaque": 1
+            }
+          },
+          "kyoto-serval": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "kyoto-p-bengalensis": 1
+            }
+          },
+          "hyrax": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "tapir": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "macaque": {
+            "n": 3,
+            "top1": 1,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1,
+              "goat": 1
+            }
+          },
+          "giraffe": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "kyoto-n-meleagris": {
+            "n": 3,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 3,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "bush-dog": 1
+            }
+          },
+          "sheep": {
+            "n": 3,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        }
+      }
+    },
+    "test": {
+      "before": {
+        "n": 122,
+        "top1": 101,
+        "top3": 108,
+        "wrong": 11,
+        "noCandidate": 10,
+        "autoCorrect": 88,
+        "autoWrong": 6,
+        "byGroup": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "badger": 1,
+              "no-candidate": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1
+            }
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1,
+              "deer": 1
+            }
+          },
+          "badger": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "fennec": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-a-fulgens": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "fennec": 1,
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 12,
+            "top1": 12,
+            "top3": 12,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "lemur": 1,
+              "kyoto-g-senegalensis": 1
+            }
+          },
+          "kyoto-p-bengalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1,
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "gibbon": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-c-didactylus": 1
+            }
+          },
+          "meerkat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-serval": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hyrax": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "tapir": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "macaque": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "giraffe": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "kyoto-n-meleagris": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 8,
+            "top1": 7,
+            "top3": 7,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        },
+        "byTaxon": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "badger": 1,
+              "no-candidate": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1
+            }
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1,
+              "deer": 1
+            }
+          },
+          "badger": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "fennec": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-a-fulgens": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "fennec": 1,
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "kyoto-p-ruber": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "lemur": 1,
+              "kyoto-g-senegalensis": 1
+            }
+          },
+          "kyoto-p-bengalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1,
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "gibbon": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-c-didactylus": 1
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-roseus": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-serval": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hyrax": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "tapir": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "macaque": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "giraffe": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "kyoto-n-meleagris": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "sheep": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        }
+      },
+      "after": {
+        "n": 122,
+        "top1": 104,
+        "top3": 109,
+        "wrong": 9,
+        "noCandidate": 9,
+        "autoCorrect": 90,
+        "autoWrong": 5,
+        "byGroup": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1
+            }
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "badger": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "fennec": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-a-fulgens": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "fennec": 1,
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "capuchin": 1
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 12,
+            "top1": 12,
+            "top3": 12,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-g-senegalensis": 1
+            }
+          },
+          "kyoto-p-bengalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1,
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "gibbon": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-c-didactylus": 1
+            }
+          },
+          "meerkat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-serval": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hyrax": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "tapir": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "macaque": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "giraffe": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "kyoto-n-meleagris": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 8,
+            "top1": 7,
+            "top3": 7,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        },
+        "byTaxon": {
+          "kyoto-l-lynx": {
+            "n": 1,
+            "top1": 0,
+            "top3": 0,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "bush-dog": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "no-candidate": 1
+            }
+          },
+          "gorilla": {
+            "n": 1,
+            "top1": 0,
+            "top3": 1,
+            "confusions": {
+              "macaque": 1
+            }
+          },
+          "mandrill": {
+            "n": 2,
+            "top1": 1,
+            "top3": 1,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "badger": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "fennec": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-a-fulgens": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-senegalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "fennec": 1,
+              "no-candidate": 1
+            }
+          },
+          "bear": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "capuchin": 1
+            }
+          },
+          "kyoto-p-ruber": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-c-didactylus": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-g-senegalensis": 1
+            }
+          },
+          "kyoto-p-bengalensis": {
+            "n": 4,
+            "top1": 2,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1,
+              "kyoto-serval": 1
+            }
+          },
+          "lemur": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-h-cristata": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-g-eremita": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "gibbon": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "kyoto-c-didactylus": 1
+            }
+          },
+          "kyoto-p-chilensis": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-roseus": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "meerkat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "capuchin": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-serval": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hyrax": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "kyoto-p-giganteus": {
+            "n": 4,
+            "top1": 2,
+            "top3": 2,
+            "confusions": {
+              "no-candidate": 2
+            }
+          },
+          "tapir": {
+            "n": 4,
+            "top1": 3,
+            "top3": 4,
+            "confusions": {
+              "deer": 1
+            }
+          },
+          "macaque": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "giraffe": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "hippo": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "deer": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "elephant": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "donkey": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "goat": 1
+            }
+          },
+          "kyoto-n-meleagris": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "goat": {
+            "n": 4,
+            "top1": 4,
+            "top3": 4,
+            "confusions": {}
+          },
+          "sheep": {
+            "n": 4,
+            "top1": 3,
+            "top3": 3,
+            "confusions": {
+              "no-candidate": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "kyotoCatalogue": {
+    "before": {
+      "n": 33,
+      "top1": 31,
+      "top3": 33,
+      "wrong": 2,
+      "noCandidate": 0,
+      "autoCorrect": 28,
+      "autoWrong": 1,
+      "byGroup": {
+        "macaque": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "elephant": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "tapir": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "kyoto-p-giganteus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-l-lynx": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "hippo": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "giraffe": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "hyrax": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-serval": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-senegalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gibbon": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-h-cristata": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-bengalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gorilla": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "badger": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bear": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "goat": {
+          "n": 2,
+          "top1": 2,
+          "top3": 2,
+          "confusions": {}
+        },
+        "fennec": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "capuchin": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-c-didactylus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "deer": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "mandrill": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "meerkat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bush-dog": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-a-fulgens": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "donkey": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "lemur": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-chilensis": {
+          "n": 3,
+          "top1": 3,
+          "top3": 3,
+          "confusions": {}
+        },
+        "kyoto-g-eremita": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-n-meleagris": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        }
+      },
+      "byTaxon": {
+        "macaque": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "elephant": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "tapir": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "kyoto-p-giganteus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-l-lynx": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "hippo": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "giraffe": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "hyrax": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-serval": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-senegalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gibbon": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-h-cristata": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-bengalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gorilla": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "badger": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bear": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "sheep": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "fennec": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "capuchin": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-c-didactylus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "deer": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "mandrill": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "meerkat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "goat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bush-dog": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-a-fulgens": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "donkey": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "lemur": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-chilensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-ruber": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-eremita": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-n-meleagris": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-roseus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        }
+      }
+    },
+    "after": {
+      "n": 33,
+      "top1": 31,
+      "top3": 33,
+      "wrong": 2,
+      "noCandidate": 0,
+      "autoCorrect": 30,
+      "autoWrong": 1,
+      "byGroup": {
+        "macaque": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "elephant": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "tapir": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "kyoto-p-giganteus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-l-lynx": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "hippo": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "giraffe": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "hyrax": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-serval": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-senegalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gibbon": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-h-cristata": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-bengalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gorilla": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "badger": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bear": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "goat": {
+          "n": 2,
+          "top1": 2,
+          "top3": 2,
+          "confusions": {}
+        },
+        "fennec": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "capuchin": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-c-didactylus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "deer": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "mandrill": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "meerkat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bush-dog": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-a-fulgens": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "donkey": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "lemur": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-chilensis": {
+          "n": 3,
+          "top1": 3,
+          "top3": 3,
+          "confusions": {}
+        },
+        "kyoto-g-eremita": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-n-meleagris": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        }
+      },
+      "byTaxon": {
+        "macaque": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "elephant": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "tapir": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "kyoto-p-giganteus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-l-lynx": {
+          "n": 1,
+          "top1": 0,
+          "top3": 1,
+          "confusions": {
+            "goat": 1
+          }
+        },
+        "hippo": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "giraffe": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "hyrax": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-serval": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-senegalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gibbon": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-h-cristata": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-bengalensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "gorilla": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "badger": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bear": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "sheep": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "fennec": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "capuchin": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-c-didactylus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "deer": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "mandrill": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "meerkat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "goat": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "bush-dog": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-a-fulgens": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "donkey": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "lemur": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-chilensis": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-ruber": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-g-eremita": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-n-meleagris": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        },
+        "kyoto-p-roseus": {
+          "n": 1,
+          "top1": 1,
+          "top3": 1,
+          "confusions": {}
+        }
+      }
+    },
+    "fixtures": [
+      {
+        "id": "kyoto-macaque",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/15c55e5bcef6b57b8c14056d6d78e2ee-2-300x200.jpg",
+        "file": "kyoto-photos/macaque.jpg",
+        "sha256": "8882c52ae41e1be0003cd99d4630b9dcd633d95a33e2af1dc1bee25c5dbfcc8b",
+        "species": "macaque",
+        "group": "macaque",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-elephant",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/DSC_1483-1-300x200.jpg",
+        "file": "kyoto-photos/elephant.jpg",
+        "sha256": "e5f7f8a16e3ac0108a5dbc2f41d32b5d8bc37185acb3bf630347d5fec2eb0339",
+        "species": "elephant",
+        "group": "elephant",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-tapir",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/3849bb8d87d73e60f74bc38305a4e8eb-300x225.jpg",
+        "file": "kyoto-photos/tapir.jpg",
+        "sha256": "8ebc9a0d055fdac526619b4e0360993eb8c135b10481b736749e722bc3fa0e21",
+        "species": "tapir",
+        "group": "tapir",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-p-giganteus",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/c007c3af0234133259f4c2ddba5d6051-1-300x213.jpg",
+        "file": "kyoto-photos/kyoto-p-giganteus.jpg",
+        "sha256": "c3ea3b283d70230739452216e46a7f2c9842b1fafb7ea1e722b133308a62d1af",
+        "species": "kyoto-p-giganteus",
+        "group": "kyoto-p-giganteus",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-l-lynx",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/ce9ca6120c089985eca0ee3c35d0b4ac-300x182.jpg",
+        "file": "kyoto-photos/kyoto-l-lynx.jpg",
+        "sha256": "d6dce6b87afb9c7885421f48f2081c24917d7d42a68f6e8adabbfaeb556f27e4",
+        "species": "kyoto-l-lynx",
+        "group": "kyoto-l-lynx",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-hippo",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/111c2d96e8efc7fbd5da8f291fd8d3be-300x200.jpg",
+        "file": "kyoto-photos/hippo.jpg",
+        "sha256": "7415084e8d7ae17f0637e925cea3413e18ed725181c89d97690a5d526f4bd4a4",
+        "species": "hippo",
+        "group": "hippo",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-giraffe",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/7bb0b577ac154c0f5e992a1e13439565-3-300x200.jpg",
+        "file": "kyoto-photos/giraffe.jpg",
+        "sha256": "e4e9504d90521cd6e0a9e4dacc421ffe0585670ab0eb5404f697007c9286fe26",
+        "species": "giraffe",
+        "group": "giraffe",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-hyrax",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/cfa3eca61035f19c6303c1ee3bc63de3-1-300x225.jpg",
+        "file": "kyoto-photos/hyrax.jpg",
+        "sha256": "eb992426d8a5489ad16a553cdca2911d3b7b7b1fcf6b1aff53a07bab01f3fc83",
+        "species": "hyrax",
+        "group": "hyrax",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-serval",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/IMG_4464-300x225.jpeg",
+        "file": "kyoto-photos/kyoto-serval.jpeg",
+        "sha256": "75d57c7496d37308392af21887bd5666f5edf1514cc8d9a912d9ad28156eaa65",
+        "species": "kyoto-serval",
+        "group": "kyoto-serval",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-g-senegalensis",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/fc8612787e84a634455443a0f97632ff-1-300x225.jpg",
+        "file": "kyoto-photos/kyoto-g-senegalensis.jpg",
+        "sha256": "82dbbf5623730512f2a7c92ba62dd8a3ff2ffa3e69637e18ce50c94b504ffe5d",
+        "species": "kyoto-g-senegalensis",
+        "group": "kyoto-g-senegalensis",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-gibbon",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/Siro.jpg",
+        "file": "kyoto-photos/gibbon.jpg",
+        "sha256": "cf51ab4ab7946e0c7cf7e0990eb552cf014835d0ffcaa407a310b66d75300573",
+        "species": "gibbon",
+        "group": "gibbon",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-h-cristata",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/img144-300x225.jpg",
+        "file": "kyoto-photos/kyoto-h-cristata.jpg",
+        "sha256": "cc1a2898f55d74638c13659342292f1d57e7544721d3352c8b5c239a7cbca712",
+        "species": "kyoto-h-cristata",
+        "group": "kyoto-h-cristata",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-p-bengalensis",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/84a7b8a9e83ec4e7d4933a9f8b3ed31d-300x225.jpg",
+        "file": "kyoto-photos/kyoto-p-bengalensis.jpg",
+        "sha256": "3d996a88c57290ff6de7772f65e88fdd13ba2853503e72fefb5459a6a99c4c42",
+        "species": "kyoto-p-bengalensis",
+        "group": "kyoto-p-bengalensis",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-gorilla",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/3b7bb02d0c1e9ca97bafacbc7fb835b6-225x300.jpeg",
+        "file": "kyoto-photos/gorilla.jpeg",
+        "sha256": "b0157e1468c036cebebc3fe54144cb720d63cae874a3da71e58165fe0427a2a1",
+        "species": "gorilla",
+        "group": "gorilla",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-badger",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/39d5a6905b7501339d922581ece3b3ae-1-300x200.jpg",
+        "file": "kyoto-photos/badger.jpg",
+        "sha256": "35eca4e7f23699cb740273a392a8dde647c170db3e044ff9f43f826de7ccef1c",
+        "species": "badger",
+        "group": "badger",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-bear",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/3020407042256389ecb9b34fa6ba03ce-300x182.jpg",
+        "file": "kyoto-photos/bear.jpg",
+        "sha256": "d330b9ee253ddca4ba91497445f7968a0563fdf0f0400cba3ec735cf49ad4218",
+        "species": "bear",
+        "group": "bear",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-sheep",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/1000004935-256x300.jpg",
+        "file": "kyoto-photos/sheep.jpg",
+        "sha256": "ea0e7ab641e89d9c4418507d640aee866a69e9f3a3c6fcc6126dd2d6264e3161",
+        "species": "sheep",
+        "group": "goat",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-fennec",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/87084b1479f55ae874f1432ace023d6d.jpg",
+        "file": "kyoto-photos/fennec.jpg",
+        "sha256": "434f7a6d97a13340fcb2480fd6996c733d516ee2621ebb842956b4da2f2eb01e",
+        "species": "fennec",
+        "group": "fennec",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-capuchin",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/1aeaa0ad760f97634da13e66eb9e6e1b-300x225.jpg",
+        "file": "kyoto-photos/capuchin.jpg",
+        "sha256": "625caa7e8cdb43ddcbf2e528eff5d8b3ef1ba5172fa563e8a7b82f574170ce98",
+        "species": "capuchin",
+        "group": "capuchin",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-c-didactylus",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/sloth202408-2-300x225.jpg",
+        "file": "kyoto-photos/kyoto-c-didactylus.jpg",
+        "sha256": "c0c11fb614b7464baded86bd38c8cf3af49f8a4d47ab46cac0317ca5d47b2a2a",
+        "species": "kyoto-c-didactylus",
+        "group": "kyoto-c-didactylus",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-deer",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/397cd9b99d9c2c203e97980568f00802-1-300x200.jpg",
+        "file": "kyoto-photos/deer.jpg",
+        "sha256": "dc2b990c8ea140890428f95de422608c4b686ed1efd815630a121eec3707ab43",
+        "species": "deer",
+        "group": "deer",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-mandrill",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/ab7efadd625ce6b1818bfb73540c4614-300x225.jpg",
+        "file": "kyoto-photos/mandrill.jpg",
+        "sha256": "f4469d2852f1258c0cb5847aed0b17bef21196f3e88a49e060ee52465122cc11",
+        "species": "mandrill",
+        "group": "mandrill",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-meerkat",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/1e4e7f1439386f1a88f22281769a3f23-1-300x182.jpg",
+        "file": "kyoto-photos/meerkat.jpg",
+        "sha256": "d072c2988961e8be20cf997bf8e8fd0070246dc1d3c6a68713986fc322173148",
+        "species": "meerkat",
+        "group": "meerkat",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-goat",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/img296-300x225.jpg",
+        "file": "kyoto-photos/goat.jpg",
+        "sha256": "da8f5bf6f5ef411ff76058c77ae2ccbcf57fcce8ebda4a0822cd5e7d1ba287e6",
+        "species": "goat",
+        "group": "goat",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-bush-dog",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/89c0fc3696494404426e0ffe5a4a4c65-2-300x225.jpg",
+        "file": "kyoto-photos/bush-dog.jpg",
+        "sha256": "eb606b4a0f532a8973943c4b30ea2a1b5b9895bebf20445247a4d0c6009455b6",
+        "species": "bush-dog",
+        "group": "bush-dog",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-a-fulgens",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/ressa_doubutu-300x225.jpg",
+        "file": "kyoto-photos/kyoto-a-fulgens.jpg",
+        "sha256": "92866c886b726ce939651e48a13fdea0264da640c3a5dcab522525ea1052c099",
+        "species": "kyoto-a-fulgens",
+        "group": "kyoto-a-fulgens",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-donkey",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/b1a7544fcb111bcae880176e297a4415-300x182.jpg",
+        "file": "kyoto-photos/donkey.jpg",
+        "sha256": "358513c1d56d7702912ffa0975a2069569b8d78c15f853580cda7db09a70137c",
+        "species": "donkey",
+        "group": "donkey",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-lemur",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/0d31d6d7293ece640edefabcc7a78252-300x225.jpg",
+        "file": "kyoto-photos/lemur.jpg",
+        "sha256": "d0b796d3b34bfc6cdf9c6a867c10b4dd4edd4bfc116879dc5cd106cefc1c66b0",
+        "species": "lemur",
+        "group": "lemur",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-p-chilensis",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/7f6410cfce58e391fd622d4083ebbdb3-300x200.jpg",
+        "file": "kyoto-photos/kyoto-p-chilensis.jpg",
+        "sha256": "5ce1c623b39f091c13be087dbf747473d3a71f8cc1bc8baeec89869b9e10b049",
+        "species": "kyoto-p-chilensis",
+        "group": "kyoto-p-chilensis",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-p-ruber",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/img232-300x200.jpg",
+        "file": "kyoto-photos/kyoto-p-ruber.jpg",
+        "sha256": "8f22ff2fb907a8477ce81c279d20d832d2f53b3ca3643bccd891558635dd7e30",
+        "species": "kyoto-p-ruber",
+        "group": "kyoto-p-chilensis",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-g-eremita",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/436d1612d497f550404d8ea7408669fc-300x200.jpg",
+        "file": "kyoto-photos/kyoto-g-eremita.jpg",
+        "sha256": "52171df6b51d723f448ae4cd35d6002e3f1eaa74acc49a424b97e6b6490fb25d",
+        "species": "kyoto-g-eremita",
+        "group": "kyoto-g-eremita",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-n-meleagris",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/12f87e9b79b376cf4022cc0465488ecf-1-300x225.jpg",
+        "file": "kyoto-photos/kyoto-n-meleagris.jpg",
+        "sha256": "49ceb46bb1173bc6b3c6c71979b8e8d19bf8a8eec86d4562ae62ecdf0af6ed6d",
+        "species": "kyoto-n-meleagris",
+        "group": "kyoto-n-meleagris",
+        "split": "test"
+      },
+      {
+        "id": "kyoto-kyoto-p-roseus",
+        "source": "https://zoo.city.kyoto.lg.jp/zoo/uploads/image/fc233d9c4d812382d859a32e2055c353-300x200.jpg",
+        "file": "kyoto-photos/kyoto-p-roseus.jpg",
+        "sha256": "999c51f7c51cbb9d4bbbb190452240d1afe106691a2f9571f5baa3bf2d4ffc58",
+        "species": "kyoto-p-roseus",
+        "group": "kyoto-p-chilensis",
+        "split": "test"
+      }
+    ]
+  }
+}

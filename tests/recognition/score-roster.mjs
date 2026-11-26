@@ -17,15 +17,19 @@ const referenceBank = JSON.parse(
   await read("src/recognition/bioclip-photo-references.json"),
 );
 const archive = process.env.ZOOKETCH_ROSTER_BASELINE;
-const vite = await createServer({
+if (!archive && !bankFiles.length)
+  throw new Error("Specify candidate banks or set ZOOKETCH_ROSTER_BASELINE");
+const serverOptions = {
+  optimizeDeps: { noDiscovery: true, include: [] },
   server: { middlewareMode: true, ws: false },
-});
+};
+const vite = await createServer(serverOptions);
 const baselineVite = archive
   ? await createServer({
+      ...serverOptions,
       root: resolve(archive),
-      server: { middlewareMode: true, ws: false },
     })
-  : vite;
+  : undefined;
 
 function loadBank(raw) {
   const start = performance.now();
@@ -105,9 +109,8 @@ function summary(rows) {
 }
 
 try {
-  const { classifyBioClip } = await baselineVite.ssrLoadModule(
-    "/src/recognition/labels.ts",
-  );
+  const { classifyBioClip } =
+    (await baselineVite?.ssrLoadModule("/src/recognition/labels.ts")) ?? {};
   const { classifyRosterBioClip } = bankFiles.length
     ? await vite.ssrLoadModule("/src/recognition/rosterClassifier.ts")
     : {};
@@ -147,14 +150,14 @@ try {
       ]),
     );
 
-  for (const path of [baselineFile, ...bankFiles]) {
+  for (const path of [...(archive ? [baselineFile] : []), ...bankFiles]) {
     const raw = await read(path);
     const { bank } = loadBank(raw);
     for (let i = 0; i < 20; i++) loadBank(raw);
     const parseMs = distribution(
       Array.from({ length: 100 }, () => loadBank(raw).ms),
     );
-    const usesBaseline = path === baselineFile;
+    const usesBaseline = Boolean(archive) && path === baselineFile;
     const classify = usesBaseline ? classifyBioClip : classifyRosterBioClip;
     if (!classify)
       throw new Error(
@@ -285,6 +288,6 @@ try {
       }
   }
 } finally {
-  if (baselineVite !== vite) await baselineVite.close();
+  await baselineVite?.close();
   await vite.close();
 }

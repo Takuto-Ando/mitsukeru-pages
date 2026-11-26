@@ -48,6 +48,13 @@ DISTINCT = {
     "kyoto-p-bengalensis": "a photo of a Tsushima leopard cat with small ears and facial stripes",
     "kyoto-serval": "a photo of a serval with long legs and large rounded ears",
 }
+# Reweight only the groups with a measured regression in the 30-group bank.
+FOCUSED_CAPTIONS = {
+    "bush-dog": "a photo of a bush dog",
+    "kyoto-c-didactylus": "a photo of a two-toed sloth",
+}
+MANDRILL_REFERENCE_WEIGHT = 0.075
+
 REJECTIONS = (
     "a person", "an empty zoo enclosure", "a landscape without animals", "a blurry photograph",
     "cage bars", "a zoo information board", "pebbles on the ground", "grass and leaves",
@@ -93,6 +100,30 @@ def encode(encoder, tokenizer_path, inputs):
     return dict(zip(inputs, embeddings))
 
 
+def unit(vector):
+    return vector / np.linalg.norm(vector)
+
+
+def quantize(rows):
+    return np.rint(rows * (127 / np.abs(rows).max(axis=-1, keepdims=True))).astype(np.int8)
+
+
+def focus_bank(labels, bank, features, reference_labels, reference_vectors):
+    focused = bank.copy()
+    for group, caption in FOCUSED_CAPTIONS.items():
+        index = labels.index(group)
+        text = unit(bank[index].astype(np.float32))
+        focused[index] = quantize(0.5 * text + 0.5 * features[caption])
+    index = labels.index("mandrill")
+    existing = unit(bank[index].astype(np.float32))
+    refs = [unit(vector.astype(np.float32)) for label, vector in zip(reference_labels, reference_vectors)
+            if label == "mandrill"]
+    reference = unit(np.mean(refs, axis=0))
+    weight = MANDRILL_REFERENCE_WEIGHT
+    focused[index] = quantize((1 - weight) * existing + weight * reference)
+    return focused
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("encoder", type=Path)
@@ -108,6 +139,7 @@ def main():
     strings = list(dict.fromkeys(
         caption for prompts in prompt_lists.values() for mode in prompts.values() for caption in mode
     ))
+    strings.extend(caption for caption in FOCUSED_CAPTIONS.values() if caption not in strings)
     features = encode(args.encoder, args.tokenizer, strings)
     args.outdir.mkdir(parents=True, exist_ok=True)
     roster = roster_ids()
@@ -119,11 +151,15 @@ def main():
     (args.outdir / "bioclip-photo-references-30.json").write_text(
         json.dumps(photo_bank, separators=(",", ":")) + "\n", encoding="utf-8",
     )
+    labels = list(prompt_lists)
+    banks = {}
     for mode in ("single", "average", "distinct"):
         bank = np.stack([np.mean([features[prompt] for prompt in prompts[mode]], axis=0)
                          for prompts in prompt_lists.values()])
-        quantized = np.rint(bank * (127 / np.abs(bank).max(axis=1, keepdims=True))).astype(np.int8)
-        content = {"labels": list(prompt_lists), "vectors": b64encode(quantized.tobytes()).decode("ascii")}
+        banks[mode] = quantize(bank)
+    banks["focused"] = focus_bank(labels, banks["distinct"], features, original["speciesIds"], originals)
+    for mode, quantized in banks.items():
+        content = {"labels": labels, "vectors": b64encode(quantized.tobytes()).decode("ascii")}
         (args.outdir / f"bioclip-labels-30-{mode}.json").write_text(
             json.dumps(content, separators=(",", ":")) + "\n", encoding="utf-8",
         )

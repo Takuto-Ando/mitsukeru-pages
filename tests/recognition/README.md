@@ -53,7 +53,7 @@ python tests/recognition/embed_roster_photos.py \
   /tmp/zooketch-roster/features.jsonl
 python tests/recognition/export_roster_bank.py \
   /path/text_encoder_fp16.onnx /path/tokenizer.json /tmp/zooketch-roster
-cmp /tmp/zooketch-roster/bioclip-labels-30-distinct.json src/recognition/bioclip-labels-30.json
+git show fa9c13d:src/recognition/bioclip-labels-30.json | cmp /tmp/zooketch-roster/bioclip-labels-30-distinct.json -
 cmp /tmp/zooketch-roster/bioclip-photo-references-30.json src/recognition/bioclip-photo-references-30.json
 ZOOKETCH_ROSTER_BASELINE=/tmp/zooketch-baseline \
   node tests/recognition/score-roster.mjs /tmp/zooketch-roster/features.jsonl \
@@ -87,3 +87,30 @@ node tests/recognition/bench-roster-worker.mjs \
 | 画像エンコーダー | 87,384,964 B | 87,384,964 B |
 
 ブラウザーでのTop-1／Top-3は Chromium 20／21→22／23、WebKit 20／21→23／23（各30枚）。1回あたりの中央値はほぼ同程度。p95は両ブラウザーで延びた。30枚の試行でばらつきの原因は確定していない。スマートフォン実機の時間は未測定。
+
+## ヤブイヌ・マンドリル・ナマケモノの再調整
+
+30グループ版 `fa9c13d` で個別に悪化した3グループを再調整した。ヤブイヌとナマケモノは旧ベクトルと簡潔な英語の写真表現を等分に混ぜた。マンドリルは旧ベクトルに、既存の写真参照ベクトルを重み0.075で混ぜた。変更した行はこの3本。テキストバンクの容量は27,220 Bで、参照写真バンク、公開モデル、キャッシュキー、前処理と判定基準は同一。
+
+前回使用した全214枚をモデルで再推論し、写真ID・ラベル・SHA-256が固定一覧と一致することを確認した。前回の評価写真を再利用した回帰確認であり、初見写真に対する推定精度とは区別する。京都市動物園の図鑑に掲載された既存33枚も追加で比較した。
+
+| 同じ test 122枚 | `fa9c13d` | 再調整版 |
+| --- | ---: | ---: |
+| ヤブイヌ Top-1 | 0/2 | 1/2 |
+| マンドリル Top-1 | 0/2 | 1/2 |
+| ナマケモノ Top-1 | 2/4 | 3/4 |
+| 30グループ全体 Top-1 | 101/122（82.8%） | 104/122（85.2%） |
+| 30グループ全体 Top-3 | 108/122（88.5%） | 109/122（89.3%） |
+| 自動確定の正答／誤り | 88／6 | 90／5 |
+
+Top-1とTop-3はどのグループも低下しなかった。validation 92枚ではTop-1が73→74、Top-3が77→78、自動確定の誤りは2件のまま。図鑑の33枚ではTop-1が31、Top-3が33で同数。自動確定の正答は28→30、誤りは1件のまま。固定セットに含まれるヤブイヌの足跡だけの写真などは引き続き識別できていない。 [全グループの比較結果](roster-targeted-results.json)
+
+生成コマンドは上記と同じ。再調整版は `bioclip-labels-30-focused.json` に出力される。比較時は以下のように2版のバンクを渡す。
+
+```sh
+cmp /tmp/zooketch-roster/bioclip-labels-30-focused.json src/recognition/bioclip-labels-30.json
+git show fa9c13d:src/recognition/bioclip-labels-30.json > /tmp/zooketch-roster/previous-bank.json
+node tests/recognition/score-roster.mjs /tmp/zooketch-roster/features.jsonl \
+  /tmp/zooketch-roster/targeted-report.json /tmp/zooketch-roster/previous-bank.json \
+  src/recognition/bioclip-labels-30.json
+```
