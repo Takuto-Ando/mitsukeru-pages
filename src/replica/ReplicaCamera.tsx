@@ -1,7 +1,10 @@
 import { downloadLiveModel, liveModelCached } from "../recognition/liveModel";
 import { useModelPreload } from "../recognition/useModelPreload";
 import { usePhotoModelDownloading } from "../recognition/usePhotoIdentification";
-import { useLiveSpecies } from "../recognition/useLiveSpecies";
+import {
+  liveDetectorHint,
+  useLiveSpecies,
+} from "../recognition/useLiveSpecies";
 import { LiveAnimalOverlay } from "../components/LiveAnimalOverlay";
 import {
   useLiveDetection,
@@ -46,11 +49,6 @@ export const samplePhoto = () =>
   assetPath("replica-assets/giraffe-example.png");
 
 const liveSetting = "zooketch-live-detection-v1";
-
-const recognizedAnimals = new Map([
-  ["キリン", { groupId: "giraffe", name: "キリン" }],
-  ["ゾウ", { groupId: "elephant", name: "アジアゾウ" }],
-]);
 
 export type CameraCapture = {
   photo?: string;
@@ -141,13 +139,6 @@ export function ReplicaCamera({
     !legacy && liveActive
       ? (live.boxes.find(({ id }) => id === trackedAnimalId) ?? live.boxes[0])
       : undefined;
-  // Keep a provisional name only for distinctive detector labels. Broad
-  // labels such as bear, sheep and bird can still localize the subject.
-  const selection =
-    bestMatch && bestMatch.score >= 0.45
-      ? recognizedAnimals.get(bestMatch.label)
-      : undefined;
-  const boxAnimal = selection;
   const species = useLiveSpecies(
     video,
     !legacy &&
@@ -166,8 +157,13 @@ export function ReplicaCamera({
     !liveDownloading &&
     !photoModelDownloading &&
     (liveDownloadFailed || speciesNeedsRetry);
-  const animal = species.animal ?? (species.checked ? undefined : boxAnimal);
-  const candidate = animal ? undefined : species.candidate;
+  const animal = species.animal;
+  const candidate = animal
+    ? undefined
+    : (species.candidate ??
+      (species.modelStatus === "ready" && (bestMatch?.score ?? 0) < 0.8
+        ? undefined
+        : liveDetectorHint(bestMatch)));
   const recognized = sample
     ? sampleVisible
     : legacy

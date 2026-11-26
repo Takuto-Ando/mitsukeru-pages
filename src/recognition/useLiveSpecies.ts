@@ -21,6 +21,7 @@ import type { Candidate } from "./labels";
 type LiveSpecies = { groupId: string; name: string; taskId?: string };
 type CameraView = { zoom: number; box?: TrackedLiveBox };
 const LIVE_INFERENCE_TIMEOUT_MS = 15_000;
+const FIRST_TRACK_WAIT_MS = 260;
 
 function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
   const id = candidate?.speciesId ?? candidate?.groupId;
@@ -32,6 +33,20 @@ function animalFromCandidate(candidate?: Candidate): LiveSpecies | undefined {
         taskId: id === "sheep" ? "sheep" : undefined,
       }
     : undefined;
+}
+
+export function liveDetectorHint(box?: TrackedLiveBox) {
+  if (!box || box.score < 0.45) return;
+  const groupId =
+    box.label === "キリン"
+      ? "giraffe"
+      : box.label === "ゾウ"
+        ? "elephant"
+        : undefined;
+  const animal = animalFromCandidate(
+    groupId ? { groupId, score: box.score } : undefined,
+  );
+  return animal && { ...animal, score: box.score };
 }
 
 function sameReadingArea(first: CameraView, second: CameraView) {
@@ -106,6 +121,7 @@ export function useLiveSpecies(
     let started = false;
     let retried = false;
     let waitingForFrame = false;
+    let firstFrame = true;
     let timer = 0;
     let coolingView: CameraView | undefined;
     let quickChecks = 0;
@@ -132,6 +148,16 @@ export function useLiveSpecies(
         timer = window.setTimeout(nextFrame, 150);
         return;
       }
+      if (firstFrame) {
+        firstFrame = false;
+        // Let the first detector snapshot arrive before starting a costly
+        // whole-frame read that would be discarded as soon as the box appears.
+        if (!snapshot.box) {
+          coolingView = snapshot;
+          timer = window.setTimeout(nextFrame, FIRST_TRACK_WAIT_MS);
+          return;
+        }
+      }
       if (!speciesRecognizer.isBusy()) {
         const source = recognitionViews(frame, snapshot);
         if (source.length) {
@@ -149,7 +175,7 @@ export function useLiveSpecies(
                   if (
                     prior &&
                     sameTarget(prior.snapshot, snapshot) &&
-                    prior.animal?.name === candidate.name
+                    prior.animal
                   )
                     return prior;
                   // Keep a suggestion separate from the capture's answer.
@@ -163,6 +189,13 @@ export function useLiveSpecies(
                   fit,
                   LIVE_INFERENCE_TIMEOUT_MS,
                 ),
+              {
+                get detectorHint() {
+                  // Read the newest confidence for the same tracked subject;
+                  // the box can refine its score while BioCLIP is running.
+                  return liveDetectorHint(view.current.box);
+                },
+              },
             );
           if (!visible()) return;
           if (unavailable) {
@@ -177,8 +210,9 @@ export function useLiveSpecies(
             const confirmed =
               supported ??
               (same &&
+              !previous?.missed &&
               previous?.speciesId === speciesId &&
-              primary === suggestion
+              speciesId === (suggestion?.speciesId ?? suggestion?.groupId)
                 ? primary
                 : undefined);
             needsConfirmation =

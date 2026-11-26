@@ -1,0 +1,65 @@
+[
+  {
+    "id": "red-panda-walk",
+    "groupId": "kyoto-a-fulgens",
+    "name": "レッサーパンダ",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Red_Panda_National_Zoo.ogv",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/transcoded/9/99/Red_Panda_National_Zoo.ogv/Red_Panda_National_Zoo.ogv.360p.vp9.webm",
+    "sha256": "b21273cffa5ad670f2da73496245ae0ee5314e58e75a6c70bbaafaf5013c6fe3"
+  },
+  {
+    "id": "giraffes",
+    "groupId": "giraffe",
+    "name": "キリン",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Giraffes_%28Giraffa_camelopardalis%29_in_zoo.webm",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Giraffes_%28Giraffa_camelopardalis%29_in_zoo.webm",
+    "sha256": "6c0525994043865e1f522e87454b7264563bcb0ca5c7a49da57932384c1e31af"
+  },
+  {
+    "id": "elephant",
+    "groupId": "elephant",
+    "name": "アジアゾウ",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Asian-elephant-ueno2009-video.ogv",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b0/Asian-elephant-ueno2009-video.ogv",
+    "sha256": "50d9bdf48174983485a7536b4969cb113fa256695ca1a42a620a19e32c6552f4"
+  },
+  {
+    "id": "hippo",
+    "groupId": "hippo",
+    "name": "カバ",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Hippopotamus.ogv",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/41/Hippopotamus.ogv",
+    "sha256": "f68d068745e960c79b517e9e08d96e6be20a81a038b5ed7aae612d7aeb9d0cca"
+  },
+  {
+    "id": "hippo-wild",
+    "groupId": "hippo",
+    "name": "カバ",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Hippo.ogv",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Hippo.ogv",
+    "sha256": "fa685c77507abfb20087b70e893c6389a68160111f6ae1971952022d41860299"
+  },
+  {
+    "id": "lemurs",
+    "groupId": "lemur",
+    "name": "ワオキツネザル",
+    "seconds": 18.0,
+    "source": "https://commons.wikimedia.org/wiki/File:Ring-tailed_lemurs_%28Lemur_catta%29.webm",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/transcoded/5/58/Ring-tailed_lemurs_%28Lemur_catta%29.webm/Ring-tailed_lemurs_%28Lemur_catta%29.webm.360p.vp9.webm",
+    "sha256": "e8b80b6136ad738cb2861b454dca7848a9a41377037dcc9a81e12c3a4802c25b"
+  },
+  {
+    "id": "meerkat",
+    "groupId": "meerkat",
+    "name": "ミーアキャット",
+    "seconds": 15.4,
+    "source": "https://commons.wikimedia.org/wiki/File:Meerkat_at_Los_Angeles_Zoo.webm",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/35/Meerkat_at_Los_Angeles_Zoo.webm",
+    "sha256": "bba5b1be7aa648974ddac340c2c444726877fbef5b0aeca8e7a3ae5004debf69"
+  }
+]

@@ -46,6 +46,17 @@ async function useStillCamera(page: Page) {
   }, sample);
 }
 
+async function captureGiraffe(page: Page) {
+  await expect(page.locator(".pitsune-bubble")).toHaveText("キリンかも！");
+  await action(page, "シャッター").tap();
+  await expect(action(page, "描いてもらう")).toBeDisabled();
+  await action(page, "修正").tap();
+  await action(page, "キリン").tap();
+  await expect(
+    page.getByRole("heading", { name: "キリン", exact: true }),
+  ).toBeVisible();
+}
+
 async function drawTongue(page: Page) {
   await action(page, "描いてもらう").tap();
   await action(page, "スケッチの準備を確認してつぎへ").tap();
@@ -116,10 +127,7 @@ for (const device of ["iPhone SE", "Galaxy S9+"] as const) {
         timeout: 30_000,
       });
       await expectNoHorizontalOverflow(page);
-      await action(page, "シャッター").tap();
-      await expect(
-        page.getByRole("heading", { name: "キリン", exact: true }),
-      ).toBeVisible();
+      await captureGiraffe(page);
       await drawTongue(page);
       await expectNoHorizontalOverflow(page);
       await action(page, "写真を撮る").tap();
@@ -233,7 +241,7 @@ test.describe("3G相当", () => {
         });
       });
     const trackingMs = Math.round(performance.now() - cameraOpened);
-    await action(page, "シャッター").tap();
+    await captureGiraffe(page);
     await drawTongue(page);
     const html = page.locator("html");
     await expect(html).toHaveAttribute("data-share-timed-out", "1", {

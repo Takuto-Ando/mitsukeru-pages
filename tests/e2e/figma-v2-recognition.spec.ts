@@ -151,7 +151,7 @@ test("チュートリアルの見本写真からもカメラへの再試行で�
   ).toBeVisible();
 });
 
-test("ライブ認識を再試行し、白い枠とセリフを表示して撮影時の動物名を引き継ぐ", async ({
+test("ライブ認識を再試行し、白い枠だけの候補は撮影後の動物名として確定しない", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 667 });
@@ -190,9 +190,7 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
   const guide = camera.locator(".replica-camera-tracking");
   await expect(guide).toBeVisible({ timeout: 15_000 });
   await expect(guide.locator("svg")).toHaveCount(4);
-  await expect(camera.locator(".pitsune-bubble")).toHaveText(
-    "キリンがいるよ！",
-  );
+  await expect(camera.locator(".pitsune-bubble")).toHaveText("キリンかも！");
   await expect(camera.locator(".live-animal-overlay")).toHaveCount(0);
   await expect(camera.getByText(/の候補/)).toHaveCount(0);
   await expect(camera).toHaveAttribute("data-figma-node", "43-1494");
@@ -215,17 +213,12 @@ test("ライブ認識を再試行し、白い枠とセリフを表示して撮�
 
   await shutter.click();
   const review = page.locator(".design3-photo-review");
-  await expect(review).toHaveAttribute("data-figma-node", "66-7554");
-  await expect(
-    review.getByRole("heading", { name: "キリン", exact: true }),
-  ).toBeVisible();
-  await expect(button(page, "描いてもらう")).toBeEnabled();
+  await expect(review).toHaveAttribute("data-figma-node", "66-7655");
+  await expect(button(page, "描いてもらう")).toBeDisabled();
   await expect(review.getByRole("status")).toHaveText(
     "画像認識を利用できませんでした。",
   );
-  await expect(review.locator(".replica-photo-selection-prompt")).toHaveCount(
-    0,
-  );
+  await expect(review.locator(".replica-photo-selection-prompt")).toBeVisible();
   expect(photoModelRequests).toBeGreaterThan(0);
 });
 
@@ -986,14 +979,18 @@ test("前の版で修了した端末も新しいチュートリアルで撮影�
   const farSpacing = await cornerSpacing();
   expect(farSpacing.horizontal).toBeGreaterThanOrEqual(5);
   expect(farSpacing.vertical).toBeGreaterThanOrEqual(5);
-  await expect(camera.locator(".pitsune-bubble")).toHaveText(
-    "キリンがいるよ！",
-  );
+  await expect(camera.locator(".pitsune-bubble")).toHaveText("キリンかも！");
   await expect(camera.locator(".live-animal-overlay")).toHaveCount(0);
   await expect(
     camera.getByRole("button", { name: "ギャラリー" }),
   ).toBeDisabled();
   await shutter.click();
+  await expect(page.locator(".design3-photo-review")).toHaveAttribute(
+    "data-figma-node",
+    "52-5265",
+  );
+  await button(page, "修正").click();
+  await button(page, "キリン").click();
   await expect(page.locator(".design3-photo-review")).toHaveAttribute(
     "data-figma-node",
     "43-1815",
@@ -1241,7 +1238,7 @@ async function verifySpeciesSwitch(page: Page, moveBox: boolean) {
                 : "fennec";
               const finish = () => {
                 const result =
-                  weak && reading % 7 !== 1
+                  weak && reading !== 1 && reading !== 3
                     ? { status: "unknown" }
                     : {
                         status: "candidates",

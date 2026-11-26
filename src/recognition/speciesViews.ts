@@ -86,12 +86,76 @@ function supportedByViews(votes: readonly Vote[]) {
   }
 }
 
+export type LiveViewPolicy = {
+  detectorHint?: { groupId: string; score: number };
+};
+
+const liveVoteMinimum = 0.52;
+const liveVoteMargin = 0.05;
+
+const detectorConflictScore = 0.8;
+
+function conflictsWithDetector(vote: Vote, { detectorHint }: LiveViewPolicy) {
+  return (
+    !!detectorHint &&
+    detectorHint.score >= detectorConflictScore &&
+    detectorHint.groupId !== key(vote.candidate)
+  );
+}
+
+function liveVoteCompatible(vote: Vote, policy: LiveViewPolicy) {
+  return (
+    !conflictsWithDetector(vote, policy) || (vote.strong && !vote.view.source)
+  );
+}
+
+function liveDecision(votes: readonly Vote[], policy: LiveViewPolicy) {
+  const latest = votes.at(-1);
+  if (!latest) return;
+  const matches = (vote: Vote) => key(vote.candidate) === key(latest.candidate);
+  // Distinctive detector labels can back up a current confident reading.
+  if (
+    latest.view.source !== "tile" &&
+    latest.strong &&
+    policy.detectorHint &&
+    policy.detectorHint.score >= 0.6 &&
+    policy.detectorHint.groupId === key(latest.candidate)
+  )
+    return latest.candidate;
+
+  const conflictingStrongVote = votes.some(
+    (vote) => vote.strong && !matches(vote),
+  );
+  for (const vote of votes.slice(0, -1)) {
+    if (vote.view.source === "tile" || !matches(vote)) continue;
+    if (
+      !liveVoteCompatible(vote, policy) &&
+      !liveVoteCompatible(latest, policy)
+    )
+      continue;
+    const clear = vote.strong || latest.strong;
+    if (
+      !clear &&
+      (conflictingStrongVote ||
+        (vote.view.source === "focus" && latest.view.source === "focus"))
+    )
+      continue;
+    if (
+      latest.view.source === "tile" &&
+      (!clear || votes.some((part) => !part.view.source && !matches(part)))
+    )
+      continue;
+    return latest.candidate;
+  }
+}
+
 export async function recognizeSpeciesViews(
   views: readonly SpeciesView[],
   active: () => boolean,
   progress?: (message: string) => void,
   onSuggestion?: (candidate: Candidate) => void,
   recognize = speciesRecognizer.recognize,
+  live?: LiveViewPolicy,
 ) {
   const candidates = new Map<string, Candidate>();
   const votes: Vote[] = [];
@@ -105,7 +169,7 @@ export async function recognizeSpeciesViews(
 
   let triedTiles = false;
   for (const view of views) {
-    if (view.source === "tile" && !triedTiles) {
+    if (!live && view.source === "tile" && !triedTiles) {
       triedTiles = true;
       // Use the same result as photo review whenever its views agree.
       supported = supportedByViews(votes);
@@ -137,12 +201,35 @@ export async function recognizeSpeciesViews(
     const [first, runner] = result.candidates;
     const margin = first ? first.score - (runner?.score ?? 0) : 0;
     const strong = result.recognition?.status === "identified";
-    const minimum = hasFocus ? 0.4 : 0.6;
-    if (!first || first.score < minimum || margin < 0.07) continue;
+    const minimum = live ? liveVoteMinimum : hasFocus ? 0.4 : 0.6;
+    if (
+      !first ||
+      first.score < minimum ||
+      margin < (live ? liveVoteMargin : 0.07)
+    )
+      continue;
     const agree = votes.filter(
       ({ candidate }) => key(candidate) === key(first),
     );
     votes.push({ candidate: first, view, strong, margin });
+
+    if (live && result.recognition) {
+      const vote = votes[votes.length - 1];
+      if (
+        view.source !== "tile" &&
+        (!view.source || strong) &&
+        first.score >= 0.6 &&
+        margin >= 0.07 &&
+        !conflictsWithDetector(vote, live) &&
+        (!suggestion || (!view.source && key(first) !== key(suggestion)))
+      ) {
+        suggestion = first;
+        onSuggestion?.(first);
+      }
+      supported = liveDecision(votes, live);
+      if (supported) break;
+      continue;
+    }
 
     // Two tighter views in the tracked frame can correct a tentative name
     // while the remaining votes are still running. One tile is insufficient.
@@ -177,7 +264,7 @@ export async function recognizeSpeciesViews(
     }
   }
 
-  if (!supported && hasFocus) {
+  if (!supported && hasFocus && !live) {
     const frame = votes.filter(({ view }) => !view.source);
     supported = supportedByViews(votes);
     // Repeat only convincing local evidence when the full frame offers no
@@ -198,9 +285,33 @@ export async function recognizeSpeciesViews(
     }
   }
 
+  if (live && !supported) {
+    const consistent = votes.find(
+      (vote) =>
+        vote.view.source !== "tile" &&
+        vote.strong &&
+        liveVoteCompatible(vote, live) &&
+        votes.every(({ candidate }) => key(candidate) === key(vote.candidate)),
+    );
+    // If the same clear reading repeats in the next camera frame, it can
+    // stand in for a second crop when the subject is partly obscured.
+    if (consistent) provisional = consistent.candidate;
+    const suggestedId = suggestion && key(suggestion);
+    if (
+      suggestedId &&
+      votes.some(({ candidate }) => key(candidate) !== suggestedId) &&
+      !votes.some(
+        ({ candidate, view, strong }) =>
+          !view.source && strong && key(candidate) === suggestedId,
+      )
+    )
+      suggestion = undefined;
+  }
   const direct = votes.find(({ view }) => view.source !== "tile")?.candidate;
   const tentative =
-    direct && votes.every(({ candidate }) => key(direct) === key(candidate))
+    !live &&
+    direct &&
+    votes.every(({ candidate }) => key(direct) === key(candidate))
       ? direct
       : undefined;
   const ranked = [...candidates.values()];

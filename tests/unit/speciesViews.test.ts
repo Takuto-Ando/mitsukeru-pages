@@ -243,3 +243,130 @@ test("写真参照の一致は手動選択用に返し、ライブ表示と自�
     }
   }
 });
+
+test("カメラでは控えめな候補でも枠内と全体で一致すれば確定する", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome(redPanda, 0.54))
+    .mockResolvedValueOnce(outcome(redPanda, 0.57));
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    {},
+  );
+  expect(result.supported?.groupId).toBe(redPanda);
+  expect(recognize).toHaveBeenCalledTimes(2);
+});
+
+test("カメラでは同じ枠内の弱い候補だけでは確定せず全体を調べる", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("goat", 0.94))
+    .mockResolvedValueOnce(outcome("goat", 0.96))
+    .mockResolvedValueOnce(outcome(redPanda, 0.99, true));
+  const suggest = vi.fn();
+  const result = await recognizeSpeciesViews(
+    [
+      { photo: "focus", source: "focus" },
+      { photo: "focus", source: "focus", fit: "contain" },
+      { photo: "whole" },
+    ],
+    () => true,
+    undefined,
+    suggest,
+    recognize,
+    {},
+  );
+  expect(result.supported).toBeUndefined();
+  expect(result.suggestion?.groupId).toBe(redPanda);
+  expect(suggest.mock.calls.map(([candidate]) => candidate.groupId)).toEqual([
+    redPanda,
+  ]);
+});
+
+test("カメラでは白枠と種識別が一致したら1回の種識別で確定できる", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("giraffe", 0.93, true));
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: { groupId: "giraffe", score: 0.82 } },
+  );
+  expect(result.supported?.groupId).toBe("giraffe");
+  expect(recognize).toHaveBeenCalledTimes(1);
+});
+
+test("カメラでは高い白枠スコアと食い違う弱い候補の一致を確定に使わない", async () => {
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValue(outcome("donkey", 0.94));
+  const result = await recognizeSpeciesViews(
+    [{ photo: "focus", source: "focus" }, { photo: "whole" }],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: { groupId: "elephant", score: 0.95 } },
+  );
+  expect(result.supported).toBeUndefined();
+  expect(result.suggestion).toBeUndefined();
+});
+
+test("種識別の途中で白枠の確度が上がったら最新の値を使う", async () => {
+  const hint = { groupId: "elephant", score: 0.48 };
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockImplementationOnce(async () => {
+      hint.score = 0.94;
+      return outcome("goat", 0.99, true);
+    })
+    .mockResolvedValueOnce(outcome("donkey", 0.62))
+    .mockResolvedValueOnce(outcome("donkey", 0.97));
+  const result = await recognizeSpeciesViews(
+    [
+      { photo: "focus", source: "focus" },
+      { photo: "focus", source: "focus", fit: "contain" },
+      { photo: "whole" },
+    ],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: hint },
+  );
+  expect(result.supported).toBeUndefined();
+  expect(result.suggestion).toBeUndefined();
+});
+
+test("白枠の確度が下がっても新しい候補と違う古い票を復活させない", async () => {
+  const hint = { groupId: "elephant", score: 0.92 };
+  const recognize = vi
+    .spyOn(speciesRecognizer, "recognize")
+    .mockResolvedValueOnce(outcome("donkey", 0.73))
+    .mockResolvedValueOnce(outcome("donkey", 0.81))
+    .mockImplementationOnce(async () => {
+      hint.score = 0.5;
+      return outcome("elephant", 0.97, true);
+    });
+  const result = await recognizeSpeciesViews(
+    [
+      { photo: "focus", source: "focus" },
+      { photo: "focus", source: "focus", fit: "contain" },
+      { photo: "whole" },
+    ],
+    () => true,
+    undefined,
+    undefined,
+    recognize,
+    { detectorHint: hint },
+  );
+  expect(result.supported).toBeUndefined();
+  expect(result.suggestion?.groupId).toBe("elephant");
+});
